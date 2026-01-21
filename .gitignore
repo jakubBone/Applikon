@@ -1,0 +1,44 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+target/
+build/
+dist/
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Uploads (user data)
+uploads/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Credentials and secrets
+**/credentials.json
+**/secrets.json
+*.pem
+*.key
+
+# Others
+.claude
+/spec
+nul

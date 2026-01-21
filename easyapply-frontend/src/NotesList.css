@@ -1,0 +1,252 @@
+.notes-list {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notes-list h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+}
+
+/* Formularz dodawania notatki */
+.note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.category-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.category-buttons.small {
+  margin-bottom: 8px;
+}
+
+.category-buttons.small .category-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.category-btn {
+  padding: 6px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 20px;
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-btn:hover {
+  border-color: var(--cat-color);
+  color: var(--cat-color);
+}
+
+.category-btn.active {
+  background: var(--cat-bg);
+  border-color: var(--cat-color);
+  color: var(--cat-color);
+}
+
+.note-form textarea {
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 70px;
+  transition: border-color 0.2s;
+}
+
+.note-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.submit-note-btn {
+  align-self: flex-end;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.submit-note-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.submit-note-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Lista notatek */
+.notes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-item {
+  background: #fafbfc;
+  border-radius: 8px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--note-color);
+  transition: box-shadow 0.2s;
+}
+
+.note-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.category-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.note-date {
+  color: #95a5a6;
+  font-size: 12px;
+}
+
+.note-content {
+  color: #2c3e50;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Akcje notatki - widoczne przy hover */
+.note-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.note-item:hover .note-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.action-btn.edit {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.action-btn.edit:hover {
+  background: #bbdefb;
+}
+
+.action-btn.delete {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.action-btn.delete:hover {
+  background: #ffcdd2;
+}
+
+/* Tryb edycji */
+.note-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.note-edit textarea {
+  padding: 10px;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.note-edit textarea:focus {
+  outline: none;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-btn {
+  padding: 6px 16px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.save-btn:hover {
+  background: #219a52;
+}
+
+.cancel-edit-btn {
+  padding: 6px 16px;
+  background: #95a5a6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-edit-btn:hover {
+  background: #7f8c8d;
+}
+
+/* Stany */
+.loading, .empty {
+  text-align: center;
+  color: #95a5a6;
+  padding: 30px 20px;
+  font-size: 14px;
+}

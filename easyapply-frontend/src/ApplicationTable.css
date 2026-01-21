@@ -1,0 +1,454 @@
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin: 1.5rem;
+}
+
+/* Toolbar */
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e9ecef;
+  background: #fafbfc;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-icon {
+  font-size: 14px;
+  color: #95a5a6;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: transparent;
+}
+
+.search-box input::placeholder {
+  color: #adb5bd;
+}
+
+.clear-search {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #95a5a6;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.clear-search:hover {
+  color: #e74c3c;
+}
+
+.status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-filter-btn {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #5a6c7d;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-filter-btn:hover {
+  background: #f8f9fa;
+  border-color: var(--status-color, #ced4da);
+  color: var(--status-color, #5a6c7d);
+}
+
+.status-filter-btn.active {
+  background: #2c3e50;
+  border-color: #2c3e50;
+  color: white;
+}
+
+.filter-info {
+  padding: 8px 20px;
+  background: #fff3cd;
+  color: #856404;
+  font-size: 13px;
+  border-bottom: 1px solid #ffeeba;
+}
+
+.app-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* Header */
+.app-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.app-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.app-table th.sortable {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.app-table th.sortable:hover {
+  background: #e9ecef;
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.th-icon {
+  font-size: 14px;
+}
+
+.sort-arrow {
+  margin-left: 4px;
+  font-size: 12px;
+  color: #667eea;
+}
+
+/* Checkbox column */
+.checkbox-col {
+  width: 40px;
+  text-align: center;
+}
+
+.checkbox-col input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+/* Rows */
+.app-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.app-table tbody tr:hover {
+  background: #f8f9ff;
+}
+
+.app-table tbody tr.selected {
+  background: #eff3ff;
+}
+
+.app-table td {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+/* Company column */
+.company-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.company-initial {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.company-name {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Position column */
+.position-col {
+  color: #495057;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Salary column */
+.salary-value {
+  color: #27ae60;
+  font-weight: 600;
+  font-family: 'Segoe UI', monospace;
+}
+
+/* Source column */
+.source-link {
+  color: #3498db;
+  font-size: 13px;
+}
+
+.no-source {
+  color: #adb5bd;
+}
+
+/* Date column */
+.date-value {
+  color: #495057;
+  font-size: 13px;
+}
+
+/* Days since column */
+.days-value {
+  color: #6c757d;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* Empty state */
+.empty-table {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+  font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .table-container {
+    margin: 1rem;
+    overflow-x: auto;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+
+  .app-table {
+    min-width: 700px;
+  }
+
+  .position-col {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-table th,
+  .app-table td {
+    padding: 10px 8px;
+  }
+
+  .company-initial {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .th-icon {
+    display: none;
+  }
+}
+
+/* Selection Bar */
+.selection-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selection-info {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.action-btn.delete-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+.action-btn.delete-btn:hover {
+  background: #c0392b;
+}
+
+/* Confirm Modal */
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.confirm-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 90%;
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.confirm-modal h3 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.confirm-modal p {
+  margin: 0 0 12px 0;
+  color: #495057;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.confirm-warning {
+  color: #e74c3c !important;
+  font-weight: 500;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.confirm-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.confirm-btn.cancel {
+  background: #f1f3f4;
+  color: #495057;
+}
+
+.confirm-btn.cancel:hover {
+  background: #e9ecef;
+}
+
+.confirm-btn.delete {
+  background: #e74c3c;
+  color: white;
+}
+
+.confirm-btn.delete:hover {
+  background: #c0392b;
+}

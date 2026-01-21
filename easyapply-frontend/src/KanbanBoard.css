@@ -1,0 +1,528 @@
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  min-height: 70vh;
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .kanban-board {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Kolumna */
+.kanban-column {
+  background: #f8f9fa;
+  border-radius: 12px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.column-header {
+  padding: 1rem;
+  border-top: 4px solid #ccc;
+  border-radius: 12px 12px 0 0;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.column-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.column-count {
+  background: #e9ecef;
+  color: #495057;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.column-content {
+  flex: 1;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+/* Karta */
+.kanban-card {
+  background: white;
+  border-radius: 8px;
+  padding: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+  transition: box-shadow 0.2s, transform 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Karta z otwartym dropdown - wysoki z-index, bez hover transform */
+.kanban-card.dropdown-open {
+  z-index: 200;
+  position: relative;
+}
+
+.kanban-card.dropdown-open:hover {
+  transform: none;
+}
+
+.kanban-card:active {
+  cursor: grabbing;
+}
+
+.kanban-card.dragging {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transform: rotate(3deg);
+  cursor: grabbing;
+}
+
+/* Karta - oferta */
+.kanban-card.card-offer {
+  border-left-color: #27ae60;
+  background: linear-gradient(to right, #f0fff4 0%, white 100%);
+}
+
+/* Karta - odmowa */
+.kanban-card.card-rejected {
+  border-left-color: #95a5a6;
+  background: linear-gradient(to right, #f5f5f5 0%, white 100%);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.card-icon {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.card-icon.offer {
+  color: #27ae60;
+}
+
+.card-icon.rejected {
+  color: #95a5a6;
+}
+
+.kanban-card h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-position {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sekcja wyboru etapu na karcie */
+.card-stage-section {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+.stage-selector-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #856404;
+  transition: all 0.2s;
+}
+
+.stage-selector-btn:hover {
+  background: #ffe69c;
+  border-color: #e0a800;
+}
+
+.stage-label {
+  flex: 1;
+  text-align: left;
+}
+
+.stage-arrow {
+  font-size: 0.6rem;
+  margin-left: 0.5rem;
+  color: #856404;
+}
+
+/* Dropdown etapów */
+.stage-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 300;
+  margin-top: 0.25rem;
+  overflow: hidden;
+}
+
+.stage-dropdown-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: white;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.stage-dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.stage-dropdown-item.active {
+  background: #e8f4fc;
+  color: #2980b9;
+  font-weight: 500;
+}
+
+.stage-dropdown-item .check-icon {
+  margin-right: 0.5rem;
+  color: #27ae60;
+}
+
+/* Formularz własnego etapu */
+.custom-stage-form {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-top: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.custom-stage-form input {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.custom-stage-form input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.custom-stage-form button {
+  padding: 0.35rem 0.6rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.custom-stage-form button:hover {
+  background: #2980b9;
+}
+
+.custom-stage-form button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Powód odmowy */
+.card-rejection {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+/* Data aplikacji - stopka */
+.card-date {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #eee;
+  font-size: 0.7rem;
+  color: #999;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  min-width: 320px;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+/* Opcje etapów */
+.stage-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.stage-option {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.stage-option:hover {
+  border-color: #3498db;
+  background: #f8f9ff;
+}
+
+.stage-option.active {
+  border-color: #3498db;
+  background: #e8f4fc;
+}
+
+/* Własny etap */
+.custom-stage {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.custom-stage input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.custom-stage input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.custom-stage button {
+  padding: 0.6rem 1rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.custom-stage button:hover {
+  background: #2980b9;
+}
+
+.custom-stage button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Przycisk anuluj */
+.modal-close {
+  width: 100%;
+  padding: 0.6rem;
+  background: #f8f9fa;
+  color: #666;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.modal-close:hover {
+  background: #e9ecef;
+}
+
+/* Modal zakończenia */
+.end-modal {
+  min-width: 360px;
+}
+
+.outcome-options {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.outcome-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.outcome-option:hover {
+  border-color: #999;
+}
+
+.outcome-option.selected.offer {
+  border-color: #27ae60;
+  background: #f0fff4;
+}
+
+.outcome-option.selected.rejected {
+  border-color: #95a5a6;
+  background: #f5f5f5;
+}
+
+.outcome-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.outcome-option.offer .outcome-icon {
+  color: #27ae60;
+}
+
+.outcome-option.rejected .outcome-icon {
+  color: #95a5a6;
+}
+
+/* Formularz odmowy */
+.rejection-form {
+  margin-bottom: 1rem;
+}
+
+.rejection-form label {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.rejection-form select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.rejection-form select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.rejection-form textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.rejection-form textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+/* Akcje modalu */
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.modal-actions .modal-close {
+  flex: 1;
+}
+
+.modal-submit {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.modal-submit:hover {
+  background: #2980b9;
+}
+
+.modal-submit:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
