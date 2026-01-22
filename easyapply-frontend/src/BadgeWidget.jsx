@@ -32,7 +32,7 @@ const BadgeWidget = ({ refreshTrigger }) => {
 
   const getIconForBadge = (name) => {
     const icons = {
-      'Rozgrzewka': '🥊',
+      'Rękawica': '🥊',
       'Patelnia': '🍳',
       'Niezniszczalny': '🦾',
       'Legenda Linkedina': '👑',
@@ -51,7 +51,7 @@ const BadgeWidget = ({ refreshTrigger }) => {
     const hasAchieved = badge?.name
     const maxThreshold = 100
     const nextThreshold = hasAchieved ? badge.nextThreshold : (isGhosting ? 5 : 5)
-    const nextName = hasAchieved ? badge.nextBadgeName : (isGhosting ? 'Widmo' : 'Rozgrzewka')
+    const nextName = hasAchieved ? badge.nextBadgeName : (isGhosting ? 'Widmo' : 'Rękawica')
     const isMaxed = hasAchieved && !badge.nextThreshold
 
     return (
@@ -62,7 +62,7 @@ const BadgeWidget = ({ refreshTrigger }) => {
           </span>
           <div className="badge-row-info">
             <div className="badge-row-name">
-              {hasAchieved ? badge.name : (isGhosting ? 'Widmo' : 'Rozgrzewka')}
+              {hasAchieved ? badge.name : (isGhosting ? 'Widmo' : 'Rękawica')}
             </div>
             <div className="badge-row-description">
               {hasAchieved ? badge.description : `${count}/${isGhosting ? 5 : 5} do odblokowania`}
@@ -103,11 +103,11 @@ const BadgeWidget = ({ refreshTrigger }) => {
       {expanded && (
         <div className="badge-widget-dropdown">
           {/* Rejection badges */}
-          <div className="badge-section-label">Twoje odrzucenia ({totalRejections})</div>
+          <div className="badge-section-label">Odrzucone aplikacje ({totalRejections})</div>
           {renderBadgeRow(rejectionBadge, totalRejections, 'rejection')}
 
           {/* Ghosting badges */}
-          <div className="badge-section-label">Ghosting ({totalGhosting})</div>
+          <div className="badge-section-label">Bez odzewu ({totalGhosting})</div>
           {renderBadgeRow(ghostingBadge, totalGhosting, 'ghosting')}
 
           {/* Sweet Revenge */}

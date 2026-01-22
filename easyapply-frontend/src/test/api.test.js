@@ -327,7 +327,7 @@ describe('API Service', () => {
         totalGhosting: 3,
         totalOffers: 1,
         sweetRevengeUnlocked: false,
-        rejectionBadge: { name: 'Rozgrzewka', icon: '🥊' },
+        rejectionBadge: { name: 'Rękawica', icon: '🥊' },
         ghostingBadge: { name: null }
       }
 

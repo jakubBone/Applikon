@@ -796,10 +796,10 @@ body {
 }
 
 .badge-section-label {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #555;
+  color: #333;
   font-weight: 700;
   padding: 0.6rem 1rem;
   background: linear-gradient(135deg, #667eea15, #764ba215);

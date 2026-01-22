@@ -26,10 +26,10 @@ public class StatisticsService {
 
     // Rejection badges
     private static final int[] REJECTION_THRESHOLDS = {5, 10, 25, 50, 100};
-    private static final String[] REJECTION_NAMES = {"Rozgrzewka", "Patelnia", "Niezniszczalny", "Legenda Linkedina", "Statystyczna Pewność"};
+    private static final String[] REJECTION_NAMES = {"Rękawica", "Patelnia", "Niezniszczalny", "Legenda Linkedina", "Statystyczna Pewność"};
     private static final String[] REJECTION_ICONS = {"🥊", "🍳", "🦾", "👑", "🎰"};
     private static final String[] REJECTION_DESCRIPTIONS = {
-            "Dopiero zaczynasz. Rynek pracy jeszcze nie wie, z kim zadziera.",
+            "Zakładasz rękawice. Rynek pracy jeszcze nie wie, z kim zadziera.",
             "Odrzucenia spływają po Tobie jak jajecznica po patelni.",
             "25 firm nie doceniło Twojego potencjału. To ich problem.",
             "Pół setki odmów i wciąż w grze. Szacunek.",
@@ -41,11 +41,11 @@ public class StatisticsService {
     private static final String[] GHOSTING_NAMES = {"Widmo", "Cierpliwy Mnich", "Detektyw", "Człowiek-Duch", "Król Ciszy"};
     private static final String[] GHOSTING_ICONS = {"👻", "🧘", "🔍", "🫥", "🤫"};
     private static final String[] GHOSTING_DESCRIPTIONS = {
-            "5 firm nie odpowiedziało wcale. Sprawdź, czy mają internet.",
-            "Czekanie to też umiejętność. Właśnie ją opanowujesz.",
-            "30 spraw bez rozwiązania. Może to nie Ty, może to oni.",
-            "50 firm udaje, że nie istniejesz. Ale Ty wiesz lepiej.",
-            "100 firm milczy. Gratuluję wytrwałości!"
+            "Firma się nie odezwała. Sprawdź, czy mają internet.",
+            "15 firm milczy jak zaklęte. Medytacja przed laptopem to Twoja codzienność.",
+            "30 aplikacji w próżni. Może ich serwer pocztowy zjadł pies?",
+            "50 firm udaje, że nie istniejesz. Zaczynasz wątpić w swoją realność.",
+            "Mistrz ciszy. 100 firm milczy, a Ty wciąż wysyłasz. Legenda."
     };
 
     public StatisticsService(ApplicationRepository applicationRepository) {

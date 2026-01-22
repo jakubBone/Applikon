@@ -31,7 +31,7 @@ describe('Badge Widget', () => {
           totalOffers: 0,
           sweetRevengeUnlocked: false,
           rejectionBadge: {
-            name: 'Rozgrzewka',
+            name: 'Rękawica',
             icon: '🥊',
             threshold: 5,
             description: 'Dopiero zaczynasz.',
@@ -50,8 +50,8 @@ describe('Badge Widget', () => {
       cy.contains('Twoje odznaki').click()
 
       // Should show badge details
-      cy.contains('Twoje odrzucenia').should('be.visible')
-      cy.contains('Rozgrzewka').should('be.visible')
+      cy.contains('Odrzucone aplikacje').should('be.visible')
+      cy.contains('Rękawica').should('be.visible')
       cy.contains('🥊').should('be.visible')
     })
 
@@ -82,7 +82,7 @@ describe('Badge Widget', () => {
 
       cy.contains('Twoje odznaki').click()
 
-      cy.contains('Ghosting').should('be.visible')
+      cy.contains('Bez odzewu').should('be.visible')
       cy.contains('Widmo').should('be.visible')
       cy.contains('👻').should('be.visible')
     })
@@ -127,7 +127,7 @@ describe('Badge Widget', () => {
           totalOffers: 1,
           sweetRevengeUnlocked: false,
           rejectionBadge: {
-            name: 'Rozgrzewka',
+            name: 'Rękawica',
             icon: '🥊',
             threshold: 5
           },
@@ -154,7 +154,7 @@ describe('Badge Widget', () => {
           totalOffers: 0,
           sweetRevengeUnlocked: false,
           rejectionBadge: {
-            name: 'Rozgrzewka',
+            name: 'Rękawica',
             icon: '🥊',
             threshold: 5,
             currentCount: 7,
@@ -215,7 +215,7 @@ describe('Badge Widget', () => {
           totalOffers: 0,
           sweetRevengeUnlocked: false,
           rejectionBadge: {
-            name: 'Rozgrzewka',
+            name: 'Rękawica',
             icon: '🥊',
             threshold: 5
           },
@@ -235,7 +235,7 @@ describe('Badge Widget', () => {
           totalOffers: 0,
           sweetRevengeUnlocked: false,
           rejectionBadge: {
-            name: 'Rozgrzewka',
+            name: 'Rękawica',
             icon: '🥊',
             threshold: 5,
             currentCount: 6

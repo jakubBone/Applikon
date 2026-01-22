@@ -48,7 +48,7 @@ describe('BadgeWidget', () => {
         totalGhosting: 0,
         totalOffers: 0,
         sweetRevengeUnlocked: false,
-        rejectionBadge: { name: 'Rozgrzewka', icon: '🥊', threshold: 5 },
+        rejectionBadge: { name: 'Rękawica', icon: '🥊', threshold: 5 },
         ghostingBadge: { name: null }
       })
 
@@ -68,7 +68,7 @@ describe('BadgeWidget', () => {
         totalGhosting: 0,
         totalOffers: 0,
         sweetRevengeUnlocked: false,
-        rejectionBadge: { name: 'Rozgrzewka', icon: '🥊', threshold: 5 },
+        rejectionBadge: { name: 'Rękawica', icon: '🥊', threshold: 5 },
         ghostingBadge: { name: null }
       })
 
@@ -91,14 +91,14 @@ describe('BadgeWidget', () => {
   // ==================== REJECTION BADGE Tests ====================
 
   describe('Rejection Badges', () => {
-    it('wyświetla "Rozgrzewka" przy 5 odmowach', async () => {
+    it('wyświetla "Rękawica" przy 5 odmowach', async () => {
       api.fetchBadgeStats.mockResolvedValue({
         totalRejections: 5,
         totalGhosting: 0,
         totalOffers: 0,
         sweetRevengeUnlocked: false,
         rejectionBadge: {
-          name: 'Rozgrzewka',
+          name: 'Rękawica',
           icon: '🥊',
           threshold: 5,
           description: 'Dopiero zaczynasz.',
@@ -115,7 +115,7 @@ describe('BadgeWidget', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText('Rozgrzewka')).toBeInTheDocument()
+        expect(screen.getByText('Rękawica')).toBeInTheDocument()
         expect(screen.getByText('🥊')).toBeInTheDocument()
       })
     })
@@ -127,7 +127,7 @@ describe('BadgeWidget', () => {
         totalOffers: 0,
         sweetRevengeUnlocked: false,
         rejectionBadge: {
-          name: 'Rozgrzewka',
+          name: 'Rękawica',
           icon: '🥊',
           threshold: 5,
           description: 'Dopiero zaczynasz.',
@@ -186,7 +186,7 @@ describe('BadgeWidget', () => {
         totalGhosting: 5,
         totalOffers: 0,
         sweetRevengeUnlocked: false,
-        rejectionBadge: { name: 'Rozgrzewka', icon: '🥊', threshold: 5 },
+        rejectionBadge: { name: 'Rękawica', icon: '🥊', threshold: 5 },
         ghostingBadge: {
           name: 'Widmo',
           icon: '👻',
@@ -265,7 +265,7 @@ describe('BadgeWidget', () => {
         totalGhosting: 0,
         totalOffers: 1,
         sweetRevengeUnlocked: false,
-        rejectionBadge: { name: 'Rozgrzewka', icon: '🥊', threshold: 5 },
+        rejectionBadge: { name: 'Rękawica', icon: '🥊', threshold: 5 },
         ghostingBadge: { name: null }
       })
 
@@ -290,7 +290,7 @@ describe('BadgeWidget', () => {
         totalGhosting: 0,
         totalOffers: 0,
         sweetRevengeUnlocked: false,
-        rejectionBadge: { name: 'Rozgrzewka', icon: '🥊', threshold: 5 },
+        rejectionBadge: { name: 'Rękawica', icon: '🥊', threshold: 5 },
         ghostingBadge: { name: null }
       })
 

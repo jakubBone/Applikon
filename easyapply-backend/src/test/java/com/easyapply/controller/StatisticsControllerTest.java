@@ -55,8 +55,8 @@ class StatisticsControllerTest {
 
     @Test
     @Order(2)
-    @DisplayName("GET /api/statistics/badges - odznaka Rozgrzewka przy 5 odmowach")
-    void getBadges_5Rejections_ReturnsRozgrzewka() throws Exception {
+    @DisplayName("GET /api/statistics/badges - odznaka Rękawica przy 5 odmowach")
+    void getBadges_5Rejections_ReturnsRękawica() throws Exception {
         // Tworzymy 5 odmow
         for (int i = 0; i < 5; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
@@ -65,7 +65,7 @@ class StatisticsControllerTest {
         mockMvc.perform(get("/api/statistics/badges"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalRejections").value(5))
-                .andExpect(jsonPath("$.rejectionBadge.name").value("Rozgrzewka"))
+                .andExpect(jsonPath("$.rejectionBadge.name").value("Rękawica"))
                 .andExpect(jsonPath("$.rejectionBadge.icon").exists())
                 .andExpect(jsonPath("$.rejectionBadge.threshold").value(5))
                 .andExpect(jsonPath("$.rejectionBadge.nextThreshold").value(10))
@@ -171,7 +171,7 @@ class StatisticsControllerTest {
 
         mockMvc.perform(get("/api/statistics/badges"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rejectionBadge.name").value("Rozgrzewka"))
+                .andExpect(jsonPath("$.rejectionBadge.name").value("Rękawica"))
                 .andExpect(jsonPath("$.rejectionBadge.currentCount").value(7))
                 .andExpect(jsonPath("$.rejectionBadge.nextThreshold").value(10))
                 .andExpect(jsonPath("$.rejectionBadge.nextBadgeName").value("Patelnia"));

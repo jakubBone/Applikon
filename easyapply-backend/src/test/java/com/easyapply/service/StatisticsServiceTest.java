@@ -47,7 +47,7 @@ class StatisticsServiceTest {
     class RejectionBadgeTests {
 
         @Test
-        @DisplayName("0 odmów - brak odznaki, następna: Rozgrzewka przy 5")
+        @DisplayName("0 odmów - brak odznaki, następna: Rękawica przy 5")
         void noBadge_ZeroRejections() {
             mockCounts(0, 0, 0);
 
@@ -57,16 +57,16 @@ class StatisticsServiceTest {
             assertNull(response.getRejectionBadge().getIcon());
             assertEquals(0, response.getRejectionBadge().getThreshold());
             assertEquals(5, response.getRejectionBadge().getNextThreshold());
-            assertEquals("Rozgrzewka", response.getRejectionBadge().getNextBadgeName());
+            assertEquals("Rękawica", response.getRejectionBadge().getNextBadgeName());
         }
 
         @ParameterizedTest
         @CsvSource({
-                "5, Rozgrzewka, 🥊, 5, 10, Patelnia",
-                "7, Rozgrzewka, 🥊, 5, 10, Patelnia",
-                "9, Rozgrzewka, 🥊, 5, 10, Patelnia"
+                "5, Rękawica, 🥊, 5, 10, Patelnia",
+                "7, Rękawica, 🥊, 5, 10, Patelnia",
+                "9, Rękawica, 🥊, 5, 10, Patelnia"
         })
-        @DisplayName("5-9 odmów = Rozgrzewka")
+        @DisplayName("5-9 odmów = Rękawica")
         void rozgrzewka_5to9Rejections(int count, String name, String icon, int threshold, int nextThreshold, String nextName) {
             mockCounts(count, 0, 0);
 
