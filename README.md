@@ -15,7 +15,6 @@ EasyApply helps organize your job search process. Instead of scattered notes, sp
 
 Built for the Polish IT market, primarily for juniors who apply to many positions simultaneously and need control over the entire process.
 
----
 
 ## Features
 
@@ -35,7 +34,6 @@ Built for the Polish IT market, primarily for juniors who apply to many position
 
 **Badge system** - achievements for rejections and ghosting.
 
----
 
 ## Status
 
