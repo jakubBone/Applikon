@@ -8,13 +8,14 @@
   Job application tracker for IT candidates in Poland.
 </p>
 
----
 
 ## About
 
 EasyApply helps organize your job search process. Instead of scattered notes, spreadsheets, and expired links - one place for all applications, CVs, and interview notes.
 
 Built for the Polish IT market, primarily for juniors who apply to many positions simultaneously and need control over the entire process.
+
+---
 
 ## Features
 
@@ -33,6 +34,8 @@ Built for the Polish IT market, primarily for juniors who apply to many position
 **Duplicate detection** - warning when reapplying to the same company.
 
 **Badge system** - achievements for rejections and ghosting.
+
+---
 
 ## Status
 
