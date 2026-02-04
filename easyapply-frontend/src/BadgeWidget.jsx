@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchBadgeStats } from './services/api'
+import { fetchBadgeStats } from './services/db'
 
 const BadgeWidget = ({ refreshTrigger }) => {
   const [stats, setStats] = useState(null)

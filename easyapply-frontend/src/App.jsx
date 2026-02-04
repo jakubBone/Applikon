@@ -4,7 +4,7 @@ import CVManager from './CVManager'
 import NotesList from './NotesList'
 import ApplicationTable from './ApplicationTable'
 import BadgeWidget from './BadgeWidget'
-import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication } from './services/api'
+import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication } from './services/db'
 import './App.css'
 
 // Komponent formularza wynagrodzenia (musi być poza App, żeby uniknąć utraty focusu)

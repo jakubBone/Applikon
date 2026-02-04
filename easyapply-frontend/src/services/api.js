@@ -148,6 +148,26 @@ export const assignCVToApplication = async (applicationId, cvId) => {
 
 export const getCVDownloadUrl = (cvId) => `${API_URL}/cv/${cvId}/download`
 
+export const createCV = async (cvData) => {
+  const response = await fetch(`${API_URL}/cv`, {
+    method: 'POST',
+    headers: getHeaders('application/json'),
+    body: JSON.stringify(cvData)
+  })
+  if (!response.ok) throw new Error('Błąd tworzenia CV')
+  return response.json()
+}
+
+export const updateCV = async (cvId, cvData) => {
+  const response = await fetch(`${API_URL}/cv/${cvId}`, {
+    method: 'PUT',
+    headers: getHeaders('application/json'),
+    body: JSON.stringify(cvData)
+  })
+  if (!response.ok) throw new Error('Błąd aktualizacji CV')
+  return response.json()
+}
+
 // Notes API
 export const fetchNotes = async (applicationId) => {
   const response = await fetch(`${API_URL}/applications/${applicationId}/notes`, {

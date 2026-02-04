@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react'
 import './CVManager.css'
-import { getSessionId } from './services/api'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+import {
+  fetchCVs as fetchCVsAPI,
+  uploadCV as uploadCVAPI,
+  deleteCV as deleteCVAPI,
+  assignCVToApplication,
+  createCV,
+  updateCV,
+  getCVDownloadUrl,
+  downloadCVFromIndexedDB
+} from './services/db'
 
 function CVManager({ applications, onCVAssigned }) {
   const [cvList, setCvList] = useState([])
@@ -18,10 +25,7 @@ function CVManager({ applications, onCVAssigned }) {
 
   const fetchCVs = async () => {
     try {
-      const response = await fetch(`${API_URL}/cv`, {
-        headers: { 'X-Session-ID': getSessionId() }
-      })
-      const data = await response.json()
+      const data = await fetchCVsAPI()
       setCvList(data)
       // Jeśli było wybrane CV, odśwież je
       if (selectedCv) {
@@ -70,29 +74,17 @@ function CVManager({ applications, onCVAssigned }) {
     }
 
     setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
 
     try {
-      const response = await fetch(`${API_URL}/cv/upload`, {
-        method: 'POST',
-        headers: { 'X-Session-ID': getSessionId() },
-        body: formData
-      })
-
-      if (response.ok) {
-        const newCv = await response.json()
-        fetchCVs()
-        setSelectedCv(newCv)
-        setShowAddModal(false)
-        setAddStep('choose')
-        e.target.value = ''
-      } else {
-        alert('Błąd podczas uploadu')
-      }
+      const newCv = await uploadCVAPI(file)
+      fetchCVs()
+      setSelectedCv(newCv)
+      setShowAddModal(false)
+      setAddStep('choose')
+      e.target.value = ''
     } catch (error) {
       console.error('Błąd uploadu:', error)
-      alert('Błąd połączenia')
+      alert('Błąd podczas uploadu')
     } finally {
       setUploading(false)
     }
@@ -108,41 +100,29 @@ function CVManager({ applications, onCVAssigned }) {
     }
 
     try {
-      const response = await fetch(`${API_URL}/cv`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': getSessionId()
-        },
-        body: JSON.stringify({
-          name: linkFormData.name,
-          type: linkFormData.type,
-          externalUrl: linkFormData.type === 'LINK' ? linkFormData.externalUrl : null
-        })
+      const newCv = await createCV({
+        originalFileName: linkFormData.name,
+        type: linkFormData.type,
+        externalUrl: linkFormData.type === 'LINK' ? linkFormData.externalUrl : null
       })
-
-      if (response.ok) {
-        const newCv = await response.json()
-        fetchCVs()
-        setSelectedCv(newCv)
-        setShowAddModal(false)
-        setAddStep('choose')
-        setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
-      } else {
-        alert('Błąd podczas zapisywania')
-      }
+      fetchCVs()
+      setSelectedCv(newCv)
+      setShowAddModal(false)
+      setAddStep('choose')
+      setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
     } catch (error) {
       console.error('Błąd zapisu:', error)
-      alert('Błąd połączenia')
+      alert('Błąd podczas zapisywania')
     }
   }
 
   // Pobierz/Otwórz CV
-  const handleOpen = (cv) => {
+  const handleOpen = async (cv) => {
     if (cv.type === 'LINK' && cv.externalUrl) {
       window.open(cv.externalUrl, '_blank')
     } else if (cv.type === 'FILE' || !cv.type) {
-      window.open(`${API_URL}/cv/${cv.id}/download`, '_blank')
+      // IndexedDB - pobierz plik bezpośrednio
+      await downloadCVFromIndexedDB(cv.id)
     }
   }
 
@@ -151,23 +131,15 @@ function CVManager({ applications, onCVAssigned }) {
     if (!confirm('Czy na pewno chcesz usunąć to CV? Zostanie ono również usunięte z przypisanych aplikacji.')) return
 
     try {
-      const response = await fetch(`${API_URL}/cv/${cvId}`, {
-        method: 'DELETE',
-        headers: { 'X-Session-ID': getSessionId() }
-      })
-      if (response.ok) {
-        if (selectedCv?.id === cvId) {
-          setSelectedCv(null)
-        }
-        fetchCVs()
-        onCVAssigned() // Odśwież aplikacje, bo mogły mieć usunięte CV
-      } else {
-        const error = await response.text()
-        alert('Błąd usuwania CV: ' + error)
+      await deleteCVAPI(cvId)
+      if (selectedCv?.id === cvId) {
+        setSelectedCv(null)
       }
+      fetchCVs()
+      onCVAssigned() // Odśwież aplikacje, bo mogły mieć usunięte CV
     } catch (error) {
       console.error('Błąd usuwania:', error)
-      alert('Błąd połączenia podczas usuwania CV')
+      alert('Błąd usuwania CV')
     }
   }
 
@@ -176,20 +148,10 @@ function CVManager({ applications, onCVAssigned }) {
     if (!selectedAppForAssign || !selectedCv) return
 
     try {
-      const response = await fetch(`${API_URL}/applications/${selectedAppForAssign.id}/cv`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': getSessionId()
-        },
-        body: JSON.stringify({ cvId: selectedCv.id })
-      })
-
-      if (response.ok) {
-        onCVAssigned()
-        setShowAssignModal(false)
-        setSelectedAppForAssign(null)
-      }
+      await assignCVToApplication(selectedAppForAssign.id, selectedCv.id)
+      onCVAssigned()
+      setShowAssignModal(false)
+      setSelectedAppForAssign(null)
     } catch (error) {
       console.error('Błąd przypisania CV:', error)
     }
@@ -200,18 +162,8 @@ function CVManager({ applications, onCVAssigned }) {
     if (!confirm('Czy na pewno chcesz usunąć przypisanie CV?')) return
 
     try {
-      const response = await fetch(`${API_URL}/applications/${appId}/cv`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': getSessionId()
-        },
-        body: JSON.stringify({ cvId: null })
-      })
-
-      if (response.ok) {
-        onCVAssigned()
-      }
+      await assignCVToApplication(appId, null)
+      onCVAssigned()
     } catch (error) {
       console.error('Błąd usuwania przypisania:', error)
     }
@@ -237,29 +189,16 @@ function CVManager({ applications, onCVAssigned }) {
     }
 
     try {
-      const response = await fetch(`${API_URL}/cv/${selectedCv.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': getSessionId()
-        },
-        body: JSON.stringify({
-          name: editFormData.name,
-          externalUrl: selectedCv.type === 'LINK' ? editFormData.externalUrl : null
-        })
+      const updatedCv = await updateCV(selectedCv.id, {
+        originalFileName: editFormData.name,
+        externalUrl: selectedCv.type === 'LINK' ? editFormData.externalUrl : null
       })
-
-      if (response.ok) {
-        const updatedCv = await response.json()
-        setSelectedCv(updatedCv)
-        fetchCVs()
-        setShowEditModal(false)
-      } else {
-        alert('Błąd podczas zapisywania')
-      }
+      setSelectedCv(updatedCv)
+      fetchCVs()
+      setShowEditModal(false)
     } catch (error) {
       console.error('Błąd edycji:', error)
-      alert('Błąd połączenia')
+      alert('Błąd podczas zapisywania')
     }
   }
 
