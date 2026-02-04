@@ -156,7 +156,16 @@ function App() {
     setApplications(prev =>
       prev.map(app =>
         app.id === applicationId
-          ? { ...app, status: stageData.status, currentStage: stageData.currentStage }
+          ? {
+              ...app,
+              status: stageData.status,
+              currentStage: stageData.currentStage,
+              // Wyczyść dane odmowy przy przejściu do W_PROCESIE lub WYSLANE
+              ...(stageData.status === 'W_PROCESIE' || stageData.status === 'WYSLANE' ? {
+                rejectionReason: null,
+                rejectionDetails: null
+              } : {})
+            }
           : app
       )
     )
@@ -169,6 +178,10 @@ function App() {
       )
     } catch (error) {
       console.error('Błąd zmiany etapu:', error)
+
+      // Pokaż komunikat użytkownikowi
+      alert('Nie udało się zmienić statusu aplikacji. Sprawdź połączenie z internetem i spróbuj ponownie.')
+
       loadApplications()
     }
   }
