@@ -136,6 +136,31 @@ function App() {
     loadApplications()
   }, [])
 
+  // Synchronizuj szerokość logo z szerokością przycisków
+  useEffect(() => {
+    const syncLogoWidth = () => {
+      const viewTabs = document.querySelector('.view-tabs')
+      const logoWrapper = document.querySelector('.logo-wrapper')
+
+      if (viewTabs && logoWrapper) {
+        const tabsWidth = viewTabs.offsetWidth
+        logoWrapper.style.width = `${tabsWidth}px`
+      }
+    }
+
+    // Synchronizuj przy załadowaniu i przy zmianie rozmiaru okna
+    syncLogoWidth()
+    window.addEventListener('resize', syncLogoWidth)
+
+    // Dodatkowe synchronizacje dla pewności (po renderze)
+    const timeoutId = setTimeout(syncLogoWidth, 100)
+
+    return () => {
+      window.removeEventListener('resize', syncLogoWidth)
+      clearTimeout(timeoutId)
+    }
+  }, [view])
+
   const handleStatusChange = async (applicationId, newStatus) => {
     setApplications(prev =>
       prev.map(app =>
@@ -392,11 +417,9 @@ function App() {
     <div className="app">
         <header className="header">
           <div className="header-left">
-            <div className="header-brand">
-              <img src="/vite.svg" alt="EasyApply logo" className="logo" />
-              <h1>EasyApply</h1>
+            <div className="logo-wrapper">
+              <img src="/logo.png" alt="EasyApply logo" className="logo" />
             </div>
-            <p className="header-tagline">Przejmij kontrolę nad chaosem w rekrutacji!</p>
           </div>
           <BadgeWidget refreshTrigger={applications} />
         </header>
