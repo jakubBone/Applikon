@@ -22,15 +22,16 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
   align-items: center;
 }
 
 .header-left {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  justify-self: start;
 }
 
 .header h1 {
@@ -44,9 +45,27 @@ body {
   gap: 12px;
 }
 
+/* Logo wrapper - prosty biały prostokąt wyrównany z przyciskami */
+.logo-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 0.3rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* Szerokość ustawiana dynamicznie przez JavaScript */
+  width: auto;
+  min-width: 200px;
+}
+
 .logo {
-  width: 32px;
-  height: 32px;
+  height: auto;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  transform: scale(0.75);
 }
 
 .header-tagline {
@@ -59,8 +78,9 @@ body {
 .toolbar {
   background: white;
   padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
@@ -71,6 +91,7 @@ body {
 .view-tabs {
   display: flex;
   gap: 0.5rem;
+  justify-self: start;
 }
 
 .tab-btn {
