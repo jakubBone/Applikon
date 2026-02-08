@@ -10,7 +10,7 @@ import './App.css'
 // Komponent formularza wynagrodzenia (musi być poza App, żeby uniknąć utraty focusu)
 const SalaryFormSection = ({ data, onChange }) => (
   <div className="salary-section">
-    <label className="section-label">Proponowane wynagrodzenie</label>
+    <label className="section-label">Zaproponowałeś wynagrodzenie</label>
     <span className="section-hint">Kwota, którą zaproponowałeś/aś w aplikacji</span>
     <div className="salary-row">
       <div className="salary-inputs">
@@ -683,7 +683,7 @@ function App() {
                 <div className="info-list">
                   {formatSalary(selectedApp) && (
                     <div className="info-item">
-                      <span className="label">Proponowane wynagrodzenie:</span>
+                      <span className="label">Zaproponowałeś wynagrodzenie:</span>
                       <span className="value salary">{formatSalary(selectedApp)}</span>
                     </div>
                   )}
