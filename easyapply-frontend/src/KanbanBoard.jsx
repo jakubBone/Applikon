@@ -387,14 +387,9 @@ function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicationsByS
     <div className="move-modal" onClick={onClose}>
       <div className="move-modal-content" onClick={e => e.stopPropagation()}>
         <div className="move-modal-header">
-          <div className="move-modal-title">Przenieś aplikację</div>
-          <div className="move-modal-card-preview">
-            <div className="move-modal-card-company">{card.company}</div>
-            <div className="move-modal-card-position">{card.position}</div>
-          </div>
+          <div className="move-modal-title">Zmień status aplikacji</div>
         </div>
 
-        <div className="move-modal-label">Wybierz docelową sekcję:</div>
         <div className="move-options">
           {statuses.map(status => {
             const isCurrent = status.id === currentStatus

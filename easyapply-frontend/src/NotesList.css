@@ -34,29 +34,36 @@
 .category-buttons.small .category-btn {
   padding: 4px 10px;
   font-size: 12px;
+  font-weight: 500;
+}
+
+.category-buttons.small .category-btn.active {
+  font-weight: 600;
 }
 
 .category-btn {
   padding: 6px 14px;
-  border: 2px solid #e0e0e0;
+  border: 1px solid #e0e0e0;
   border-radius: 20px;
   background: white;
   font-size: 13px;
   font-weight: 500;
-  color: #666;
+  color: #5a6c7d;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .category-btn:hover {
-  border-color: var(--cat-color);
-  color: var(--cat-color);
+  background: #f8f9fa;
+  border-color: #2c3e50;
+  color: #2c3e50;
 }
 
 .category-btn.active {
-  background: var(--cat-bg);
-  border-color: var(--cat-color);
-  color: var(--cat-color);
+  background: #2c3e50;
+  border-color: #2c3e50;
+  color: white;
+  font-weight: 600;
 }
 
 .note-form textarea {
