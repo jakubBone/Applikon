@@ -50,12 +50,12 @@ const getRelativeTime = (dateString) => {
 function NotesList({ applicationId }) {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
-  const [newCategory, setNewCategory] = useState('INNE')
+  const [newCategory, setNewCategory] = useState('PYTANIA')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editContent, setEditContent] = useState('')
-  const [editCategory, setEditCategory] = useState('INNE')
+  const [editCategory, setEditCategory] = useState('PYTANIA')
 
   useEffect(() => {
     loadNotes()
@@ -97,7 +97,7 @@ function NotesList({ applicationId }) {
       const note = await response.json()
       setNotes(prev => [note, ...prev])
       setNewNote('')
-      setNewCategory('INNE')
+      setNewCategory('PYTANIA')
     } catch (error) {
       console.error('Błąd dodawania notatki:', error)
       alert('Nie udało się dodać notatki. Upewnij się, że backend jest uruchomiony.')
@@ -121,13 +121,13 @@ function NotesList({ applicationId }) {
   const handleEditStart = (note) => {
     setEditingId(note.id)
     setEditContent(note.content)
-    setEditCategory(note.category || 'INNE')
+    setEditCategory(note.category || 'PYTANIA')
   }
 
   const handleEditCancel = () => {
     setEditingId(null)
     setEditContent('')
-    setEditCategory('INNE')
+    setEditCategory('PYTANIA')
   }
 
   const handleEditSave = async (noteId) => {
@@ -149,7 +149,7 @@ function NotesList({ applicationId }) {
       setNotes(prev => prev.map(n => n.id === noteId ? updated : n))
       setEditingId(null)
       setEditContent('')
-      setEditCategory('INNE')
+      setEditCategory('PYTANIA')
     } catch (error) {
       console.error('Błąd aktualizacji notatki:', error)
       alert('Nie udało się zaktualizować notatki')
