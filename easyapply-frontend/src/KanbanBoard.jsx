@@ -98,16 +98,17 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
 
       // Visual feedback
       setIsLifting(true)
-      setShowHint(true)
 
-      // Trigger long press after short delay
+      // Trigger long press immediately
+      if (onLongPress) {
+        onLongPress(application)
+      }
+
+      // Hide hint after modal opens
       setTimeout(() => {
-        if (isLifting && onLongPress) {
-          onLongPress(application)
-          setIsLifting(false)
-          setShowHint(false)
-        }
-      }, 250)
+        setIsLifting(false)
+        setShowHint(false)
+      }, 100)
     }, 500) // 500ms = 0.5 seconds
   }
 
