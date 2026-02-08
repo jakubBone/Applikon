@@ -565,7 +565,10 @@ function App() {
 
             <div className="details-header">
               <div className="details-title">
-                <h2>{selectedApp.company}</h2>
+                <div className="details-title-row">
+                  <h2>{selectedApp.company}</h2>
+                </div>
+                <p className="details-position">{selectedApp.position}</p>
                 <div className="status-info">
                   <span
                     className="status-badge large"
@@ -579,11 +582,15 @@ function App() {
                     </span>
                   )}
                 </div>
-                <button className="edit-btn" onClick={handleEditClick}>
-                  Edytuj
-                </button>
+                <div className="details-actions">
+                  <button className="edit-btn" onClick={handleEditClick}>
+                    ✏️ Edytuj
+                  </button>
+                  <button className="back-btn-mobile" onClick={handleBackToList}>
+                    ← Powrót
+                  </button>
+                </div>
               </div>
-              <p className="details-position">{selectedApp.position}</p>
             </div>
 
             {/* Modal edycji */}

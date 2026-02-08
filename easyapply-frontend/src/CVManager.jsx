@@ -339,9 +339,6 @@ function CVManager({ applications, onCVAssigned }) {
           <div className="empty-icon">📄</div>
           <h3>Brak CV</h3>
           <p>Dodaj swoje pierwsze CV, aby móc je przypisywać do aplikacji</p>
-          <button className="add-cv-btn" onClick={() => setShowAddModal(true)}>
-            + Dodaj CV
-          </button>
         </div>
       ) : (
         <div className="cv-layout">

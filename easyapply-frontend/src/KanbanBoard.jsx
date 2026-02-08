@@ -174,9 +174,12 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
     >
       {showHint && <div className="card-long-press-hint">👆 Przytrzymaj...</div>}
       <div className="card-header">
-        {isOffer && <span className="card-icon offer">✓</span>}
-        {isRejected && <span className="card-icon rejected">✗</span>}
-        <h4>{application.company}</h4>
+        <div className="card-header-left">
+          {isOffer && <span className="card-icon offer">✓</span>}
+          {isRejected && <span className="card-icon rejected">✗</span>}
+          <h4>{application.company}</h4>
+        </div>
+        <span className="card-menu-icon">⋮</span>
       </div>
       <p className="card-position">{application.position}</p>
 

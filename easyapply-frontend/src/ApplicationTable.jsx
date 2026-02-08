@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './ApplicationTable.css'
 
 // Funkcja do generowania koloru na podstawie nazwy firmy
@@ -55,6 +55,14 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  // Detect mobile on resize
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -155,6 +163,93 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
     return salaryStr
   }
 
+  // Render mobile card view
+  const renderMobileCards = () => {
+    if (sortedApplications.length === 0) {
+      return (
+        <div className="empty-table">
+          {applications.length === 0
+            ? 'Brak aplikacji. Dodaj pierwszą!'
+            : 'Brak wyników dla wybranych filtrów'}
+        </div>
+      )
+    }
+
+    return (
+      <div className="mobile-card-list">
+        {sortedApplications.map(app => {
+          const status = statusConfig[app.status] || statusConfig['WYSLANE']
+          const companyColor = getCompanyColor(app.company)
+          const isSelected = selectedIds.has(app.id)
+
+          return (
+            <div
+              key={app.id}
+              className={`mobile-app-card ${isSelected ? 'selected' : ''}`}
+              onClick={() => onRowClick(app)}
+            >
+              <div className="mobile-card-header">
+                <input
+                  type="checkbox"
+                  className="mobile-card-checkbox"
+                  checked={isSelected}
+                  onChange={(e) => handleSelectRow(app.id, e)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div className="mobile-card-main">
+                  <div className="mobile-card-company-row">
+                    <span
+                      className="mobile-card-initial"
+                      style={{ backgroundColor: companyColor }}
+                    >
+                      {app.company.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="mobile-card-company">{app.company}</span>
+                  </div>
+                  <div className="mobile-card-position">{app.position}</div>
+                </div>
+                <span className="mobile-card-menu">⋮</span>
+              </div>
+
+              <div className="mobile-card-details">
+                {app.salaryMin && (
+                  <div className="mobile-card-detail-row">
+                    <span className="mobile-card-detail-icon">💰</span>
+                    <span className="mobile-card-detail-value salary">
+                      {formatSalary(app)}
+                    </span>
+                  </div>
+                )}
+                {app.source && (
+                  <div className="mobile-card-detail-row">
+                    <span className="mobile-card-detail-icon">🔗</span>
+                    <span className="mobile-card-detail-value">{app.source}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mobile-card-footer">
+                <span className="mobile-card-date">
+                  {formatDate(app.appliedAt)} • {getDaysSince(app.appliedAt)}
+                </span>
+                <span
+                  className="mobile-card-status"
+                  style={{
+                    backgroundColor: status.bg,
+                    color: status.color,
+                    borderColor: status.color
+                  }}
+                >
+                  {status.label}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div className="table-container">
       <div className="table-toolbar">
@@ -242,7 +337,10 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
         </div>
       )}
 
-      <table className="app-table">
+      {/* Desktop: Table view */}
+      {!isMobile && (
+        <>
+          <table className="app-table">
         <thead>
           <tr>
             <th className="checkbox-col">
@@ -309,6 +407,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                 )}
               </span>
             </th>
+            <th className="menu-col"></th>
           </tr>
         </thead>
         <tbody>
@@ -371,19 +470,27 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                     {status.label}
                   </span>
                 </td>
+                <td className="menu-col">
+                  <span className="row-menu-icon">⋮</span>
+                </td>
               </tr>
             )
           })}
         </tbody>
       </table>
 
-      {sortedApplications.length === 0 && (
-        <div className="empty-table">
-          {applications.length === 0
-            ? 'Brak aplikacji. Dodaj pierwszą!'
-            : 'Brak wyników dla wybranych filtrów'}
-        </div>
+          {sortedApplications.length === 0 && (
+            <div className="empty-table">
+              {applications.length === 0
+                ? 'Brak aplikacji. Dodaj pierwszą!'
+                : 'Brak wyników dla wybranych filtrów'}
+            </div>
+          )}
+        </>
       )}
+
+      {/* Mobile: Card view */}
+      {isMobile && renderMobileCards()}
     </div>
   )
 }

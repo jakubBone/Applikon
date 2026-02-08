@@ -208,8 +208,31 @@
 .card-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.card-menu-icon {
+  font-size: 1.1rem;
+  color: #777;
+  opacity: 0.8;
+  transition: opacity 0.2s, color 0.2s;
+  flex-shrink: 0;
+  padding: 0 0.25rem;
+}
+
+.kanban-card:hover .card-menu-icon {
+  opacity: 1;
+  color: #667eea;
 }
 
 .card-icon {
@@ -230,9 +253,10 @@
   font-weight: 600;
   color: #333;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
+  flex: 1;
 }
 
 .card-position {
@@ -642,31 +666,42 @@
 
   .kanban-nav-btn {
     flex: 1;
-    min-width: 110px;
-    padding: 0.6rem 0.8rem;
+    min-width: 85px;
+    padding: 6px 12px;
     background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px; /* Zaokrąglone jak pigułki */
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
     white-space: nowrap;
-    min-height: 44px; /* Touch target */
+    min-height: 38px;
+    color: #5a6c7d; /* Ciemny kolor jak w Lista */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+  }
+
+  .kanban-nav-btn:hover {
+    background: #f8f9fa;
+    border-color: #ced4da;
   }
 
   .kanban-nav-btn.active {
-    background: #667eea;
-    border-color: #667eea;
+    background: #2c3e50; /* Ciemne tło jak w Lista */
+    border-color: #2c3e50;
     color: white;
+    font-weight: 600;
   }
 
   .kanban-nav-btn .count {
     display: block;
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    margin-bottom: 2px;
   }
 }
 

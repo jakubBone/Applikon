@@ -258,6 +258,26 @@
   white-space: nowrap;
 }
 
+/* Menu column (⋮) */
+.menu-col {
+  width: 40px;
+  padding: 14px 8px !important;
+  text-align: center;
+}
+
+.row-menu-icon {
+  font-size: 18px;
+  color: #777;
+  opacity: 0.75;
+  transition: opacity 0.2s, color 0.2s;
+  cursor: pointer;
+}
+
+.app-table tbody tr:hover .row-menu-icon {
+  opacity: 1;
+  color: #667eea;
+}
+
 /* Empty state */
 .empty-table {
   text-align: center;
@@ -451,4 +471,164 @@
 
 .confirm-btn.delete:hover {
   background: #c0392b;
+}
+
+/* ==================== */
+/* MOBILE CARD VIEW     */
+/* ==================== */
+
+@media (max-width: 768px) {
+  /* Hide table on mobile, show card view instead */
+  .app-table {
+    display: none !important;
+  }
+
+  /* Mobile Card View */
+  .mobile-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .mobile-app-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .mobile-app-card:active {
+    transform: scale(0.98);
+  }
+
+  .mobile-app-card.selected {
+    background: #f0f4ff;
+    border-left-color: #667eea;
+  }
+
+  .mobile-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-card-checkbox {
+    margin-top: 0.25rem;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .mobile-card-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-card-menu {
+    font-size: 1.2rem;
+    color: #777;
+    opacity: 0.8;
+    padding: 0 0.25rem;
+    flex-shrink: 0;
+    transition: opacity 0.2s, color 0.2s;
+  }
+
+  .mobile-app-card:hover .mobile-card-menu,
+  .mobile-app-card:active .mobile-card-menu {
+    opacity: 1;
+    color: #667eea;
+  }
+
+  .mobile-card-company-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-card-initial {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .mobile-card-company {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+    word-wrap: break-word;
+  }
+
+  .mobile-card-position {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    word-wrap: break-word;
+  }
+
+  .mobile-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-card-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .mobile-card-detail-icon {
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .mobile-card-detail-value {
+    color: #555;
+    flex: 1;
+  }
+
+  .mobile-card-detail-value.salary {
+    color: #27ae60;
+    font-weight: 500;
+  }
+
+  .mobile-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 0.5rem;
+  }
+
+  .mobile-card-date {
+    font-size: 0.75rem;
+    color: #999;
+  }
+
+  .mobile-card-status {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid;
+  }
 }
