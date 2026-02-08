@@ -101,27 +101,41 @@ const BadgeWidget = ({ refreshTrigger }) => {
       </div>
 
       {expanded && (
-        <div className="badge-widget-dropdown">
-          {/* Rejection badges */}
-          <div className="badge-section-label">Odrzucone aplikacje ({totalRejections})</div>
-          {renderBadgeRow(rejectionBadge, totalRejections, 'rejection')}
-
-          {/* Ghosting badges */}
-          <div className="badge-section-label">Bez odzewu ({totalGhosting})</div>
-          {renderBadgeRow(ghostingBadge, totalGhosting, 'ghosting')}
-
-          {/* Sweet Revenge */}
-          {sweetRevengeUnlocked && (
-            <div className="badge-row sweet-revenge">
-              <div className="badge-row-left">
-                <span className="badge-row-icon special">🏆</span>
-                <div className="badge-row-info">
-                  <div className="badge-row-name special">Sweet Revenge</div>
-                  <div className="badge-row-description">Kto się śmieje ostatni, ten dostał robotę.</div>
-                </div>
-              </div>
+        <div className="badge-modal" onClick={() => setExpanded(false)}>
+          <div className="badge-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="badge-modal-header">
+              <div className="badge-modal-title">🏅 Twoje odznaki</div>
             </div>
-          )}
+
+            <div className="badge-modal-body">
+              {/* Rejection badges */}
+              <div className="badge-section-label">Odrzucone aplikacje ({totalRejections})</div>
+              {renderBadgeRow(rejectionBadge, totalRejections, 'rejection')}
+
+              {/* Ghosting badges */}
+              <div className="badge-section-label">Bez odzewu ({totalGhosting})</div>
+              {renderBadgeRow(ghostingBadge, totalGhosting, 'ghosting')}
+
+              {/* Sweet Revenge */}
+              {sweetRevengeUnlocked && (
+                <div className="badge-row sweet-revenge">
+                  <div className="badge-row-left">
+                    <span className="badge-row-icon special">🏆</span>
+                    <div className="badge-row-info">
+                      <div className="badge-row-name special">Sweet Revenge</div>
+                      <div className="badge-row-description">Kto się śmieje ostatni, ten dostał robotę.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="badge-modal-actions">
+              <button className="badge-modal-btn" onClick={() => setExpanded(false)}>
+                Zamknij
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -564,11 +564,13 @@ body {
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
+  justify-content: flex-end; /* Align buttons to the right on desktop */
 }
 
 @media (max-width: 768px) {
   .details-actions {
     flex-wrap: wrap;
+    justify-content: stretch; /* Full width on mobile */
   }
 
   .details-header {
@@ -670,7 +672,6 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  flex: 1;
   min-width: 120px;
 }
 
@@ -689,13 +690,19 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  flex: 1;
   min-width: 120px;
 }
 
 .back-btn-mobile:hover {
   background: #e8e8e8;
   border-color: #ccc;
+}
+
+@media (max-width: 768px) {
+  .edit-btn,
+  .back-btn-mobile {
+    flex: 1; /* Full width on mobile */
+  }
 }
 
 @media (min-width: 769px) {
@@ -929,16 +936,119 @@ body {
   opacity: 0.7;
 }
 
-.badge-widget-dropdown {
+/* Badge Modal */
+/* Desktop: dropdown under button (default) */
+.badge-modal {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
+  background: transparent;
+  z-index: 250;
+}
+
+.badge-modal-content {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   min-width: 340px;
-  z-index: 1000;
+  max-width: 400px;
+  max-height: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.badge-modal-header {
+  display: none; /* Hidden on desktop */
+}
+
+.badge-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.badge-modal-actions {
+  display: none; /* Hidden on desktop */
+}
+
+.badge-modal-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.badge-modal-btn:hover {
+  background: #e9ecef;
+}
+
+.badge-modal-btn:active {
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Mobile: bottom sheet with backdrop */
+@media (max-width: 768px) {
+  .badge-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: flex-end;
+    animation: fadeIn 0.2s;
+  }
+
+  .badge-modal-content {
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    max-height: 80vh;
+    animation: slideUpModal 0.3s;
+  }
+
+  .badge-modal-header {
+    display: block; /* Show title on mobile */
+    text-align: center;
+    padding: 1.25rem 1.5rem 0.75rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .badge-modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .badge-modal-actions {
+    display: block; /* Show close button on mobile */
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #f0f0f0;
+  }
 }
 
 .badge-section-label {
