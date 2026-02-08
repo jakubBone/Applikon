@@ -116,6 +116,49 @@ body {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+/* Mobile: Hide toolbar button, show FAB instead */
+@media (max-width: 768px) {
+  .add-btn {
+    display: none;
+  }
+}
+
+/* Floating Action Button (Mobile only) */
+.fab {
+  display: none; /* Hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  .fab {
+    display: flex;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    z-index: 150;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .fab:active {
+    transform: scale(0.95);
+  }
+
+  .fab:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+  }
+}
+
 /* Form Modal */
 .form-modal {
   position: fixed;

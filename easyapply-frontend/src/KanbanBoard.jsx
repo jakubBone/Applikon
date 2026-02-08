@@ -5,6 +5,8 @@ import {
   closestCorners,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
+  MouseSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
@@ -15,6 +17,9 @@ import {
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import './KanbanBoard.css'
+
+// Helper: Check if mobile
+const isMobile = () => window.innerWidth <= 768
 
 // Statusy Kanban - 3 kolumny
 const STATUSES = [
@@ -41,10 +46,14 @@ const REJECTION_REASONS = [
 ]
 
 // Karta aplikacji (draggable)
-function ApplicationCard({ application, isDragging, onClick, onStageChange }) {
+function ApplicationCard({ application, isDragging, onClick, onStageChange, onLongPress }) {
   const [showStageDropdown, setShowStageDropdown] = useState(false)
   const [customStageInput, setCustomStageInput] = useState('')
+  const [isLifting, setIsLifting] = useState(false)
+  const [showHint, setShowHint] = useState(false)
   const dropdownRef = useRef(null)
+  const pressTimerRef = useRef(null)
+  const touchMovedRef = useRef(false)
 
   // Zamknij dropdown przy kliknięciu poza
   useEffect(() => {
@@ -73,6 +82,53 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange }) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  }
+
+  // Long press detection (mobile only - 500ms)
+  const handleTouchStart = (e) => {
+    if (!isMobile()) return
+
+    touchMovedRef.current = false
+
+    pressTimerRef.current = setTimeout(() => {
+      // Haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate(50)
+      }
+
+      // Visual feedback
+      setIsLifting(true)
+      setShowHint(true)
+
+      // Trigger long press after short delay
+      setTimeout(() => {
+        if (isLifting && onLongPress) {
+          onLongPress(application)
+          setIsLifting(false)
+          setShowHint(false)
+        }
+      }, 250)
+    }, 500) // 500ms = 0.5 seconds
+  }
+
+  const handleTouchMove = () => {
+    touchMovedRef.current = true
+    clearTimeout(pressTimerRef.current)
+    setIsLifting(false)
+    setShowHint(false)
+  }
+
+  const handleTouchEnd = () => {
+    clearTimeout(pressTimerRef.current)
+    if (!touchMovedRef.current && !showHint) {
+      // Quick tap - normal click behavior
+    }
+    setTimeout(() => {
+      if (!document.querySelector('.move-modal')) {
+        setIsLifting(false)
+        setShowHint(false)
+      }
+    }, 100)
   }
 
   const handleClick = (e) => {
@@ -109,9 +165,13 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`kanban-card ${isOffer ? 'card-offer' : ''} ${isRejected ? 'card-rejected' : ''} ${showStageDropdown ? 'dropdown-open' : ''}`}
+      className={`kanban-card ${isOffer ? 'card-offer' : ''} ${isRejected ? 'card-rejected' : ''} ${showStageDropdown ? 'dropdown-open' : ''} ${isLifting ? 'lifting' : ''}`}
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
+      {showHint && <div className="card-long-press-hint">👆 Przytrzymaj...</div>}
       <div className="card-header">
         {isOffer && <span className="card-icon offer">✓</span>}
         {isRejected && <span className="card-icon rejected">✗</span>}
@@ -256,6 +316,119 @@ function StageModal({ isOpen, onClose, onSelect, currentStage }) {
   )
 }
 
+// Onboarding Overlay (tylko mobile, pierwszy raz)
+function OnboardingOverlay({ isOpen, onClose }) {
+  if (!isOpen) return null
+
+  return (
+    <div className="onboarding-overlay" onClick={onClose}>
+      <div className="onboarding-content" onClick={e => e.stopPropagation()}>
+        <div className="onboarding-emoji">👋</div>
+        <div className="onboarding-title">Witaj w Kanban Mobile!</div>
+
+        <div className="onboarding-steps">
+          <div className="onboarding-step">
+            <div className="onboarding-step-icon">📱</div>
+            <div className="onboarding-step-text">
+              <div className="onboarding-step-title">Przesuń palcem</div>
+              <div className="onboarding-step-desc">Swipe w lewo/prawo aby zobaczyć inne kolumny</div>
+            </div>
+          </div>
+
+          <div className="onboarding-step">
+            <div className="onboarding-step-icon">👆</div>
+            <div className="onboarding-step-text">
+              <div className="onboarding-step-title">Przytrzymaj kartę</div>
+              <div className="onboarding-step-desc">Long press (0.5s) aby przenieść do innej sekcji</div>
+            </div>
+          </div>
+
+          <div className="onboarding-step">
+            <div className="onboarding-step-icon">📳</div>
+            <div className="onboarding-step-text">
+              <div className="onboarding-step-title">Wibracja</div>
+              <div className="onboarding-step-desc">Poczujesz wibrację gdy karta będzie gotowa do przeniesienia</div>
+            </div>
+          </div>
+        </div>
+
+        <button className="onboarding-btn" onClick={onClose}>Rozumiem, zaczynamy!</button>
+      </div>
+    </div>
+  )
+}
+
+// Move Modal (Bottom Sheet dla mobile)
+function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicationsByStatus }) {
+  const [selectedStatus, setSelectedStatus] = useState(null)
+
+  useEffect(() => {
+    if (card) {
+      setSelectedStatus(card.status === 'OFERTA' || card.status === 'ODMOWA' ? 'ZAKONCZONE' : card.status)
+    }
+  }, [card])
+
+  if (!isOpen || !card) return null
+
+  const currentStatus = card.status === 'OFERTA' || card.status === 'ODMOWA' ? 'ZAKONCZONE' : card.status
+
+  const handleMove = () => {
+    if (selectedStatus && selectedStatus !== currentStatus) {
+      onMove(selectedStatus)
+    }
+    onClose()
+  }
+
+  return (
+    <div className="move-modal" onClick={onClose}>
+      <div className="move-modal-content" onClick={e => e.stopPropagation()}>
+        <div className="move-modal-header">
+          <div className="move-modal-title">Przenieś aplikację</div>
+          <div className="move-modal-card-preview">
+            <div className="move-modal-card-company">{card.company}</div>
+            <div className="move-modal-card-position">{card.position}</div>
+          </div>
+        </div>
+
+        <div className="move-modal-label">Wybierz docelową sekcję:</div>
+        <div className="move-options">
+          {statuses.map(status => {
+            const isCurrent = status.id === currentStatus
+            const isSelected = status.id === selectedStatus
+            const count = getApplicationsByStatus(status.id).length
+
+            return (
+              <div
+                key={status.id}
+                className={`move-option ${isSelected ? 'selected' : ''} ${isCurrent ? 'current' : ''}`}
+                onClick={() => !isCurrent && setSelectedStatus(status.id)}
+              >
+                <div className="move-option-radio"></div>
+                <div className="move-option-color" style={{ background: status.color }}></div>
+                <div className="move-option-text">
+                  <div className="move-option-name">{status.label}</div>
+                  <div className="move-option-count">{count} aplikacji</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="move-modal-actions">
+          <button className="move-modal-btn cancel" onClick={onClose}>Anuluj</button>
+          <button
+            className="move-modal-btn confirm"
+            onClick={handleMove}
+            disabled={!selectedStatus || selectedStatus === currentStatus}
+          >
+            Przenieś
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Modal zakończenia - wybór oferty lub odmowy
 function EndModal({ isOpen, onClose, onSelect }) {
   const [selectedOutcome, setSelectedOutcome] = useState(null) // 'OFERTA' lub 'ODMOWA'
@@ -371,11 +544,32 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
   const [endModalOpen, setEndModalOpen] = useState(false)
   const [pendingApplication, setPendingApplication] = useState(null)
 
+  // Mobile states
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const [moveModalOpen, setMoveModalOpen] = useState(false)
+  const [moveModalCard, setMoveModalCard] = useState(null)
+  const [successToast, setSuccessToast] = useState(null)
+  const [activeColumn, setActiveColumn] = useState(0)
+  const kanbanBoardRef = useRef(null)
+
+  // Check onboarding on mount (mobile only)
+  useEffect(() => {
+    if (isMobile() && !localStorage.getItem('kanban_onboarding_shown')) {
+      setShowOnboarding(true)
+    }
+  }, [])
+
+  // Enhanced sensors for better mobile support
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 10 }
+    }),
+    useSensor(TouchSensor, {
       activationConstraint: {
-        distance: 8,
-      },
+        delay: 250,
+        tolerance: 5
+      }
     }),
     useSensor(KeyboardSensor)
   )
@@ -493,42 +687,221 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
     }
   }
 
+  // Mobile: Onboarding close
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false)
+    localStorage.setItem('kanban_onboarding_shown', 'true')
+    if (isMobile()) {
+      showAnimatedHint()
+    }
+  }
+
+  // Mobile: Animated hint (first time)
+  const showAnimatedHint = () => {
+    setShowSwipeHint(true)
+    const board = kanbanBoardRef.current
+    if (board) {
+      setTimeout(() => {
+        board.scrollTo({ left: 250, behavior: 'smooth' })
+        setTimeout(() => {
+          board.scrollTo({ left: 0, behavior: 'smooth' })
+          setTimeout(() => {
+            setShowSwipeHint(false)
+          }, 800)
+        }, 1000)
+      }, 500)
+    }
+  }
+
+  // Mobile: Long press handler
+  const handleLongPress = (application) => {
+    if (!isMobile()) return
+    setMoveModalCard(application)
+    setMoveModalOpen(true)
+  }
+
+  // Mobile: Move card via modal
+  const handleMoveCard = (targetStatus) => {
+    if (!moveModalCard) return
+
+    // Obsługa przejścia do W_PROCESIE
+    if (targetStatus === 'W_PROCESIE') {
+      setPendingApplication(moveModalCard)
+      setStageModalOpen(true)
+      setMoveModalOpen(false)
+      setMoveModalCard(null)
+      return
+    }
+
+    // Obsługa przejścia do ZAKONCZONE
+    if (targetStatus === 'ZAKONCZONE') {
+      setPendingApplication(moveModalCard)
+      setEndModalOpen(true)
+      setMoveModalOpen(false)
+      setMoveModalCard(null)
+      return
+    }
+
+    // Obsługa przejścia do WYSLANE (cofnięcie)
+    if (targetStatus === 'WYSLANE') {
+      onStageChange(moveModalCard.id, {
+        status: 'WYSLANE',
+        currentStage: null,
+        rejectionReason: null,
+        rejectionDetails: null
+      })
+    }
+
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate([50, 100, 50])
+
+    // Success toast
+    const targetStatusLabel = STATUSES.find(s => s.id === targetStatus)?.label
+    showSuccessToast(`✓ Przeniesiono do: ${targetStatusLabel}`)
+
+    setMoveModalOpen(false)
+    setMoveModalCard(null)
+  }
+
+  // Mobile: Success toast
+  const showSuccessToast = (message) => {
+    setSuccessToast(message)
+    setTimeout(() => {
+      setSuccessToast(null)
+    }, 2000)
+  }
+
+  // Mobile: Scroll tracking
+  useEffect(() => {
+    if (!isMobile()) return
+
+    const handleScroll = () => {
+      const board = kanbanBoardRef.current
+      if (!board) return
+
+      const scrollLeft = board.scrollLeft
+      const columnWidth = board.querySelector('.kanban-column')?.offsetWidth || 0
+      const gap = 16
+      const index = Math.round(scrollLeft / (columnWidth + gap))
+      setActiveColumn(index)
+    }
+
+    const board = kanbanBoardRef.current
+    if (board) {
+      board.addEventListener('scroll', handleScroll)
+      return () => board.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Mobile: Navigate to column
+  const scrollToColumn = (index) => {
+    const board = kanbanBoardRef.current
+    if (!board) return
+
+    const columnWidth = board.querySelector('.kanban-column')?.offsetWidth || 0
+    const gap = 16
+    board.scrollTo({ left: index * (columnWidth + gap), behavior: 'smooth' })
+  }
+
   const activeApplication = activeId ? findApplication(activeId) : null
 
   return (
     <>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="kanban-board">
-          {STATUSES.map(status => (
-            <KanbanColumn
+      {/* Mobile: Onboarding (first time) */}
+      {isMobile() && (
+        <OnboardingOverlay
+          isOpen={showOnboarding}
+          onClose={handleOnboardingClose}
+        />
+      )}
+
+      {/* Mobile: Navigation buttons */}
+      {isMobile() && (
+        <div className="kanban-nav">
+          {STATUSES.map((status, idx) => (
+            <button
               key={status.id}
-              status={status}
-              applications={getApplicationsByStatus(status.id)}
+              className={`kanban-nav-btn ${activeColumn === idx ? 'active' : ''}`}
+              onClick={() => scrollToColumn(idx)}
             >
-              {getApplicationsByStatus(status.id).map(app => (
-                <ApplicationCard
-                  key={app.id}
-                  application={app}
-                  isDragging={activeId === app.id.toString()}
-                  onClick={onCardClick}
-                  onStageChange={onStageChange}
-                />
-              ))}
-            </KanbanColumn>
+              <span className="count">{getApplicationsByStatus(status.id).length}</span>
+              {status.label}
+            </button>
           ))}
         </div>
+      )}
 
-        <DragOverlay>
-          {activeApplication ? (
-            <DragOverlayCard application={activeApplication} />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+      <div className="kanban-board-container">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="kanban-board" ref={kanbanBoardRef}>
+            {STATUSES.map(status => (
+              <KanbanColumn
+                key={status.id}
+                status={status}
+                applications={getApplicationsByStatus(status.id)}
+              >
+                {getApplicationsByStatus(status.id).map(app => (
+                  <ApplicationCard
+                    key={app.id}
+                    application={app}
+                    isDragging={activeId === app.id.toString()}
+                    onClick={onCardClick}
+                    onStageChange={onStageChange}
+                    onLongPress={handleLongPress}
+                  />
+                ))}
+              </KanbanColumn>
+            ))}
+          </div>
+
+          <DragOverlay>
+            {activeApplication ? (
+              <DragOverlayCard application={activeApplication} />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+
+        {/* Mobile: Scroll indicators */}
+        {isMobile() && (
+          <div className="scroll-indicator">
+            {STATUSES.map((_, idx) => (
+              <span key={idx} className={activeColumn === idx ? 'active' : ''}></span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Mobile: Swipe hint */}
+      {showSwipeHint && (
+        <div className="swipe-hint">
+          ← Przesuń palcem →
+        </div>
+      )}
+
+      {/* Mobile: Success toast */}
+      {successToast && (
+        <div className={`success-toast ${!successToast ? 'fade-out' : ''}`}>
+          {successToast}
+        </div>
+      )}
+
+      {/* Mobile: Move modal */}
+      <MoveModal
+        isOpen={moveModalOpen}
+        onClose={() => {
+          setMoveModalOpen(false)
+          setMoveModalCard(null)
+        }}
+        card={moveModalCard}
+        statuses={STATUSES}
+        onMove={handleMoveCard}
+        getApplicationsByStatus={getApplicationsByStatus}
+      />
 
       <StageModal
         isOpen={stageModalOpen}

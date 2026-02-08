@@ -452,6 +452,11 @@ function App() {
         </div>
       )}
 
+      {/* Floating Action Button (Mobile only) */}
+      <button className="fab" onClick={() => setShowForm(!showForm)}>
+        {showForm ? '✕' : '+'}
+      </button>
+
       {/* Modal formularza dodawania */}
       {showForm && (
         <div className="form-modal">
