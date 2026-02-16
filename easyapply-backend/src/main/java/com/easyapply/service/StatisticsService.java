@@ -7,7 +7,6 @@ import com.easyapply.entity.RejectionReason;
 import com.easyapply.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -15,12 +14,11 @@ public class StatisticsService {
 
     private final ApplicationRepository applicationRepository;
 
-    private static final List<ApplicationStatus> REJECTION_STATUSES = Arrays.asList(
-            ApplicationStatus.ODMOWA,
-            ApplicationStatus.ODRZUCONE
+    private static final List<ApplicationStatus> REJECTION_STATUSES = List.of(
+            ApplicationStatus.ODMOWA
     );
 
-    private static final List<ApplicationStatus> OFFER_STATUSES = Arrays.asList(
+    private static final List<ApplicationStatus> OFFER_STATUSES = List.of(
             ApplicationStatus.OFERTA
     );
 

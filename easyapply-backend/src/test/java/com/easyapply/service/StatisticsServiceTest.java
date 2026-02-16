@@ -32,8 +32,7 @@ class StatisticsServiceTest {
     private StatisticsService statisticsService;
 
     private static final List<ApplicationStatus> REJECTION_STATUSES = List.of(
-            ApplicationStatus.ODMOWA,
-            ApplicationStatus.ODRZUCONE
+            ApplicationStatus.ODMOWA
     );
 
     private static final List<ApplicationStatus> OFFER_STATUSES = List.of(
