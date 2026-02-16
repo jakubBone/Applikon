@@ -229,6 +229,26 @@ export const assignCVToApplication = async (applicationId, cvId) => {
 
 export const getCVDownloadUrl = (cvId) => `${API_URL}/cv/${cvId}/download`
 
+export const createCV = async ({ originalFileName, type, externalUrl }) => {
+  const response = await fetch(`${API_URL}/cv`, {
+    method: 'POST',
+    headers: getHeaders('application/json'),
+    body: JSON.stringify({ name: originalFileName, type, externalUrl })
+  })
+  if (!response.ok) throw new Error('Błąd tworzenia CV')
+  return response.json()
+}
+
+export const updateCV = async (cvId, { originalFileName, externalUrl }) => {
+  const response = await fetch(`${API_URL}/cv/${cvId}`, {
+    method: 'PUT',
+    headers: getHeaders('application/json'),
+    body: JSON.stringify({ name: originalFileName, externalUrl })
+  })
+  if (!response.ok) throw new Error('Błąd aktualizacji CV')
+  return response.json()
+}
+
 // Notes API
 export const fetchNotes = async (applicationId) => {
   const response = await fetch(`${API_URL}/applications/${applicationId}/notes`, {
@@ -238,13 +258,23 @@ export const fetchNotes = async (applicationId) => {
   return response.json()
 }
 
-export const createNote = async (applicationId, content) => {
+export const createNote = async (applicationId, content, category = null) => {
   const response = await fetch(`${API_URL}/applications/${applicationId}/notes`, {
     method: 'POST',
     headers: getHeaders('application/json'),
-    body: JSON.stringify({ content })
+    body: JSON.stringify({ content, category })
   })
   if (!response.ok) throw new Error('Błąd dodawania notatki')
+  return response.json()
+}
+
+export const updateNote = async (noteId, content, category = null) => {
+  const response = await fetch(`${API_URL}/notes/${noteId}`, {
+    method: 'PUT',
+    headers: getHeaders('application/json'),
+    body: JSON.stringify({ content, category })
+  })
+  if (!response.ok) throw new Error('Błąd aktualizacji notatki')
   return response.json()
 }
 

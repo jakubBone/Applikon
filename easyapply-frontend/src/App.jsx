@@ -4,7 +4,8 @@ import CVManager from './CVManager'
 import NotesList from './NotesList'
 import ApplicationTable from './ApplicationTable'
 import BadgeWidget from './BadgeWidget'
-import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication, ensureDemoApplication } from './services/api'
+import TourGuide from './TourGuide'
+import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication, ensureDemoApplication, getCVDownloadUrl } from './services/api'
 import './App.css'
 
 // Komponent formularza wynagrodzenia (musi być poza App, żeby uniknąć utraty focusu)
@@ -145,10 +146,14 @@ function App() {
     const syncLogoWidth = () => {
       const viewTabs = document.querySelector('.view-tabs')
       const logoWrapper = document.querySelector('.logo-wrapper')
+      const logoImg = document.querySelector('.logo')
+      const LOGO_WIDTH_SCALE = 1.0
 
-      if (viewTabs && logoWrapper) {
+      if (viewTabs && logoWrapper && logoImg) {
         const tabsWidth = viewTabs.offsetWidth
-        logoWrapper.style.width = `${tabsWidth}px`
+        const targetWidth = tabsWidth * LOGO_WIDTH_SCALE
+        logoWrapper.style.width = `${targetWidth}px`
+        logoImg.style.width = `${targetWidth}px`
       }
     }
 
@@ -422,11 +427,14 @@ function App() {
         <header className="header">
           <div className="header-left">
             <div className="logo-wrapper">
-              <img src="/logo.png" alt="EasyApply logo" className="logo" />
+              <img src="/logo-trim.png" alt="EasyApply logo" className="logo" />
             </div>
           </div>
           <BadgeWidget refreshTrigger={applications} />
         </header>
+
+        {/* Tour Guide */}
+        <TourGuide />
 
       {view !== 'details' && (
         <div className="toolbar">
@@ -717,7 +725,7 @@ function App() {
                         {selectedApp.cvType === 'FILE' && (
                           <button
                             className="cv-download-btn"
-                            onClick={() => window.open(`http://localhost:8080/api/cv/${selectedApp.cvId}/download`, '_blank')}
+                            onClick={() => window.open(getCVDownloadUrl(selectedApp.cvId), '_blank')}
                           >
                             Pobierz
                           </button>
@@ -777,3 +785,5 @@ function App() {
 }
 
 export default App
+// force rebuild
+

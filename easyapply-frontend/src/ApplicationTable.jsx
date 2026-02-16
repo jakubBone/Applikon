@@ -341,143 +341,143 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
       {!isMobile && (
         <>
           <table className="app-table">
-        <thead>
-          <tr>
-            <th className="checkbox-col">
-              <input
-                type="checkbox"
-                onChange={handleSelectAll}
-                checked={selectedIds.size === applications.length && applications.length > 0}
-              />
-            </th>
-            <th className="sortable" onClick={() => handleSort('company')}>
-              <span className="th-content">
-                <span className="th-icon">🏢</span>
-                Firma
-                {sortField === 'company' && (
-                  <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                )}
-              </span>
-            </th>
-            <th className="sortable" onClick={() => handleSort('position')}>
-              <span className="th-content">
-                <span className="th-icon">💼</span>
-                Stanowisko
-                {sortField === 'position' && (
-                  <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                )}
-              </span>
-            </th>
-            <th className="sortable" onClick={() => handleSort('salaryMin')}>
-              <span className="th-content">
-                <span className="th-icon">💰</span>
-                Wynagrodzenie
-                {sortField === 'salaryMin' && (
-                  <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                )}
-              </span>
-            </th>
-            <th>
-              <span className="th-content">
-                <span className="th-icon">🔗</span>
-                Źródło
-              </span>
-            </th>
-            <th className="sortable" onClick={() => handleSort('appliedAt')}>
-              <span className="th-content">
-                <span className="th-icon">📅</span>
-                Data
-                {sortField === 'appliedAt' && (
-                  <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                )}
-              </span>
-            </th>
-            <th>
-              <span className="th-content">
-                <span className="th-icon">⏱️</span>
-                Dni temu
-              </span>
-            </th>
-            <th className="sortable" onClick={() => handleSort('status')}>
-              <span className="th-content">
-                <span className="th-icon">📊</span>
-                Status
-                {sortField === 'status' && (
-                  <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                )}
-              </span>
-            </th>
-            <th className="menu-col"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedApplications.map(app => {
-            const status = statusConfig[app.status] || statusConfig['WYSLANE']
-            const companyColor = getCompanyColor(app.company)
-
-            return (
-              <tr
-                key={app.id}
-                className={selectedIds.has(app.id) ? 'selected' : ''}
-                onClick={() => onRowClick(app)}
-              >
-                <td className="checkbox-col" onClick={(e) => e.stopPropagation()}>
+            <thead>
+              <tr>
+                <th className="checkbox-col">
                   <input
                     type="checkbox"
-                    checked={selectedIds.has(app.id)}
-                    onChange={(e) => handleSelectRow(app.id, e)}
+                    onChange={handleSelectAll}
+                    checked={selectedIds.size === applications.length && applications.length > 0}
                   />
-                </td>
-                <td className="company-col">
-                  <div className="company-cell">
-                    <span
-                      className="company-initial"
-                      style={{ backgroundColor: companyColor }}
-                    >
-                      {app.company.charAt(0).toUpperCase()}
-                    </span>
-                    <span className="company-name">{app.company}</span>
-                  </div>
-                </td>
-                <td className="position-col">{app.position}</td>
-                <td className="salary-col">
-                  <span className="salary-value">
-                    {formatSalary(app)}
+                </th>
+                <th className="sortable" onClick={() => handleSort('company')}>
+                  <span className="th-content">
+                    <span className="th-icon">🏢</span>
+                    Firma
+                    {sortField === 'company' && (
+                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </span>
-                </td>
-                <td className="source-col">
-                  {app.source ? (
-                    <span className="source-link">{app.source}</span>
-                  ) : (
-                    <span className="no-source">-</span>
-                  )}
-                </td>
-                <td className="date-col">
-                  <span className="date-value">{formatDate(app.appliedAt)}</span>
-                </td>
-                <td className="days-col">
-                  <span className="days-value">{getDaysSince(app.appliedAt)}</span>
-                </td>
-                <td className="status-col">
-                  <span
-                    className="status-badge"
-                    style={{
-                      backgroundColor: status.bg,
-                      color: status.color,
-                      borderColor: status.color
-                    }}
-                  >
-                    {status.label}
+                </th>
+                <th className="sortable" onClick={() => handleSort('position')}>
+                  <span className="th-content">
+                    <span className="th-icon">💼</span>
+                    Stanowisko
+                    {sortField === 'position' && (
+                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </span>
-                </td>
-                <td className="menu-col">
-                  <span className="row-menu-icon">⋮</span>
-                </td>
+                </th>
+                <th className="sortable" onClick={() => handleSort('salaryMin')}>
+                  <span className="th-content">
+                    <span className="th-icon">💰</span>
+                    Wynagrodzenie
+                    {sortField === 'salaryMin' && (
+                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </span>
+                </th>
+                <th>
+                  <span className="th-content">
+                    <span className="th-icon">🔗</span>
+                    Źródło
+                  </span>
+                </th>
+                <th className="sortable" onClick={() => handleSort('appliedAt')}>
+                  <span className="th-content">
+                    <span className="th-icon">📅</span>
+                    Data
+                    {sortField === 'appliedAt' && (
+                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </span>
+                </th>
+                <th>
+                  <span className="th-content">
+                    <span className="th-icon">⏱️</span>
+                    Dni temu
+                  </span>
+                </th>
+                <th className="sortable" onClick={() => handleSort('status')}>
+                  <span className="th-content">
+                    <span className="th-icon">📊</span>
+                    Status
+                    {sortField === 'status' && (
+                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </span>
+                </th>
+                <th className="menu-col"></th>
               </tr>
-            )
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {sortedApplications.map(app => {
+                const status = statusConfig[app.status] || statusConfig['WYSLANE']
+                const companyColor = getCompanyColor(app.company)
+
+                return (
+                  <tr
+                    key={app.id}
+                    className={selectedIds.has(app.id) ? 'selected' : ''}
+                    onClick={() => onRowClick(app)}
+                  >
+                    <td className="checkbox-col" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(app.id)}
+                        onChange={(e) => handleSelectRow(app.id, e)}
+                      />
+                    </td>
+                    <td className="company-col">
+                      <div className="company-cell">
+                        <span
+                          className="company-initial"
+                          style={{ backgroundColor: companyColor }}
+                        >
+                          {app.company.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="company-name">{app.company}</span>
+                      </div>
+                    </td>
+                    <td className="position-col">{app.position}</td>
+                    <td className="salary-col">
+                      <span className="salary-value">
+                        {formatSalary(app)}
+                      </span>
+                    </td>
+                    <td className="source-col">
+                      {app.source ? (
+                        <span className="source-link">{app.source}</span>
+                      ) : (
+                        <span className="no-source">-</span>
+                      )}
+                    </td>
+                    <td className="date-col">
+                      <span className="date-value">{formatDate(app.appliedAt)}</span>
+                    </td>
+                    <td className="days-col">
+                      <span className="days-value">{getDaysSince(app.appliedAt)}</span>
+                    </td>
+                    <td className="status-col">
+                      <span
+                        className="status-badge"
+                        style={{
+                          backgroundColor: status.bg,
+                          color: status.color,
+                          borderColor: status.color
+                        }}
+                      >
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="menu-col">
+                      <span className="row-menu-icon">⋮</span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
 
           {sortedApplications.length === 0 && (
             <div className="empty-table">

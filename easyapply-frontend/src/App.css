@@ -50,6 +50,34 @@ html, body {
   gap: 12px;
 }
 
+/* Logo wrapper - wyrównanie z przyciskami bez tła/prostokąta */
+.logo-wrapper {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-shadow: none;
+  /* Szerokość ustawiana dynamicznie przez JavaScript */
+  width: auto;
+}
+
+.logo {
+  height: auto;
+  display: block;
+  width: 100%;
+  max-width: none;
+  object-fit: contain;
+  transform: none;
+}
+
+.header-tagline {
+  opacity: 0.9;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 /* Mobile: Header responsiveness */
 @media (max-width: 768px) {
   .header {
@@ -99,34 +127,6 @@ html, body {
   display: flex;
   gap: 0.5rem;
   justify-self: start;
-}
-
-/* Logo wrapper - wyrównanie z przyciskami bez tła/prostokąta */
-.logo-wrapper {
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  box-shadow: none;
-  /* Szerokość ustawiana dynamicznie przez JavaScript */
-  width: auto;
-}
-
-.logo {
-  height: auto;
-  display: block;
-  width: 100%;
-  max-width: none;
-  object-fit: contain;
-  transform: none;
-}
-
-.header-tagline {
-  opacity: 0.9;
-  font-size: 0.9rem;
-  margin: 0;
 }
 
 .tab-btn {

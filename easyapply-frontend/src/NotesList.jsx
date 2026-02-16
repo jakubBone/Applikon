@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
-import { fetchNotes, deleteNote, getSessionId } from './services/api'
+import { fetchNotes, createNote, updateNote, deleteNote } from './services/api'
 import './NotesList.css'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
 // Kategorie notatek (uproszczone)
 const CATEGORIES = [
@@ -79,28 +77,13 @@ function NotesList({ applicationId }) {
 
     setSubmitting(true)
     try {
-      const response = await fetch(`${API_URL}/applications/${applicationId}/notes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': getSessionId()
-        },
-        body: JSON.stringify({ content: newNote.trim(), category: newCategory })
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Server error:', errorText)
-        throw new Error('Błąd serwera')
-      }
-
-      const note = await response.json()
+      const note = await createNote(applicationId, newNote.trim(), newCategory)
       setNotes(prev => [note, ...prev])
       setNewNote('')
       setNewCategory('PYTANIA')
     } catch (error) {
       console.error('Błąd dodawania notatki:', error)
-      alert('Nie udało się dodać notatki. Upewnij się, że backend jest uruchomiony.')
+      alert('Nie udało się dodać notatki')
     } finally {
       setSubmitting(false)
     }
@@ -134,18 +117,7 @@ function NotesList({ applicationId }) {
     if (!editContent.trim()) return
 
     try {
-      const response = await fetch(`${API_URL}/notes/${noteId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': getSessionId()
-        },
-        body: JSON.stringify({ content: editContent.trim(), category: editCategory })
-      })
-
-      if (!response.ok) throw new Error('Błąd aktualizacji')
-
-      const updated = await response.json()
+      const updated = await updateNote(noteId, editContent.trim(), editCategory)
       setNotes(prev => prev.map(n => n.id === noteId ? updated : n))
       setEditingId(null)
       setEditContent('')

@@ -122,7 +122,8 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
   const handleTouchEnd = () => {
     clearTimeout(pressTimerRef.current)
     if (!touchMovedRef.current && !showHint) {
-      // Quick tap - normal click behavior
+      // Quick tap - normal click behavior (jeśli nie było long press)
+      // Nic nie robimy, bo to drag & drop event
     }
     setTimeout(() => {
       if (!document.querySelector('.move-modal')) {
@@ -552,24 +553,28 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
   const [activeColumn, setActiveColumn] = useState(0)
   const kanbanBoardRef = useRef(null)
 
-  // Check onboarding on mount (mobile only)
-  useEffect(() => {
-    if (isMobile() && !localStorage.getItem('kanban_onboarding_shown')) {
-      setShowOnboarding(true)
-    }
-  }, [])
+  // Check onboarding on mount (mobile only) - DISABLED (replaced by main TourGuide)
+  // useEffect(() => {
+  //   if (isMobile() && !localStorage.getItem('kanban_onboarding_shown')) {
+  //     setShowOnboarding(true)
+  //   }
+  // }, [])
 
   // Enhanced sensors for better mobile support
+  // Na mobile wyłączamy TouchSensor, żeby long-press działał bez konfliktów
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: { distance: 10 }
     }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5
-      }
-    }),
+    // WYŁĄCZ TouchSensor na mobile - long press wtedy zadziała
+    ...(isMobile() ? [] : [
+      useSensor(TouchSensor, {
+        activationConstraint: {
+          delay: 250,
+          tolerance: 5
+        }
+      })
+    ]),
     useSensor(KeyboardSensor)
   )
 
@@ -806,13 +811,13 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
 
   return (
     <>
-      {/* Mobile: Onboarding (first time) */}
-      {isMobile() && (
+      {/* Mobile: Onboarding - DISABLED (replaced by main TourGuide) */}
+      {/* {isMobile() && (
         <OnboardingOverlay
           isOpen={showOnboarding}
           onClose={handleOnboardingClose}
         />
-      )}
+      )} */}
 
       {/* Mobile: Navigation buttons */}
       {isMobile() && (

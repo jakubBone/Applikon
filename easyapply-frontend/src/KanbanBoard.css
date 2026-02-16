@@ -2,6 +2,9 @@
 .kanban-board-container {
   position: relative;
   min-height: 70vh;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 .kanban-board {
@@ -32,6 +35,8 @@
     padding: 1rem;
     padding-bottom: 2rem;
     scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100vw;
   }
 
   /* Hide scrollbar but keep functionality */
@@ -52,26 +57,10 @@
     flex-shrink: 0;
   }
 
-  /* Gradient fade on edges */
+  /* Gradient fade on edges - wyłączone, powoduje blur */
   .kanban-board-container::before,
   .kanban-board-container::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    width: 30px;
-    height: 100%;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  .kanban-board-container::before {
-    left: 0;
-    background: linear-gradient(to right, #f5f7fa 0%, transparent 100%);
-  }
-
-  .kanban-board-container::after {
-    right: 0;
-    background: linear-gradient(to left, #f5f7fa 0%, transparent 100%);
+    display: none;
   }
 }
 
@@ -259,13 +248,24 @@
   flex: 1;
 }
 
+@media (max-width: 768px) {
+  .kanban-card h4 {
+    font-size: 0.9rem;
+  }
+}
+
 .card-position {
   font-size: 0.85rem;
   color: #666;
   margin: 0 0 0.5rem 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .card-position {
+    font-size: 0.8rem;
+  }
 }
 
 /* Sekcja wyboru etapu na karcie */
@@ -433,6 +433,18 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
+@media (max-width: 768px) {
+  .modal-content {
+    min-width: 90vw;
+    max-width: 90vw;
+    padding: 1.25rem;
+  }
+
+  .modal-content h3 {
+    font-size: 1rem;
+  }
+}
+
 .modal-content h3 {
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
@@ -528,10 +540,22 @@
   min-width: 360px;
 }
 
+@media (max-width: 768px) {
+  .end-modal {
+    min-width: 90vw;
+  }
+}
+
 .outcome-options {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 400px) {
+  .outcome-options {
+    flex-direction: column;
+  }
 }
 
 .outcome-option {
