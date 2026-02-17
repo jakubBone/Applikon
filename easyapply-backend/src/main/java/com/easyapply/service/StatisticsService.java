@@ -8,21 +8,16 @@ import com.easyapply.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class StatisticsService {
 
     private final ApplicationRepository applicationRepository;
 
-    private static final List<ApplicationStatus> REJECTION_STATUSES = List.of(
-            ApplicationStatus.ODMOWA
-    );
+    private static final List<ApplicationStatus> REJECTION_STATUSES = List.of(ApplicationStatus.ODMOWA);
+    private static final List<ApplicationStatus> OFFER_STATUSES = List.of(ApplicationStatus.OFERTA);
 
-    private static final List<ApplicationStatus> OFFER_STATUSES = List.of(
-            ApplicationStatus.OFERTA
-    );
-
-    // Rejection badges
     private static final int[] REJECTION_THRESHOLDS = {5, 10, 25, 50, 100};
     private static final String[] REJECTION_NAMES = {"Rękawica", "Patelnia", "Niezniszczalny", "Legenda Linkedina", "Statystyczna Pewność"};
     private static final String[] REJECTION_ICONS = {"🥊", "🍳", "🦾", "👑", "🎰"};
@@ -34,7 +29,6 @@ public class StatisticsService {
             "Przy takiej próbie, kolejna MUSI być ta właściwa."
     };
 
-    // Ghosting badges
     private static final int[] GHOSTING_THRESHOLDS = {5, 15, 30, 50, 100};
     private static final String[] GHOSTING_NAMES = {"Widmo", "Cierpliwy Mnich", "Detektyw", "Człowiek-Duch", "Król Ciszy"};
     private static final String[] GHOSTING_ICONS = {"👻", "🧘", "🔍", "🫥", "🤫"};
@@ -50,11 +44,11 @@ public class StatisticsService {
         this.applicationRepository = applicationRepository;
     }
 
-    public BadgeStatsResponse getBadgeStats(String sessionId) {
-        long rejectionCount = applicationRepository.countBySessionIdAndStatusIn(sessionId, REJECTION_STATUSES);
-        long ghostingCount = applicationRepository.countBySessionIdAndStatusInAndRejectionReason(
-                sessionId, REJECTION_STATUSES, RejectionReason.BRAK_ODPOWIEDZI);
-        long offerCount = applicationRepository.countBySessionIdAndStatusIn(sessionId, OFFER_STATUSES);
+    public BadgeStatsResponse getBadgeStats(UUID userId) {
+        long rejectionCount = applicationRepository.countByUserIdAndStatusIn(userId, REJECTION_STATUSES);
+        long ghostingCount = applicationRepository.countByUserIdAndStatusInAndRejectionReason(
+                userId, REJECTION_STATUSES, RejectionReason.BRAK_ODPOWIEDZI);
+        long offerCount = applicationRepository.countByUserIdAndStatusIn(userId, OFFER_STATUSES);
 
         BadgeStatsResponse response = new BadgeStatsResponse();
         response.setTotalRejections((int) rejectionCount);
@@ -62,22 +56,10 @@ public class StatisticsService {
         response.setTotalOffers((int) offerCount);
 
         response.setRejectionBadge(calculateBadge(
-                (int) rejectionCount,
-                REJECTION_THRESHOLDS,
-                REJECTION_NAMES,
-                REJECTION_ICONS,
-                REJECTION_DESCRIPTIONS
-        ));
-
+                (int) rejectionCount, REJECTION_THRESHOLDS, REJECTION_NAMES, REJECTION_ICONS, REJECTION_DESCRIPTIONS));
         response.setGhostingBadge(calculateBadge(
-                (int) ghostingCount,
-                GHOSTING_THRESHOLDS,
-                GHOSTING_NAMES,
-                GHOSTING_ICONS,
-                GHOSTING_DESCRIPTIONS
-        ));
+                (int) ghostingCount, GHOSTING_THRESHOLDS, GHOSTING_NAMES, GHOSTING_ICONS, GHOSTING_DESCRIPTIONS));
 
-        // Sweet Revenge: oferta po 10+ odrzuceniach
         response.setSweetRevengeUnlocked(rejectionCount >= 10 && offerCount > 0);
 
         return response;
@@ -100,13 +82,11 @@ public class StatisticsService {
             badge.setIcon(icons[achievedIndex]);
             badge.setDescription(descriptions[achievedIndex]);
             badge.setThreshold(thresholds[achievedIndex]);
-
             if (achievedIndex < thresholds.length - 1) {
                 badge.setNextThreshold(thresholds[achievedIndex + 1]);
                 badge.setNextBadgeName(names[achievedIndex + 1]);
             }
         } else {
-            // Jeszcze nie osiągnięto pierwszego progu
             badge.setName(null);
             badge.setIcon(null);
             badge.setDescription(null);

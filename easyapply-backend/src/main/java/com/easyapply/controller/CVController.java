@@ -2,12 +2,14 @@ package com.easyapply.controller;
 
 import com.easyapply.entity.CV;
 import com.easyapply.entity.CVType;
+import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.CVService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,10 +29,10 @@ public class CVController {
 
     @PostMapping("/upload")
     public ResponseEntity<CVResponse> uploadCV(
-            @RequestHeader("X-Session-ID") String sessionId,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestParam("file") MultipartFile file) {
         try {
-            CV cv = cvService.uploadCV(file, sessionId);
+            CV cv = cvService.uploadCV(file, user.id());
             return ResponseEntity.status(HttpStatus.CREATED).body(CVResponse.fromEntity(cv));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -40,9 +42,8 @@ public class CVController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CVResponse>> findAll(
-            @RequestHeader("X-Session-ID") String sessionId) {
-        List<CVResponse> cvs = cvService.findAllBySessionId(sessionId).stream()
+    public ResponseEntity<List<CVResponse>> findAll(@AuthenticationPrincipal AuthenticatedUser user) {
+        List<CVResponse> cvs = cvService.findAllByUserId(user.id()).stream()
                 .map(CVResponse::fromEntity)
                 .toList();
         return ResponseEntity.ok(cvs);
@@ -50,8 +51,7 @@ public class CVController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CVResponse> findById(@PathVariable Long id) {
-        CV cv = cvService.findById(id);
-        return ResponseEntity.ok(CVResponse.fromEntity(cv));
+        return ResponseEntity.ok(CVResponse.fromEntity(cvService.findById(id)));
     }
 
     @GetMapping("/{id}/download")
@@ -59,7 +59,6 @@ public class CVController {
         try {
             CV cv = cvService.findById(id);
             Resource resource = cvService.downloadCV(id);
-
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -78,10 +77,10 @@ public class CVController {
 
     @PostMapping
     public ResponseEntity<CVResponse> createCV(
-            @RequestHeader("X-Session-ID") String sessionId,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody CVCreateRequest request) {
         try {
-            CV cv = cvService.createCV(request.name(), request.type(), request.externalUrl(), sessionId);
+            CV cv = cvService.createCV(request.name(), request.type(), request.externalUrl(), user.id());
             return ResponseEntity.status(HttpStatus.CREATED).body(CVResponse.fromEntity(cv));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -98,19 +97,9 @@ public class CVController {
         }
     }
 
-    // DTO Requests
-    public record CVCreateRequest(
-            String name,
-            CVType type,
-            String externalUrl
-    ) {}
+    public record CVCreateRequest(String name, CVType type, String externalUrl) {}
+    public record CVUpdateRequest(String name, String externalUrl) {}
 
-    public record CVUpdateRequest(
-            String name,
-            String externalUrl
-    ) {}
-
-    // DTO Response
     public record CVResponse(
             Long id,
             String fileName,

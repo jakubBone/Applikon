@@ -7,32 +7,23 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
-@Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    // Metody z filtrowaniem po sessionId
-    List<Application> findBySessionId(String sessionId);
+    List<Application> findByUserId(UUID userId);
 
-    List<Application> findBySessionIdAndCompanyIgnoreCaseAndPositionIgnoreCase(
-            String sessionId, String company, String position);
+    List<Application> findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase(
+            UUID userId, String company, String position);
 
-    long countBySessionIdAndStatusIn(String sessionId, List<ApplicationStatus> statuses);
+    long countByUserIdAndStatusIn(UUID userId, List<ApplicationStatus> statuses);
 
-    long countBySessionIdAndStatusInAndRejectionReason(
-            String sessionId, List<ApplicationStatus> statuses, RejectionReason reason);
-
-    // Metody bez sessionId (dla kompatybilności wstecznej i migracji)
-    List<Application> findByCompanyIgnoreCaseAndPositionIgnoreCase(String company, String position);
+    long countByUserIdAndStatusInAndRejectionReason(
+            UUID userId, List<ApplicationStatus> statuses, RejectionReason reason);
 
     @Modifying
     @Query("UPDATE Application a SET a.cv = null WHERE a.cv.id = :cvId")
     void clearCVReferences(@Param("cvId") Long cvId);
-
-    long countByStatusIn(List<ApplicationStatus> statuses);
-
-    long countByStatusInAndRejectionReason(List<ApplicationStatus> statuses, RejectionReason reason);
 }

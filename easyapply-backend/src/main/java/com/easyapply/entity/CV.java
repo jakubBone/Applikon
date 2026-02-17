@@ -27,87 +27,30 @@ public class CV {
 
     private Long fileSize;
 
-    // URL dla typu LINK (Google Drive, Dropbox, etc.)
     private String externalUrl;
 
-    // Session ID dla izolacji danych userów (multi-tenant demo)
-    @Column(name = "session_id", length = 50)
-    private String sessionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime uploadedAt;
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getOriginalFileName() {
-        return originalFileName;
-    }
-
-    public void setOriginalFileName(String originalFileName) {
-        this.originalFileName = originalFileName;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
-
-    public Long getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(Long fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
-    }
-
-    public void setUploadedAt(LocalDateTime uploadedAt) {
-        this.uploadedAt = uploadedAt;
-    }
-
-    public CVType getType() {
-        return type;
-    }
-
-    public void setType(CVType type) {
-        this.type = type;
-    }
-
-    public String getExternalUrl() {
-        return externalUrl;
-    }
-
-    public void setExternalUrl(String externalUrl) {
-        this.externalUrl = externalUrl;
-    }
-
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
+    public Long getId() { return id; }
+    public CVType getType() { return type; }
+    public void setType(CVType type) { this.type = type; }
+    public String getFileName() { return fileName; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
+    public String getOriginalFileName() { return originalFileName; }
+    public void setOriginalFileName(String originalFileName) { this.originalFileName = originalFileName; }
+    public String getFilePath() { return filePath; }
+    public void setFilePath(String filePath) { this.filePath = filePath; }
+    public Long getFileSize() { return fileSize; }
+    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
+    public String getExternalUrl() { return externalUrl; }
+    public void setExternalUrl(String externalUrl) { this.externalUrl = externalUrl; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public LocalDateTime getUploadedAt() { return uploadedAt; }
 }

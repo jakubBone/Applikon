@@ -1,10 +1,11 @@
 package com.easyapply.controller;
 
 import com.easyapply.dto.BadgeStatsResponse;
+import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.StatisticsService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,8 +20,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/badges")
-    public ResponseEntity<BadgeStatsResponse> getBadgeStats(
-            @RequestHeader("X-Session-ID") String sessionId) {
-        return ResponseEntity.ok(statisticsService.getBadgeStats(sessionId));
+    public ResponseEntity<BadgeStatsResponse> getBadgeStats(@AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(statisticsService.getBadgeStats(user.id()));
     }
 }

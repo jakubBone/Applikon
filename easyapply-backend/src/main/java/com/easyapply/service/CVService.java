@@ -3,8 +3,10 @@ package com.easyapply.service;
 import com.easyapply.entity.Application;
 import com.easyapply.entity.CV;
 import com.easyapply.entity.CVType;
+import com.easyapply.entity.User;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.CVRepository;
+import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -27,12 +29,17 @@ public class CVService {
 
     private final CVRepository cvRepository;
     private final ApplicationRepository applicationRepository;
+    private final UserRepository userRepository;
     private final Path uploadDir;
 
-    public CVService(CVRepository cvRepository, ApplicationRepository applicationRepository,
-                     @Value("${app.upload.dir:uploads/cv}") String uploadDir) {
+    public CVService(
+            CVRepository cvRepository,
+            ApplicationRepository applicationRepository,
+            UserRepository userRepository,
+            @Value("${app.upload.dir:uploads/cv}") String uploadDir) {
         this.cvRepository = cvRepository;
         this.applicationRepository = applicationRepository;
+        this.userRepository = userRepository;
         this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
 
         try {
@@ -43,32 +50,28 @@ public class CVService {
     }
 
     @Transactional
-    public CV uploadCV(MultipartFile file, String sessionId) throws IOException {
-        // Walidacja
+    public CV uploadCV(MultipartFile file, UUID userId) throws IOException {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("Plik nie może być pusty");
         }
-
         String contentType = file.getContentType();
         if (contentType == null || !contentType.equals("application/pdf")) {
             throw new IllegalArgumentException("Dozwolone są tylko pliki PDF");
         }
-
-        if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+        if (file.getSize() > 5 * 1024 * 1024) {
             throw new IllegalArgumentException("Plik nie może przekraczać 5MB");
         }
 
-        // Generuj unikalną nazwę pliku
-        String originalFileName = file.getOriginalFilename();
-        String fileName = UUID.randomUUID().toString() + "_" + originalFileName;
-        Path filePath = uploadDir.resolve(fileName);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
 
-        // Zapisz plik
+        String originalFileName = file.getOriginalFilename();
+        String fileName = UUID.randomUUID() + "_" + originalFileName;
+        Path filePath = uploadDir.resolve(fileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        // Zapisz w bazie
         CV cv = new CV();
-        cv.setSessionId(sessionId);
+        cv.setUser(user);
         cv.setType(CVType.FILE);
         cv.setFileName(fileName);
         cv.setOriginalFileName(originalFileName);
@@ -79,17 +82,19 @@ public class CVService {
     }
 
     @Transactional
-    public CV createCV(String name, CVType type, String externalUrl, String sessionId) {
+    public CV createCV(String name, CVType type, String externalUrl, UUID userId) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Nazwa CV nie może być pusta");
         }
-
         if (type == CVType.FILE) {
             throw new IllegalArgumentException("Użyj metody uploadCV dla plików");
         }
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
+
         CV cv = new CV();
-        cv.setSessionId(sessionId);
+        cv.setUser(user);
         cv.setType(type);
         cv.setOriginalFileName(name.trim());
 
@@ -103,10 +108,12 @@ public class CVService {
         return cvRepository.save(cv);
     }
 
-    public List<CV> findAllBySessionId(String sessionId) {
-        return cvRepository.findBySessionId(sessionId);
+    @Transactional(readOnly = true)
+    public List<CV> findAllByUserId(UUID userId) {
+        return cvRepository.findByUserId(userId);
     }
 
+    @Transactional(readOnly = true)
     public CV findById(Long id) {
         return cvRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("CV o ID " + id + " nie zostało znalezione"));
@@ -116,11 +123,9 @@ public class CVService {
         CV cv = findById(id);
         Path filePath = Paths.get(cv.getFilePath());
         Resource resource = new UrlResource(filePath.toUri());
-
         if (!resource.exists()) {
             throw new EntityNotFoundException("Plik CV nie istnieje na dysku");
         }
-
         return resource;
     }
 
@@ -128,10 +133,8 @@ public class CVService {
     public Application assignCVToApplication(Long applicationId, Long cvId) {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona"));
-
         CV cv = findById(cvId);
         application.setCv(cv);
-
         return applicationRepository.save(application);
     }
 
@@ -139,7 +142,6 @@ public class CVService {
     public Application removeCVFromApplication(Long applicationId) {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona"));
-
         application.setCv(null);
         return applicationRepository.save(application);
     }
@@ -147,16 +149,13 @@ public class CVService {
     @Transactional
     public void deleteCV(Long id) {
         CV cv = findById(id);
-
-        // Najpierw usuń referencje do tego CV ze wszystkich aplikacji (bezpośrednie zapytanie SQL)
         applicationRepository.clearCVReferences(id);
 
-        // Usuń plik z dysku tylko dla typu FILE
         if (cv.getType() == CVType.FILE && cv.getFilePath() != null) {
             try {
                 Files.deleteIfExists(Paths.get(cv.getFilePath()));
             } catch (IOException e) {
-                // Log error but continue
+                // plik mógł już nie istnieć — ignorujemy
             }
         }
 
@@ -170,7 +169,6 @@ public class CVService {
         if (name != null && !name.trim().isEmpty()) {
             cv.setOriginalFileName(name.trim());
         }
-
         if (cv.getType() == CVType.LINK && externalUrl != null) {
             cv.setExternalUrl(externalUrl.trim());
         }

@@ -3,18 +3,16 @@ package com.easyapply.service;
 import com.easyapply.dto.ApplicationRequest;
 import com.easyapply.dto.ApplicationResponse;
 import com.easyapply.dto.StageUpdateRequest;
-import com.easyapply.entity.Application;
-import com.easyapply.entity.ApplicationStatus;
-import com.easyapply.entity.RejectionReason;
-import com.easyapply.entity.StageHistory;
+import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.StageHistoryRepository;
+import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ApplicationService {
@@ -22,17 +20,26 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final NoteService noteService;
     private final StageHistoryRepository stageHistoryRepository;
+    private final UserRepository userRepository;
 
-    public ApplicationService(ApplicationRepository applicationRepository, NoteService noteService, StageHistoryRepository stageHistoryRepository) {
+    public ApplicationService(
+            ApplicationRepository applicationRepository,
+            NoteService noteService,
+            StageHistoryRepository stageHistoryRepository,
+            UserRepository userRepository) {
         this.applicationRepository = applicationRepository;
         this.noteService = noteService;
         this.stageHistoryRepository = stageHistoryRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
-    public ApplicationResponse create(ApplicationRequest request, String sessionId) {
+    public ApplicationResponse create(ApplicationRequest request, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
+
         Application application = new Application();
-        application.setSessionId(sessionId);
+        application.setUser(user);
         application.setCompany(request.getCompany());
         application.setPosition(request.getPosition());
         application.setLink(request.getLink());
@@ -49,20 +56,20 @@ public class ApplicationService {
 
         Application saved = applicationRepository.save(application);
 
-        // Dodaj początkowy wpis w historii etapów
         StageHistory initialStage = new StageHistory(saved, "Wysłane");
-        initialStage.setCompleted(false);
         stageHistoryRepository.save(initialStage);
 
         return ApplicationResponse.fromEntity(applicationRepository.findById(saved.getId()).orElseThrow());
     }
 
-    public List<ApplicationResponse> findAllBySessionId(String sessionId) {
-        return applicationRepository.findBySessionId(sessionId).stream()
+    @Transactional(readOnly = true)
+    public List<ApplicationResponse> findAllByUserId(UUID userId) {
+        return applicationRepository.findByUserId(userId).stream()
                 .map(ApplicationResponse::fromEntity)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public ApplicationResponse findById(Long id) {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
@@ -74,8 +81,7 @@ public class ApplicationService {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
         application.setStatus(status);
-        Application saved = applicationRepository.save(application);
-        return ApplicationResponse.fromEntity(saved);
+        return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
 
     @Transactional
@@ -86,54 +92,43 @@ public class ApplicationService {
         ApplicationStatus oldStatus = application.getStatus();
         ApplicationStatus newStatus = request.getStatus();
 
-        // Aktualizuj status
         application.setStatus(newStatus);
 
-        // Obsługa przejścia do WYSLANE (cofnięcie - czyść wszystko)
         if (newStatus == ApplicationStatus.WYSLANE) {
             application.setCurrentStage(null);
             application.setRejectionReason(null);
             application.setRejectionDetails(null);
-            // Usuń historię etapów
             stageHistoryRepository.deleteByApplicationId(application.getId());
         }
 
-        // Obsługa przejścia do W_PROCESIE
         if (newStatus == ApplicationStatus.W_PROCESIE) {
-            // Jeśli cofamy z ZAKONCZONE - czyść dane zakończenia
             if (oldStatus == ApplicationStatus.OFERTA || oldStatus == ApplicationStatus.ODMOWA) {
                 application.setRejectionReason(null);
                 application.setRejectionDetails(null);
             }
-
-            // Ustaw nowy etap (jeśli podano)
             if (request.getCurrentStage() != null) {
                 application.setCurrentStage(request.getCurrentStage());
             }
         }
 
-        // Obsługa przejścia do OFERTA
         if (newStatus == ApplicationStatus.OFERTA) {
             application.setCurrentStage(null);
             application.setRejectionReason(null);
             application.setRejectionDetails(null);
         }
 
-        // Obsługa przejścia do ODMOWA
         if (newStatus == ApplicationStatus.ODMOWA) {
             application.setCurrentStage(null);
             application.setRejectionReason(request.getRejectionReason());
             application.setRejectionDetails(request.getRejectionDetails());
         }
 
-        Application saved = applicationRepository.save(application);
-        return ApplicationResponse.fromEntity(saved);
+        return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
 
     private void markCurrentStageCompleted(Application application) {
         if (application.getCurrentStage() != null) {
-            List<StageHistory> history = stageHistoryRepository.findByApplicationIdOrderByCreatedAtAsc(application.getId());
-            history.stream()
+            stageHistoryRepository.findByApplicationIdOrderByCreatedAtAsc(application.getId()).stream()
                     .filter(h -> h.getStageName().equals(application.getCurrentStage()) && !h.isCompleted())
                     .findFirst()
                     .ifPresent(h -> {
@@ -143,39 +138,24 @@ public class ApplicationService {
         }
     }
 
-    private void markStageCompletedByName(Application application, String stageName) {
-        List<StageHistory> history = stageHistoryRepository.findByApplicationIdOrderByCreatedAtAsc(application.getId());
-        history.stream()
-                .filter(h -> h.getStageName().equals(stageName) && !h.isCompleted())
-                .findFirst()
-                .ifPresent(h -> {
-                    h.markCompleted();
-                    stageHistoryRepository.save(h);
-                });
-    }
-
     @Transactional
     public ApplicationResponse addStage(Long id, String stageName) {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
 
-        // Zamknij poprzedni etap
         markCurrentStageCompleted(application);
-
-        // Ustaw nowy etap jako aktualny
         application.setCurrentStage(stageName);
         application.setStatus(ApplicationStatus.W_PROCESIE);
 
-        // Dodaj do historii
-        StageHistory newStage = new StageHistory(application, stageName);
-        stageHistoryRepository.save(newStage);
+        stageHistoryRepository.save(new StageHistory(application, stageName));
 
-        Application saved = applicationRepository.save(application);
-        return ApplicationResponse.fromEntity(saved);
+        return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
 
-    public List<ApplicationResponse> findDuplicates(String sessionId, String company, String position) {
-        return applicationRepository.findBySessionIdAndCompanyIgnoreCaseAndPositionIgnoreCase(sessionId, company, position).stream()
+    @Transactional(readOnly = true)
+    public List<ApplicationResponse> findDuplicates(UUID userId, String company, String position) {
+        return applicationRepository
+                .findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase(userId, company, position).stream()
                 .map(ApplicationResponse::fromEntity)
                 .toList();
     }
@@ -185,7 +165,6 @@ public class ApplicationService {
         if (!applicationRepository.existsById(id)) {
             throw new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona");
         }
-        // Najpierw usuń powiązane notatki
         noteService.deleteByApplicationId(id);
         applicationRepository.deleteById(id);
     }
@@ -195,7 +174,6 @@ public class ApplicationService {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
 
-        // Aktualizuj pola
         application.setCompany(request.getCompany());
         application.setPosition(request.getPosition());
         application.setLink(request.getLink());
@@ -209,7 +187,6 @@ public class ApplicationService {
         application.setJobDescription(request.getJobDescription());
         application.setAgency(request.getAgency());
 
-        Application saved = applicationRepository.save(application);
-        return ApplicationResponse.fromEntity(saved);
+        return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
 }

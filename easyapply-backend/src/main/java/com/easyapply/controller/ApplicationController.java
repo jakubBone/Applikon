@@ -4,11 +4,13 @@ import com.easyapply.dto.ApplicationRequest;
 import com.easyapply.dto.ApplicationResponse;
 import com.easyapply.dto.StatusUpdateRequest;
 import com.easyapply.dto.StageUpdateRequest;
+import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.ApplicationService;
 import com.easyapply.service.CVService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,39 +29,35 @@ public class ApplicationController {
 
     @PostMapping
     public ResponseEntity<ApplicationResponse> create(
-            @RequestHeader("X-Session-ID") String sessionId,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @Valid @RequestBody ApplicationRequest request) {
-        ApplicationResponse response = applicationService.create(request, sessionId);
+        ApplicationResponse response = applicationService.create(request, user.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     public ResponseEntity<List<ApplicationResponse>> findAll(
-            @RequestHeader("X-Session-ID") String sessionId) {
-        List<ApplicationResponse> applications = applicationService.findAllBySessionId(sessionId);
-        return ResponseEntity.ok(applications);
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(applicationService.findAllByUserId(user.id()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponse> findById(@PathVariable Long id) {
-        ApplicationResponse response = applicationService.findById(id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(applicationService.findById(id));
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApplicationResponse> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody StatusUpdateRequest request) {
-        ApplicationResponse response = applicationService.updateStatus(id, request.getStatus());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(applicationService.updateStatus(id, request.getStatus()));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApplicationResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody ApplicationRequest request) {
-        ApplicationResponse response = applicationService.update(id, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(applicationService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -70,11 +68,10 @@ public class ApplicationController {
 
     @GetMapping("/check-duplicate")
     public ResponseEntity<List<ApplicationResponse>> checkDuplicate(
-            @RequestHeader("X-Session-ID") String sessionId,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestParam String company,
             @RequestParam String position) {
-        List<ApplicationResponse> duplicates = applicationService.findDuplicates(sessionId, company, position);
-        return ResponseEntity.ok(duplicates);
+        return ResponseEntity.ok(applicationService.findDuplicates(user.id(), company, position));
     }
 
     @PatchMapping("/{id}/cv")
@@ -86,24 +83,21 @@ public class ApplicationController {
         } else {
             cvService.assignCVToApplication(id, request.cvId());
         }
-        ApplicationResponse response = applicationService.findById(id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(applicationService.findById(id));
     }
 
     @PatchMapping("/{id}/stage")
     public ResponseEntity<ApplicationResponse> updateStage(
             @PathVariable Long id,
             @Valid @RequestBody StageUpdateRequest request) {
-        ApplicationResponse response = applicationService.updateStage(id, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(applicationService.updateStage(id, request));
     }
 
     @PostMapping("/{id}/stage")
     public ResponseEntity<ApplicationResponse> addStage(
             @PathVariable Long id,
             @RequestBody AddStageRequest request) {
-        ApplicationResponse response = applicationService.addStage(id, request.stageName());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(applicationService.addStage(id, request.stageName()));
     }
 
     public record AssignCVRequest(Long cvId) {}
