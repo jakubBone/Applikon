@@ -8,6 +8,8 @@ import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.CVRepository;
 import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -26,6 +28,8 @@ import java.util.UUID;
 
 @Service
 public class CVService {
+
+    private static final Logger log = LoggerFactory.getLogger(CVService.class);
 
     private final CVRepository cvRepository;
     private final ApplicationRepository applicationRepository;
@@ -69,6 +73,8 @@ public class CVService {
         String fileName = UUID.randomUUID() + "_" + originalFileName;
         Path filePath = uploadDir.resolve(fileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        log.info("Uploaded CV file={} for user={}", fileName, userId);
 
         CV cv = new CV();
         cv.setUser(user);
@@ -155,7 +161,7 @@ public class CVService {
             try {
                 Files.deleteIfExists(Paths.get(cv.getFilePath()));
             } catch (IOException e) {
-                // plik mógł już nie istnieć — ignorujemy
+                log.warn("Could not delete file for CV id={}, path={}", id, cv.getFilePath(), e);
             }
         }
 

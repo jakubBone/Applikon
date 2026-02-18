@@ -5,18 +5,19 @@ import com.easyapply.dto.BadgeStatsResponse;
 import com.easyapply.entity.ApplicationStatus;
 import com.easyapply.entity.RejectionReason;
 import com.easyapply.repository.ApplicationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class StatisticsService {
 
-    private final ApplicationRepository applicationRepository;
+    private static final Logger log = LoggerFactory.getLogger(StatisticsService.class);
 
-    private static final List<ApplicationStatus> REJECTION_STATUSES = List.of(ApplicationStatus.ODMOWA);
-    private static final List<ApplicationStatus> OFFER_STATUSES = List.of(ApplicationStatus.OFERTA);
+    private final ApplicationRepository applicationRepository;
 
     private static final int[] REJECTION_THRESHOLDS = {5, 10, 25, 50, 100};
     private static final String[] REJECTION_NAMES = {"Rękawica", "Patelnia", "Niezniszczalny", "Legenda Linkedina", "Statystyczna Pewność"};
@@ -44,57 +45,35 @@ public class StatisticsService {
         this.applicationRepository = applicationRepository;
     }
 
+    @Transactional(readOnly = true)
     public BadgeStatsResponse getBadgeStats(UUID userId) {
-        long rejectionCount = applicationRepository.countByUserIdAndStatusIn(userId, REJECTION_STATUSES);
-        long ghostingCount = applicationRepository.countByUserIdAndStatusInAndRejectionReason(
-                userId, REJECTION_STATUSES, RejectionReason.BRAK_ODPOWIEDZI);
-        long offerCount = applicationRepository.countByUserIdAndStatusIn(userId, OFFER_STATUSES);
+        Object[] stats = applicationRepository.getApplicationStats(
+                userId, ApplicationStatus.ODMOWA, ApplicationStatus.OFERTA, RejectionReason.BRAK_ODPOWIEDZI);
 
-        BadgeStatsResponse response = new BadgeStatsResponse();
-        response.setTotalRejections((int) rejectionCount);
-        response.setTotalGhosting((int) ghostingCount);
-        response.setTotalOffers((int) offerCount);
+        int rejectionCount = stats[0] != null ? ((Number) stats[0]).intValue() : 0;
+        int ghostingCount = stats[1] != null ? ((Number) stats[1]).intValue() : 0;
+        int offerCount = stats[2] != null ? ((Number) stats[2]).intValue() : 0;
 
-        response.setRejectionBadge(calculateBadge(
-                (int) rejectionCount, REJECTION_THRESHOLDS, REJECTION_NAMES, REJECTION_ICONS, REJECTION_DESCRIPTIONS));
-        response.setGhostingBadge(calculateBadge(
-                (int) ghostingCount, GHOSTING_THRESHOLDS, GHOSTING_NAMES, GHOSTING_ICONS, GHOSTING_DESCRIPTIONS));
+        log.debug("Badge stats for user={}: rejections={}, ghosting={}, offers={}", userId, rejectionCount, ghostingCount, offerCount);
 
-        response.setSweetRevengeUnlocked(rejectionCount >= 10 && offerCount > 0);
-
-        return response;
+        return new BadgeStatsResponse(
+                calculateBadge(rejectionCount, REJECTION_THRESHOLDS, REJECTION_NAMES, REJECTION_ICONS, REJECTION_DESCRIPTIONS),
+                calculateBadge(ghostingCount, GHOSTING_THRESHOLDS, GHOSTING_NAMES, GHOSTING_ICONS, GHOSTING_DESCRIPTIONS),
+                rejectionCount >= 10 && offerCount > 0,
+                rejectionCount,
+                ghostingCount,
+                offerCount
+        );
     }
 
     private BadgeResponse calculateBadge(int count, int[] thresholds, String[] names, String[] icons, String[] descriptions) {
-        BadgeResponse badge = new BadgeResponse();
-        badge.setCurrentCount(count);
-
-        int achievedIndex = -1;
         for (int i = thresholds.length - 1; i >= 0; i--) {
             if (count >= thresholds[i]) {
-                achievedIndex = i;
-                break;
+                Integer nextThreshold = i < thresholds.length - 1 ? thresholds[i + 1] : null;
+                String nextBadgeName = i < thresholds.length - 1 ? names[i + 1] : null;
+                return new BadgeResponse(names[i], icons[i], descriptions[i], thresholds[i], count, nextThreshold, nextBadgeName);
             }
         }
-
-        if (achievedIndex >= 0) {
-            badge.setName(names[achievedIndex]);
-            badge.setIcon(icons[achievedIndex]);
-            badge.setDescription(descriptions[achievedIndex]);
-            badge.setThreshold(thresholds[achievedIndex]);
-            if (achievedIndex < thresholds.length - 1) {
-                badge.setNextThreshold(thresholds[achievedIndex + 1]);
-                badge.setNextBadgeName(names[achievedIndex + 1]);
-            }
-        } else {
-            badge.setName(null);
-            badge.setIcon(null);
-            badge.setDescription(null);
-            badge.setThreshold(0);
-            badge.setNextThreshold(thresholds[0]);
-            badge.setNextBadgeName(names[0]);
-        }
-
-        return badge;
+        return new BadgeResponse(null, null, null, 0, count, thresholds[0], names[0]);
     }
 }

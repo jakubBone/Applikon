@@ -50,7 +50,7 @@ public class ApplicationController {
     public ResponseEntity<ApplicationResponse> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody StatusUpdateRequest request) {
-        return ResponseEntity.ok(applicationService.updateStatus(id, request.getStatus()));
+        return ResponseEntity.ok(applicationService.updateStatus(id, request.status()));
     }
 
     @PutMapping("/{id}")

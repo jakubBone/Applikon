@@ -8,6 +8,8 @@ import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.StageHistoryRepository;
 import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import java.util.UUID;
 
 @Service
 public class ApplicationService {
+
+    private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
 
     private final ApplicationRepository applicationRepository;
     private final NoteService noteService;
@@ -35,36 +39,36 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationResponse create(ApplicationRequest request, UUID userId) {
+        log.info("Creating application for user={}, company={}", userId, request.company());
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
 
         Application application = new Application();
         application.setUser(user);
-        application.setCompany(request.getCompany());
-        application.setPosition(request.getPosition());
-        application.setLink(request.getLink());
-        application.setSalaryMin(request.getSalaryMin());
-        application.setSalaryMax(request.getSalaryMax());
-        application.setCurrency(request.getCurrency());
-        application.setSalaryType(request.getSalaryType());
-        application.setContractType(request.getContractType());
-        application.setSalarySource(request.getSalarySource());
-        application.setSource(request.getSource());
-        application.setJobDescription(request.getJobDescription());
-        application.setAgency(request.getAgency());
+        application.setCompany(request.company());
+        application.setPosition(request.position());
+        application.setLink(request.link());
+        application.setSalaryMin(request.salaryMin());
+        application.setSalaryMax(request.salaryMax());
+        application.setCurrency(request.currency());
+        application.setSalaryType(request.salaryType());
+        application.setContractType(request.contractType());
+        application.setSalarySource(request.salarySource());
+        application.setSource(request.source());
+        application.setJobDescription(request.jobDescription());
+        application.setAgency(request.agency());
         application.setStatus(ApplicationStatus.WYSLANE);
 
         Application saved = applicationRepository.save(application);
-
-        StageHistory initialStage = new StageHistory(saved, "Wysłane");
-        stageHistoryRepository.save(initialStage);
+        stageHistoryRepository.save(new StageHistory(saved, "Wysłane"));
 
         return ApplicationResponse.fromEntity(applicationRepository.findById(saved.getId()).orElseThrow());
     }
 
     @Transactional(readOnly = true)
     public List<ApplicationResponse> findAllByUserId(UUID userId) {
-        return applicationRepository.findByUserId(userId).stream()
+        return applicationRepository.findByUserIdWithStageHistory(userId).stream()
                 .map(ApplicationResponse::fromEntity)
                 .toList();
     }
@@ -90,7 +94,7 @@ public class ApplicationService {
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
 
         ApplicationStatus oldStatus = application.getStatus();
-        ApplicationStatus newStatus = request.getStatus();
+        ApplicationStatus newStatus = request.status();
 
         application.setStatus(newStatus);
 
@@ -106,8 +110,8 @@ public class ApplicationService {
                 application.setRejectionReason(null);
                 application.setRejectionDetails(null);
             }
-            if (request.getCurrentStage() != null) {
-                application.setCurrentStage(request.getCurrentStage());
+            if (request.currentStage() != null) {
+                application.setCurrentStage(request.currentStage());
             }
         }
 
@@ -119,8 +123,8 @@ public class ApplicationService {
 
         if (newStatus == ApplicationStatus.ODMOWA) {
             application.setCurrentStage(null);
-            application.setRejectionReason(request.getRejectionReason());
-            application.setRejectionDetails(request.getRejectionDetails());
+            application.setRejectionReason(request.rejectionReason());
+            application.setRejectionDetails(request.rejectionDetails());
         }
 
         return ApplicationResponse.fromEntity(applicationRepository.save(application));
@@ -165,6 +169,7 @@ public class ApplicationService {
         if (!applicationRepository.existsById(id)) {
             throw new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona");
         }
+        log.info("Deleting application id={}", id);
         noteService.deleteByApplicationId(id);
         applicationRepository.deleteById(id);
     }
@@ -174,18 +179,18 @@ public class ApplicationService {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
 
-        application.setCompany(request.getCompany());
-        application.setPosition(request.getPosition());
-        application.setLink(request.getLink());
-        application.setSalaryMin(request.getSalaryMin());
-        application.setSalaryMax(request.getSalaryMax());
-        application.setCurrency(request.getCurrency());
-        application.setSalaryType(request.getSalaryType());
-        application.setContractType(request.getContractType());
-        application.setSalarySource(request.getSalarySource());
-        application.setSource(request.getSource());
-        application.setJobDescription(request.getJobDescription());
-        application.setAgency(request.getAgency());
+        application.setCompany(request.company());
+        application.setPosition(request.position());
+        application.setLink(request.link());
+        application.setSalaryMin(request.salaryMin());
+        application.setSalaryMax(request.salaryMax());
+        application.setCurrency(request.currency());
+        application.setSalaryType(request.salaryType());
+        application.setContractType(request.contractType());
+        application.setSalarySource(request.salarySource());
+        application.setSource(request.source());
+        application.setJobDescription(request.jobDescription());
+        application.setAgency(request.agency());
 
         return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }

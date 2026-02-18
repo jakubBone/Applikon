@@ -7,6 +7,8 @@ import com.easyapply.entity.Note;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.NoteRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,8 @@ import java.util.List;
 
 @Service
 public class NoteService {
+
+    private static final Logger log = LoggerFactory.getLogger(NoteService.class);
 
     private final NoteRepository noteRepository;
     private final ApplicationRepository applicationRepository;
@@ -28,11 +32,12 @@ public class NoteService {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona"));
 
-        Note note = new Note(request.getContent(), application, request.getCategory());
+        Note note = new Note(request.content(), application, request.category());
         Note saved = noteRepository.save(note);
         return NoteResponse.fromEntity(saved);
     }
 
+    @Transactional(readOnly = true)
     public List<NoteResponse> findByApplicationId(Long applicationId) {
         if (!applicationRepository.existsById(applicationId)) {
             throw new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona");
@@ -42,6 +47,7 @@ public class NoteService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public NoteResponse findById(Long id) {
         Note note = noteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Notatka o ID " + id + " nie została znaleziona"));
@@ -52,9 +58,9 @@ public class NoteService {
     public NoteResponse update(Long id, NoteRequest request) {
         Note note = noteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Notatka o ID " + id + " nie została znaleziona"));
-        note.setContent(request.getContent());
-        if (request.getCategory() != null) {
-            note.setCategory(request.getCategory());
+        note.setContent(request.content());
+        if (request.category() != null) {
+            note.setCategory(request.category());
         }
         Note saved = noteRepository.save(note);
         return NoteResponse.fromEntity(saved);
@@ -84,6 +90,7 @@ public class NoteService {
                 newSalary != null ? newSalary : 0,
                 newCurrency != null ? newCurrency : "PLN");
 
+        log.info("Creating salary change note for applicationId={}", applicationId);
         Note note = new Note(content, application);
         Note saved = noteRepository.save(note);
         return NoteResponse.fromEntity(saved);
