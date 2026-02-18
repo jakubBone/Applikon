@@ -47,12 +47,12 @@ public class StatisticsService {
 
     @Transactional(readOnly = true)
     public BadgeStatsResponse getBadgeStats(UUID userId) {
-        Object[] stats = applicationRepository.getApplicationStats(
-                userId, ApplicationStatus.ODMOWA, ApplicationStatus.OFERTA, RejectionReason.BRAK_ODPOWIEDZI);
-
-        int rejectionCount = stats[0] != null ? ((Number) stats[0]).intValue() : 0;
-        int ghostingCount = stats[1] != null ? ((Number) stats[1]).intValue() : 0;
-        int offerCount = stats[2] != null ? ((Number) stats[2]).intValue() : 0;
+        Object[] stats = normalizeStats(applicationRepository.getApplicationStats(
+                userId, ApplicationStatus.ODMOWA, ApplicationStatus.OFERTA, RejectionReason.BRAK_ODPOWIEDZI));
+        
+        int rejectionCount = getStatValue(stats, 0);
+        int ghostingCount = getStatValue(stats, 1);
+        int offerCount = getStatValue(stats, 2);
 
         log.debug("Badge stats for user={}: rejections={}, ghosting={}, offers={}", userId, rejectionCount, ghostingCount, offerCount);
 
@@ -64,6 +64,28 @@ public class StatisticsService {
                 ghostingCount,
                 offerCount
         );
+    }
+
+    /**
+     * Depending on JPA provider/version, aggregate tuple can come as:
+     * 1) Object[] of numbers, or
+     * 2) one-element array containing nested Object[].
+     */
+    private Object[] normalizeStats(Object[] stats) {
+        if (stats == null) {
+            return new Object[0];
+        }
+        if (stats.length == 1 && stats[0] instanceof Object[] nested) {
+            return nested;
+        }
+        return stats;
+    }
+
+    private int getStatValue(Object[] stats, int index) {
+        if (stats.length <= index || stats[index] == null) {
+            return 0;
+        }
+        return ((Number) stats[index]).intValue();
     }
 
     private BadgeResponse calculateBadge(int count, int[] thresholds, String[] names, String[] icons, String[] descriptions) {
