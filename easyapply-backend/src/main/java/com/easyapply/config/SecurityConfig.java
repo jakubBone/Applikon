@@ -3,7 +3,6 @@ package com.easyapply.config;
 import com.easyapply.security.JwtAuthenticationConverter;
 import com.easyapply.security.OAuth2AuthenticationSuccessHandler;
 import com.easyapply.security.CustomOAuth2UserService;
-import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
@@ -13,7 +12,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -48,15 +47,12 @@ public class SecurityConfig {
     private String allowedOrigins;
 
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
     public SecurityConfig(
             CustomOAuth2UserService customOAuth2UserService,
-            OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
             JwtAuthenticationConverter jwtAuthenticationConverter) {
         this.customOAuth2UserService = customOAuth2UserService;
-        this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
         this.jwtAuthenticationConverter = jwtAuthenticationConverter;
     }
 
@@ -106,9 +102,16 @@ public class SecurityConfig {
     // =====================================================================
     // SECURITY FILTER CHAIN
     // Tutaj definiujemy WSZYSTKIE reguły bezpieczeństwa aplikacji.
+    // Pomijamy ten bean w profilu "test" — TestSecurityConfig dostarcza własny
+    // łańcuch z permitAll(). Pozostałe beany (RSAKey, JwtEncoder, JwtDecoder)
+    // pozostają aktywne we wszystkich profilach, bo JwtService ich wymaga.
     // =====================================================================
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
+    @Profile("!test")
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtDecoder jwtDecoder,
+            OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
         return http
                 // CSRF wyłączone — używamy JWT (bezstanowe), nie sesji/cookies z formularzy
                 .csrf(AbstractHttpConfigurer::disable)
