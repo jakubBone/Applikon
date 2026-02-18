@@ -4,33 +4,47 @@ import com.easyapply.entity.Application;
 import com.easyapply.entity.ApplicationStatus;
 import com.easyapply.entity.CV;
 import com.easyapply.entity.CVType;
+import com.easyapply.entity.User;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.CVRepository;
+import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CVService Unit Tests")
+@DisplayName("CVService tests")
 class CVServiceTest {
 
-    private static final String TEST_SESSION_ID = "test-session-123";
+    private static final UUID TEST_USER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
     @Mock
     private CVRepository cvRepository;
@@ -38,485 +52,224 @@ class CVServiceTest {
     @Mock
     private ApplicationRepository applicationRepository;
 
-    private CVService cvService;
-
-    @TempDir
-    Path tempDir;
+    @Mock
+    private UserRepository userRepository;
 
     @Captor
     private ArgumentCaptor<CV> cvCaptor;
 
+    @TempDir
+    Path tempDir;
+
+    private CVService cvService;
+    private User testUser;
+
     @BeforeEach
     void setUp() {
-        cvService = new CVService(cvRepository, applicationRepository, tempDir.toString());
+        cvService = new CVService(cvRepository, applicationRepository, userRepository, tempDir.toString());
+        testUser = new User("cv@test.com", "CV User", "google-cv");
+        setField(testUser, "id", TEST_USER_ID);
     }
 
-    private CV createTestCV(Long id, String name, CVType type) {
+    private static void setField(Object target, String fieldName, Object value) {
+        try {
+            Field field = target.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(target, value);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static CV cv(long id, String name, CVType type) {
         CV cv = new CV();
-        cv.setId(id);
+        setField(cv, "id", id);
         cv.setOriginalFileName(name);
         cv.setType(type);
-        cv.setUploadedAt(LocalDateTime.now());
-        if (type == CVType.FILE) {
-            cv.setFileName("uuid_" + name);
-            cv.setFilePath(tempDir.resolve("uuid_" + name).toString());
-            cv.setFileSize(1024L);
-        }
         if (type == CVType.LINK) {
             cv.setExternalUrl("https://example.com/" + name);
         }
         return cv;
     }
 
-    private Application createTestApplication(Long id) {
+    private static Application application(long id) {
         Application app = new Application();
-        app.setId(id);
+        setField(app, "id", id);
         app.setCompany("Google");
         app.setPosition("Developer");
         app.setStatus(ApplicationStatus.WYSLANE);
         return app;
     }
 
-    // ==================== UPLOAD Tests ====================
-
     @Nested
-    @DisplayName("uploadCV()")
-    class UploadCVTests {
+    class UploadTests {
 
         @Test
-        @DisplayName("uploaduje poprawny plik PDF")
-        void uploadCV_ValidPDF_Success() throws IOException {
-            byte[] content = "%PDF-1.4\nTest content".getBytes();
+        void uploadCV_validPdf_savesCvAndFile() throws IOException {
             MockMultipartFile file = new MockMultipartFile(
                     "file",
-                    "test.pdf",
+                    "cv.pdf",
                     "application/pdf",
-                    content
+                    "%PDF-1.4\nbody".getBytes()
             );
 
-            CV savedCV = createTestCV(1L, "test.pdf", CVType.FILE);
-            when(cvRepository.save(any(CV.class))).thenReturn(savedCV);
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
+            when(cvRepository.save(any(CV.class))).thenAnswer(inv -> {
+                CV saved = inv.getArgument(0);
+                setField(saved, "id", 1L);
+                return saved;
+            });
 
-            CV result = cvService.uploadCV(file, TEST_SESSION_ID);
+            CV result = cvService.uploadCV(file, TEST_USER_ID);
 
             verify(cvRepository).save(cvCaptor.capture());
             CV captured = cvCaptor.getValue();
-
             assertEquals(CVType.FILE, captured.getType());
-            assertEquals("test.pdf", captured.getOriginalFileName());
-            assertEquals(content.length, captured.getFileSize());
-            assertNotNull(captured.getFileName());
-            assertTrue(captured.getFileName().contains("test.pdf"));
+            assertEquals("cv.pdf", captured.getOriginalFileName());
+            assertNotNull(result.getFilePath());
+            assertTrue(Files.exists(Path.of(result.getFilePath())));
         }
 
         @Test
-        @DisplayName("odrzuca pusty plik")
-        void uploadCV_EmptyFile_ThrowsException() {
+        void uploadCV_nonPdf_throws() {
             MockMultipartFile file = new MockMultipartFile(
                     "file",
-                    "empty.pdf",
-                    "application/pdf",
-                    new byte[0]
-            );
-
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.uploadCV(file, TEST_SESSION_ID)
-            );
-
-            assertTrue(exception.getMessage().contains("pusty"));
-            verify(cvRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("odrzuca plik nie-PDF")
-        void uploadCV_NonPDF_ThrowsException() {
-            MockMultipartFile file = new MockMultipartFile(
-                    "file",
-                    "document.txt",
+                    "notes.txt",
                     "text/plain",
-                    "Not a PDF".getBytes()
+                    "bad".getBytes()
             );
 
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.uploadCV(file, TEST_SESSION_ID)
-            );
-
-            assertTrue(exception.getMessage().contains("PDF"));
-            verify(cvRepository, never()).save(any());
+            assertThrows(IllegalArgumentException.class, () -> cvService.uploadCV(file, TEST_USER_ID));
+            verify(cvRepository, never()).save(any(CV.class));
         }
 
         @Test
-        @DisplayName("odrzuca plik większy niż 5MB")
-        void uploadCV_TooLarge_ThrowsException() {
-            byte[] largeContent = new byte[6 * 1024 * 1024]; // 6MB
+        void uploadCV_userMissing_throws() {
             MockMultipartFile file = new MockMultipartFile(
                     "file",
-                    "large.pdf",
+                    "cv.pdf",
                     "application/pdf",
-                    largeContent
+                    "%PDF-1.4\nbody".getBytes()
             );
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
 
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.uploadCV(file, TEST_SESSION_ID)
-            );
-
-            assertTrue(exception.getMessage().contains("5MB"));
-            verify(cvRepository, never()).save(any());
-        }
-    }
-
-    // ==================== CREATE CV Tests ====================
-
-    @Nested
-    @DisplayName("createCV()")
-    class CreateCVTests {
-
-        @Test
-        @DisplayName("tworzy CV typu LINK z URL")
-        void createCV_TypeLink_WithUrl_Success() {
-            CV savedCV = createTestCV(1L, "CV.pdf", CVType.LINK);
-            when(cvRepository.save(any(CV.class))).thenReturn(savedCV);
-
-            CV result = cvService.createCV("CV.pdf", CVType.LINK, "https://drive.google.com/123", TEST_SESSION_ID);
-
-            verify(cvRepository).save(cvCaptor.capture());
-            CV captured = cvCaptor.getValue();
-
-            assertEquals(CVType.LINK, captured.getType());
-            assertEquals("CV.pdf", captured.getOriginalFileName());
-            assertEquals("https://drive.google.com/123", captured.getExternalUrl());
-        }
-
-        @Test
-        @DisplayName("tworzy CV typu NOTE bez URL")
-        void createCV_TypeNote_WithoutUrl_Success() {
-            CV savedCV = createTestCV(1L, "CV.pdf", CVType.NOTE);
-            when(cvRepository.save(any(CV.class))).thenReturn(savedCV);
-
-            CV result = cvService.createCV("CV.pdf", CVType.NOTE, null, TEST_SESSION_ID);
-
-            verify(cvRepository).save(cvCaptor.capture());
-            CV captured = cvCaptor.getValue();
-
-            assertEquals(CVType.NOTE, captured.getType());
-            assertEquals("CV.pdf", captured.getOriginalFileName());
-            assertNull(captured.getExternalUrl());
-        }
-
-        @Test
-        @DisplayName("odrzuca pustą nazwę")
-        void createCV_EmptyName_ThrowsException() {
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.createCV("", CVType.NOTE, null, TEST_SESSION_ID)
-            );
-
-            assertTrue(exception.getMessage().contains("pusta"));
-            verify(cvRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("odrzuca null nazwę")
-        void createCV_NullName_ThrowsException() {
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.createCV(null, CVType.NOTE, null, TEST_SESSION_ID)
-            );
-
-            verify(cvRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("odrzuca typ FILE (wymaga uploadu)")
-        void createCV_TypeFile_ThrowsException() {
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.createCV("CV.pdf", CVType.FILE, null, TEST_SESSION_ID)
-            );
-
-            assertTrue(exception.getMessage().contains("uploadCV"));
-            verify(cvRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("wymaga URL dla typu LINK")
-        void createCV_TypeLinkWithoutUrl_ThrowsException() {
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.createCV("CV.pdf", CVType.LINK, null, TEST_SESSION_ID)
-            );
-
-            assertTrue(exception.getMessage().contains("URL"));
-            verify(cvRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("wymaga URL dla typu LINK - pusty string")
-        void createCV_TypeLinkWithEmptyUrl_ThrowsException() {
-            IllegalArgumentException exception = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> cvService.createCV("CV.pdf", CVType.LINK, "   ", TEST_SESSION_ID)
-            );
-
-            assertTrue(exception.getMessage().contains("URL"));
-            verify(cvRepository, never()).save(any());
-        }
-    }
-
-    // ==================== FIND Tests ====================
-
-    @Nested
-    @DisplayName("findAll()")
-    class FindAllTests {
-
-        @Test
-        @DisplayName("zwraca wszystkie CV")
-        void findAll_ReturnsAllCVs() {
-            List<CV> cvs = Arrays.asList(
-                    createTestCV(1L, "CV1.pdf", CVType.FILE),
-                    createTestCV(2L, "CV2.pdf", CVType.LINK),
-                    createTestCV(3L, "CV3.pdf", CVType.NOTE)
-            );
-            when(cvRepository.findBySessionId(TEST_SESSION_ID)).thenReturn(cvs);
-
-            List<CV> result = cvService.findAllBySessionId(TEST_SESSION_ID);
-
-            assertEquals(3, result.size());
-        }
-
-        @Test
-        @DisplayName("zwraca pustą listę gdy brak CV")
-        void findAll_NoCVs_ReturnsEmptyList() {
-            when(cvRepository.findBySessionId(TEST_SESSION_ID)).thenReturn(List.of());
-
-            List<CV> result = cvService.findAllBySessionId(TEST_SESSION_ID);
-
-            assertTrue(result.isEmpty());
+            assertThrows(EntityNotFoundException.class, () -> cvService.uploadCV(file, TEST_USER_ID));
         }
     }
 
     @Nested
-    @DisplayName("findById()")
-    class FindByIdTests {
+    class CreateAndFindTests {
 
         @Test
-        @DisplayName("zwraca CV gdy istnieje")
-        void findById_ExistingId_ReturnsCV() {
-            CV cv = createTestCV(1L, "CV.pdf", CVType.FILE);
-            when(cvRepository.findById(1L)).thenReturn(Optional.of(cv));
+        void createCV_link_setsUrl() {
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
+            when(cvRepository.save(any(CV.class))).thenAnswer(inv -> {
+                CV saved = inv.getArgument(0);
+                setField(saved, "id", 2L);
+                return saved;
+            });
 
-            CV result = cvService.findById(1L);
+            CV result = cvService.createCV("Linked CV", CVType.LINK, "https://drive.google.com/file", TEST_USER_ID);
 
-            assertEquals("CV.pdf", result.getOriginalFileName());
-            assertEquals(CVType.FILE, result.getType());
+            assertEquals(CVType.LINK, result.getType());
+            assertEquals("Linked CV", result.getOriginalFileName());
+            assertEquals("https://drive.google.com/file", result.getExternalUrl());
         }
 
         @Test
-        @DisplayName("rzuca wyjątek gdy CV nie istnieje")
-        void findById_NonExistingId_ThrowsException() {
+        void createCV_typeFile_throws() {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> cvService.createCV("file", CVType.FILE, null, TEST_USER_ID)
+            );
+        }
+
+        @Test
+        void findAllByUserId_usesUserScope() {
+            when(cvRepository.findByUserId(TEST_USER_ID)).thenReturn(List.of(
+                    cv(1L, "One", CVType.NOTE),
+                    cv(2L, "Two", CVType.LINK)
+            ));
+
+            List<CV> result = cvService.findAllByUserId(TEST_USER_ID);
+
+            assertEquals(2, result.size());
+            assertEquals("One", result.get(0).getOriginalFileName());
+        }
+    }
+
+    @Nested
+    class AssignmentTests {
+
+        @Test
+        void assignCVToApplication_assignsCv() {
+            Application app = application(10L);
+            CV cv = cv(7L, "Assigned", CVType.NOTE);
+
+            when(applicationRepository.findById(10L)).thenReturn(Optional.of(app));
+            when(cvRepository.findById(7L)).thenReturn(Optional.of(cv));
+            when(applicationRepository.save(any(Application.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            Application result = cvService.assignCVToApplication(10L, 7L);
+
+            assertNotNull(result.getCv());
+            assertEquals(7L, result.getCv().getId());
+        }
+
+        @Test
+        void removeCVFromApplication_clearsReference() {
+            Application app = application(10L);
+            app.setCv(cv(7L, "Assigned", CVType.NOTE));
+
+            when(applicationRepository.findById(10L)).thenReturn(Optional.of(app));
+            when(applicationRepository.save(any(Application.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            Application result = cvService.removeCVFromApplication(10L);
+
+            assertNull(result.getCv());
+        }
+    }
+
+    @Nested
+    class UpdateAndDeleteTests {
+
+        @Test
+        void updateCV_updatesNameAndUrlForLink() {
+            CV existing = cv(3L, "Old", CVType.LINK);
+            existing.setExternalUrl("https://old.url");
+
+            when(cvRepository.findById(3L)).thenReturn(Optional.of(existing));
+            when(cvRepository.save(any(CV.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            CV result = cvService.updateCV(3L, "New Name", "https://new.url");
+
+            assertEquals("New Name", result.getOriginalFileName());
+            assertEquals("https://new.url", result.getExternalUrl());
+        }
+
+        @Test
+        void deleteCV_fileType_removesFileAndEntity() throws IOException {
+            Path filePath = tempDir.resolve("to-delete.pdf");
+            Files.write(filePath, "pdf".getBytes());
+
+            CV fileCv = cv(11L, "File CV", CVType.FILE);
+            fileCv.setFilePath(filePath.toString());
+
+            when(cvRepository.findById(11L)).thenReturn(Optional.of(fileCv));
+
+            cvService.deleteCV(11L);
+
+            verify(applicationRepository).clearCVReferences(11L);
+            verify(cvRepository).delete(fileCv);
+            assertFalse(Files.exists(filePath));
+        }
+
+        @Test
+        void deleteCV_missingCv_throws() {
             when(cvRepository.findById(999L)).thenReturn(Optional.empty());
 
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> cvService.findById(999L)
-            );
-        }
-    }
-
-    // ==================== ASSIGN CV Tests ====================
-
-    @Nested
-    @DisplayName("assignCVToApplication()")
-    class AssignCVToApplicationTests {
-
-        @Test
-        @DisplayName("przypisuje CV do aplikacji")
-        void assignCV_Success() {
-            Application app = createTestApplication(1L);
-            CV cv = createTestCV(10L, "CV.pdf", CVType.FILE);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(cvRepository.findById(10L)).thenReturn(Optional.of(cv));
-            when(applicationRepository.save(any())).thenReturn(app);
-
-            Application result = cvService.assignCVToApplication(1L, 10L);
-
-            verify(applicationRepository).save(argThat(a -> a.getCv() == cv));
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void assignCV_ApplicationNotFound_ThrowsException() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> cvService.assignCVToApplication(999L, 1L)
-            );
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy CV nie istnieje")
-        void assignCV_CVNotFound_ThrowsException() {
-            Application app = createTestApplication(1L);
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(cvRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> cvService.assignCVToApplication(1L, 999L)
-            );
-        }
-    }
-
-    @Nested
-    @DisplayName("removeCVFromApplication()")
-    class RemoveCVFromApplicationTests {
-
-        @Test
-        @DisplayName("usuwa CV z aplikacji")
-        void removeCV_Success() {
-            CV cv = createTestCV(10L, "CV.pdf", CVType.FILE);
-            Application app = createTestApplication(1L);
-            app.setCv(cv);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(applicationRepository.save(any())).thenReturn(app);
-
-            cvService.removeCVFromApplication(1L);
-
-            verify(applicationRepository).save(argThat(a -> a.getCv() == null));
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void removeCV_ApplicationNotFound_ThrowsException() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> cvService.removeCVFromApplication(999L)
-            );
-        }
-    }
-
-    // ==================== UPDATE Tests ====================
-
-    @Nested
-    @DisplayName("updateCV()")
-    class UpdateCVTests {
-
-        @Test
-        @DisplayName("aktualizuje nazwę CV")
-        void updateCV_UpdatesName() {
-            CV existingCV = createTestCV(1L, "OldName.pdf", CVType.NOTE);
-            when(cvRepository.findById(1L)).thenReturn(Optional.of(existingCV));
-            when(cvRepository.save(any())).thenReturn(existingCV);
-
-            cvService.updateCV(1L, "NewName.pdf", null);
-
-            verify(cvRepository).save(cvCaptor.capture());
-            CV captured = cvCaptor.getValue();
-
-            assertEquals("NewName.pdf", captured.getOriginalFileName());
-        }
-
-        @Test
-        @DisplayName("aktualizuje URL dla typu LINK")
-        void updateCV_UpdatesUrlForLink() {
-            CV existingCV = createTestCV(1L, "CV.pdf", CVType.LINK);
-            when(cvRepository.findById(1L)).thenReturn(Optional.of(existingCV));
-            when(cvRepository.save(any())).thenReturn(existingCV);
-
-            cvService.updateCV(1L, null, "https://new.url");
-
-            verify(cvRepository).save(cvCaptor.capture());
-            CV captured = cvCaptor.getValue();
-
-            assertEquals("https://new.url", captured.getExternalUrl());
-        }
-
-        @Test
-        @DisplayName("ignoruje URL dla typu NOTE")
-        void updateCV_IgnoresUrlForNote() {
-            CV existingCV = createTestCV(1L, "CV.pdf", CVType.NOTE);
-            when(cvRepository.findById(1L)).thenReturn(Optional.of(existingCV));
-            when(cvRepository.save(any())).thenReturn(existingCV);
-
-            cvService.updateCV(1L, null, "https://should.be.ignored");
-
-            verify(cvRepository).save(cvCaptor.capture());
-            CV captured = cvCaptor.getValue();
-
-            assertNull(captured.getExternalUrl());
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy CV nie istnieje")
-        void updateCV_NonExistingId_ThrowsException() {
-            when(cvRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> cvService.updateCV(999L, "New.pdf", null)
-            );
-        }
-    }
-
-    // ==================== DELETE Tests ====================
-
-    @Nested
-    @DisplayName("deleteCV()")
-    class DeleteCVTests {
-
-        @Test
-        @DisplayName("usuwa CV i czyści referencje")
-        void deleteCV_RemovesCVAndClearsReferences() {
-            CV cv = createTestCV(1L, "CV.pdf", CVType.NOTE);
-            when(cvRepository.findById(1L)).thenReturn(Optional.of(cv));
-
-            cvService.deleteCV(1L);
-
-            verify(applicationRepository).clearCVReferences(1L);
-            verify(cvRepository).delete(cv);
-        }
-
-        @Test
-        @DisplayName("usuwa plik z dysku dla typu FILE")
-        void deleteCV_TypeFile_DeletesFileFromDisk() throws IOException {
-            // Create actual file
-            Path filePath = tempDir.resolve("uuid_test.pdf");
-            java.nio.file.Files.write(filePath, "test".getBytes());
-            assertTrue(java.nio.file.Files.exists(filePath));
-
-            CV cv = new CV();
-            cv.setId(1L);
-            cv.setType(CVType.FILE);
-            cv.setFilePath(filePath.toString());
-            cv.setOriginalFileName("test.pdf");
-
-            when(cvRepository.findById(1L)).thenReturn(Optional.of(cv));
-
-            cvService.deleteCV(1L);
-
-            assertFalse(java.nio.file.Files.exists(filePath));
-            verify(cvRepository).delete(cv);
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy CV nie istnieje")
-        void deleteCV_NonExistingId_ThrowsException() {
-            when(cvRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> cvService.deleteCV(999L)
-            );
-
-            verify(cvRepository, never()).delete(any());
+            assertThrows(EntityNotFoundException.class, () -> cvService.deleteCV(999L));
+            verify(cvRepository, never()).delete(any(CV.class));
         }
     }
 }

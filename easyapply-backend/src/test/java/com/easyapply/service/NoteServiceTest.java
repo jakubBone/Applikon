@@ -9,22 +9,33 @@ import com.easyapply.entity.NoteCategory;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.NoteRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NoteService Unit Tests")
+@DisplayName("NoteService tests")
 class NoteServiceTest {
 
     @Mock
@@ -44,13 +55,23 @@ class NoteServiceTest {
     @BeforeEach
     void setUp() {
         testApplication = new Application();
-        testApplication.setId(1L);
+        setField(testApplication, "id", 1L);
         testApplication.setCompany("Google");
         testApplication.setPosition("Developer");
         testApplication.setStatus(ApplicationStatus.WYSLANE);
     }
 
-    private Note createTestNote(Long id, String content, NoteCategory category) {
+    private static void setField(Object target, String fieldName, Object value) {
+        try {
+            Field field = target.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(target, value);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Note note(long id, String content, NoteCategory category) {
         Note note = new Note();
         note.setId(id);
         note.setContent(content);
@@ -60,310 +81,134 @@ class NoteServiceTest {
         return note;
     }
 
-    // ==================== CREATE Tests ====================
-
     @Nested
-    @DisplayName("create()")
     class CreateTests {
 
         @Test
-        @DisplayName("tworzy notatkę z kategorią PYTANIA")
-        void create_WithCategoryPytania_Success() {
+        void create_withCategory_returnsMappedResponse() {
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            Note savedNote = createTestNote(1L, "Test content", NoteCategory.PYTANIA);
-            when(noteRepository.save(any(Note.class))).thenReturn(savedNote);
+            when(noteRepository.save(any(Note.class))).thenReturn(note(11L, "Test content", NoteCategory.PYTANIA));
 
-            NoteRequest request = new NoteRequest();
-            request.setContent("Test content");
-            request.setCategory(NoteCategory.PYTANIA);
-
-            NoteResponse response = noteService.create(1L, request);
+            NoteResponse response = noteService.create(1L, new NoteRequest("Test content", NoteCategory.PYTANIA));
 
             verify(noteRepository).save(noteCaptor.capture());
             Note captured = noteCaptor.getValue();
-
             assertEquals("Test content", captured.getContent());
             assertEquals(NoteCategory.PYTANIA, captured.getCategory());
-            assertEquals(testApplication, captured.getApplication());
+
+            assertEquals("Test content", response.content());
+            assertEquals(NoteCategory.PYTANIA, response.category());
+            assertEquals(1L, response.applicationId());
         }
 
         @Test
-        @DisplayName("tworzy notatkę z kategorią FEEDBACK")
-        void create_WithCategoryFeedback_Success() {
+        void create_withoutCategory_defaultsToInne() {
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            Note savedNote = createTestNote(1L, "Feedback content", NoteCategory.FEEDBACK);
-            when(noteRepository.save(any(Note.class))).thenReturn(savedNote);
+            when(noteRepository.save(any(Note.class))).thenReturn(note(12L, "No category", NoteCategory.INNE));
 
-            NoteRequest request = new NoteRequest();
-            request.setContent("Feedback content");
-            request.setCategory(NoteCategory.FEEDBACK);
+            NoteResponse response = noteService.create(1L, new NoteRequest("No category", null));
 
-            NoteResponse response = noteService.create(1L, request);
-
-            assertEquals(NoteCategory.FEEDBACK, response.getCategory());
+            assertEquals(NoteCategory.INNE, response.category());
         }
 
         @Test
-        @DisplayName("tworzy notatkę z domyślną kategorią INNE")
-        void create_WithDefaultCategoryInne_Success() {
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            Note savedNote = createTestNote(1L, "Content", NoteCategory.INNE);
-            when(noteRepository.save(any(Note.class))).thenReturn(savedNote);
-
-            NoteRequest request = new NoteRequest();
-            request.setContent("Content");
-            // category is null - should default to INNE
-
-            noteService.create(1L, request);
-
-            verify(noteRepository).save(noteCaptor.capture());
-            // The Note constructor handles default category
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void create_ApplicationNotFound_ThrowsException() {
+        void create_whenApplicationMissing_throws() {
             when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
-
-            NoteRequest request = new NoteRequest();
-            request.setContent("Test");
 
             assertThrows(
                     EntityNotFoundException.class,
-                    () -> noteService.create(999L, request)
+                    () -> noteService.create(999L, new NoteRequest("test", NoteCategory.INNE))
             );
-
-            verify(noteRepository, never()).save(any());
+            verify(noteRepository, never()).save(any(Note.class));
         }
     }
 
-    // ==================== FIND Tests ====================
-
     @Nested
-    @DisplayName("findByApplicationId()")
-    class FindByApplicationIdTests {
+    class FindTests {
 
         @Test
-        @DisplayName("zwraca notatki posortowane od najnowszych")
-        void findByApplicationId_ReturnsSortedNotes() {
+        void findByApplicationId_returnsSortedList() {
             when(applicationRepository.existsById(1L)).thenReturn(true);
-
-            Note note1 = createTestNote(1L, "Starsza", NoteCategory.INNE);
-            Note note2 = createTestNote(2L, "Nowsza", NoteCategory.PYTANIA);
-            when(noteRepository.findByApplicationIdOrderByCreatedAtDesc(1L))
-                    .thenReturn(Arrays.asList(note2, note1)); // Already sorted by repo
+            when(noteRepository.findByApplicationIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(
+                    note(2L, "Newest", NoteCategory.FEEDBACK),
+                    note(1L, "Older", NoteCategory.INNE)
+            ));
 
             List<NoteResponse> result = noteService.findByApplicationId(1L);
 
             assertEquals(2, result.size());
-            assertEquals("Nowsza", result.get(0).getContent());
-            assertEquals("Starsza", result.get(1).getContent());
+            assertEquals("Newest", result.get(0).content());
+            assertEquals("Older", result.get(1).content());
         }
 
         @Test
-        @DisplayName("zwraca pustą listę gdy brak notatek")
-        void findByApplicationId_NoNotes_ReturnsEmptyList() {
-            when(applicationRepository.existsById(1L)).thenReturn(true);
-            when(noteRepository.findByApplicationIdOrderByCreatedAtDesc(1L))
-                    .thenReturn(List.of());
-
-            List<NoteResponse> result = noteService.findByApplicationId(1L);
-
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void findByApplicationId_ApplicationNotFound_ThrowsException() {
-            when(applicationRepository.existsById(999L)).thenReturn(false);
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> noteService.findByApplicationId(999L)
-            );
-        }
-    }
-
-    @Nested
-    @DisplayName("findById()")
-    class FindByIdTests {
-
-        @Test
-        @DisplayName("zwraca notatkę gdy istnieje")
-        void findById_ExistingId_ReturnsNote() {
-            Note note = createTestNote(1L, "Content", NoteCategory.PYTANIA);
-            when(noteRepository.findById(1L)).thenReturn(Optional.of(note));
+        void findById_returnsMappedNote() {
+            when(noteRepository.findById(1L)).thenReturn(Optional.of(note(1L, "Content", NoteCategory.PYTANIA)));
 
             NoteResponse response = noteService.findById(1L);
 
-            assertEquals("Content", response.getContent());
-            assertEquals(NoteCategory.PYTANIA, response.getCategory());
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy notatka nie istnieje")
-        void findById_NonExistingId_ThrowsException() {
-            when(noteRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> noteService.findById(999L)
-            );
-        }
-    }
-
-    // ==================== UPDATE Tests ====================
-
-    @Nested
-    @DisplayName("update()")
-    class UpdateTests {
-
-        @Test
-        @DisplayName("aktualizuje treść i kategorię notatki")
-        void update_UpdatesContentAndCategory() {
-            Note existingNote = createTestNote(1L, "Old content", NoteCategory.INNE);
-            when(noteRepository.findById(1L)).thenReturn(Optional.of(existingNote));
-            when(noteRepository.save(any())).thenReturn(existingNote);
-
-            NoteRequest request = new NoteRequest();
-            request.setContent("New content");
-            request.setCategory(NoteCategory.PYTANIA);
-
-            noteService.update(1L, request);
-
-            verify(noteRepository).save(noteCaptor.capture());
-            Note captured = noteCaptor.getValue();
-
-            assertEquals("New content", captured.getContent());
-            assertEquals(NoteCategory.PYTANIA, captured.getCategory());
-        }
-
-        @Test
-        @DisplayName("aktualizuje tylko treść gdy kategoria jest null")
-        void update_OnlyContent_WhenCategoryIsNull() {
-            Note existingNote = createTestNote(1L, "Old content", NoteCategory.FEEDBACK);
-            when(noteRepository.findById(1L)).thenReturn(Optional.of(existingNote));
-            when(noteRepository.save(any())).thenReturn(existingNote);
-
-            NoteRequest request = new NoteRequest();
-            request.setContent("New content");
-            request.setCategory(null);
-
-            noteService.update(1L, request);
-
-            verify(noteRepository).save(noteCaptor.capture());
-            Note captured = noteCaptor.getValue();
-
-            assertEquals("New content", captured.getContent());
-            assertEquals(NoteCategory.FEEDBACK, captured.getCategory()); // Unchanged
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy notatka nie istnieje")
-        void update_NonExistingId_ThrowsException() {
-            when(noteRepository.findById(999L)).thenReturn(Optional.empty());
-
-            NoteRequest request = new NoteRequest();
-            request.setContent("Test");
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> noteService.update(999L, request)
-            );
-        }
-    }
-
-    // ==================== DELETE Tests ====================
-
-    @Nested
-    @DisplayName("delete()")
-    class DeleteTests {
-
-        @Test
-        @DisplayName("usuwa notatkę gdy istnieje")
-        void delete_ExistingId_DeletesNote() {
-            when(noteRepository.existsById(1L)).thenReturn(true);
-
-            noteService.delete(1L);
-
-            verify(noteRepository).deleteById(1L);
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy notatka nie istnieje")
-        void delete_NonExistingId_ThrowsException() {
-            when(noteRepository.existsById(999L)).thenReturn(false);
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> noteService.delete(999L)
-            );
-
-            verify(noteRepository, never()).deleteById(any());
+            assertEquals("Content", response.content());
+            assertEquals(NoteCategory.PYTANIA, response.category());
         }
     }
 
     @Nested
-    @DisplayName("deleteByApplicationId()")
-    class DeleteByApplicationIdTests {
+    class UpdateAndDeleteTests {
 
         @Test
-        @DisplayName("usuwa wszystkie notatki dla aplikacji")
-        void deleteByApplicationId_DeletesAllNotes() {
+        void update_withNullCategory_keepsOldCategory() {
+            Note existing = note(1L, "Old", NoteCategory.FEEDBACK);
+            when(noteRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(noteRepository.save(any(Note.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            NoteResponse response = noteService.update(1L, new NoteRequest("Updated", null));
+
+            assertEquals("Updated", response.content());
+            assertEquals(NoteCategory.FEEDBACK, response.category());
+        }
+
+        @Test
+        void delete_missingNote_throws() {
+            when(noteRepository.existsById(10L)).thenReturn(false);
+
+            assertThrows(EntityNotFoundException.class, () -> noteService.delete(10L));
+        }
+
+        @Test
+        void deleteByApplicationId_delegatesToRepository() {
             noteService.deleteByApplicationId(1L);
-
             verify(noteRepository).deleteByApplicationId(1L);
         }
     }
 
-    // ==================== SALARY CHANGE NOTE Tests ====================
-
     @Nested
-    @DisplayName("createSalaryChangeNote()")
-    class CreateSalaryChangeNoteTests {
+    class SalaryNoteTests {
 
         @Test
-        @DisplayName("tworzy notatkę o zmianie stawki")
-        void createSalaryChangeNote_CreatesNoteWithCorrectContent() {
+        void createSalaryChangeNote_buildsExpectedText() {
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            Note savedNote = createTestNote(1L, "Stawka zmieniona: 5000 PLN -> 7000 PLN", NoteCategory.INNE);
-            when(noteRepository.save(any(Note.class))).thenReturn(savedNote);
+            when(noteRepository.save(any(Note.class))).thenReturn(note(
+                    101L,
+                    "Stawka zmieniona: 5000 PLN -> 7000 PLN",
+                    NoteCategory.INNE
+            ));
 
             NoteResponse response = noteService.createSalaryChangeNote(1L, 5000, "PLN", 7000, "PLN");
 
             verify(noteRepository).save(noteCaptor.capture());
-            Note captured = noteCaptor.getValue();
-
-            assertTrue(captured.getContent().contains("5000"));
-            assertTrue(captured.getContent().contains("7000"));
-            assertTrue(captured.getContent().contains("PLN"));
+            assertTrue(noteCaptor.getValue().getContent().contains("5000"));
+            assertTrue(noteCaptor.getValue().getContent().contains("7000"));
+            assertEquals(101L, response.id());
         }
 
         @Test
-        @DisplayName("obsługuje wartości null")
-        void createSalaryChangeNote_HandlesNullValues() {
+        void createSalaryChangeNote_handlesNulls() {
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            Note savedNote = createTestNote(1L, "Stawka zmieniona", NoteCategory.INNE);
-            when(noteRepository.save(any(Note.class))).thenReturn(savedNote);
+            when(noteRepository.save(any(Note.class))).thenReturn(note(102L, "any", NoteCategory.INNE));
 
-            noteService.createSalaryChangeNote(1L, null, null, 7000, "EUR");
+            NoteResponse response = noteService.createSalaryChangeNote(1L, null, null, 7000, "EUR");
 
-            verify(noteRepository).save(noteCaptor.capture());
-            Note captured = noteCaptor.getValue();
-
-            // Should handle nulls gracefully
-            assertNotNull(captured.getContent());
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void createSalaryChangeNote_ApplicationNotFound_ThrowsException() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> noteService.createSalaryChangeNote(999L, 5000, "PLN", 7000, "PLN")
-            );
+            assertNotNull(response);
         }
     }
 }

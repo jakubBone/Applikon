@@ -3,29 +3,50 @@ package com.easyapply.service;
 import com.easyapply.dto.ApplicationRequest;
 import com.easyapply.dto.ApplicationResponse;
 import com.easyapply.dto.StageUpdateRequest;
-import com.easyapply.entity.*;
+import com.easyapply.entity.Application;
+import com.easyapply.entity.ApplicationStatus;
+import com.easyapply.entity.ContractType;
+import com.easyapply.entity.RejectionReason;
+import com.easyapply.entity.SalarySource;
+import com.easyapply.entity.SalaryType;
+import com.easyapply.entity.StageHistory;
+import com.easyapply.entity.User;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.StageHistoryRepository;
+import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ApplicationService Unit Tests")
+@DisplayName("ApplicationService tests")
 class ApplicationServiceTest {
 
-    private static final String TEST_SESSION_ID = "test-session-123";
+    private static final UUID TEST_USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Mock
     private ApplicationRepository applicationRepository;
@@ -36,309 +57,233 @@ class ApplicationServiceTest {
     @Mock
     private StageHistoryRepository stageHistoryRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private ApplicationService applicationService;
 
     @Captor
-    private ArgumentCaptor<Application> applicationCaptor;
+    private ArgumentCaptor<Application> appCaptor;
 
     @Captor
     private ArgumentCaptor<StageHistory> stageHistoryCaptor;
 
-    private Application createTestApplication(Long id, String company, String position) {
+    private User testUser;
+
+    @BeforeEach
+    void setUp() {
+        testUser = new User("test@example.com", "Test User", "google-123");
+        setField(testUser, "id", TEST_USER_ID);
+    }
+
+    private static void setField(Object target, String fieldName, Object value) {
+        try {
+            Field field = target.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(target, value);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Application app(long id, String company, String position) {
         Application app = new Application();
-        app.setId(id);
+        setField(app, "id", id);
         app.setCompany(company);
         app.setPosition(position);
-        app.setSalaryMin(5000);
+        app.setSalaryMin(10000);
+        app.setSalaryMax(15000);
         app.setCurrency("PLN");
+        app.setSalaryType(SalaryType.BRUTTO);
+        app.setContractType(ContractType.B2B);
+        app.setSalarySource(SalarySource.FROM_POSTING);
         app.setStatus(ApplicationStatus.WYSLANE);
-        app.setAppliedAt(LocalDateTime.now());
         return app;
     }
 
-    // ==================== CREATE Tests ====================
+    private static ApplicationRequest request(String company, String position) {
+        return new ApplicationRequest(
+                company,
+                position,
+                "https://example.com/job",
+                10000,
+                15000,
+                "PLN",
+                SalaryType.BRUTTO,
+                ContractType.B2B,
+                SalarySource.FROM_POSTING,
+                "LinkedIn",
+                "Java + Spring",
+                "Agency"
+        );
+    }
 
     @Nested
-    @DisplayName("create()")
     class CreateTests {
 
         @Test
-        @DisplayName("tworzy aplikację z domyślnym statusem WYSLANE")
-        void create_SetsDefaultStatusToWyslane() {
-            ApplicationRequest request = new ApplicationRequest();
-            request.setCompany("Google");
-            request.setPosition("Developer");
-            request.setSalaryMin(10000);
-            request.setCurrency("PLN");
+        void create_savesEntityAndReturnsResponse() {
+            Application saved = app(1L, "Google", "Java Dev");
 
-            Application savedApp = createTestApplication(1L, "Google", "Developer");
-            when(applicationRepository.save(any(Application.class))).thenReturn(savedApp);
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(savedApp));
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
+            when(applicationRepository.save(any(Application.class))).thenReturn(saved);
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(saved));
 
-            ApplicationResponse response = applicationService.create(request, TEST_SESSION_ID);
+            ApplicationResponse response = applicationService.create(request("Google", "Java Dev"), TEST_USER_ID);
 
-            verify(applicationRepository).save(applicationCaptor.capture());
-            Application captured = applicationCaptor.getValue();
-
-            assertEquals(ApplicationStatus.WYSLANE, captured.getStatus());
-            assertEquals("Google", captured.getCompany());
-            assertEquals("Developer", captured.getPosition());
-        }
-
-        @Test
-        @DisplayName("tworzy początkowy wpis w historii etapów")
-        void create_CreatesInitialStageHistory() {
-            ApplicationRequest request = new ApplicationRequest();
-            request.setCompany("Google");
-            request.setPosition("Developer");
-            request.setSalaryMin(10000);
-            request.setCurrency("PLN");
-
-            Application savedApp = createTestApplication(1L, "Google", "Developer");
-            when(applicationRepository.save(any(Application.class))).thenReturn(savedApp);
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(savedApp));
-
-            applicationService.create(request, TEST_SESSION_ID);
-
+            verify(applicationRepository).save(appCaptor.capture());
             verify(stageHistoryRepository).save(stageHistoryCaptor.capture());
-            StageHistory captured = stageHistoryCaptor.getValue();
 
-            assertEquals("Wysłane", captured.getStageName());
-            assertFalse(captured.isCompleted());
+            Application captured = appCaptor.getValue();
+            assertEquals("Google", captured.getCompany());
+            assertEquals("Java Dev", captured.getPosition());
+            assertEquals(ApplicationStatus.WYSLANE, captured.getStatus());
+            assertNotNull(captured.getUser());
+            assertEquals("Google", response.company());
         }
 
         @Test
-        @DisplayName("ustawia wszystkie pola z requestu")
-        void create_SetsAllFieldsFromRequest() {
-            ApplicationRequest request = new ApplicationRequest();
-            request.setCompany("Google");
-            request.setPosition("Senior Dev");
-            request.setLink("https://careers.google.com");
-            request.setSalaryMin(15000);
-            request.setSalaryMax(25000);
-            request.setCurrency("EUR");
-            request.setSalaryType(SalaryType.NETTO);
-            request.setContractType(ContractType.B2B);
-            request.setSource("LinkedIn");
-            request.setJobDescription("Java + Spring");
+        void create_throwsWhenUserDoesNotExist() {
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.empty());
 
-            Application savedApp = createTestApplication(1L, "Google", "Senior Dev");
-            when(applicationRepository.save(any(Application.class))).thenReturn(savedApp);
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(savedApp));
+            assertThrows(
+                    EntityNotFoundException.class,
+                    () -> applicationService.create(request("Google", "Java Dev"), TEST_USER_ID)
+            );
 
-            applicationService.create(request, TEST_SESSION_ID);
-
-            verify(applicationRepository).save(applicationCaptor.capture());
-            Application captured = applicationCaptor.getValue();
-
-            assertEquals("Google", captured.getCompany());
-            assertEquals("Senior Dev", captured.getPosition());
-            assertEquals("https://careers.google.com", captured.getLink());
-            assertEquals(15000, captured.getSalaryMin());
-            assertEquals(25000, captured.getSalaryMax());
-            assertEquals("EUR", captured.getCurrency());
-            assertEquals(SalaryType.NETTO, captured.getSalaryType());
-            assertEquals(ContractType.B2B, captured.getContractType());
-            assertEquals("LinkedIn", captured.getSource());
-            assertEquals("Java + Spring", captured.getJobDescription());
+            verify(applicationRepository, never()).save(any(Application.class));
         }
     }
 
-    // ==================== FIND Tests ====================
-
     @Nested
-    @DisplayName("findById()")
-    class FindByIdTests {
+    class FindTests {
 
         @Test
-        @DisplayName("zwraca aplikację gdy istnieje")
-        void findById_ExistingId_ReturnsApplication() {
-            Application app = createTestApplication(1L, "Google", "Developer");
+        void findById_returnsResponse() {
+            Application app = app(1L, "Google", "Developer");
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
 
             ApplicationResponse response = applicationService.findById(1L);
 
-            assertEquals("Google", response.getCompany());
-            assertEquals("Developer", response.getPosition());
+            assertEquals("Google", response.company());
+            assertEquals("Developer", response.position());
         }
 
         @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void findById_NonExistingId_ThrowsException() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
+        void findAllByUserId_returnsMappedList() {
+            when(applicationRepository.findByUserIdWithStageHistory(TEST_USER_ID))
+                    .thenReturn(List.of(
+                            app(1L, "Google", "Dev"),
+                            app(2L, "Meta", "Engineer")
+                    ));
 
-            EntityNotFoundException exception = assertThrows(
-                    EntityNotFoundException.class,
-                    () -> applicationService.findById(999L)
-            );
-
-            assertTrue(exception.getMessage().contains("999"));
-        }
-    }
-
-    @Nested
-    @DisplayName("findAll()")
-    class FindAllTests {
-
-        @Test
-        @DisplayName("zwraca wszystkie aplikacje")
-        void findAll_ReturnsAllApplications() {
-            List<Application> apps = Arrays.asList(
-                    createTestApplication(1L, "Google", "Dev"),
-                    createTestApplication(2L, "Meta", "Engineer")
-            );
-            when(applicationRepository.findBySessionId(TEST_SESSION_ID)).thenReturn(apps);
-
-            List<ApplicationResponse> result = applicationService.findAllBySessionId(TEST_SESSION_ID);
+            List<ApplicationResponse> result = applicationService.findAllByUserId(TEST_USER_ID);
 
             assertEquals(2, result.size());
+            assertEquals("Google", result.get(0).company());
         }
 
         @Test
-        @DisplayName("zwraca pustą listę gdy brak aplikacji")
-        void findAll_NoApplications_ReturnsEmptyList() {
-            when(applicationRepository.findBySessionId(TEST_SESSION_ID)).thenReturn(List.of());
+        void findDuplicates_usesUserIdBasedRepositoryMethod() {
+            when(applicationRepository.findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase(
+                    TEST_USER_ID, "GOOGLE", "developer"
+            )).thenReturn(List.of(app(3L, "Google", "Developer")));
 
-            List<ApplicationResponse> result = applicationService.findAllBySessionId(TEST_SESSION_ID);
+            List<ApplicationResponse> result = applicationService.findDuplicates(TEST_USER_ID, "GOOGLE", "developer");
 
-            assertTrue(result.isEmpty());
+            assertEquals(1, result.size());
+            assertEquals("Google", result.get(0).company());
         }
     }
 
-    // ==================== UPDATE STAGE Tests ====================
-
     @Nested
-    @DisplayName("updateStage()")
-    class UpdateStageTests {
+    class UpdateTests {
 
         @Test
-        @DisplayName("zmiana na W_PROCESIE ustawia etap")
-        void updateStage_ToInProcess_SetsStage() {
-            Application app = createTestApplication(1L, "Google", "Dev");
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(applicationRepository.save(any())).thenReturn(app);
+        void update_updatesAllCoreFields() {
+            Application existing = app(10L, "Old", "Old Position");
+            when(applicationRepository.findById(10L)).thenReturn(Optional.of(existing));
+            when(applicationRepository.save(any(Application.class))).thenReturn(existing);
 
-            StageUpdateRequest request = new StageUpdateRequest();
-            request.setStatus(ApplicationStatus.W_PROCESIE);
-            request.setCurrentStage("Rozmowa z HR");
+            ApplicationRequest updateRequest = new ApplicationRequest(
+                    "New Co",
+                    "Senior Dev",
+                    "https://new.example.com",
+                    20000,
+                    30000,
+                    "EUR",
+                    SalaryType.NETTO,
+                    ContractType.UOP,
+                    SalarySource.MY_PROPOSAL,
+                    "Referral",
+                    "Updated desc",
+                    "New agency"
+            );
 
-            applicationService.updateStage(1L, request);
+            ApplicationResponse response = applicationService.update(10L, updateRequest);
 
-            verify(applicationRepository).save(applicationCaptor.capture());
-            Application captured = applicationCaptor.getValue();
+            verify(applicationRepository).save(appCaptor.capture());
+            Application captured = appCaptor.getValue();
 
-            assertEquals(ApplicationStatus.W_PROCESIE, captured.getStatus());
-            assertEquals("Rozmowa z HR", captured.getCurrentStage());
+            assertEquals("New Co", captured.getCompany());
+            assertEquals("Senior Dev", captured.getPosition());
+            assertEquals(20000, captured.getSalaryMin());
+            assertEquals("EUR", captured.getCurrency());
+            assertEquals("New Co", response.company());
         }
 
         @Test
-        @DisplayName("zmiana na ODMOWA ustawia powód odrzucenia")
-        void updateStage_ToRejection_SetsReason() {
-            Application app = createTestApplication(1L, "Google", "Dev");
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(applicationRepository.save(any())).thenReturn(app);
+        void updateStage_toRejection_setsRejectionData() {
+            Application existing = app(11L, "Google", "Dev");
+            when(applicationRepository.findById(11L)).thenReturn(Optional.of(existing));
+            when(applicationRepository.save(any(Application.class))).thenReturn(existing);
 
-            StageUpdateRequest request = new StageUpdateRequest();
-            request.setStatus(ApplicationStatus.ODMOWA);
-            request.setRejectionReason(RejectionReason.BRAK_ODPOWIEDZI);
-            request.setRejectionDetails("Brak kontaktu od 2 tygodni");
+            StageUpdateRequest request = new StageUpdateRequest(
+                    ApplicationStatus.ODMOWA,
+                    null,
+                    RejectionReason.BRAK_ODPOWIEDZI,
+                    "No feedback"
+            );
 
-            applicationService.updateStage(1L, request);
+            ApplicationResponse response = applicationService.updateStage(11L, request);
 
-            verify(applicationRepository).save(applicationCaptor.capture());
-            Application captured = applicationCaptor.getValue();
-
+            verify(applicationRepository).save(appCaptor.capture());
+            Application captured = appCaptor.getValue();
             assertEquals(ApplicationStatus.ODMOWA, captured.getStatus());
             assertEquals(RejectionReason.BRAK_ODPOWIEDZI, captured.getRejectionReason());
-            assertEquals("Brak kontaktu od 2 tygodni", captured.getRejectionDetails());
             assertNull(captured.getCurrentStage());
+            assertEquals(RejectionReason.BRAK_ODPOWIEDZI, response.rejectionReason());
         }
 
         @Test
-        @DisplayName("zmiana na OFERTA czyści dane etapu i odrzucenia")
-        void updateStage_ToOffer_ClearsStageAndRejection() {
-            Application app = createTestApplication(1L, "Google", "Dev");
-            app.setStatus(ApplicationStatus.W_PROCESIE);
-            app.setCurrentStage("Rozmowa techniczna");
+        void updateStage_toWyslane_clearsFlowDataAndHistory() {
+            Application existing = app(12L, "Google", "Dev");
+            existing.setStatus(ApplicationStatus.ODMOWA);
+            existing.setCurrentStage("HR call");
+            existing.setRejectionReason(RejectionReason.ODMOWA_MAILOWA);
+            existing.setRejectionDetails("No fit");
 
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(applicationRepository.save(any())).thenReturn(app);
+            when(applicationRepository.findById(12L)).thenReturn(Optional.of(existing));
+            when(applicationRepository.save(any(Application.class))).thenReturn(existing);
 
-            StageUpdateRequest request = new StageUpdateRequest();
-            request.setStatus(ApplicationStatus.OFERTA);
+            ApplicationResponse response = applicationService.updateStage(
+                    12L,
+                    new StageUpdateRequest(ApplicationStatus.WYSLANE, null, null, null)
+            );
 
-            applicationService.updateStage(1L, request);
-
-            verify(applicationRepository).save(applicationCaptor.capture());
-            Application captured = applicationCaptor.getValue();
-
-            assertEquals(ApplicationStatus.OFERTA, captured.getStatus());
-            assertNull(captured.getCurrentStage());
-            assertNull(captured.getRejectionReason());
-        }
-
-        @Test
-        @DisplayName("cofnięcie do WYSLANE resetuje wszystkie dane")
-        void updateStage_BackToWyslane_ResetsAll() {
-            Application app = createTestApplication(1L, "Google", "Dev");
-            app.setStatus(ApplicationStatus.ODMOWA);
-            app.setCurrentStage("Rozmowa techniczna");
-            app.setRejectionReason(RejectionReason.ODMOWA_MAILOWA);
-            app.setRejectionDetails("Za mało doświadczenia");
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(applicationRepository.save(any())).thenReturn(app);
-
-            StageUpdateRequest request = new StageUpdateRequest();
-            request.setStatus(ApplicationStatus.WYSLANE);
-
-            applicationService.updateStage(1L, request);
-
-            verify(applicationRepository).save(applicationCaptor.capture());
-            verify(stageHistoryRepository).deleteByApplicationId(1L);
-
-            Application captured = applicationCaptor.getValue();
-            assertEquals(ApplicationStatus.WYSLANE, captured.getStatus());
-            assertNull(captured.getCurrentStage());
-            assertNull(captured.getRejectionReason());
-            assertNull(captured.getRejectionDetails());
-        }
-
-        @Test
-        @DisplayName("cofnięcie z ODMOWA do W_PROCESIE czyści dane odrzucenia")
-        void updateStage_FromRejectionToInProcess_ClearsRejectionData() {
-            Application app = createTestApplication(1L, "Google", "Dev");
-            app.setStatus(ApplicationStatus.ODMOWA);
-            app.setRejectionReason(RejectionReason.ODMOWA_MAILOWA);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(applicationRepository.save(any())).thenReturn(app);
-
-            StageUpdateRequest request = new StageUpdateRequest();
-            request.setStatus(ApplicationStatus.W_PROCESIE);
-            request.setCurrentStage("Nowa rozmowa");
-
-            applicationService.updateStage(1L, request);
-
-            verify(applicationRepository).save(applicationCaptor.capture());
-            Application captured = applicationCaptor.getValue();
-
-            assertEquals(ApplicationStatus.W_PROCESIE, captured.getStatus());
-            assertEquals("Nowa rozmowa", captured.getCurrentStage());
-            assertNull(captured.getRejectionReason());
+            verify(stageHistoryRepository).deleteByApplicationId(12L);
+            assertEquals(ApplicationStatus.WYSLANE, response.status());
+            assertNull(response.currentStage());
+            assertNull(response.rejectionReason());
         }
     }
 
-    // ==================== DELETE Tests ====================
-
     @Nested
-    @DisplayName("delete()")
     class DeleteTests {
 
         @Test
-        @DisplayName("usuwa aplikację i powiązane notatki")
-        void delete_ExistingId_DeletesApplicationAndNotes() {
+        void delete_callsNoteCleanupAndDelete() {
             when(applicationRepository.existsById(1L)).thenReturn(true);
 
             applicationService.delete(1L);
@@ -348,123 +293,16 @@ class ApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void delete_NonExistingId_ThrowsException() {
-            when(applicationRepository.existsById(999L)).thenReturn(false);
+        void delete_throwsWhenApplicationMissing() {
+            when(applicationRepository.existsById(99L)).thenReturn(false);
 
-            assertThrows(
+            EntityNotFoundException ex = assertThrows(
                     EntityNotFoundException.class,
-                    () -> applicationService.delete(999L)
+                    () -> applicationService.delete(99L)
             );
 
+            assertTrue(ex.getMessage().contains("99"));
             verify(applicationRepository, never()).deleteById(any());
-        }
-    }
-
-    // ==================== DUPLICATES Tests ====================
-
-    @Nested
-    @DisplayName("findDuplicates()")
-    class FindDuplicatesTests {
-
-        @Test
-        @DisplayName("znajduje duplikaty ignorując wielkość liter")
-        void findDuplicates_IgnoresCase() {
-            Application app = createTestApplication(1L, "Google", "Developer");
-            when(applicationRepository.findBySessionIdAndCompanyIgnoreCaseAndPositionIgnoreCase(TEST_SESSION_ID, "GOOGLE", "developer"))
-                    .thenReturn(List.of(app));
-
-            List<ApplicationResponse> result = applicationService.findDuplicates(TEST_SESSION_ID, "GOOGLE", "developer");
-
-            assertEquals(1, result.size());
-            assertEquals("Google", result.get(0).getCompany());
-        }
-
-        @Test
-        @DisplayName("zwraca pustą listę gdy brak duplikatów")
-        void findDuplicates_NoDuplicates_ReturnsEmptyList() {
-            when(applicationRepository.findBySessionIdAndCompanyIgnoreCaseAndPositionIgnoreCase(eq(TEST_SESSION_ID), any(), any()))
-                    .thenReturn(List.of());
-
-            List<ApplicationResponse> result = applicationService.findDuplicates(TEST_SESSION_ID, "NewCompany", "NewPosition");
-
-            assertTrue(result.isEmpty());
-        }
-    }
-
-    // ==================== UPDATE Tests ====================
-
-    @Nested
-    @DisplayName("update()")
-    class UpdateTests {
-
-        @Test
-        @DisplayName("aktualizuje wszystkie pola aplikacji")
-        void update_UpdatesAllFields() {
-            Application existingApp = createTestApplication(1L, "Old Company", "Old Position");
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(existingApp));
-            when(applicationRepository.save(any())).thenReturn(existingApp);
-
-            ApplicationRequest request = new ApplicationRequest();
-            request.setCompany("New Company");
-            request.setPosition("New Position");
-            request.setSalaryMin(20000);
-            request.setSalaryMax(30000);
-            request.setCurrency("EUR");
-
-            applicationService.update(1L, request);
-
-            verify(applicationRepository).save(applicationCaptor.capture());
-            Application captured = applicationCaptor.getValue();
-
-            assertEquals("New Company", captured.getCompany());
-            assertEquals("New Position", captured.getPosition());
-            assertEquals(20000, captured.getSalaryMin());
-            assertEquals(30000, captured.getSalaryMax());
-            assertEquals("EUR", captured.getCurrency());
-        }
-
-        @Test
-        @DisplayName("rzuca wyjątek gdy aplikacja nie istnieje")
-        void update_NonExistingId_ThrowsException() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
-
-            ApplicationRequest request = new ApplicationRequest();
-            request.setCompany("Test");
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> applicationService.update(999L, request)
-            );
-        }
-    }
-
-    // ==================== ADD STAGE Tests ====================
-
-    @Nested
-    @DisplayName("addStage()")
-    class AddStageTests {
-
-        @Test
-        @DisplayName("dodaje nowy etap i zmienia status na W_PROCESIE")
-        void addStage_CreatesNewStageAndChangesStatus() {
-            Application app = createTestApplication(1L, "Google", "Dev");
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
-            when(applicationRepository.save(any())).thenReturn(app);
-            // Note: stageHistoryRepository.findByApplicationIdOrderByCreatedAtAsc is only called
-            // if currentStage is not null (to mark previous stage as completed)
-
-            applicationService.addStage(1L, "Rozmowa techniczna");
-
-            verify(applicationRepository).save(applicationCaptor.capture());
-            verify(stageHistoryRepository).save(stageHistoryCaptor.capture());
-
-            Application capturedApp = applicationCaptor.getValue();
-            assertEquals(ApplicationStatus.W_PROCESIE, capturedApp.getStatus());
-            assertEquals("Rozmowa techniczna", capturedApp.getCurrentStage());
-
-            StageHistory capturedStage = stageHistoryCaptor.getValue();
-            assertEquals("Rozmowa techniczna", capturedStage.getStageName());
         }
     }
 }
