@@ -6,6 +6,7 @@ import com.easyapply.entity.Application;
 import com.easyapply.entity.ApplicationStatus;
 import com.easyapply.entity.Note;
 import com.easyapply.entity.NoteCategory;
+import com.easyapply.entity.User;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.NoteRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,6 +25,7 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,6 +39,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("NoteService tests")
 class NoteServiceTest {
+
+    private static final UUID TEST_USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Mock
     private NoteRepository noteRepository;
@@ -56,6 +60,9 @@ class NoteServiceTest {
     void setUp() {
         testApplication = new Application();
         setField(testApplication, "id", 1L);
+        User testUser = new User("test@example.com", "Test User", "google-test");
+        setField(testUser, "id", TEST_USER_ID);
+        testApplication.setUser(testUser);
         testApplication.setCompany("Google");
         testApplication.setPosition("Developer");
         testApplication.setStatus(ApplicationStatus.WYSLANE);
@@ -86,10 +93,10 @@ class NoteServiceTest {
 
         @Test
         void create_withCategory_returnsMappedResponse() {
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
             when(noteRepository.save(any(Note.class))).thenReturn(note(11L, "Test content", NoteCategory.PYTANIA));
 
-            NoteResponse response = noteService.create(1L, new NoteRequest("Test content", NoteCategory.PYTANIA));
+            NoteResponse response = noteService.create(1L, new NoteRequest("Test content", NoteCategory.PYTANIA), TEST_USER_ID);
 
             verify(noteRepository).save(noteCaptor.capture());
             Note captured = noteCaptor.getValue();
@@ -103,21 +110,21 @@ class NoteServiceTest {
 
         @Test
         void create_withoutCategory_defaultsToInne() {
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
             when(noteRepository.save(any(Note.class))).thenReturn(note(12L, "No category", NoteCategory.INNE));
 
-            NoteResponse response = noteService.create(1L, new NoteRequest("No category", null));
+            NoteResponse response = noteService.create(1L, new NoteRequest("No category", null), TEST_USER_ID);
 
             assertEquals(NoteCategory.INNE, response.category());
         }
 
         @Test
         void create_whenApplicationMissing_throws() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
+            when(applicationRepository.findByIdAndUserId(999L, TEST_USER_ID)).thenReturn(Optional.empty());
 
             assertThrows(
                     EntityNotFoundException.class,
-                    () -> noteService.create(999L, new NoteRequest("test", NoteCategory.INNE))
+                    () -> noteService.create(999L, new NoteRequest("test", NoteCategory.INNE), TEST_USER_ID)
             );
             verify(noteRepository, never()).save(any(Note.class));
         }
@@ -128,13 +135,13 @@ class NoteServiceTest {
 
         @Test
         void findByApplicationId_returnsSortedList() {
-            when(applicationRepository.existsById(1L)).thenReturn(true);
-            when(noteRepository.findByApplicationIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(
+            when(applicationRepository.existsByIdAndUserId(1L, TEST_USER_ID)).thenReturn(true);
+            when(noteRepository.findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc(1L, TEST_USER_ID)).thenReturn(List.of(
                     note(2L, "Newest", NoteCategory.FEEDBACK),
                     note(1L, "Older", NoteCategory.INNE)
             ));
 
-            List<NoteResponse> result = noteService.findByApplicationId(1L);
+            List<NoteResponse> result = noteService.findByApplicationId(1L, TEST_USER_ID);
 
             assertEquals(2, result.size());
             assertEquals("Newest", result.get(0).content());
@@ -143,9 +150,10 @@ class NoteServiceTest {
 
         @Test
         void findById_returnsMappedNote() {
-            when(noteRepository.findById(1L)).thenReturn(Optional.of(note(1L, "Content", NoteCategory.PYTANIA)));
+            when(noteRepository.findByIdAndApplicationUserId(1L, TEST_USER_ID))
+                    .thenReturn(Optional.of(note(1L, "Content", NoteCategory.PYTANIA)));
 
-            NoteResponse response = noteService.findById(1L);
+            NoteResponse response = noteService.findById(1L, TEST_USER_ID);
 
             assertEquals("Content", response.content());
             assertEquals(NoteCategory.PYTANIA, response.category());
@@ -158,10 +166,10 @@ class NoteServiceTest {
         @Test
         void update_withNullCategory_keepsOldCategory() {
             Note existing = note(1L, "Old", NoteCategory.FEEDBACK);
-            when(noteRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(noteRepository.findByIdAndApplicationUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(existing));
             when(noteRepository.save(any(Note.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            NoteResponse response = noteService.update(1L, new NoteRequest("Updated", null));
+            NoteResponse response = noteService.update(1L, new NoteRequest("Updated", null), TEST_USER_ID);
 
             assertEquals("Updated", response.content());
             assertEquals(NoteCategory.FEEDBACK, response.category());
@@ -169,15 +177,15 @@ class NoteServiceTest {
 
         @Test
         void delete_missingNote_throws() {
-            when(noteRepository.existsById(10L)).thenReturn(false);
+            when(noteRepository.existsByIdAndApplicationUserId(10L, TEST_USER_ID)).thenReturn(false);
 
-            assertThrows(EntityNotFoundException.class, () -> noteService.delete(10L));
+            assertThrows(EntityNotFoundException.class, () -> noteService.delete(10L, TEST_USER_ID));
         }
 
         @Test
         void deleteByApplicationId_delegatesToRepository() {
-            noteService.deleteByApplicationId(1L);
-            verify(noteRepository).deleteByApplicationId(1L);
+            noteService.deleteByApplicationId(1L, TEST_USER_ID);
+            verify(noteRepository).deleteByApplicationIdAndApplicationUserId(1L, TEST_USER_ID);
         }
     }
 
@@ -186,14 +194,14 @@ class NoteServiceTest {
 
         @Test
         void createSalaryChangeNote_buildsExpectedText() {
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
             when(noteRepository.save(any(Note.class))).thenReturn(note(
                     101L,
                     "Stawka zmieniona: 5000 PLN -> 7000 PLN",
                     NoteCategory.INNE
             ));
 
-            NoteResponse response = noteService.createSalaryChangeNote(1L, 5000, "PLN", 7000, "PLN");
+            NoteResponse response = noteService.createSalaryChangeNote(1L, 5000, "PLN", 7000, "PLN", TEST_USER_ID);
 
             verify(noteRepository).save(noteCaptor.capture());
             assertTrue(noteCaptor.getValue().getContent().contains("5000"));
@@ -203,10 +211,10 @@ class NoteServiceTest {
 
         @Test
         void createSalaryChangeNote_handlesNulls() {
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
             when(noteRepository.save(any(Note.class))).thenReturn(note(102L, "any", NoteCategory.INNE));
 
-            NoteResponse response = noteService.createSalaryChangeNote(1L, null, null, 7000, "EUR");
+            NoteResponse response = noteService.createSalaryChangeNote(1L, null, null, 7000, "EUR", TEST_USER_ID);
 
             assertNotNull(response);
         }

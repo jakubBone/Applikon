@@ -63,7 +63,8 @@ public class ApplicationService {
         Application saved = applicationRepository.save(application);
         stageHistoryRepository.save(new StageHistory(saved, "Wysłane"));
 
-        return ApplicationResponse.fromEntity(applicationRepository.findById(saved.getId()).orElseThrow());
+        return ApplicationResponse.fromEntity(
+                applicationRepository.findByIdAndUserId(saved.getId(), userId).orElseThrow());
     }
 
     @Transactional(readOnly = true)
@@ -74,24 +75,20 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public ApplicationResponse findById(Long id) {
-        Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
-        return ApplicationResponse.fromEntity(application);
+    public ApplicationResponse findById(Long id, UUID userId) {
+        return ApplicationResponse.fromEntity(getApplicationByIdAndUserId(id, userId));
     }
 
     @Transactional
-    public ApplicationResponse updateStatus(Long id, ApplicationStatus status) {
-        Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
+    public ApplicationResponse updateStatus(Long id, ApplicationStatus status, UUID userId) {
+        Application application = getApplicationByIdAndUserId(id, userId);
         application.setStatus(status);
         return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
 
     @Transactional
-    public ApplicationResponse updateStage(Long id, StageUpdateRequest request) {
-        Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
+    public ApplicationResponse updateStage(Long id, StageUpdateRequest request, UUID userId) {
+        Application application = getApplicationByIdAndUserId(id, userId);
 
         ApplicationStatus oldStatus = application.getStatus();
         ApplicationStatus newStatus = request.status();
@@ -143,9 +140,8 @@ public class ApplicationService {
     }
 
     @Transactional
-    public ApplicationResponse addStage(Long id, String stageName) {
-        Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
+    public ApplicationResponse addStage(Long id, String stageName, UUID userId) {
+        Application application = getApplicationByIdAndUserId(id, userId);
 
         markCurrentStageCompleted(application);
         application.setCurrentStage(stageName);
@@ -165,19 +161,16 @@ public class ApplicationService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        if (!applicationRepository.existsById(id)) {
-            throw new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona");
-        }
-        log.info("Deleting application id={}", id);
-        noteService.deleteByApplicationId(id);
-        applicationRepository.deleteById(id);
+    public void delete(Long id, UUID userId) {
+        Application application = getApplicationByIdAndUserId(id, userId);
+        log.info("Deleting application id={} for user={}", id, userId);
+        noteService.deleteByApplicationId(id, userId);
+        applicationRepository.delete(application);
     }
 
     @Transactional
-    public ApplicationResponse update(Long id, ApplicationRequest request) {
-        Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
+    public ApplicationResponse update(Long id, ApplicationRequest request, UUID userId) {
+        Application application = getApplicationByIdAndUserId(id, userId);
 
         application.setCompany(request.company());
         application.setPosition(request.position());
@@ -193,5 +186,10 @@ public class ApplicationService {
         application.setAgency(request.agency());
 
         return ApplicationResponse.fromEntity(applicationRepository.save(application));
+    }
+
+    private Application getApplicationByIdAndUserId(Long id, UUID userId) {
+        return applicationRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
     }
 }

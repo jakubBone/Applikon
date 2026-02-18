@@ -50,15 +50,19 @@ public class CVController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CVResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(CVResponse.fromEntity(cvService.findById(id)));
+    public ResponseEntity<CVResponse> findById(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(CVResponse.fromEntity(cvService.findById(id, user.id())));
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> downloadCV(@PathVariable Long id) {
+    public ResponseEntity<Resource> downloadCV(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id) {
         try {
-            CV cv = cvService.findById(id);
-            Resource resource = cvService.downloadCV(id);
+            CV cv = cvService.findById(id, user.id());
+            Resource resource = cvService.downloadCV(id, user.id());
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -70,8 +74,10 @@ public class CVController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCV(@PathVariable Long id) {
-        cvService.deleteCV(id);
+    public ResponseEntity<Void> deleteCV(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id) {
+        cvService.deleteCV(id, user.id());
         return ResponseEntity.noContent().build();
     }
 
@@ -88,9 +94,12 @@ public class CVController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CVResponse> updateCV(@PathVariable Long id, @RequestBody CVUpdateRequest request) {
+    public ResponseEntity<CVResponse> updateCV(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id,
+            @RequestBody CVUpdateRequest request) {
         try {
-            CV cv = cvService.updateCV(id, request.name(), request.externalUrl());
+            CV cv = cvService.updateCV(id, request.name(), request.externalUrl(), user.id());
             return ResponseEntity.ok(CVResponse.fromEntity(cv));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();

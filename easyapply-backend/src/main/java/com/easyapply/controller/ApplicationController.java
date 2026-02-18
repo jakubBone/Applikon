@@ -2,8 +2,8 @@ package com.easyapply.controller;
 
 import com.easyapply.dto.ApplicationRequest;
 import com.easyapply.dto.ApplicationResponse;
-import com.easyapply.dto.StatusUpdateRequest;
 import com.easyapply.dto.StageUpdateRequest;
+import com.easyapply.dto.StatusUpdateRequest;
 import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.ApplicationService;
 import com.easyapply.service.CVService;
@@ -42,27 +42,33 @@ public class ApplicationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApplicationResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(applicationService.findById(id));
+    public ResponseEntity<ApplicationResponse> findById(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(applicationService.findById(id, user.id()));
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApplicationResponse> updateStatus(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
             @Valid @RequestBody StatusUpdateRequest request) {
-        return ResponseEntity.ok(applicationService.updateStatus(id, request.status()));
+        return ResponseEntity.ok(applicationService.updateStatus(id, request.status(), user.id()));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApplicationResponse> update(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
             @Valid @RequestBody ApplicationRequest request) {
-        return ResponseEntity.ok(applicationService.update(id, request));
+        return ResponseEntity.ok(applicationService.update(id, request, user.id()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        applicationService.delete(id);
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id) {
+        applicationService.delete(id, user.id());
         return ResponseEntity.noContent().build();
     }
 
@@ -76,28 +82,31 @@ public class ApplicationController {
 
     @PatchMapping("/{id}/cv")
     public ResponseEntity<ApplicationResponse> assignCV(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
             @RequestBody AssignCVRequest request) {
         if (request.cvId() == null) {
-            cvService.removeCVFromApplication(id);
+            cvService.removeCVFromApplication(id, user.id());
         } else {
-            cvService.assignCVToApplication(id, request.cvId());
+            cvService.assignCVToApplication(id, request.cvId(), user.id());
         }
-        return ResponseEntity.ok(applicationService.findById(id));
+        return ResponseEntity.ok(applicationService.findById(id, user.id()));
     }
 
     @PatchMapping("/{id}/stage")
     public ResponseEntity<ApplicationResponse> updateStage(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
             @Valid @RequestBody StageUpdateRequest request) {
-        return ResponseEntity.ok(applicationService.updateStage(id, request));
+        return ResponseEntity.ok(applicationService.updateStage(id, request, user.id()));
     }
 
     @PostMapping("/{id}/stage")
     public ResponseEntity<ApplicationResponse> addStage(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
             @RequestBody AddStageRequest request) {
-        return ResponseEntity.ok(applicationService.addStage(id, request.stageName()));
+        return ResponseEntity.ok(applicationService.addStage(id, request.stageName(), user.id()));
     }
 
     public record AssignCVRequest(Long cvId) {}

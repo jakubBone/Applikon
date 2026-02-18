@@ -204,13 +204,14 @@ class CVServiceTest {
         @Test
         void assignCVToApplication_assignsCv() {
             Application app = application(10L);
+            app.setUser(testUser);
             CV cv = cv(7L, "Assigned", CVType.NOTE);
 
-            when(applicationRepository.findById(10L)).thenReturn(Optional.of(app));
-            when(cvRepository.findById(7L)).thenReturn(Optional.of(cv));
+            when(applicationRepository.findByIdAndUserId(10L, TEST_USER_ID)).thenReturn(Optional.of(app));
+            when(cvRepository.findByIdAndUserId(7L, TEST_USER_ID)).thenReturn(Optional.of(cv));
             when(applicationRepository.save(any(Application.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            Application result = cvService.assignCVToApplication(10L, 7L);
+            Application result = cvService.assignCVToApplication(10L, 7L, TEST_USER_ID);
 
             assertNotNull(result.getCv());
             assertEquals(7L, result.getCv().getId());
@@ -219,12 +220,13 @@ class CVServiceTest {
         @Test
         void removeCVFromApplication_clearsReference() {
             Application app = application(10L);
+            app.setUser(testUser);
             app.setCv(cv(7L, "Assigned", CVType.NOTE));
 
-            when(applicationRepository.findById(10L)).thenReturn(Optional.of(app));
+            when(applicationRepository.findByIdAndUserId(10L, TEST_USER_ID)).thenReturn(Optional.of(app));
             when(applicationRepository.save(any(Application.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            Application result = cvService.removeCVFromApplication(10L);
+            Application result = cvService.removeCVFromApplication(10L, TEST_USER_ID);
 
             assertNull(result.getCv());
         }
@@ -238,10 +240,10 @@ class CVServiceTest {
             CV existing = cv(3L, "Old", CVType.LINK);
             existing.setExternalUrl("https://old.url");
 
-            when(cvRepository.findById(3L)).thenReturn(Optional.of(existing));
+            when(cvRepository.findByIdAndUserId(3L, TEST_USER_ID)).thenReturn(Optional.of(existing));
             when(cvRepository.save(any(CV.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            CV result = cvService.updateCV(3L, "New Name", "https://new.url");
+            CV result = cvService.updateCV(3L, "New Name", "https://new.url", TEST_USER_ID);
 
             assertEquals("New Name", result.getOriginalFileName());
             assertEquals("https://new.url", result.getExternalUrl());
@@ -255,9 +257,9 @@ class CVServiceTest {
             CV fileCv = cv(11L, "File CV", CVType.FILE);
             fileCv.setFilePath(filePath.toString());
 
-            when(cvRepository.findById(11L)).thenReturn(Optional.of(fileCv));
+            when(cvRepository.findByIdAndUserId(11L, TEST_USER_ID)).thenReturn(Optional.of(fileCv));
 
-            cvService.deleteCV(11L);
+            cvService.deleteCV(11L, TEST_USER_ID);
 
             verify(applicationRepository).clearCVReferences(11L);
             verify(cvRepository).delete(fileCv);
@@ -266,9 +268,9 @@ class CVServiceTest {
 
         @Test
         void deleteCV_missingCv_throws() {
-            when(cvRepository.findById(999L)).thenReturn(Optional.empty());
+            when(cvRepository.findByIdAndUserId(999L, TEST_USER_ID)).thenReturn(Optional.empty());
 
-            assertThrows(EntityNotFoundException.class, () -> cvService.deleteCV(999L));
+            assertThrows(EntityNotFoundException.class, () -> cvService.deleteCV(999L, TEST_USER_ID));
             verify(cvRepository, never()).delete(any(CV.class));
         }
     }

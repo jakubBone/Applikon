@@ -128,7 +128,7 @@ class ApplicationServiceTest {
 
             when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
             when(applicationRepository.save(any(Application.class))).thenReturn(saved);
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(saved));
+            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(saved));
 
             ApplicationResponse response = applicationService.create(request("Google", "Java Dev"), TEST_USER_ID);
 
@@ -162,9 +162,9 @@ class ApplicationServiceTest {
         @Test
         void findById_returnsResponse() {
             Application app = app(1L, "Google", "Developer");
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
+            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(app));
 
-            ApplicationResponse response = applicationService.findById(1L);
+            ApplicationResponse response = applicationService.findById(1L, TEST_USER_ID);
 
             assertEquals("Google", response.company());
             assertEquals("Developer", response.position());
@@ -203,7 +203,7 @@ class ApplicationServiceTest {
         @Test
         void update_updatesAllCoreFields() {
             Application existing = app(10L, "Old", "Old Position");
-            when(applicationRepository.findById(10L)).thenReturn(Optional.of(existing));
+            when(applicationRepository.findByIdAndUserId(10L, TEST_USER_ID)).thenReturn(Optional.of(existing));
             when(applicationRepository.save(any(Application.class))).thenReturn(existing);
 
             ApplicationRequest updateRequest = new ApplicationRequest(
@@ -221,7 +221,7 @@ class ApplicationServiceTest {
                     "New agency"
             );
 
-            ApplicationResponse response = applicationService.update(10L, updateRequest);
+            ApplicationResponse response = applicationService.update(10L, updateRequest, TEST_USER_ID);
 
             verify(applicationRepository).save(appCaptor.capture());
             Application captured = appCaptor.getValue();
@@ -236,7 +236,7 @@ class ApplicationServiceTest {
         @Test
         void updateStage_toRejection_setsRejectionData() {
             Application existing = app(11L, "Google", "Dev");
-            when(applicationRepository.findById(11L)).thenReturn(Optional.of(existing));
+            when(applicationRepository.findByIdAndUserId(11L, TEST_USER_ID)).thenReturn(Optional.of(existing));
             when(applicationRepository.save(any(Application.class))).thenReturn(existing);
 
             StageUpdateRequest request = new StageUpdateRequest(
@@ -246,7 +246,7 @@ class ApplicationServiceTest {
                     "No feedback"
             );
 
-            ApplicationResponse response = applicationService.updateStage(11L, request);
+            ApplicationResponse response = applicationService.updateStage(11L, request, TEST_USER_ID);
 
             verify(applicationRepository).save(appCaptor.capture());
             Application captured = appCaptor.getValue();
@@ -264,12 +264,13 @@ class ApplicationServiceTest {
             existing.setRejectionReason(RejectionReason.ODMOWA_MAILOWA);
             existing.setRejectionDetails("No fit");
 
-            when(applicationRepository.findById(12L)).thenReturn(Optional.of(existing));
+            when(applicationRepository.findByIdAndUserId(12L, TEST_USER_ID)).thenReturn(Optional.of(existing));
             when(applicationRepository.save(any(Application.class))).thenReturn(existing);
 
             ApplicationResponse response = applicationService.updateStage(
                     12L,
-                    new StageUpdateRequest(ApplicationStatus.WYSLANE, null, null, null)
+                    new StageUpdateRequest(ApplicationStatus.WYSLANE, null, null, null),
+                    TEST_USER_ID
             );
 
             verify(stageHistoryRepository).deleteByApplicationId(12L);
@@ -284,25 +285,26 @@ class ApplicationServiceTest {
 
         @Test
         void delete_callsNoteCleanupAndDelete() {
-            when(applicationRepository.existsById(1L)).thenReturn(true);
+            Application existing = app(1L, "Google", "Dev");
+            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(existing));
 
-            applicationService.delete(1L);
+            applicationService.delete(1L, TEST_USER_ID);
 
-            verify(noteService).deleteByApplicationId(1L);
-            verify(applicationRepository).deleteById(1L);
+            verify(noteService).deleteByApplicationId(1L, TEST_USER_ID);
+            verify(applicationRepository).delete(existing);
         }
 
         @Test
         void delete_throwsWhenApplicationMissing() {
-            when(applicationRepository.existsById(99L)).thenReturn(false);
+            when(applicationRepository.findByIdAndUserId(99L, TEST_USER_ID)).thenReturn(Optional.empty());
 
             EntityNotFoundException ex = assertThrows(
                     EntityNotFoundException.class,
-                    () -> applicationService.delete(99L)
+                    () -> applicationService.delete(99L, TEST_USER_ID)
             );
 
             assertTrue(ex.getMessage().contains("99"));
-            verify(applicationRepository, never()).deleteById(any());
+            verify(applicationRepository, never()).delete(any());
         }
     }
 }

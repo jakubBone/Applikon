@@ -434,6 +434,7 @@ class ApplicationControllerTest {
         CV cv = new CV();
         cv.setOriginalFileName(name);
         cv.setType(type);
+        cv.setUser(testUser);
         return cvRepository.save(cv);
     }
 }

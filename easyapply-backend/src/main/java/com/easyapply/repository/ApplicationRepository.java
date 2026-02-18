@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
@@ -22,6 +23,10 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     List<Application> findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase(
             UUID userId, String company, String position);
+
+    Optional<Application> findByIdAndUserId(Long id, UUID userId);
+
+    boolean existsByIdAndUserId(Long id, UUID userId);
 
     @Query("SELECT " +
             "SUM(CASE WHEN a.status = :odmowa THEN 1 ELSE 0 END), " +

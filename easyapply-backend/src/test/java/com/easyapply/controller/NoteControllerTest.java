@@ -2,18 +2,24 @@ package com.easyapply.controller;
 
 import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
+import com.easyapply.repository.CVRepository;
 import com.easyapply.repository.NoteRepository;
-import com.easyapply.security.WithMockAuthenticatedUser;
+import com.easyapply.repository.UserRepository;
+import com.easyapply.security.AuthenticatedUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,22 +31,41 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@WithMockAuthenticatedUser
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class NoteControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private ApplicationRepository applicationRepository;
+    @Autowired private CVRepository cvRepository;
     @Autowired private NoteRepository noteRepository;
+    @Autowired private UserRepository userRepository;
 
     private Application testApplication;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         noteRepository.deleteAll();
         applicationRepository.deleteAll();
+        cvRepository.deleteAll();
+        userRepository.deleteAll();
+
+        testUser = userRepository.save(new User("test@example.com", "Test User", "google-test-note"));
+
+        AuthenticatedUser principal = new AuthenticatedUser(
+                testUser.getId(), testUser.getEmail(), testUser.getName());
+        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+        ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
+                principal, null, Collections.emptyList()));
+        SecurityContextHolder.setContext(ctx);
+
         testApplication = createTestApplication();
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // ==================== ETAP 5: Notatki Tests ====================
@@ -190,6 +215,7 @@ class NoteControllerTest {
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
         app.setStatus(ApplicationStatus.WYSLANE);
+        app.setUser(testUser);
         return applicationRepository.save(app);
     }
 

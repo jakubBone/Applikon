@@ -120,13 +120,13 @@ public class CVService {
     }
 
     @Transactional(readOnly = true)
-    public CV findById(Long id) {
-        return cvRepository.findById(id)
+    public CV findById(Long id, UUID userId) {
+        return cvRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new EntityNotFoundException("CV o ID " + id + " nie zostało znalezione"));
     }
 
-    public Resource downloadCV(Long id) throws MalformedURLException {
-        CV cv = findById(id);
+    public Resource downloadCV(Long id, UUID userId) throws MalformedURLException {
+        CV cv = findById(id, userId);
         Path filePath = Paths.get(cv.getFilePath());
         Resource resource = new UrlResource(filePath.toUri());
         if (!resource.exists()) {
@@ -136,25 +136,23 @@ public class CVService {
     }
 
     @Transactional
-    public Application assignCVToApplication(Long applicationId, Long cvId) {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona"));
-        CV cv = findById(cvId);
+    public Application assignCVToApplication(Long applicationId, Long cvId, UUID userId) {
+        Application application = getApplicationByIdAndUserId(applicationId, userId);
+        CV cv = findById(cvId, userId);
         application.setCv(cv);
         return applicationRepository.save(application);
     }
 
     @Transactional
-    public Application removeCVFromApplication(Long applicationId) {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona"));
+    public Application removeCVFromApplication(Long applicationId, UUID userId) {
+        Application application = getApplicationByIdAndUserId(applicationId, userId);
         application.setCv(null);
         return applicationRepository.save(application);
     }
 
     @Transactional
-    public void deleteCV(Long id) {
-        CV cv = findById(id);
+    public void deleteCV(Long id, UUID userId) {
+        CV cv = findById(id, userId);
         applicationRepository.clearCVReferences(id);
 
         if (cv.getType() == CVType.FILE && cv.getFilePath() != null) {
@@ -169,8 +167,8 @@ public class CVService {
     }
 
     @Transactional
-    public CV updateCV(Long id, String name, String externalUrl) {
-        CV cv = findById(id);
+    public CV updateCV(Long id, String name, String externalUrl, UUID userId) {
+        CV cv = findById(id, userId);
 
         if (name != null && !name.trim().isEmpty()) {
             cv.setOriginalFileName(name.trim());
@@ -180,5 +178,10 @@ public class CVService {
         }
 
         return cvRepository.save(cv);
+    }
+
+    private Application getApplicationByIdAndUserId(Long applicationId, UUID userId) {
+        return applicationRepository.findByIdAndUserId(applicationId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona"));
     }
 }

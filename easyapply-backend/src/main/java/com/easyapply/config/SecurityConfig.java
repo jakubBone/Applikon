@@ -126,7 +126,7 @@ public class SecurityConfig {
                 // Reguły dostępu do endpointów
                 .authorizeHttpRequests(auth -> auth
                         // Endpointy publiczne
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         // Wszystko inne wymaga JWT
