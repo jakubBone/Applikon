@@ -3,6 +3,7 @@ package com.easyapply.controller;
 import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.NoteRepository;
+import com.easyapply.security.WithMockAuthenticatedUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,20 +25,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockAuthenticatedUser
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class NoteControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private ApplicationRepository applicationRepository;
-
-    @Autowired
-    private NoteRepository noteRepository;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private ApplicationRepository applicationRepository;
+    @Autowired private NoteRepository noteRepository;
 
     private Application testApplication;
 
@@ -111,16 +106,15 @@ class NoteControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value(containsString("pusta")));
+                .andExpect(jsonPath("$.detail").value(containsString("pusta")));
     }
 
     @Test
     @Order(5)
     @DisplayName("GET /api/applications/{id}/notes - zwraca notatki posortowane od najnowszych")
     void getNotes_ReturnsSortedByDateDesc() throws Exception {
-        // Tworzymy notatki w kolejnosci
         createTestNote("Notatka 1", NoteCategory.PYTANIA);
-        Thread.sleep(10); // Mala przerwa dla roznych timestampow
+        Thread.sleep(10);
         createTestNote("Notatka 2", NoteCategory.FEEDBACK);
         Thread.sleep(10);
         createTestNote("Notatka 3", NoteCategory.INNE);
@@ -128,7 +122,6 @@ class NoteControllerTest {
         mockMvc.perform(get("/api/applications/" + testApplication.getId() + "/notes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
-                // Najnowsza pierwsza
                 .andExpect(jsonPath("$[0].content").value("Notatka 3"))
                 .andExpect(jsonPath("$[1].content").value("Notatka 2"))
                 .andExpect(jsonPath("$[2].content").value("Notatka 1"));
@@ -180,7 +173,6 @@ class NoteControllerTest {
     void createNote_NoCategoryProvided_DefaultsToInne() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Notatka bez kategorii");
-        // Brak category w request
 
         mockMvc.perform(post("/api/applications/" + testApplication.getId() + "/notes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -198,7 +190,6 @@ class NoteControllerTest {
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
         app.setStatus(ApplicationStatus.WYSLANE);
-        app.setAppliedAt(LocalDateTime.now());
         return applicationRepository.save(app);
     }
 

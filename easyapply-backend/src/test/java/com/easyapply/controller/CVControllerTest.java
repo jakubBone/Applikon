@@ -2,7 +2,11 @@ package com.easyapply.controller;
 
 import com.easyapply.entity.CV;
 import com.easyapply.entity.CVType;
+import com.easyapply.entity.User;
+import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.CVRepository;
+import com.easyapply.repository.UserRepository;
+import com.easyapply.security.AuthenticatedUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +14,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,18 +35,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CVControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private CVRepository cvRepository;
+    @Autowired private ApplicationRepository applicationRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private CVRepository cvRepository;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
+        applicationRepository.deleteAll();
         cvRepository.deleteAll();
+        userRepository.deleteAll();
+
+        testUser = userRepository.save(new User("test@example.com", "Test User", "google-test-cv"));
+
+        AuthenticatedUser principal = new AuthenticatedUser(
+                testUser.getId(), testUser.getEmail(), testUser.getName());
+        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+        ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
+                principal, null, Collections.emptyList()));
+        SecurityContextHolder.setContext(ctx);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // ==================== ETAP 4: CV CRUD Tests ====================
@@ -161,7 +183,6 @@ class CVControllerTest {
     @Order(8)
     @DisplayName("POST /api/cv/upload - upload pliku PDF")
     void uploadCV_ValidPDF_Success() throws Exception {
-        // Minimalny poprawny PDF
         byte[] pdfContent = "%PDF-1.4\n%Test PDF content\n%%EOF".getBytes();
 
         MockMultipartFile file = new MockMultipartFile(
@@ -200,7 +221,8 @@ class CVControllerTest {
         CV cv = new CV();
         cv.setOriginalFileName(name);
         cv.setType(type);
-        cv.setUploadedAt(LocalDateTime.now());
+        cv.setUser(testUser);
+
         if (type == CVType.FILE) {
             cv.setFileName("uuid_" + name);
             cv.setFileSize(1024L);

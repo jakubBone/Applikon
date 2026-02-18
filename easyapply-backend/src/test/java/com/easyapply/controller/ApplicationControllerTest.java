@@ -4,17 +4,21 @@ import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.CVRepository;
 import com.easyapply.repository.NoteRepository;
+import com.easyapply.repository.UserRepository;
+import com.easyapply.security.AuthenticatedUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,25 +33,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ApplicationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private ApplicationRepository applicationRepository;
+    @Autowired private CVRepository cvRepository;
+    @Autowired private NoteRepository noteRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private ApplicationRepository applicationRepository;
-
-    @Autowired
-    private CVRepository cvRepository;
-
-    @Autowired
-    private NoteRepository noteRepository;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         noteRepository.deleteAll();
         applicationRepository.deleteAll();
+        cvRepository.deleteAll();
+        userRepository.deleteAll();
+
+        testUser = userRepository.save(new User("test@example.com", "Test User", "google-test-app"));
+
+        AuthenticatedUser principal = new AuthenticatedUser(
+                testUser.getId(), testUser.getEmail(), testUser.getName());
+        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+        ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
+                principal, null, Collections.emptyList()));
+        SecurityContextHolder.setContext(ctx);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // ==================== ETAP 1: CRUD Tests ====================
@@ -97,7 +111,7 @@ class ApplicationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value(containsString("Nazwa firmy")));
+                .andExpect(jsonPath("$.detail").value(containsString("Nazwa firmy")));
     }
 
     @Test
@@ -113,18 +127,16 @@ class ApplicationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value(containsString("dodatnia")));
+                .andExpect(jsonPath("$.detail").value(containsString("dodatnia")));
     }
 
     @Test
     @Order(4)
     @DisplayName("GET /api/applications - zwraca liste aplikacji")
     void getAllApplications_ReturnsListOfApplications() throws Exception {
-        // Given: 2 aplikacje w bazie
         createTestApplication("Google", "Dev");
         createTestApplication("Meta", "Engineer");
 
-        // When & Then
         mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -149,7 +161,7 @@ class ApplicationControllerTest {
     void getApplicationById_NotFound_Returns404() throws Exception {
         mockMvc.perform(get("/api/applications/99999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value(containsString("znaleziona")));
+                .andExpect(jsonPath("$.detail").value(containsString("znaleziona")));
     }
 
     @Test
@@ -414,7 +426,7 @@ class ApplicationControllerTest {
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
         app.setStatus(ApplicationStatus.WYSLANE);
-        app.setAppliedAt(LocalDateTime.now());
+        app.setUser(testUser);
         return applicationRepository.save(app);
     }
 
@@ -422,7 +434,6 @@ class ApplicationControllerTest {
         CV cv = new CV();
         cv.setOriginalFileName(name);
         cv.setType(type);
-        cv.setUploadedAt(LocalDateTime.now());
         return cvRepository.save(cv);
     }
 }

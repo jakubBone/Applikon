@@ -2,15 +2,21 @@ package com.easyapply.controller;
 
 import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
+import com.easyapply.repository.CVRepository;
 import com.easyapply.repository.NoteRepository;
+import com.easyapply.repository.UserRepository;
+import com.easyapply.security.AuthenticatedUser;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -22,19 +28,34 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StatisticsControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ApplicationRepository applicationRepository;
+    @Autowired private CVRepository cvRepository;
+    @Autowired private NoteRepository noteRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private ApplicationRepository applicationRepository;
-
-    @Autowired
-    private NoteRepository noteRepository;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         noteRepository.deleteAll();
         applicationRepository.deleteAll();
+        cvRepository.deleteAll();
+        userRepository.deleteAll();
+
+        testUser = userRepository.save(new User("test@example.com", "Test User", "google-test-stats"));
+
+        AuthenticatedUser principal = new AuthenticatedUser(
+                testUser.getId(), testUser.getEmail(), testUser.getName());
+        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+        ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
+                principal, null, Collections.emptyList()));
+        SecurityContextHolder.setContext(ctx);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     // ==================== ETAP 7: Gamifikacja Tests ====================
@@ -57,7 +78,6 @@ class StatisticsControllerTest {
     @Order(2)
     @DisplayName("GET /api/statistics/badges - odznaka Rękawica przy 5 odmowach")
     void getBadges_5Rejections_ReturnsRękawica() throws Exception {
-        // Tworzymy 5 odmow
         for (int i = 0; i < 5; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
         }
@@ -109,11 +129,9 @@ class StatisticsControllerTest {
     @Order(5)
     @DisplayName("GET /api/statistics/badges - Sweet Revenge przy 10+ odmowach i 1 ofercie")
     void getBadges_10RejectionsAnd1Offer_UnlocksSweetRevenge() throws Exception {
-        // 10 odmow
         for (int i = 0; i < 10; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
         }
-        // 1 oferta
         createOfferApplication("SuccessCompany");
 
         mockMvc.perform(get("/api/statistics/badges"))
@@ -127,11 +145,9 @@ class StatisticsControllerTest {
     @Order(6)
     @DisplayName("GET /api/statistics/badges - Sweet Revenge NIE odblokowane przy 5 odmowach i ofercie")
     void getBadges_5RejectionsAnd1Offer_SweetRevengeNotUnlocked() throws Exception {
-        // 5 odmow (za malo)
         for (int i = 0; i < 5; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
         }
-        // 1 oferta
         createOfferApplication("SuccessCompany");
 
         mockMvc.perform(get("/api/statistics/badges"))
@@ -145,26 +161,23 @@ class StatisticsControllerTest {
     @Order(7)
     @DisplayName("GET /api/statistics/badges - rozne typy odmow liczone oddzielnie")
     void getBadges_MixedRejectionTypes_CountedCorrectly() throws Exception {
-        // 3 ghostingi
         for (int i = 0; i < 3; i++) {
             createRejectedApplication("Ghost" + i, RejectionReason.BRAK_ODPOWIEDZI);
         }
-        // 2 odmowy mailowe
         for (int i = 0; i < 2; i++) {
             createRejectedApplication("Mail" + i, RejectionReason.ODMOWA_MAILOWA);
         }
 
         mockMvc.perform(get("/api/statistics/badges"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalRejections").value(5)) // 3 + 2
-                .andExpect(jsonPath("$.totalGhosting").value(3));   // tylko BRAK_ODPOWIEDZI
+                .andExpect(jsonPath("$.totalRejections").value(5))
+                .andExpect(jsonPath("$.totalGhosting").value(3));
     }
 
     @Test
     @Order(8)
     @DisplayName("GET /api/statistics/badges - postep do nastepnej odznaki")
     void getBadges_ShowsProgressToNextBadge() throws Exception {
-        // 7 odmow (po Rozgrzewce, przed Patelnia)
         for (int i = 0; i < 7; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
         }
@@ -181,11 +194,9 @@ class StatisticsControllerTest {
     @Order(9)
     @DisplayName("GET /api/statistics/badges - liczy tylko ODMOWA (nie WYSLANE/W_PROCESIE)")
     void getBadges_OnlyCountsRejectedStatus() throws Exception {
-        // 2 odmowy
         createRejectedApplication("Rejected1", RejectionReason.ODMOWA_MAILOWA);
         createRejectedApplication("Rejected2", RejectionReason.ODMOWA_MAILOWA);
 
-        // 3 aplikacje w innych statusach (nie powinny byc liczone)
         createTestApplication("Sent", ApplicationStatus.WYSLANE);
         createTestApplication("InProcess", ApplicationStatus.W_PROCESIE);
         createOfferApplication("Offer");
@@ -206,7 +217,7 @@ class StatisticsControllerTest {
         app.setCurrency("PLN");
         app.setStatus(ApplicationStatus.ODMOWA);
         app.setRejectionReason(reason);
-        app.setAppliedAt(LocalDateTime.now());
+        app.setUser(testUser);
         return applicationRepository.save(app);
     }
 
@@ -217,7 +228,7 @@ class StatisticsControllerTest {
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
         app.setStatus(ApplicationStatus.OFERTA);
-        app.setAppliedAt(LocalDateTime.now());
+        app.setUser(testUser);
         return applicationRepository.save(app);
     }
 
@@ -228,7 +239,7 @@ class StatisticsControllerTest {
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
         app.setStatus(status);
-        app.setAppliedAt(LocalDateTime.now());
+        app.setUser(testUser);
         return applicationRepository.save(app);
     }
 }
