@@ -7,7 +7,7 @@ import {
   assignCVToApplication,
   createCV,
   updateCV,
-  getCVDownloadUrl
+  downloadCV
 } from './services/api'
 
 function CVManager({ applications, onCVAssigned }) {
@@ -120,7 +120,7 @@ function CVManager({ applications, onCVAssigned }) {
     if (cv.type === 'LINK' && cv.externalUrl) {
       window.open(cv.externalUrl, '_blank')
     } else if (cv.type === 'FILE' || !cv.type) {
-      window.open(getCVDownloadUrl(cv.id), '_blank')
+      downloadCV(cv.id, cv.originalFileName ?? cv.fileName ?? 'CV')
     }
   }
 

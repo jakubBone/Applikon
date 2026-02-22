@@ -5,7 +5,7 @@ import { NotesList } from './components/notes/NotesList'
 import ApplicationTable from './ApplicationTable'
 import { BadgeWidget } from './components/badges/BadgeWidget'
 import TourGuide from './TourGuide'
-import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication, getCVDownloadUrl } from './services/api'
+import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication, downloadCV } from './services/api'
 import './App.css'
 
 // Komponent formularza wynagrodzenia (musi być poza App, żeby uniknąć utraty focusu)
@@ -490,6 +490,8 @@ function App() {
                     value={formData.company}
                     onChange={handleInputChange}
                     required
+                    onInvalid={(e) => e.target.setCustomValidity('Nazwa firmy nie może być pusta')}
+                    onInput={(e) => e.target.setCustomValidity('')}
                     placeholder="np. Google"
                   />
                 </div>
@@ -502,6 +504,8 @@ function App() {
                     value={formData.position}
                     onChange={handleInputChange}
                     required
+                    onInvalid={(e) => e.target.setCustomValidity('Stanowisko nie może być puste')}
+                    onInput={(e) => e.target.setCustomValidity('')}
                     placeholder="np. Junior Developer"
                   />
                 </div>
@@ -576,6 +580,9 @@ function App() {
               <div className="details-title">
                 <div className="details-title-row">
                   <h2>{selectedApp.company}</h2>
+                  <button className="edit-btn" onClick={handleEditClick}>
+                    ✏️ Edytuj
+                  </button>
                 </div>
                 <p className="details-position">{selectedApp.position}</p>
                 <div className="status-info">
@@ -592,9 +599,6 @@ function App() {
                   )}
                 </div>
                 <div className="details-actions">
-                  <button className="edit-btn" onClick={handleEditClick}>
-                    ✏️ Edytuj
-                  </button>
                   <button className="back-btn-mobile" onClick={handleBackToList}>
                     ← Powrót
                   </button>
@@ -618,6 +622,8 @@ function App() {
                           value={editFormData.company}
                           onChange={handleEditInputChange}
                           required
+                          onInvalid={(e) => e.target.setCustomValidity('Nazwa firmy nie może być pusta')}
+                          onInput={(e) => e.target.setCustomValidity('')}
                         />
                       </div>
                       <div className="form-group">
@@ -629,6 +635,8 @@ function App() {
                           value={editFormData.position}
                           onChange={handleEditInputChange}
                           required
+                          onInvalid={(e) => e.target.setCustomValidity('Stanowisko nie może być puste')}
+                          onInput={(e) => e.target.setCustomValidity('')}
                         />
                       </div>
                     </div>
@@ -722,7 +730,7 @@ function App() {
                         {selectedApp.cvType === 'FILE' && (
                           <button
                             className="cv-download-btn"
-                            onClick={() => window.open(getCVDownloadUrl(selectedApp.cvId), '_blank')}
+                            onClick={() => downloadCV(selectedApp.cvId, selectedApp.cvFileName)}
                           >
                             Pobierz
                           </button>

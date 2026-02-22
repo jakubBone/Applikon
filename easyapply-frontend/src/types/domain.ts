@@ -100,22 +100,23 @@ export interface StageUpdateRequest {
 // Badge / statystyki
 // ============================================================
 
-export type BadgeLevel = 'NONE' | 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM'
-
+// Odzwierciedla BadgeResponse.java z backendu
 export interface BadgeInfo {
-  level: BadgeLevel
-  label: string
-  description: string
+  name: string
   icon: string
-  count: number
+  description: string
+  threshold: number
+  currentCount: number
   nextThreshold: number | null
+  nextBadgeName: string | null
 }
 
+// Odzwierciedla BadgeStatsResponse.java z backendu
 export interface BadgeStats {
   rejectionBadge: BadgeInfo | null
   ghostingBadge: BadgeInfo | null
-  rejectionCount: number
-  ghostingCount: number
-  offerCount: number
-  hasSpecialBadge: boolean
+  totalRejections: number
+  totalGhosting: number
+  totalOffers: number
+  sweetRevengeUnlocked: boolean
 }

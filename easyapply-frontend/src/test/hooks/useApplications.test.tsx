@@ -7,6 +7,8 @@ import {
   useCreateApplication,
   useCheckDuplicate,
 } from '../../hooks/useApplications'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error - test-utils is a JSX file without types
 import { createTestQueryClient } from '../test-utils'
 
 vi.mock('../../services/api', () => ({
@@ -40,7 +42,7 @@ function createWrapper() {
 }
 
 describe('useApplications', () => {
-  beforeEach(() => vi.resetAllMocks())
+  beforeEach(() => { vi.resetAllMocks() })
 
   it('pobiera i zwraca listę aplikacji', async () => {
     vi.mocked(api.fetchApplications).mockResolvedValue(mockApplications as any)
@@ -66,7 +68,7 @@ describe('useApplications', () => {
 })
 
 describe('useCreateApplication', () => {
-  beforeEach(() => vi.resetAllMocks())
+  beforeEach(() => { vi.resetAllMocks() })
 
   it('wywołuje createApplication z przekazanymi danymi', async () => {
     const newApp = { id: 3, company: 'Apple', position: 'iOS Dev', status: 'WYSLANE' }
@@ -87,7 +89,7 @@ describe('useCreateApplication', () => {
 })
 
 describe('useCheckDuplicate', () => {
-  beforeEach(() => vi.resetAllMocks())
+  beforeEach(() => { vi.resetAllMocks() })
 
   it('nie wysyła zapytania gdy company jest puste', () => {
     vi.mocked(api.checkDuplicate).mockResolvedValue([])

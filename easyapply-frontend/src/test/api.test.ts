@@ -12,7 +12,7 @@ import {
   uploadCV,
   deleteCV,
   assignCVToApplication,
-  getCVDownloadUrl,
+  downloadCV,
   fetchNotes,
   createNote,
   deleteNote,
@@ -234,9 +234,25 @@ describe('API Service', () => {
       expect(result).toEqual(updatedApp)
     })
 
-    it('getCVDownloadUrl - zwraca poprawny URL do pobrania', () => {
-      const url = getCVDownloadUrl(123)
-      expect(url).toBe(`${API_URL}/cv/123/download`)
+    it('downloadCV - wywołuje fetch na poprawny endpoint z tokenem', async () => {
+      const mockBlob = new Blob(['file content'], { type: 'application/pdf' })
+      ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        blob: () => Promise.resolve(mockBlob),
+      })
+
+      // Mockujemy URL.createObjectURL bo jsdom go nie wspiera
+      const mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-url')
+      const mockRevokeObjectURL = vi.fn()
+      global.URL.createObjectURL = mockCreateObjectURL
+      global.URL.revokeObjectURL = mockRevokeObjectURL
+
+      await downloadCV(123, 'CV_Test.pdf')
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${API_URL}/cv/123/download`,
+        expect.objectContaining({ headers: expect.anything() })
+      )
     })
   })
 

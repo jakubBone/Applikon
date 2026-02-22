@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useBadgeStats } from '../../hooks/useBadgeStats'
+import type { BadgeInfo } from '../../types/domain'
 
 const getIconForBadge = (name: string): string => {
   const icons: Record<string, string> = {
@@ -23,17 +24,24 @@ const calculateProgress = (current: number, target: number | null): number => {
 }
 
 interface BadgeRowProps {
-  badge: { name: string; icon: string; description: string; nextThreshold: number | null; nextBadgeName?: string } | null
+  badge: BadgeInfo | null
   count: number
   type: 'rejection' | 'ghosting'
 }
 
+// Próg pierwszej odznaki — taki sam dla odrzuceń i ghostingu
+const FIRST_THRESHOLD = 5
+
 function BadgeRow({ badge, count, type }: BadgeRowProps) {
   const isGhosting = type === 'ghosting'
   const hasAchieved = Boolean(badge?.name)
-  const maxThreshold = 100
-  const nextName = hasAchieved ? badge?.nextBadgeName : (isGhosting ? 'Widmo' : 'Rękawica')
   const isMaxed = hasAchieved && !badge?.nextThreshold
+
+  // Cel paska: gdy brak odznaki — próg pierwszej (5); gdy mamy — próg następnej
+  const progressTarget = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
+  const progressLabel = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
+
+  const nextName = hasAchieved ? badge?.nextBadgeName : (isGhosting ? 'Widmo' : 'Rękawica')
 
   return (
     <div className="badge-row">
@@ -46,16 +54,16 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
             {hasAchieved ? badge?.name : (isGhosting ? 'Widmo' : 'Rękawica')}
           </div>
           <div className="badge-row-description">
-            {hasAchieved ? badge?.description : `${count}/${isGhosting ? 5 : 5} do odblokowania`}
+            {hasAchieved ? badge?.description : `${count}/${FIRST_THRESHOLD} do odblokowania`}
           </div>
           <div className="badge-row-progress">
             <div className={`badge-progress-bar ${isGhosting ? 'ghosting' : ''}`}>
               <div
                 className="badge-progress-fill"
-                style={{ width: `${calculateProgress(count, maxThreshold)}%` }}
+                style={{ width: `${calculateProgress(count, progressTarget)}%` }}
               />
             </div>
-            <span className="badge-progress-count">{count}/{maxThreshold}</span>
+            <span className="badge-progress-count">{count}/{progressLabel ?? '∞'}</span>
           </div>
           {!isMaxed && nextName && (
             <div className="badge-row-next-line">
@@ -76,7 +84,7 @@ export function BadgeWidget() {
   // Nie renderuj nic jeśli dane jeszcze nie są gotowe
   if (!stats) return null
 
-  const { rejectionBadge, ghostingBadge, hasSpecialBadge, rejectionCount, ghostingCount } = stats
+  const { rejectionBadge, ghostingBadge, sweetRevengeUnlocked, totalRejections, totalGhosting } = stats
 
   return (
     <div className="badge-widget">
@@ -93,13 +101,13 @@ export function BadgeWidget() {
             </div>
 
             <div className="badge-modal-body">
-              <div className="badge-section-label">Odrzucone aplikacje ({rejectionCount})</div>
-              <BadgeRow badge={rejectionBadge} count={rejectionCount} type="rejection" />
+              <div className="badge-section-label">Odrzucone aplikacje ({totalRejections})</div>
+              <BadgeRow badge={rejectionBadge} count={totalRejections} type="rejection" />
 
-              <div className="badge-section-label">Bez odzewu ({ghostingCount})</div>
-              <BadgeRow badge={ghostingBadge} count={ghostingCount} type="ghosting" />
+              <div className="badge-section-label">Bez odzewu ({totalGhosting})</div>
+              <BadgeRow badge={ghostingBadge} count={totalGhosting} type="ghosting" />
 
-              {hasSpecialBadge && (
+              {sweetRevengeUnlocked && (
                 <div className="badge-row sweet-revenge">
                   <div className="badge-row-left">
                     <span className="badge-row-icon special">🏆</span>

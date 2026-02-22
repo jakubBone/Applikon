@@ -210,8 +210,19 @@ export const assignCVToApplication = async (applicationId: number, cvId: number 
   return response.json() as Promise<Application>
 }
 
-export const getCVDownloadUrl = (id: number): string =>
-  `${API_URL}/cv/${id}/download`
+export const downloadCV = async (id: number, fileName: string): Promise<void> => {
+  const response = await apiFetch(`${API_URL}/cv/${id}/download`, {
+    headers: getHeaders(),
+  })
+  if (!response.ok) throw new Error('Błąd pobierania pliku')
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
+}
 
 // ============================================================
 // Notes
