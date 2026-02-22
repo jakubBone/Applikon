@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import KanbanBoard from './KanbanBoard'
 import CVManager from './CVManager'
-import NotesList from './NotesList'
+import { NotesList } from './components/notes/NotesList'
 import ApplicationTable from './ApplicationTable'
-import BadgeWidget from './BadgeWidget'
+import { BadgeWidget } from './components/badges/BadgeWidget'
 import TourGuide from './TourGuide'
 import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication, getCVDownloadUrl } from './services/api'
 import './App.css'
@@ -427,7 +427,7 @@ function App() {
               <img src="/logo-trim.png" alt="EasyApply logo" className="logo" />
             </div>
           </div>
-          <BadgeWidget refreshTrigger={applications} />
+          <BadgeWidget />
         </header>
 
         {/* Tour Guide */}
