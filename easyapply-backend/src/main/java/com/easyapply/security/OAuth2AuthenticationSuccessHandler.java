@@ -59,8 +59,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String googleId = oAuth2User.getAttribute("sub");
+        String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
 
-        User user = userService.getByGoogleId(googleId);
+        User user = userService.findOrCreateUser(googleId, email, name);
 
         // Generuj tokeny
         String accessToken = jwtService.generateAccessToken(user);
