@@ -28,7 +28,7 @@ describe('CV Manager', () => {
       ]
     }).as('getCVsWithData')
 
-    cy.visit('/')
+    cy.login()
     cy.wait('@getApplications')
     cy.wait('@getBadges')
   })
@@ -113,7 +113,7 @@ describe('CV Manager', () => {
         }]
       }).as('getApplicationsWithCV')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplicationsWithCV')
       cy.wait('@getBadges')
 
@@ -138,7 +138,7 @@ describe('CV Manager', () => {
         }]
       }).as('getApplicationsWithFileCV')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplicationsWithFileCV')
       cy.wait('@getBadges')
 
@@ -163,7 +163,7 @@ describe('CV Manager', () => {
         }]
       }).as('getApplicationsWithLinkCV')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplicationsWithLinkCV')
       cy.wait('@getBadges')
 

@@ -1,0 +1,127 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor, act } from '@testing-library/react'
+import { AuthProvider, useAuth } from '../../auth/AuthProvider'
+
+// Mockujemy cały moduł api — AuthProvider nie powinien dotykać prawdziwego fetch
+vi.mock('../../services/api', () => ({
+  getToken: vi.fn(),
+  fetchCurrentUser: vi.fn(),
+  clearToken: vi.fn(),
+}))
+
+import * as api from '../../services/api'
+
+const mockUser = { id: '1', email: 'test@example.com', name: 'Test User' }
+
+// Komponent pomocniczy wystawiający stan hooka do assertów
+function AuthStateDisplay() {
+  const { user, isLoading, isAuthenticated } = useAuth()
+  if (isLoading) return <div>loading</div>
+  return (
+    <div>
+      <span data-testid="authenticated">{String(isAuthenticated)}</span>
+      <span data-testid="user">{user?.name ?? 'null'}</span>
+    </div>
+  )
+}
+
+describe('AuthProvider', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('bez tokenu — isAuthenticated: false, nie wywołuje fetchCurrentUser', async () => {
+    vi.mocked(api.getToken).mockReturnValue(null)
+
+    render(
+      <AuthProvider>
+        <AuthStateDisplay />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('authenticated')).toHaveTextContent('false')
+    })
+    expect(api.fetchCurrentUser).not.toHaveBeenCalled()
+  })
+
+  it('z ważnym tokenem — pobiera usera i ustawia isAuthenticated: true', async () => {
+    vi.mocked(api.getToken).mockReturnValue('valid-token')
+    vi.mocked(api.fetchCurrentUser).mockResolvedValue(mockUser)
+
+    render(
+      <AuthProvider>
+        <AuthStateDisplay />
+      </AuthProvider>
+    )
+
+    // Podczas ładowania powinien być spinner / loading state
+    expect(screen.getByText('loading')).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('authenticated')).toHaveTextContent('true')
+      expect(screen.getByTestId('user')).toHaveTextContent('Test User')
+    })
+  })
+
+  it('z nieważnym tokenem — wywołuje clearToken i pozostaje niezalogowany', async () => {
+    vi.mocked(api.getToken).mockReturnValue('expired-token')
+    vi.mocked(api.fetchCurrentUser).mockRejectedValue(new Error('Unauthorized'))
+
+    render(
+      <AuthProvider>
+        <AuthStateDisplay />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('authenticated')).toHaveTextContent('false')
+    })
+    expect(api.clearToken).toHaveBeenCalledOnce()
+  })
+
+  it('signOut — czyści token i resetuje stan usera do null', async () => {
+    vi.mocked(api.getToken).mockReturnValue('valid-token')
+    vi.mocked(api.fetchCurrentUser).mockResolvedValue(mockUser)
+
+    function SignOutButton() {
+      const { isAuthenticated, signOut } = useAuth()
+      return (
+        <>
+          <span data-testid="authenticated">{String(isAuthenticated)}</span>
+          <button onClick={signOut}>Wyloguj</button>
+        </>
+      )
+    }
+
+    render(
+      <AuthProvider>
+        <SignOutButton />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('authenticated')).toHaveTextContent('true')
+    })
+
+    act(() => screen.getByText('Wyloguj').click())
+
+    expect(screen.getByTestId('authenticated')).toHaveTextContent('false')
+    expect(api.clearToken).toHaveBeenCalled()
+  })
+
+  it('useAuth poza AuthProvider — rzuca błąd z czytelnym komunikatem', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    function BrokenComponent() {
+      useAuth()
+      return null
+    }
+
+    expect(() => render(<BrokenComponent />)).toThrow(
+      'useAuth musi być używany wewnątrz AuthProvider'
+    )
+
+    consoleSpy.mockRestore()
+  })
+})

@@ -1,7 +1,7 @@
 describe('Application CRUD Operations', () => {
   beforeEach(() => {
     cy.interceptApi()
-    cy.visit('/')
+    cy.login()
     cy.wait('@getApplications')
     cy.wait('@getBadges')
   })

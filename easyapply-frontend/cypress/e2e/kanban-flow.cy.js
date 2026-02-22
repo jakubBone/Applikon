@@ -36,7 +36,7 @@ describe('Kanban Board Functionality', () => {
       ]
     }).as('getApplicationsWithData')
 
-    cy.visit('/')
+    cy.login()
     cy.wait('@getApplicationsWithData')
     cy.wait('@getBadges')
   })

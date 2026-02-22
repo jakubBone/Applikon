@@ -4,6 +4,30 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
+/**
+ * cy.login() — symuluje zalogowanego użytkownika bez przechodzenia przez OAuth2.
+ *
+ * Działanie:
+ * 1. Ustawia fake JWT token w localStorage zanim aplikacja się załaduje
+ *    (onBeforeLoad gwarantuje że token jest PRZED inicjalizacją AuthProvider)
+ * 2. Przechwytuje GET /api/auth/me i zwraca mock usera
+ *    (AuthProvider wywoła ten endpoint przy starcie, musimy odpowiedzieć)
+ * 3. Odwiedza stronę główną i czeka na zakończenie weryfikacji tożsamości
+ */
+Cypress.Commands.add('login', (path = '/') => {
+  const mockUser = { id: '1', email: 'test@example.com', name: 'Test User' }
+
+  cy.intercept('GET', '**/api/auth/me', mockUser).as('authMe')
+
+  cy.visit(path, {
+    onBeforeLoad(win) {
+      win.localStorage.setItem('easyapply_token', 'fake-test-token')
+    },
+  })
+
+  cy.wait('@authMe')
+})
+
 // Custom commands
 Cypress.Commands.add('createApplication', (company, position, options = {}) => {
   cy.get('button').contains('+ Dodaj aplikację').click()

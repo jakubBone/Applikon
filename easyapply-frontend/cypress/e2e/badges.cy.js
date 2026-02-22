@@ -16,7 +16,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesEmpty')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesEmpty')
 
@@ -42,7 +42,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesWithData')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesWithData')
 
@@ -76,7 +76,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesWithGhosting')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesWithGhosting')
 
@@ -109,7 +109,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesWithSweetRevenge')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesWithSweetRevenge')
 
@@ -135,7 +135,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesNoSweetRevenge')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesNoSweetRevenge')
 
@@ -165,7 +165,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesWithProgress')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesWithProgress')
 
@@ -195,7 +195,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesMax')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesMax')
 
@@ -223,7 +223,7 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesInitial')
 
-      cy.visit('/')
+      cy.login()
       cy.wait('@getApplications')
       cy.wait('@getBadgesInitial')
 
