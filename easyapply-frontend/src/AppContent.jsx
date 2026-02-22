@@ -5,7 +5,7 @@ import NotesList from './NotesList'
 import ApplicationTable from './ApplicationTable'
 import BadgeWidget from './BadgeWidget'
 import TourGuide from './TourGuide'
-import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication, ensureDemoApplication, getCVDownloadUrl } from './services/api'
+import { fetchApplications, createApplication, updateApplication, updateApplicationStatus, updateApplicationStage, checkDuplicate, deleteApplication, getCVDownloadUrl } from './services/api'
 import './App.css'
 
 // Komponent formularza wynagrodzenia (musi być poza App, żeby uniknąć utraty focusu)
@@ -124,10 +124,7 @@ function App() {
 
   const loadApplications = async () => {
     try {
-      // Upewnij się że jest demo aplikacja (jeśli baza jest pusta)
-      await ensureDemoApplication()
-
-      // Pobierz wszystkie aplikacje
+      // Demo aplikacja tworzona przez backend przy pierwszym logowaniu
       const data = await fetchApplications()
       setApplications(data)
     } catch (error) {

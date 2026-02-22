@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import App from '../../App'
+import AppContent from '../../AppContent'
 import * as api from '../../services/api'
 
 // Mock all API functions
@@ -17,7 +17,9 @@ vi.mock('../../services/api', () => ({
   fetchCVs: vi.fn(),
   uploadCV: vi.fn(),
   deleteCV: vi.fn(),
-  assignCVToApplication: vi.fn()
+  assignCVToApplication: vi.fn(),
+  getToken: vi.fn(() => null),
+  fetchCurrentUser: vi.fn(),
 }))
 
 describe('App Component', () => {
@@ -42,15 +44,15 @@ describe('App Component', () => {
 
   describe('Initial Rendering', () => {
     it('renderuje nagłówek aplikacji', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
-        expect(screen.getByText('EasyApply')).toBeInTheDocument()
+        expect(screen.getByText(/EasyApply/i)).toBeInTheDocument()
       })
     })
 
     it('renderuje przycisk dodawania aplikacji', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(screen.getByText('+ Dodaj aplikację')).toBeInTheDocument()
@@ -58,7 +60,7 @@ describe('App Component', () => {
     })
 
     it('renderuje zakładki widoku (Kanban, Lista, CV)', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(screen.getByText('Kanban')).toBeInTheDocument()
@@ -71,13 +73,13 @@ describe('App Component', () => {
       // Delay the API response
       api.fetchApplications.mockImplementation(() => new Promise(() => {}))
 
-      render(<App />)
+      render(<AppContent />)
 
       expect(screen.getByText('Ładowanie...')).toBeInTheDocument()
     })
 
     it('pobiera aplikacje przy montowaniu', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(api.fetchApplications).toHaveBeenCalledTimes(1)
@@ -93,7 +95,7 @@ describe('App Component', () => {
         { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() }
       ])
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(screen.queryByText('Ładowanie...')).not.toBeInTheDocument()
@@ -108,7 +110,7 @@ describe('App Component', () => {
     })
 
     it('przełącza na widok CV', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(screen.queryByText('Ładowanie...')).not.toBeInTheDocument()
@@ -126,7 +128,7 @@ describe('App Component', () => {
 
   describe('Application Form', () => {
     it('otwiera formularz po kliknięciu przycisku', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(screen.queryByText('Ładowanie...')).not.toBeInTheDocument()
@@ -140,7 +142,7 @@ describe('App Component', () => {
     })
 
     it('zamyka formularz po kliknięciu Anuluj', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -158,7 +160,7 @@ describe('App Component', () => {
     })
 
     it('wyświetla pola formularza', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -183,7 +185,7 @@ describe('App Component', () => {
         appliedAt: new Date().toISOString()
       })
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -220,7 +222,7 @@ describe('App Component', () => {
         }
       ])
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -256,7 +258,7 @@ describe('App Component', () => {
         appliedAt: new Date().toISOString()
       })
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -285,7 +287,7 @@ describe('App Component', () => {
 
   describe('Salary Form', () => {
     it('pokazuje pojedyncze pole kwoty domyślnie', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -298,7 +300,7 @@ describe('App Component', () => {
     })
 
     it('pokazuje widełki po zaznaczeniu checkboxa', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -316,7 +318,7 @@ describe('App Component', () => {
     })
 
     it('zawiera wybór waluty', async () => {
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
@@ -338,7 +340,7 @@ describe('App Component', () => {
         { id: 2, company: 'Meta', position: 'Engineer', status: 'W_PROCESIE', appliedAt: new Date().toISOString() }
       ])
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(screen.getByText('Google')).toBeInTheDocument()
@@ -349,7 +351,7 @@ describe('App Component', () => {
     it('wyświetla kolumny Kanban', async () => {
       api.fetchApplications.mockResolvedValue([])
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(screen.getByText('Wysłane')).toBeInTheDocument()
@@ -366,7 +368,7 @@ describe('App Component', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       api.fetchApplications.mockRejectedValue(new Error('Network error'))
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalled()
@@ -381,7 +383,7 @@ describe('App Component', () => {
 
       api.createApplication.mockRejectedValue(new Error('Create failed'))
 
-      render(<App />)
+      render(<AppContent />)
 
       await waitFor(() => {
         fireEvent.click(screen.getByText('+ Dodaj aplikację'))
