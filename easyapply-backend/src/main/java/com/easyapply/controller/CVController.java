@@ -4,6 +4,8 @@ import com.easyapply.entity.CV;
 import com.easyapply.entity.CVType;
 import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.CVService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -30,15 +32,9 @@ public class CVController {
     @PostMapping("/upload")
     public ResponseEntity<CVResponse> uploadCV(
             @AuthenticationPrincipal AuthenticatedUser user,
-            @RequestParam("file") MultipartFile file) {
-        try {
-            CV cv = cvService.uploadCV(file, user.id());
-            return ResponseEntity.status(HttpStatus.CREATED).body(CVResponse.fromEntity(cv));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+            @RequestParam("file") MultipartFile file) throws IOException {
+        CV cv = cvService.uploadCV(file, user.id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(CVResponse.fromEntity(cv));
     }
 
     @GetMapping
@@ -59,18 +55,14 @@ public class CVController {
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> downloadCV(
             @AuthenticationPrincipal AuthenticatedUser user,
-            @PathVariable Long id) {
-        try {
-            CV cv = cvService.findById(id, user.id());
-            Resource resource = cvService.downloadCV(id, user.id());
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + cv.getOriginalFileName() + "\"")
-                    .body(resource);
-        } catch (MalformedURLException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+            @PathVariable Long id) throws MalformedURLException {
+        CV cv = cvService.findById(id, user.id());
+        Resource resource = cvService.downloadCV(id, user.id());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + cv.getOriginalFileName() + "\"")
+                .body(resource);
     }
 
     @DeleteMapping("/{id}")
@@ -84,30 +76,28 @@ public class CVController {
     @PostMapping
     public ResponseEntity<CVResponse> createCV(
             @AuthenticationPrincipal AuthenticatedUser user,
-            @RequestBody CVCreateRequest request) {
-        try {
-            CV cv = cvService.createCV(request.name(), request.type(), request.externalUrl(), user.id());
-            return ResponseEntity.status(HttpStatus.CREATED).body(CVResponse.fromEntity(cv));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+            @Valid @RequestBody CVCreateRequest request) {
+        CV cv = cvService.createCV(request.name(), request.type(), request.externalUrl(), user.id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(CVResponse.fromEntity(cv));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CVResponse> updateCV(
             @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
-            @RequestBody CVUpdateRequest request) {
-        try {
-            CV cv = cvService.updateCV(id, request.name(), request.externalUrl(), user.id());
-            return ResponseEntity.ok(CVResponse.fromEntity(cv));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+            @Valid @RequestBody CVUpdateRequest request) {
+        CV cv = cvService.updateCV(id, request.name(), request.externalUrl(), user.id());
+        return ResponseEntity.ok(CVResponse.fromEntity(cv));
     }
 
-    public record CVCreateRequest(String name, CVType type, String externalUrl) {}
-    public record CVUpdateRequest(String name, String externalUrl) {}
+    public record CVCreateRequest(
+            @NotBlank(message = "Nazwa CV nie może być pusta") String name,
+            CVType type,
+            String externalUrl) {}
+
+    public record CVUpdateRequest(
+            @NotBlank(message = "Nazwa CV nie może być pusta") String name,
+            String externalUrl) {}
 
     public record CVResponse(
             Long id,

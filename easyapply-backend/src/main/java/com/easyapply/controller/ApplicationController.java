@@ -8,6 +8,7 @@ import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.ApplicationService;
 import com.easyapply.service.CVService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -84,7 +85,7 @@ public class ApplicationController {
     public ResponseEntity<ApplicationResponse> assignCV(
             @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
-            @RequestBody AssignCVRequest request) {
+            @Valid @RequestBody AssignCVRequest request) {
         if (request.cvId() == null) {
             cvService.removeCVFromApplication(id, user.id());
         } else {
@@ -105,10 +106,10 @@ public class ApplicationController {
     public ResponseEntity<ApplicationResponse> addStage(
             @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
-            @RequestBody AddStageRequest request) {
+            @Valid @RequestBody AddStageRequest request) {
         return ResponseEntity.ok(applicationService.addStage(id, request.stageName(), user.id()));
     }
 
     public record AssignCVRequest(Long cvId) {}
-    public record AddStageRequest(String stageName) {}
+    public record AddStageRequest(@NotBlank(message = "Nazwa etapu nie może być pusta") String stageName) {}
 }

@@ -127,6 +127,7 @@ public class ApplicationService {
         return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
 
+    @Transactional
     private void markCurrentStageCompleted(Application application) {
         if (application.getCurrentStage() != null) {
             stageHistoryRepository.findByApplicationIdOrderByCreatedAtAsc(application.getId()).stream()

@@ -56,6 +56,7 @@ public class UserService {
                 });
     }
 
+    @Transactional(readOnly = true)
     public User getByGoogleId(String googleId) {
         return userRepository.findByGoogleId(googleId)
                 .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));

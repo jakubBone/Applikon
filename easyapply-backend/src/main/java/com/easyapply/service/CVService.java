@@ -125,6 +125,7 @@ public class CVService {
                 .orElseThrow(() -> new EntityNotFoundException("CV o ID " + id + " nie zostało znalezione"));
     }
 
+    @Transactional(readOnly = true)
     public Resource downloadCV(Long id, UUID userId) throws MalformedURLException {
         CV cv = findById(id, userId);
         Path filePath = Paths.get(cv.getFilePath());

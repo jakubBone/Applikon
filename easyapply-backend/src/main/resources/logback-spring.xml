@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!--
+        Importujemy domyślne ustawienia Spring Boot (kolory w konsoli, poziomy logowania).
+        Rozszerzamy je o MDC z userId zamiast pisać konfigurację od zera.
+    -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!--
+        %X{userId} — wartość z MDC pod kluczem "userId".
+        Jeśli użytkownik nie jest zalogowany (np. /api/auth/refresh), pole jest puste.
+        Separator ":-" oznacza: użyj "anonymous" jeśli klucz nie istnieje.
+    -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%X{userId:-anonymous}]){cyan} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- Redukuj szum od Hibernate i Spring Security w logach -->
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.springframework.security" level="WARN"/>
+
+</configuration>
