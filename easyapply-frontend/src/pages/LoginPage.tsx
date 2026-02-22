@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import '../App.css'
 
 /**
  * Publiczna strona logowania.
