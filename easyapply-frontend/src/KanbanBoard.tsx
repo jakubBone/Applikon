@@ -10,19 +10,27 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import type { Application, StageUpdateRequest } from './types/domain'
 import './KanbanBoard.css'
 
 // Helper: Check if mobile
 const isMobile = () => window.innerWidth <= 768
 
+interface KanbanStatus {
+  id: string
+  label: string
+  color: string
+}
+
 // Statusy Kanban - 3 kolumny
-const STATUSES = [
+const STATUSES: KanbanStatus[] = [
   { id: 'WYSLANE', label: 'Wysłane', color: '#3498db' },
   { id: 'W_PROCESIE', label: 'W procesie', color: '#f39c12' },
   { id: 'ZAKONCZONE', label: 'Zakończone', color: '#95a5a6' },
@@ -46,21 +54,29 @@ const REJECTION_REASONS = [
 ]
 
 // Karta aplikacji (draggable)
-function ApplicationCard({ application, isDragging, onClick, onStageChange, onLongPress }) {
+interface ApplicationCardProps {
+  application: Application
+  isDragging: boolean
+  onClick: (app: Application) => void
+  onStageChange: (id: number, data: StageUpdateRequest) => void
+  onLongPress: (app: Application) => void
+}
+
+function ApplicationCard({ application, isDragging, onClick, onStageChange, onLongPress }: ApplicationCardProps) {
   const [showStageDropdown, setShowStageDropdown] = useState(false)
   const [customStageInput, setCustomStageInput] = useState('')
   const [isLifting, setIsLifting] = useState(false)
   const [showHint, setShowHint] = useState(false)
-  const dropdownRef = useRef(null)
-  const pressTimerRef = useRef(null)
-  const touchMovedRef = useRef(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const pressTimerRef = useRef<number | null>(null)
+  const touchMovedRef = useRef<boolean>(false)
 
   // Zamknij dropdown przy kliknięciu poza
   useEffect(() => {
     if (!showStageDropdown) return
 
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowStageDropdown(false)
         setCustomStageInput('')
       }
@@ -85,12 +101,12 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
   }
 
   // Long press detection (mobile only - 500ms)
-  const handleTouchStart = (e) => {
+  const handleTouchStart = () => {
     if (!isMobile()) return
 
     touchMovedRef.current = false
 
-    pressTimerRef.current = setTimeout(() => {
+    pressTimerRef.current = window.setTimeout(() => {
       // Haptic feedback
       if (navigator.vibrate) {
         navigator.vibrate(50)
@@ -100,9 +116,7 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
       setIsLifting(true)
 
       // Trigger long press immediately
-      if (onLongPress) {
-        onLongPress(application)
-      }
+      onLongPress(application)
 
       // Hide hint after modal opens
       setTimeout(() => {
@@ -114,13 +128,13 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
 
   const handleTouchMove = () => {
     touchMovedRef.current = true
-    clearTimeout(pressTimerRef.current)
+    if (pressTimerRef.current !== null) clearTimeout(pressTimerRef.current)
     setIsLifting(false)
     setShowHint(false)
   }
 
   const handleTouchEnd = () => {
-    clearTimeout(pressTimerRef.current)
+    if (pressTimerRef.current !== null) clearTimeout(pressTimerRef.current)
     if (!touchMovedRef.current && !showHint) {
       // Quick tap - normal click behavior (jeśli nie było long press)
       // Nic nie robimy, bo to drag & drop event
@@ -133,23 +147,21 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
     }, 100)
   }
 
-  const handleClick = (e) => {
+  const handleClick = (e: React.MouseEvent) => {
     if (e.defaultPrevented) return
-    if (onClick) onClick(application)
+    onClick(application)
   }
 
-  const handleStageSelect = (stage) => {
-    if (onStageChange) {
-      onStageChange(application.id, {
-        status: 'W_PROCESIE',
-        currentStage: stage
-      })
-    }
+  const handleStageSelect = (stage: string) => {
+    onStageChange(application.id, {
+      status: 'W_PROCESIE',
+      currentStage: stage
+    })
     setShowStageDropdown(false)
     setCustomStageInput('')
   }
 
-  const handleCustomStageSubmit = (e) => {
+  const handleCustomStageSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (customStageInput.trim()) {
@@ -262,7 +274,11 @@ function ApplicationCard({ application, isDragging, onClick, onStageChange, onLo
 }
 
 // Karta w overlay podczas przeciągania
-function DragOverlayCard({ application }) {
+interface DragOverlayCardProps {
+  application: Application
+}
+
+function DragOverlayCard({ application }: DragOverlayCardProps) {
   return (
     <div className="kanban-card dragging">
       <h4>{application.company}</h4>
@@ -272,17 +288,24 @@ function DragOverlayCard({ application }) {
 }
 
 // Modal wyboru etapu
-function StageModal({ isOpen, onClose, onSelect, currentStage }) {
+interface StageModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSelect: (stage: string) => void
+  currentStage?: string | null
+}
+
+function StageModal({ isOpen, onClose, onSelect, currentStage }: StageModalProps) {
   const [customStage, setCustomStage] = useState('')
 
   if (!isOpen) return null
 
-  const handleSelect = (stage) => {
+  const handleSelect = (stage: string) => {
     onSelect(stage)
     onClose()
   }
 
-  const handleCustomSubmit = (e) => {
+  const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (customStage.trim()) {
       onSelect(customStage.trim())
@@ -322,7 +345,12 @@ function StageModal({ isOpen, onClose, onSelect, currentStage }) {
 }
 
 // Onboarding Overlay (tylko mobile, pierwszy raz)
-function OnboardingOverlay({ isOpen, onClose }) {
+interface OnboardingOverlayProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+function OnboardingOverlay({ isOpen, onClose }: OnboardingOverlayProps) {
   if (!isOpen) return null
 
   return (
@@ -364,8 +392,17 @@ function OnboardingOverlay({ isOpen, onClose }) {
 }
 
 // Move Modal (Bottom Sheet dla mobile)
-function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicationsByStatus }) {
-  const [selectedStatus, setSelectedStatus] = useState(null)
+interface MoveModalProps {
+  isOpen: boolean
+  onClose: () => void
+  card: Application | null
+  statuses: KanbanStatus[]
+  onMove: (status: string) => void
+  getApplicationsByStatus: (statusId: string) => Application[]
+}
+
+function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicationsByStatus }: MoveModalProps) {
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
 
   useEffect(() => {
     if (card) {
@@ -430,8 +467,14 @@ function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicationsByS
 }
 
 // Modal zakończenia - wybór oferty lub odmowy
-function EndModal({ isOpen, onClose, onSelect }) {
-  const [selectedOutcome, setSelectedOutcome] = useState(null) // 'OFERTA' lub 'ODMOWA'
+interface EndModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSelect: (endData: StageUpdateRequest) => void
+}
+
+function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
+  const [selectedOutcome, setSelectedOutcome] = useState<'OFERTA' | 'ODMOWA' | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionDetails, setRejectionDetails] = useState('')
 
@@ -513,7 +556,13 @@ function EndModal({ isOpen, onClose, onSelect }) {
 }
 
 // Kolumna Kanban
-function KanbanColumn({ status, applications, children }) {
+interface KanbanColumnProps {
+  status: KanbanStatus
+  applications: Application[]
+  children: React.ReactNode
+}
+
+function KanbanColumn({ status, applications, children }: KanbanColumnProps) {
   const { setNodeRef } = useSortable({
     id: status.id,
     data: { type: 'column' }
@@ -538,20 +587,27 @@ function KanbanColumn({ status, applications, children }) {
 }
 
 // Główny komponent Kanban
-function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick }) {
-  const [activeId, setActiveId] = useState(null)
+interface KanbanBoardProps {
+  applications: Application[]
+  onStatusChange: (id: number, status: string) => void
+  onStageChange: (id: number, data: StageUpdateRequest) => void
+  onCardClick: (app: Application) => void
+}
+
+function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageChange, onCardClick }: KanbanBoardProps) {
+  const [activeId, setActiveId] = useState<string | null>(null)
   const [stageModalOpen, setStageModalOpen] = useState(false)
   const [endModalOpen, setEndModalOpen] = useState(false)
-  const [pendingApplication, setPendingApplication] = useState(null)
+  const [pendingApplication, setPendingApplication] = useState<Application | null>(null)
 
   // Mobile states
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showSwipeHint, setShowSwipeHint] = useState(false)
   const [moveModalOpen, setMoveModalOpen] = useState(false)
-  const [moveModalCard, setMoveModalCard] = useState(null)
-  const [successToast, setSuccessToast] = useState(null)
+  const [moveModalCard, setMoveModalCard] = useState<Application | null>(null)
+  const [successToast, setSuccessToast] = useState<string | null>(null)
   const [activeColumn, setActiveColumn] = useState(0)
-  const kanbanBoardRef = useRef(null)
+  const kanbanBoardRef = useRef<HTMLDivElement>(null)
 
   // Check onboarding on mount (mobile only) - DISABLED (replaced by main TourGuide)
   // useEffect(() => {
@@ -579,25 +635,22 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
   )
 
   // Sortowanie po dacie aplikacji (najnowsze na górze)
-  const sortByDate = (apps) => {
-    return [...apps].sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt))
+  const sortByDate = (apps: Application[]): Application[] => {
+    return [...apps].sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
   }
 
   // Grupowanie aplikacji według statusu (łączymy OFERTA i ODMOWA w ZAKONCZONE)
   // Obsługuje też stare statusy: ROZMOWA, ZADANIE -> W_PROCESIE, ODRZUCONE -> ZAKONCZONE
-  const getApplicationsByStatus = (statusId) => {
-    let filtered
+  const getApplicationsByStatus = (statusId: string): Application[] => {
+    let filtered: Application[]
     if (statusId === 'ZAKONCZONE') {
       filtered = applications.filter(app =>
         app.status === 'OFERTA' ||
-        app.status === 'ODMOWA' ||
-        app.status === 'ODRZUCONE'  // stary status
+        app.status === 'ODMOWA'
       )
     } else if (statusId === 'W_PROCESIE') {
       filtered = applications.filter(app =>
-        app.status === 'W_PROCESIE' ||
-        app.status === 'ROZMOWA' ||  // stary status
-        app.status === 'ZADANIE'     // stary status
+        app.status === 'W_PROCESIE'
       )
     } else {
       filtered = applications.filter(app => app.status === statusId)
@@ -605,11 +658,11 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
     return sortByDate(filtered)
   }
 
-  const findApplication = (id) => {
+  const findApplication = (id: string): Application | undefined => {
     return applications.find(app => app.id.toString() === id)
   }
 
-  const getColumnByStatus = (status) => {
+  const getColumnByStatus = (status: string): string => {
     // Nowe statusy
     if (status === 'OFERTA' || status === 'ODMOWA') return 'ZAKONCZONE'
     // Stare statusy (kompatybilność wsteczna)
@@ -618,29 +671,29 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
     return status
   }
 
-  const handleDragStart = (event) => {
-    setActiveId(event.active.id)
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
   }
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     setActiveId(null)
 
     if (!over) return
 
-    const activeApp = findApplication(active.id)
+    const activeApp = findApplication(active.id as string)
     if (!activeApp) return
 
-    let targetColumn = null
+    let targetColumn: string | null = null
 
     // Sprawdź czy upuszczono na kartę lub kolumnę
-    const overApp = findApplication(over.id)
+    const overApp = findApplication(over.id as string)
     if (overApp) {
       targetColumn = getColumnByStatus(overApp.status)
     } else {
       const isColumn = STATUSES.find(s => s.id === over.id)
       if (isColumn) {
-        targetColumn = over.id
+        targetColumn = over.id as string
       }
     }
 
@@ -674,7 +727,7 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
     }
   }
 
-  const handleStageSelect = (stageName) => {
+  const handleStageSelect = (stageName: string) => {
     if (pendingApplication) {
       onStageChange(pendingApplication.id, {
         status: 'W_PROCESIE',
@@ -684,7 +737,7 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
     }
   }
 
-  const handleEndSelect = (endData) => {
+  const handleEndSelect = (endData: StageUpdateRequest) => {
     if (pendingApplication) {
       onStageChange(pendingApplication.id, endData)
       setPendingApplication(null)
@@ -718,14 +771,14 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
   }
 
   // Mobile: Long press handler
-  const handleLongPress = (application) => {
+  const handleLongPress = (application: Application) => {
     if (!isMobile()) return
     setMoveModalCard(application)
     setMoveModalOpen(true)
   }
 
   // Mobile: Move card via modal
-  const handleMoveCard = (targetStatus) => {
+  const handleMoveCard = (targetStatus: string) => {
     if (!moveModalCard) return
 
     // Obsługa przejścia do W_PROCESIE
@@ -768,7 +821,7 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
   }
 
   // Mobile: Success toast
-  const showSuccessToast = (message) => {
+  const showSuccessToast = (message: string) => {
     setSuccessToast(message)
     setTimeout(() => {
       setSuccessToast(null)
@@ -784,7 +837,8 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
       if (!board) return
 
       const scrollLeft = board.scrollLeft
-      const columnWidth = board.querySelector('.kanban-column')?.offsetWidth || 0
+      const columnEl = board.querySelector('.kanban-column') as HTMLElement | null
+      const columnWidth = columnEl?.offsetWidth ?? 0
       const gap = 16
       const index = Math.round(scrollLeft / (columnWidth + gap))
       setActiveColumn(index)
@@ -798,11 +852,12 @@ function KanbanBoard({ applications, onStatusChange, onStageChange, onCardClick 
   }, [])
 
   // Mobile: Navigate to column
-  const scrollToColumn = (index) => {
+  const scrollToColumn = (index: number) => {
     const board = kanbanBoardRef.current
     if (!board) return
 
-    const columnWidth = board.querySelector('.kanban-column')?.offsetWidth || 0
+    const columnEl = board.querySelector('.kanban-column') as HTMLElement | null
+    const columnWidth = columnEl?.offsetWidth ?? 0
     const gap = 16
     board.scrollTo({ left: index * (columnWidth + gap), behavior: 'smooth' })
   }

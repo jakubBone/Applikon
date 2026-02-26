@@ -30,17 +30,17 @@ describe('App Component', () => {
     vi.resetAllMocks()
 
     // Default mocks
-    api.fetchApplications.mockResolvedValue([])
-    api.fetchBadgeStats.mockResolvedValue({
+    vi.mocked(api.fetchApplications).mockResolvedValue([])
+    vi.mocked(api.fetchBadgeStats).mockResolvedValue({
       totalRejections: 0,
       totalGhosting: 0,
       totalOffers: 0,
       sweetRevengeUnlocked: false,
       rejectionBadge: { name: null },
       ghostingBadge: { name: null }
-    })
-    api.checkDuplicate.mockResolvedValue([])
-    api.fetchCVs.mockResolvedValue([])
+    } as never)
+    vi.mocked(api.checkDuplicate).mockResolvedValue([])
+    vi.mocked(api.fetchCVs).mockResolvedValue([])
   })
 
   // ==================== INITIAL RENDERING Tests ====================
@@ -74,7 +74,7 @@ describe('App Component', () => {
 
     it('pokazuje komunikat ładowania', async () => {
       // Delay the API response
-      api.fetchApplications.mockImplementation(() => new Promise(() => {}))
+      vi.mocked(api.fetchApplications).mockImplementation(() => new Promise(() => {}))
 
       renderApp()
 
@@ -94,8 +94,8 @@ describe('App Component', () => {
 
   describe('View Switching', () => {
     it('przełącza na widok listy', async () => {
-      api.fetchApplications.mockResolvedValue([
-        { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() }
+      vi.mocked(api.fetchApplications).mockResolvedValue([
+        { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() } as never
       ])
 
       renderApp()
@@ -180,13 +180,13 @@ describe('App Component', () => {
     it('tworzy aplikację po wypełnieniu formularza', async () => {
       const user = userEvent.setup()
 
-      api.createApplication.mockResolvedValue({
+      vi.mocked(api.createApplication).mockResolvedValue({
         id: 1,
         company: 'Google',
         position: 'Developer',
         status: 'WYSLANE',
         appliedAt: new Date().toISOString()
-      })
+      } as never)
 
       renderApp()
 
@@ -216,13 +216,13 @@ describe('App Component', () => {
     it('wyświetla ostrzeżenie o duplikacie', async () => {
       const user = userEvent.setup()
 
-      api.checkDuplicate.mockResolvedValue([
+      vi.mocked(api.checkDuplicate).mockResolvedValue([
         {
           id: 1,
           company: 'Google',
           position: 'Developer',
           appliedAt: '2024-01-15T10:00:00'
-        }
+        } as never
       ])
 
       renderApp()
@@ -244,22 +244,22 @@ describe('App Component', () => {
     it('pozwala kontynuować mimo duplikatu', async () => {
       const user = userEvent.setup()
 
-      api.checkDuplicate.mockResolvedValue([
+      vi.mocked(api.checkDuplicate).mockResolvedValue([
         {
           id: 1,
           company: 'Google',
           position: 'Developer',
           appliedAt: '2024-01-15T10:00:00'
-        }
+        } as never
       ])
 
-      api.createApplication.mockResolvedValue({
+      vi.mocked(api.createApplication).mockResolvedValue({
         id: 2,
         company: 'Google',
         position: 'Developer',
         status: 'WYSLANE',
         appliedAt: new Date().toISOString()
-      })
+      } as never)
 
       renderApp()
 
@@ -338,9 +338,9 @@ describe('App Component', () => {
 
   describe('Application List', () => {
     it('wyświetla aplikacje w widoku Kanban', async () => {
-      api.fetchApplications.mockResolvedValue([
-        { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() },
-        { id: 2, company: 'Meta', position: 'Engineer', status: 'W_PROCESIE', appliedAt: new Date().toISOString() }
+      vi.mocked(api.fetchApplications).mockResolvedValue([
+        { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() } as never,
+        { id: 2, company: 'Meta', position: 'Engineer', status: 'W_PROCESIE', appliedAt: new Date().toISOString() } as never
       ])
 
       renderApp()
@@ -352,7 +352,7 @@ describe('App Component', () => {
     })
 
     it('wyświetla kolumny Kanban', async () => {
-      api.fetchApplications.mockResolvedValue([])
+      vi.mocked(api.fetchApplications).mockResolvedValue([])
 
       renderApp()
 
@@ -368,7 +368,7 @@ describe('App Component', () => {
 
   describe('Error Handling', () => {
     it('obsługuje błąd pobierania aplikacji — aplikacja nie crashuje', async () => {
-      api.fetchApplications.mockRejectedValue(new Error('Network error'))
+      vi.mocked(api.fetchApplications).mockRejectedValue(new Error('Network error'))
 
       renderApp()
 
@@ -381,7 +381,7 @@ describe('App Component', () => {
     it('obsługuje błąd tworzenia aplikacji — formularz pozostaje otwarty', async () => {
       const user = userEvent.setup()
 
-      api.createApplication.mockRejectedValue(new Error('Create failed'))
+      vi.mocked(api.createApplication).mockRejectedValue(new Error('Create failed'))
 
       renderApp()
 

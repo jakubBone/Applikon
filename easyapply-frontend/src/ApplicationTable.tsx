@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react'
 import './ApplicationTable.css'
+import type { Application } from './types/domain'
 
-// Funkcja do generowania koloru na podstawie nazwy firmy
-const getCompanyColor = (company) => {
+interface Props {
+  applications: Application[]
+  onRowClick: (app: Application) => void
+  onStatusChange?: (id: number, status: string) => void
+  onDelete: (ids: Set<number>) => void
+}
+
+const getCompanyColor = (company: string): string => {
   const colors = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
     '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
@@ -15,8 +22,7 @@ const getCompanyColor = (company) => {
   return colors[Math.abs(hash) % colors.length]
 }
 
-// Formatowanie daty (dd.mm.yyyy)
-const formatDate = (dateString) => {
+const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   return date.toLocaleDateString('pl-PL', {
     day: '2-digit',
@@ -25,11 +31,10 @@ const formatDate = (dateString) => {
   })
 }
 
-// Ile dni minęło
-const getDaysSince = (dateString) => {
+const getDaysSince = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
-  const diffMs = now - date
+  const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
   if (diffDays === 0) return 'Dzisiaj'
@@ -37,7 +42,7 @@ const getDaysSince = (dateString) => {
   return `${diffDays} dni`
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   'WYSLANE': { label: 'Wysłane', color: '#3498db', bg: '#ebf5fb' },
   'W_PROCESIE': { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
   'OFERTA': { label: 'Oferta', color: '#27ae60', bg: '#eafaf1' },
@@ -48,23 +53,22 @@ const statusConfig = {
   'ODRZUCONE': { label: 'Odmowa', color: '#95a5a6', bg: '#f5f5f5' }
 }
 
-function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }) {
-  const [selectedIds, setSelectedIds] = useState(new Set())
+function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [sortField, setSortField] = useState('appliedAt')
-  const [sortDirection, setSortDirection] = useState('desc')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
-  // Detect mobile on resize
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768)
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const handleSelectAll = (e) => {
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedIds(new Set(applications.map(app => app.id)))
     } else {
@@ -72,7 +76,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
     }
   }
 
-  const handleSelectRow = (id, e) => {
+  const handleSelectRow = (id: number, e: React.SyntheticEvent) => {
     e.stopPropagation()
     const newSelected = new Set(selectedIds)
     if (newSelected.has(id)) {
@@ -83,7 +87,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
     setSelectedIds(newSelected)
   }
 
-  const handleSort = (field) => {
+  const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
@@ -100,9 +104,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
     }
   }
 
-  // Filtrowanie
   const filteredApplications = applications.filter(app => {
-    // Filtr tekstowy
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       const matchesSearch =
@@ -111,7 +113,6 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
         (app.source && app.source.toLowerCase().includes(query))
       if (!matchesSearch) return false
     }
-    // Filtr statusu
     if (statusFilter !== 'ALL' && app.status !== statusFilter) {
       return false
     }
@@ -119,31 +120,30 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
   })
 
   const sortedApplications = [...filteredApplications].sort((a, b) => {
-    let aVal = a[sortField]
-    let bVal = b[sortField]
+    let aVal = (a as Record<string, unknown>)[sortField]
+    let bVal = (b as Record<string, unknown>)[sortField]
 
     if (sortField === 'salaryMin') {
-      aVal = aVal || 0
-      bVal = bVal || 0
+      aVal = (aVal as number) || 0
+      bVal = (bVal as number) || 0
     }
 
     if (sortField === 'appliedAt') {
-      aVal = new Date(aVal)
-      bVal = new Date(bVal)
+      aVal = new Date(aVal as string)
+      bVal = new Date(bVal as string)
     }
 
-    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
-    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
+    if (aVal! < bVal!) return sortDirection === 'asc' ? -1 : 1
+    if (aVal! > bVal!) return sortDirection === 'asc' ? 1 : -1
     return 0
   })
 
-  // Statystyki dla filtrów
-  const statusCounts = applications.reduce((acc, app) => {
+  const statusCounts = applications.reduce<Record<string, number>>((acc, app) => {
     acc[app.status] = (acc[app.status] || 0) + 1
     return acc
   }, {})
 
-  const formatSalary = (app) => {
+  const formatSalary = (app: Application): string => {
     if (!app.salaryMin) return '-'
 
     let salaryStr = app.salaryMin.toLocaleString('pl-PL')
@@ -152,7 +152,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
     }
     salaryStr += ` ${app.currency || 'PLN'}`
 
-    const extras = []
+    const extras: string[] = []
     if (app.salaryType) extras.push(app.salaryType.toLowerCase())
     if (app.contractType) extras.push(app.contractType)
 
@@ -163,7 +163,6 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
     return salaryStr
   }
 
-  // Render mobile card view
   const renderMobileCards = () => {
     if (sortedApplications.length === 0) {
       return (
@@ -198,10 +197,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                 />
                 <div className="mobile-card-main">
                   <div className="mobile-card-company-row">
-                    <span
-                      className="mobile-card-initial"
-                      style={{ backgroundColor: companyColor }}
-                    >
+                    <span className="mobile-card-initial" style={{ backgroundColor: companyColor }}>
                       {app.company.charAt(0).toUpperCase()}
                     </span>
                     <span className="mobile-card-company">{app.company}</span>
@@ -215,9 +211,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                 {app.salaryMin && (
                   <div className="mobile-card-detail-row">
                     <span className="mobile-card-detail-icon">💰</span>
-                    <span className="mobile-card-detail-value salary">
-                      {formatSalary(app)}
-                    </span>
+                    <span className="mobile-card-detail-value salary">{formatSalary(app)}</span>
                   </div>
                 )}
                 {app.source && (
@@ -234,11 +228,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                 </span>
                 <span
                   className="mobile-card-status"
-                  style={{
-                    backgroundColor: status.bg,
-                    color: status.color,
-                    borderColor: status.color
-                  }}
+                  style={{ backgroundColor: status.bg, color: status.color, borderColor: status.color }}
                 >
                   {status.label}
                 </span>
@@ -280,7 +270,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                 key={key}
                 className={`status-filter-btn ${statusFilter === key ? 'active' : ''}`}
                 onClick={() => setStatusFilter(key)}
-                style={{ '--status-color': config.color }}
+                style={{ '--status-color': config.color } as React.CSSProperties}
               >
                 {config.label} ({count})
               </button>
@@ -301,10 +291,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
             Zaznaczono: {selectedIds.size} {selectedIds.size === 1 ? 'aplikację' : selectedIds.size < 5 ? 'aplikacje' : 'aplikacji'}
           </span>
           <div className="selection-actions">
-            <button
-              className="action-btn delete-btn"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
+            <button className="action-btn delete-btn" onClick={() => setShowDeleteConfirm(true)}>
               Usuń zaznaczone
             </button>
           </div>
@@ -320,16 +307,10 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
             </p>
             <p className="confirm-warning">Ta operacja jest nieodwracalna.</p>
             <div className="confirm-actions">
-              <button
-                className="confirm-btn cancel"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
+              <button className="confirm-btn cancel" onClick={() => setShowDeleteConfirm(false)}>
                 Anuluj
               </button>
-              <button
-                className="confirm-btn delete"
-                onClick={handleDeleteSelected}
-              >
+              <button className="confirm-btn delete" onClick={handleDeleteSelected}>
                 Usuń
               </button>
             </div>
@@ -337,7 +318,6 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
         </div>
       )}
 
-      {/* Desktop: Table view */}
       {!isMobile && (
         <>
           <table className="app-table">
@@ -354,57 +334,41 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                   <span className="th-content">
                     <span className="th-icon">🏢</span>
                     Firma
-                    {sortField === 'company' && (
-                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    {sortField === 'company' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('position')}>
                   <span className="th-content">
                     <span className="th-icon">💼</span>
                     Stanowisko
-                    {sortField === 'position' && (
-                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    {sortField === 'position' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('salaryMin')}>
                   <span className="th-content">
                     <span className="th-icon">💰</span>
                     Wynagrodzenie
-                    {sortField === 'salaryMin' && (
-                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    {sortField === 'salaryMin' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th>
-                  <span className="th-content">
-                    <span className="th-icon">🔗</span>
-                    Źródło
-                  </span>
+                  <span className="th-content"><span className="th-icon">🔗</span>Źródło</span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('appliedAt')}>
                   <span className="th-content">
                     <span className="th-icon">📅</span>
                     Data
-                    {sortField === 'appliedAt' && (
-                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    {sortField === 'appliedAt' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th>
-                  <span className="th-content">
-                    <span className="th-icon">⏱️</span>
-                    Dni temu
-                  </span>
+                  <span className="th-content"><span className="th-icon">⏱️</span>Dni temu</span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('status')}>
                   <span className="th-content">
                     <span className="th-icon">📊</span>
                     Status
-                    {sortField === 'status' && (
-                      <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    {sortField === 'status' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th className="menu-col"></th>
@@ -430,10 +394,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                     </td>
                     <td className="company-col">
                       <div className="company-cell">
-                        <span
-                          className="company-initial"
-                          style={{ backgroundColor: companyColor }}
-                        >
+                        <span className="company-initial" style={{ backgroundColor: companyColor }}>
                           {app.company.charAt(0).toUpperCase()}
                         </span>
                         <span className="company-name">{app.company}</span>
@@ -441,16 +402,12 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                     </td>
                     <td className="position-col">{app.position}</td>
                     <td className="salary-col">
-                      <span className="salary-value">
-                        {formatSalary(app)}
-                      </span>
+                      <span className="salary-value">{formatSalary(app)}</span>
                     </td>
                     <td className="source-col">
-                      {app.source ? (
-                        <span className="source-link">{app.source}</span>
-                      ) : (
-                        <span className="no-source">-</span>
-                      )}
+                      {app.source
+                        ? <span className="source-link">{app.source}</span>
+                        : <span className="no-source">-</span>}
                     </td>
                     <td className="date-col">
                       <span className="date-value">{formatDate(app.appliedAt)}</span>
@@ -461,11 +418,7 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
                     <td className="status-col">
                       <span
                         className="status-badge"
-                        style={{
-                          backgroundColor: status.bg,
-                          color: status.color,
-                          borderColor: status.color
-                        }}
+                        style={{ backgroundColor: status.bg, color: status.color, borderColor: status.color }}
                       >
                         {status.label}
                       </span>
@@ -489,7 +442,6 @@ function ApplicationTable({ applications, onRowClick, onStatusChange, onDelete }
         </>
       )}
 
-      {/* Mobile: Card view */}
       {isMobile && renderMobileCards()}
     </div>
   )

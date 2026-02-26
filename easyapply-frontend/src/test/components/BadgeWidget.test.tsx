@@ -24,7 +24,7 @@ describe('BadgeWidget', () => {
 
   describe('Rendering', () => {
     it('nie renderuje nic gdy brak danych', () => {
-      useBadgeStats.mockReturnValue({ data: undefined })
+      vi.mocked(useBadgeStats).mockReturnValue({ data: undefined } as never)
 
       const { container } = render(<BadgeWidget />)
 
@@ -32,7 +32,7 @@ describe('BadgeWidget', () => {
     })
 
     it('renderuje nagłówek z ikoną odznak', () => {
-      useBadgeStats.mockReturnValue({ data: mockStats() })
+      vi.mocked(useBadgeStats).mockReturnValue({ data: mockStats() } as never)
 
       render(<BadgeWidget />)
 
@@ -40,7 +40,7 @@ describe('BadgeWidget', () => {
     })
 
     it('jest domyślnie zwinięty', () => {
-      useBadgeStats.mockReturnValue({ data: mockStats({ totalRejections: 5 }) })
+      vi.mocked(useBadgeStats).mockReturnValue({ data: mockStats({ totalRejections: 5 }) } as never)
 
       render(<BadgeWidget />)
 
@@ -48,12 +48,12 @@ describe('BadgeWidget', () => {
     })
 
     it('rozwija się po kliknięciu nagłówka', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,
           rejectionBadge: { name: 'Rękawica', icon: '🥊', threshold: 5 },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -66,7 +66,7 @@ describe('BadgeWidget', () => {
 
   describe('Rejection Badges', () => {
     it('wyświetla "Rękawica" przy 5 odmowach', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,
           rejectionBadge: {
@@ -78,7 +78,7 @@ describe('BadgeWidget', () => {
             nextBadgeName: 'Patelnia',
           },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -88,7 +88,7 @@ describe('BadgeWidget', () => {
     })
 
     it('wyświetla następną odznakę do zdobycia', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 7,
           rejectionBadge: {
@@ -100,7 +100,7 @@ describe('BadgeWidget', () => {
             nextBadgeName: 'Patelnia',
           },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -109,7 +109,7 @@ describe('BadgeWidget', () => {
     })
 
     it('pokazuje MAX gdy osiągnięto najwyższą odznakę', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 100,
           rejectionBadge: {
@@ -121,7 +121,7 @@ describe('BadgeWidget', () => {
             nextBadgeName: null,
           },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -134,7 +134,7 @@ describe('BadgeWidget', () => {
 
   describe('Ghosting Badges', () => {
     it('wyświetla "Widmo" przy 5 ghostingach', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,
           totalGhosting: 5,
@@ -148,7 +148,7 @@ describe('BadgeWidget', () => {
             nextBadgeName: 'Cierpliwy Mnich',
           },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -157,14 +157,14 @@ describe('BadgeWidget', () => {
     })
 
     it('wyświetla liczbę ghostingów', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 10,
           totalGhosting: 8,
           rejectionBadge: { name: 'Patelnia', icon: '🍳', threshold: 10 },
           ghostingBadge: { name: 'Widmo', icon: '👻', threshold: 5 },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -177,7 +177,7 @@ describe('BadgeWidget', () => {
 
   describe('Sweet Revenge', () => {
     it('wyświetla Sweet Revenge gdy odblokowane', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 15,
           totalGhosting: 5,
@@ -186,7 +186,7 @@ describe('BadgeWidget', () => {
           rejectionBadge: { name: 'Patelnia', icon: '🍳', threshold: 10 },
           ghostingBadge: { name: 'Widmo', icon: '👻', threshold: 5 },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -196,14 +196,14 @@ describe('BadgeWidget', () => {
     })
 
     it('nie wyświetla Sweet Revenge gdy nie odblokowane', () => {
-      useBadgeStats.mockReturnValue({
+      vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,
           totalOffers: 1,
           sweetRevengeUnlocked: false,
           rejectionBadge: { name: 'Rękawica', icon: '🥊', threshold: 5 },
         }),
-      })
+      } as never)
 
       render(<BadgeWidget />)
       fireEvent.click(screen.getByText(/Twoje odznaki/))
@@ -216,7 +216,7 @@ describe('BadgeWidget', () => {
 
   describe('Error Handling', () => {
     it('nie renderuje nic gdy hook zwraca brak danych', () => {
-      useBadgeStats.mockReturnValue({ data: undefined, error: new Error('API Error') })
+      vi.mocked(useBadgeStats).mockReturnValue({ data: undefined, error: new Error('API Error') } as never)
 
       const { container } = render(<BadgeWidget />)
 

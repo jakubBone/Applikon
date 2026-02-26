@@ -16,7 +16,7 @@ export const createTestQueryClient = () =>
  * Wrapper opakowujący komponent w QueryClientProvider.
  * Używaj jako `wrapper` w opcjach render() z Testing Library.
  */
-export function QueryWrapper({ children }) {
+export function QueryWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient()
   return (
     <QueryClientProvider client={queryClient}>

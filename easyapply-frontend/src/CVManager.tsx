@@ -9,16 +9,22 @@ import {
   updateCV,
   downloadCV
 } from './services/api'
+import type { Application, CV, CVType } from './types/domain'
 
-function CVManager({ applications, onCVAssigned }) {
-  const [cvList, setCvList] = useState([])
+interface Props {
+  applications: Application[]
+  onCVAssigned: () => void
+}
+
+function CVManager({ applications, onCVAssigned }: Props) {
+  const [cvList, setCvList] = useState<CV[]>([])
   const [uploading, setUploading] = useState(false)
-  const [selectedCv, setSelectedCv] = useState(null)
+  const [selectedCv, setSelectedCv] = useState<CV | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [addStep, setAddStep] = useState('choose')
-  const [linkFormData, setLinkFormData] = useState({ name: '', externalUrl: '', type: 'LINK' })
+  const [addStep, setAddStep] = useState<'choose' | 'file' | 'link'>('choose')
+  const [linkFormData, setLinkFormData] = useState<{ name: string; externalUrl: string; type: CVType }>({ name: '', externalUrl: '', type: 'LINK' })
   const [showAssignModal, setShowAssignModal] = useState(false)
-  const [selectedAppForAssign, setSelectedAppForAssign] = useState(null)
+  const [selectedAppForAssign, setSelectedAppForAssign] = useState<Application | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editFormData, setEditFormData] = useState({ name: '', externalUrl: '' })
 
@@ -29,7 +35,7 @@ function CVManager({ applications, onCVAssigned }) {
       // Jeśli było wybrane CV, odśwież je
       if (selectedCv) {
         const updated = data.find(cv => cv.id === selectedCv.id)
-        setSelectedCv(updated || null)
+        setSelectedCv(updated ?? null)
       }
     } catch (error) {
       console.error('Błąd pobierania CV:', error)
@@ -48,18 +54,18 @@ function CVManager({ applications, onCVAssigned }) {
   }
 
   // Liczenie użyć CV
-  const getUsageCount = (cvId) => {
+  const getUsageCount = (cvId: number): number => {
     return applications.filter(app => app.cvId === cvId).length
   }
 
   // Aplikacje przypisane do wybranego CV
-  const getAssignedApps = (cvId) => {
+  const getAssignedApps = (cvId: number): Application[] => {
     return applications.filter(app => app.cvId === cvId)
   }
 
   // Upload CV (plik)
-  const handleUpload = async (e) => {
-    const file = e.target.files[0]
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
 
     if (file.type !== 'application/pdf') {
@@ -90,7 +96,7 @@ function CVManager({ applications, onCVAssigned }) {
   }
 
   // Utwórz CV typu LINK lub NOTE
-  const handleCreateLinkOrNote = async (e) => {
+  const handleCreateLinkOrNote = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!linkFormData.name.trim()) {
@@ -102,7 +108,7 @@ function CVManager({ applications, onCVAssigned }) {
       const newCv = await createCV({
         originalFileName: linkFormData.name,
         type: linkFormData.type,
-        externalUrl: linkFormData.type === 'LINK' ? linkFormData.externalUrl : null
+        externalUrl: linkFormData.type === 'LINK' ? linkFormData.externalUrl : undefined
       })
       fetchCVs()
       setSelectedCv(newCv)
@@ -116,7 +122,7 @@ function CVManager({ applications, onCVAssigned }) {
   }
 
   // Pobierz/Otwórz CV
-  const handleOpen = async (cv) => {
+  const handleOpen = async (cv: CV) => {
     if (cv.type === 'LINK' && cv.externalUrl) {
       window.open(cv.externalUrl, '_blank')
     } else if (cv.type === 'FILE' || !cv.type) {
@@ -125,7 +131,7 @@ function CVManager({ applications, onCVAssigned }) {
   }
 
   // Usuń CV
-  const handleDelete = async (cvId) => {
+  const handleDelete = async (cvId: number) => {
     if (!confirm('Czy na pewno chcesz usunąć to CV? Zostanie ono również usunięte z przypisanych aplikacji.')) return
 
     try {
@@ -156,7 +162,7 @@ function CVManager({ applications, onCVAssigned }) {
   }
 
   // Usuń przypisanie CV
-  const handleRemoveAssignment = async (appId) => {
+  const handleRemoveAssignment = async (appId: number) => {
     if (!confirm('Czy na pewno chcesz usunąć przypisanie CV?')) return
 
     try {
@@ -178,8 +184,9 @@ function CVManager({ applications, onCVAssigned }) {
   }
 
   // Zapisz edycję CV
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!selectedCv) return
 
     if (!editFormData.name.trim()) {
       alert('Podaj nazwę CV')
@@ -189,7 +196,7 @@ function CVManager({ applications, onCVAssigned }) {
     try {
       const updatedCv = await updateCV(selectedCv.id, {
         originalFileName: editFormData.name,
-        externalUrl: selectedCv.type === 'LINK' ? editFormData.externalUrl : null
+        externalUrl: selectedCv.type === 'LINK' ? editFormData.externalUrl : undefined
       })
       setSelectedCv(updatedCv)
       fetchCVs()
@@ -200,14 +207,15 @@ function CVManager({ applications, onCVAssigned }) {
     }
   }
 
-  const formatSize = (bytes) => {
+  const formatSize = (bytes: number | null | undefined): string | null => {
     if (!bytes) return null
     if (bytes < 1024) return bytes + ' B'
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return '-'
     return new Date(dateString).toLocaleDateString('pl-PL', {
       day: '2-digit',
       month: '2-digit',
@@ -221,7 +229,7 @@ function CVManager({ applications, onCVAssigned }) {
     setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
   }
 
-  const renderCVItem = (cv) => {
+  const renderCVItem = (cv: CV) => {
     const usageCount = getUsageCount(cv.id)
     const typeClass = cv.type === 'LINK' ? 'type-link' : cv.type === 'NOTE' ? 'type-note' : 'type-file'
 
@@ -245,7 +253,7 @@ function CVManager({ applications, onCVAssigned }) {
     )
   }
 
-  const renderGroup = (title, icon, items, type) => {
+  const renderGroup = (title: string, icon: string, items: CV[], type: string) => {
     if (items.length === 0) return null
 
     return (

@@ -1,8 +1,25 @@
 import { useState, useEffect, useRef } from 'react'
 import './TourGuide.css'
 
+interface TourStep {
+  id: string
+  title: string
+  content: string
+  target: string | null
+  position: string
+  needsView: string
+  scrollIntoView?: boolean
+  autoClick?: boolean
+  highlightMultiple?: boolean
+  avoidFab?: boolean
+  compactOnMobile?: boolean
+  extraSpacing?: number
+  offsetX?: number
+  offsetY?: number
+}
+
 // Tour steps definition
-const getTourSteps = (isMobile) => [
+const getTourSteps = (isMobile: boolean): TourStep[] => [
   {
     id: 'welcome',
     title: '👋 Witaj w EasyApply!',
@@ -84,7 +101,7 @@ const getTourSteps = (isMobile) => [
     target: isMobile ? '.fab' : '.add-btn',
     position: isMobile ? 'left' : 'bottom',
     needsView: 'kanban',
-    avoidFab: isMobile,  // Specjalna flaga dla tooltipa na mobile
+    avoidFab: isMobile,
     compactOnMobile: true
   },
   {
@@ -143,27 +160,28 @@ const getTourSteps = (isMobile) => [
   }
 ]
 
-function TourGuide({ onComplete }) {
+interface TourGuideProps {
+  onComplete?: () => void
+}
+
+function TourGuide({ onComplete }: TourGuideProps) {
   const [isActive, setIsActive] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
-  const tooltipRef = useRef(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const transitioningRef = useRef(false)
 
   const steps = getTourSteps(isMobile)
 
   useEffect(() => {
-    // Check if tour was already shown
     const tourShown = localStorage.getItem('tour_guide_completed')
     if (!tourShown) {
-      // Small delay to ensure DOM is ready
       setTimeout(() => {
         setIsActive(true)
       }, 500)
     }
 
-    // Handle window resize
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768)
     }
@@ -171,14 +189,12 @@ function TourGuide({ onComplete }) {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Handle view transitions when step changes
   useEffect(() => {
     if (!isActive || transitioningRef.current) return
 
     const step = steps[currentStep]
     const currentView = getCurrentView()
 
-    // Check if we need to change view
     if (step.needsView && step.needsView !== currentView) {
       transitioningRef.current = true
       switchToView(step.needsView, () => {
@@ -187,62 +203,45 @@ function TourGuide({ onComplete }) {
       return
     }
 
-    // Ensure a CV is selected before showing assign step
     if (step.id === 'cv-assign-open') {
       const selected = document.querySelector('.cv-item.selected')
       if (!selected) {
         const firstCv = document.querySelector('.cv-item')
-        if (firstCv) {
-          firstCv.click()
-        }
+        if (firstCv) (firstCv as HTMLElement).click()
       }
     }
 
-    // Ensure assign modal is open for the confirmation step
     if (step.id === 'cv-assign-modal') {
       const assignModalButton = document.querySelector('.assign-confirm-btn')
       if (!assignModalButton) {
         const openAssignBtn = document.querySelector('.assign-btn')
-        if (openAssignBtn) {
-          openAssignBtn.click()
-        }
+        if (openAssignBtn) (openAssignBtn as HTMLElement).click()
       }
     }
 
-    // Auto-click if needed
     if (step.autoClick && step.target) {
       setTimeout(() => {
-        const element = document.querySelector(step.target)
-        if (element) {
-          element.click()
-        }
+        const element = document.querySelector(step.target!)
+        if (element) (element as HTMLElement).click()
       }, 300)
     }
 
-    // Scroll into view if needed
     if (step.scrollIntoView && step.target) {
       setTimeout(() => {
-        const element = document.querySelector(step.target)
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
+        const element = document.querySelector(step.target!)
+        if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 400)
     }
   }, [isActive, currentStep, steps])
 
-  // Calculate tooltip position whenever step changes
   useEffect(() => {
     if (!isActive) return
 
     const step = steps[currentStep]
-    if (!step.target) {
-      // Center position for welcome/finish screens
-      return
-    }
+    if (!step.target) return
 
-    // Calculate tooltip position
     const calculatePosition = () => {
-      const element = document.querySelector(step.target)
+      const element = document.querySelector(step.target!)
       if (!element || !tooltipRef.current) return
 
       const rect = element.getBoundingClientRect()
@@ -252,9 +251,9 @@ function TourGuide({ onComplete }) {
       const offsetY = step.offsetY || 0
       const padding = 20
 
-      const clamp = (value, min, max) => Math.max(min, Math.min(value, max))
+      const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max))
 
-      const computePosition = (position) => {
+      const computePosition = (position: string) => {
         let top = 0
         let left = 0
 
@@ -288,7 +287,7 @@ function TourGuide({ onComplete }) {
         return { top, left }
       }
 
-      const overlapsTarget = (pos) => {
+      const overlapsTarget = (pos: { top: number; left: number }) => {
         const tooltipBox = {
           left: pos.left,
           right: pos.left + tooltipRect.width,
@@ -328,7 +327,6 @@ function TourGuide({ onComplete }) {
       setTooltipPosition(finalPos)
     }
 
-    // Initial calculation with delay to ensure DOM is ready
     const timeoutId = setTimeout(calculatePosition, 100)
 
     calculatePosition()
@@ -343,17 +341,13 @@ function TourGuide({ onComplete }) {
   }, [isActive, currentStep, steps])
 
   const getCurrentView = () => {
-    // Check if we're in details view
     if (document.querySelector('.details-view')) return 'details'
-    // Check if we're in list view
     if (document.querySelector('.table-container')) return 'list'
-    // Check if we're in CV view
     if (document.querySelector('.cv-manager')) return 'cv'
-    // Default to kanban
     return 'kanban'
   }
 
-  const switchToView = (targetView, callback) => {
+  const switchToView = (targetView: string, callback?: () => void) => {
     let finished = false
     const finish = () => {
       if (finished) return
@@ -365,10 +359,10 @@ function TourGuide({ onComplete }) {
       setTimeout(finish, delay)
     }
 
-    const clickIfExists = (selector) => {
+    const clickIfExists = (selector: string) => {
       const element = document.querySelector(selector)
       if (element) {
-        element.click()
+        ;(element as HTMLElement).click()
         return true
       }
       return false
@@ -392,14 +386,12 @@ function TourGuide({ onComplete }) {
     }
 
     if (targetView === 'details') {
-      // Click on first kanban card
       if (!clickIfExists('.kanban-card:first-child')) {
         finishLater(300)
         return
       }
       finishLater(500)
     } else if (targetView === 'kanban') {
-      // Click back button if in details view
       if (clickIfExists('.back-btn') || clickIfExists('.back-btn-mobile')) {
         finishLater(500)
         return
@@ -410,14 +402,12 @@ function TourGuide({ onComplete }) {
       }
       finishLater(300)
     } else if (targetView === 'list') {
-      // Click list tab
       if (!clickIfExists('.tab-btn:nth-child(2)')) {
         finishLater(200)
         return
       }
       finishLater(300)
     } else if (targetView === 'cv') {
-      // Click CV tab
       if (!clickIfExists('.tab-btn:nth-child(3)')) {
         finishLater(200)
         return
@@ -448,7 +438,6 @@ function TourGuide({ onComplete }) {
     setIsActive(false)
     localStorage.setItem('tour_guide_completed', 'true')
 
-    // Make sure we're back in kanban view
     const currentView = getCurrentView()
     if (currentView !== 'kanban') {
       switchToView('kanban')
@@ -467,11 +456,7 @@ function TourGuide({ onComplete }) {
 
   return (
     <div className="tour-guide-overlay">
-      {/* Backdrop with light dimming */}
-      <div className="tour-backdrop" onClick={(e) => {
-        // Prevent clicks on backdrop from propagating
-        e.stopPropagation()
-      }}>
+      <div className="tour-backdrop" onClick={(e) => { e.stopPropagation() }}>
         {step.target && (
           <SpotlightHighlight
             target={step.target}
@@ -480,7 +465,6 @@ function TourGuide({ onComplete }) {
         )}
       </div>
 
-      {/* Tooltip */}
       <div
         ref={tooltipRef}
         className={`tour-tooltip ${isCenter ? 'center' : ''} ${isCompact ? 'compact' : ''} ${step.avoidFab ? 'avoid-fab' : ''}`}
@@ -526,9 +510,13 @@ function TourGuide({ onComplete }) {
   )
 }
 
-// Spotlight component to highlight target elements
-function SpotlightHighlight({ target, highlightMultiple }) {
-  const [highlights, setHighlights] = useState([])
+interface SpotlightProps {
+  target: string
+  highlightMultiple?: boolean
+}
+
+function SpotlightHighlight({ target, highlightMultiple }: SpotlightProps) {
+  const [highlights, setHighlights] = useState<{ top: number; left: number; width: number; height: number }[]>([])
 
   useEffect(() => {
     const calculateHighlights = () => {
@@ -537,7 +525,7 @@ function SpotlightHighlight({ target, highlightMultiple }) {
         : [document.querySelector(target)]
 
       const rects = Array.from(elements)
-        .filter(el => el)
+        .filter((el): el is Element => el !== null)
         .map(el => {
           const rect = el.getBoundingClientRect()
           return {
