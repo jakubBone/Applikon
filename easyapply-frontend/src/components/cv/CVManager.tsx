@@ -8,8 +8,8 @@ import {
   createCV,
   updateCV,
   downloadCV
-} from './services/api'
-import type { Application, CV, CVType } from './types/domain'
+} from '../../services/api'
+import type { Application, CV, CVType } from '../../types/domain'
 
 interface Props {
   applications: Application[]

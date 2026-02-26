@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import './ApplicationTable.css'
-import type { Application } from './types/domain'
+import type { Application } from '../../types/domain'
 
 interface Props {
   applications: Application[]
