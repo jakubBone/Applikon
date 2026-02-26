@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../hooks/useNotes'
 import type { NoteCategory } from '../../types/domain'
-import '../../NotesList.css'
+import './NotesList.css'
 
 const CATEGORIES: { value: NoteCategory; label: string; color: string; bg: string }[] = [
   { value: 'PYTANIA', label: 'Pytania z rozmowy', color: '#3498db', bg: '#ebf5fb' },
