@@ -93,10 +93,10 @@ export interface ApplicationRequest {
 }
 
 export interface StageUpdateRequest {
-  stageName: string
-  rejectionReason?: RejectionReason | null
-  offerSalaryMin?: number | null
-  offerSalaryMax?: number | null
+  status?: ApplicationStatus | null
+  currentStage?: string | null
+  rejectionReason?: string | null
+  rejectionDetails?: string | null
 }
 
 // ============================================================

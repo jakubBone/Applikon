@@ -94,7 +94,7 @@ describe('API Service', () => {
     })
 
     it('updateApplicationStage - zmienia etap aplikacji', async () => {
-      const stageData = { stageName: 'Rozmowa z HR' }
+      const stageData = { status: 'W_PROCESIE', currentStage: 'Rozmowa z HR' }
       const updatedApp = { id: 1, currentStage: 'Rozmowa z HR' }
       mockFetch(updatedApp)
 
