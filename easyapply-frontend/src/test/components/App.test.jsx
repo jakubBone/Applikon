@@ -367,22 +367,19 @@ describe('App Component', () => {
   // ==================== ERROR HANDLING Tests ====================
 
   describe('Error Handling', () => {
-    it('obsługuje błąd pobierania aplikacji', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    it('obsługuje błąd pobierania aplikacji — aplikacja nie crashuje', async () => {
       api.fetchApplications.mockRejectedValue(new Error('Network error'))
 
       renderApp()
 
+      // App should not crash — header and badge widget still render
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalled()
+        expect(screen.getByText(/Twoje odznaki/)).toBeInTheDocument()
       })
-
-      consoleSpy.mockRestore()
     })
 
-    it('obsługuje błąd tworzenia aplikacji', async () => {
+    it('obsługuje błąd tworzenia aplikacji — formularz pozostaje otwarty', async () => {
       const user = userEvent.setup()
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       api.createApplication.mockRejectedValue(new Error('Create failed'))
 
@@ -397,11 +394,10 @@ describe('App Component', () => {
 
       fireEvent.click(screen.getByText('Dodaj aplikację'))
 
+      // After create error, the form should remain visible (not closed)
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalled()
+        expect(screen.getByText('Dodaj nową aplikację')).toBeInTheDocument()
       })
-
-      consoleSpy.mockRestore()
     })
   })
 })

@@ -45,6 +45,9 @@ export interface Application {
   rejectionReason: RejectionReason | null
   appliedAt: string
   cvId: number | null
+  cvFileName: string | null
+  cvType: CVType | null
+  cvExternalUrl: string | null
   stageHistory: StageHistory[]
 }
 

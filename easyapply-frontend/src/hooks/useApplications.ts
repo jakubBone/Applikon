@@ -69,6 +69,7 @@ export function useUpdateStatus() {
       updateApplicationStatus(id, status),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: applicationKeys.all })
+      void queryClient.invalidateQueries({ queryKey: ['badgeStats'] })
     },
   })
 }
@@ -80,6 +81,7 @@ export function useUpdateStage() {
       updateApplicationStage(id, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: applicationKeys.all })
+      void queryClient.invalidateQueries({ queryKey: ['badgeStats'] })
     },
   })
 }
