@@ -4,6 +4,17 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      login(path?: string): void
+      createApplication(company: string, position: string, options?: { salaryMin?: number; source?: string }): void
+      waitForApi(): void
+      interceptApi(): void
+    }
+  }
+}
+
 /**
  * cy.login() — symuluje zalogowanego użytkownika bez przechodzenia przez OAuth2.
  *
