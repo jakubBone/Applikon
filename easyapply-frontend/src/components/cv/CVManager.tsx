@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react'
 import './CVManager.css'
 import {
-  fetchCVs as fetchCVsAPI,
-  uploadCV as uploadCVAPI,
-  deleteCV as deleteCVAPI,
   assignCVToApplication,
-  createCV,
-  updateCV,
   downloadCV
 } from '../../services/api'
+import { useCVs, useUploadCV, useCreateCV, useUpdateCV, useDeleteCV } from '../../hooks/useCV'
 import type { Application, CV, CVType } from '../../types/domain'
 
 interface Props {
@@ -17,8 +13,13 @@ interface Props {
 }
 
 function CVManager({ applications, onCVAssigned }: Props) {
-  const [cvList, setCvList] = useState<CV[]>([])
-  const [uploading, setUploading] = useState(false)
+  // React Query — pobieranie i mutacje CV (zamiast ręcznego useState + useEffect + fetchCVs)
+  const { data: cvList = [] } = useCVs()
+  const uploadCVMutation = useUploadCV()
+  const createCVMutation = useCreateCV()
+  const updateCVMutation = useUpdateCV()
+  const deleteCVMutation = useDeleteCV()
+
   const [selectedCv, setSelectedCv] = useState<CV | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [addStep, setAddStep] = useState<'choose' | 'file' | 'link'>('choose')
@@ -28,23 +29,13 @@ function CVManager({ applications, onCVAssigned }: Props) {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editFormData, setEditFormData] = useState({ name: '', externalUrl: '' })
 
-  const fetchCVs = async () => {
-    try {
-      const data = await fetchCVsAPI()
-      setCvList(data)
-      // Jeśli było wybrane CV, odśwież je
-      if (selectedCv) {
-        const updated = data.find(cv => cv.id === selectedCv.id)
-        setSelectedCv(updated ?? null)
-      }
-    } catch (error) {
-      console.error('Błąd pobierania CV:', error)
-    }
-  }
-
+  // Synchronizuj selectedCv z danymi z cache (gdy React Query odświeży listę)
   useEffect(() => {
-    fetchCVs()
-  }, [])
+    if (selectedCv) {
+      const updated = cvList.find(cv => cv.id === selectedCv.id)
+      setSelectedCv(updated ?? null)
+    }
+  }, [cvList])
 
   // Grupowanie CV według typu
   const groupedCVs = {
@@ -64,7 +55,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
   }
 
   // Upload CV (plik)
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -78,25 +69,21 @@ function CVManager({ applications, onCVAssigned }: Props) {
       return
     }
 
-    setUploading(true)
-
-    try {
-      const newCv = await uploadCVAPI(file)
-      fetchCVs()
-      setSelectedCv(newCv)
-      setShowAddModal(false)
-      setAddStep('choose')
-      e.target.value = ''
-    } catch (error) {
-      console.error('Błąd uploadu:', error)
-      alert('Błąd podczas uploadu')
-    } finally {
-      setUploading(false)
-    }
+    uploadCVMutation.mutate(file, {
+      onSuccess: (newCv) => {
+        setSelectedCv(newCv)
+        setShowAddModal(false)
+        setAddStep('choose')
+        e.target.value = ''
+      },
+      onError: () => {
+        alert('Błąd podczas uploadu')
+      },
+    })
   }
 
   // Utwórz CV typu LINK lub NOTE
-  const handleCreateLinkOrNote = async (e: React.FormEvent) => {
+  const handleCreateLinkOrNote = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!linkFormData.name.trim()) {
@@ -104,21 +91,21 @@ function CVManager({ applications, onCVAssigned }: Props) {
       return
     }
 
-    try {
-      const newCv = await createCV({
-        originalFileName: linkFormData.name,
-        type: linkFormData.type,
-        externalUrl: linkFormData.type === 'LINK' ? linkFormData.externalUrl : undefined
-      })
-      fetchCVs()
-      setSelectedCv(newCv)
-      setShowAddModal(false)
-      setAddStep('choose')
-      setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
-    } catch (error) {
-      console.error('Błąd zapisu:', error)
-      alert('Błąd podczas zapisywania')
-    }
+    createCVMutation.mutate({
+      originalFileName: linkFormData.name,
+      type: linkFormData.type,
+      externalUrl: linkFormData.type === 'LINK' ? linkFormData.externalUrl : undefined
+    }, {
+      onSuccess: (newCv) => {
+        setSelectedCv(newCv)
+        setShowAddModal(false)
+        setAddStep('choose')
+        setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
+      },
+      onError: () => {
+        alert('Błąd podczas zapisywania')
+      },
+    })
   }
 
   // Pobierz/Otwórz CV
@@ -131,20 +118,20 @@ function CVManager({ applications, onCVAssigned }: Props) {
   }
 
   // Usuń CV
-  const handleDelete = async (cvId: number) => {
+  const handleDelete = (cvId: number) => {
     if (!confirm('Czy na pewno chcesz usunąć to CV? Zostanie ono również usunięte z przypisanych aplikacji.')) return
 
-    try {
-      await deleteCVAPI(cvId)
-      if (selectedCv?.id === cvId) {
-        setSelectedCv(null)
-      }
-      fetchCVs()
-      onCVAssigned() // Odśwież aplikacje, bo mogły mieć usunięte CV
-    } catch (error) {
-      console.error('Błąd usuwania:', error)
-      alert('Błąd usuwania CV')
-    }
+    deleteCVMutation.mutate(cvId, {
+      onSuccess: () => {
+        if (selectedCv?.id === cvId) {
+          setSelectedCv(null)
+        }
+        onCVAssigned()
+      },
+      onError: () => {
+        alert('Błąd usuwania CV')
+      },
+    })
   }
 
   // Przypisz CV do aplikacji
@@ -184,7 +171,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
   }
 
   // Zapisz edycję CV
-  const handleEditSubmit = async (e: React.FormEvent) => {
+  const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedCv) return
 
@@ -193,18 +180,21 @@ function CVManager({ applications, onCVAssigned }: Props) {
       return
     }
 
-    try {
-      const updatedCv = await updateCV(selectedCv.id, {
+    updateCVMutation.mutate({
+      id: selectedCv.id,
+      data: {
         originalFileName: editFormData.name,
         externalUrl: selectedCv.type === 'LINK' ? editFormData.externalUrl : undefined
-      })
-      setSelectedCv(updatedCv)
-      fetchCVs()
-      setShowEditModal(false)
-    } catch (error) {
-      console.error('Błąd edycji:', error)
-      alert('Błąd podczas zapisywania')
-    }
+      }
+    }, {
+      onSuccess: (updatedCv) => {
+        setSelectedCv(updatedCv)
+        setShowEditModal(false)
+      },
+      onError: () => {
+        alert('Błąd podczas zapisywania')
+      },
+    })
   }
 
   const formatSize = (bytes: number | null | undefined): string | null => {
@@ -449,7 +439,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
                     <div className="dropzone-content">
                       <span className="dropzone-icon">📄</span>
                       <span className="dropzone-text">
-                        {uploading ? 'Wysyłanie...' : 'Kliknij lub przeciągnij plik PDF'}
+                        {uploadCVMutation.isPending ? 'Wysyłanie...' : 'Kliknij lub przeciągnij plik PDF'}
                       </span>
                       <span className="dropzone-hint">Maksymalnie 5MB</span>
                     </div>
@@ -457,7 +447,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
                       type="file"
                       accept=".pdf"
                       onChange={handleUpload}
-                      disabled={uploading}
+                      disabled={uploadCVMutation.isPending}
                       hidden
                     />
                   </label>
