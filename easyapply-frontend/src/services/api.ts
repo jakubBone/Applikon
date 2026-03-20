@@ -43,6 +43,7 @@ const apiFetch = async (input: string, init?: RequestInit): Promise<Response> =>
   if (response.status === 401) {
     clearToken()
     window.location.href = '/login'
+    throw new Error('Unauthorized')
   }
   return response
 }
