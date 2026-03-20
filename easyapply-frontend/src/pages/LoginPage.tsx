@@ -13,7 +13,8 @@ export function LoginPage() {
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/google'
+    const backendUrl = import.meta.env.VITE_API_URL?.split('/api')[0] || 'http://localhost:8080'
+    window.location.href = `${backendUrl}/oauth2/authorization/google`
   }
 
   return (
