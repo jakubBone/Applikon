@@ -69,7 +69,7 @@ public class AuthController {
         try {
             User user = userService.findByValidRefreshToken(refreshToken);
             String newAccessToken = jwtService.generateAccessToken(user);
-            return ResponseEntity.ok(Map.of("token", newAccessToken));
+            return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Nieprawidłowy lub wygasły refresh token"));
         }
