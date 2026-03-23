@@ -44,6 +44,17 @@ function CVManager({ applications, onCVAssigned }: Props) {
     NOTE: cvList.filter(cv => cv.type === 'NOTE')
   }
 
+  // Bezpieczne wyodrębnianie hostname z URL (bez crash'u)
+  const getHostname = (url: string | undefined): string => {
+    if (!url) return 'na komputerze'
+    try {
+      return new URL(url).hostname || url
+    } catch {
+      // Invalid URL — zwróć surowy URL zamiast crash'u
+      return url
+    }
+  }
+
   // Liczenie użyć CV
   const getUsageCount = (cvId: number): number => {
     return applications.filter(app => app.cvId === cvId).length
@@ -233,7 +244,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
           <div className="cv-item-name">{cv.originalFileName}</div>
           <div className="cv-item-meta">
             {cv.type === 'FILE' || !cv.type ? formatSize(cv.fileSize) :
-             cv.type === 'LINK' && cv.externalUrl ? new URL(cv.externalUrl).hostname :
+             cv.type === 'LINK' ? getHostname(cv.externalUrl) :
              'na komputerze'}
             {' • '}
             {usageCount > 0 ? `użyte ${usageCount}×` : 'nieużyte'}
