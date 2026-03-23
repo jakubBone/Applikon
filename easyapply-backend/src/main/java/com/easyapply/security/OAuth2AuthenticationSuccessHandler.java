@@ -77,7 +77,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         refreshCookie.setHttpOnly(true);    // JavaScript nie może go odczytać
         refreshCookie.setSecure(true);      // Tylko HTTPS
         refreshCookie.setPath("/api/auth"); // Cookie wysyłane tylko do /api/auth
-        refreshCookie.setSameSite("Strict"); // CSRF protection: wysyłaj tylko z easyapply.com
+        refreshCookie.setAttribute("SameSite", "Strict"); // CSRF protection: wysyłaj tylko z easyapply.com
         refreshCookie.setMaxAge(refreshTokenExpiryDays * 24 * 60 * 60);
         response.addCookie(refreshCookie);
 
