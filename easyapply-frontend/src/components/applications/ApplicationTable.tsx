@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './ApplicationTable.css'
+import { STATUS_CONFIG } from '../../constants/applicationStatus'
 import type { Application } from '../../types/domain'
 
 interface Props {
@@ -43,14 +44,11 @@ const getDaysSince = (dateString: string): string => {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  'WYSLANE': { label: 'Wysłane', color: '#3498db', bg: '#ebf5fb' },
-  'W_PROCESIE': { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
-  'OFERTA': { label: 'Oferta', color: '#27ae60', bg: '#eafaf1' },
-  'ODMOWA': { label: 'Odmowa', color: '#95a5a6', bg: '#f5f5f5' },
+  ...STATUS_CONFIG,
   // Stare statusy (kompatybilność wsteczna)
-  'ROZMOWA': { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
-  'ZADANIE': { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
-  'ODRZUCONE': { label: 'Odmowa', color: '#95a5a6', bg: '#f5f5f5' }
+  'ROZMOWA':   { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
+  'ZADANIE':   { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
+  'ODRZUCONE': { label: 'Odmowa',     color: '#95a5a6', bg: '#f5f5f5' },
 }
 
 function ApplicationTable({ applications, onRowClick, onDelete }: Props) {

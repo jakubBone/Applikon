@@ -3,25 +3,12 @@ import { NotesList } from '../notes/NotesList'
 import { ApplicationForm } from './ApplicationForm'
 import { downloadCV } from '../../services/api'
 import { isSafeUrl } from '../../utils/urlValidator'
-import type { Application, ApplicationStatus } from '../../types/domain'
+import { STATUS_CONFIG } from '../../constants/applicationStatus'
+import type { Application } from '../../types/domain'
 
 interface Props {
   application: Application
   onBack: () => void
-}
-
-const STATUS_COLORS: Record<ApplicationStatus, string> = {
-  WYSLANE: '#3498db',
-  W_PROCESIE: '#f39c12',
-  OFERTA: '#27ae60',
-  ODMOWA: '#95a5a6',
-}
-
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  WYSLANE: 'Wysłane',
-  W_PROCESIE: 'W procesie',
-  OFERTA: 'Oferta otrzymana',
-  ODMOWA: 'Odmowa',
 }
 
 function formatDate(dateString: string): string {
@@ -76,9 +63,9 @@ export function ApplicationDetails({ application, onBack }: Props) {
           <div className="status-info">
             <span
               className="status-badge large"
-              style={{ backgroundColor: STATUS_COLORS[application.status] }}
+              style={{ backgroundColor: STATUS_CONFIG[application.status].color }}
             >
-              {STATUS_LABELS[application.status]}
+              {STATUS_CONFIG[application.status].label}
             </span>
             {application.currentStage && (
               <span className="current-stage-badge">{application.currentStage}</span>
