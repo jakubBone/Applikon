@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NotesList } from '../notes/NotesList'
 import { ApplicationForm } from './ApplicationForm'
 import { downloadCV } from '../../services/api'
+import { isSafeUrl } from '../../utils/urlValidator'
 import type { Application, ApplicationStatus } from '../../types/domain'
 
 interface Props {
@@ -119,7 +120,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
               <span className="label">Data aplikacji:</span>
               <span className="value">{formatDate(application.appliedAt)}</span>
             </div>
-            {application.link && (
+            {application.link && isSafeUrl(application.link) && (
               <div className="info-item">
                 <span className="label">Link:</span>
                 <a

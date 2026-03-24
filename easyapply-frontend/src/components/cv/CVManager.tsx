@@ -4,6 +4,7 @@ import {
   assignCVToApplication,
   downloadCV
 } from '../../services/api'
+import { isSafeUrl } from '../../utils/urlValidator'
 import { useCVs, useUploadCV, useCreateCV, useUpdateCV, useDeleteCV } from '../../hooks/useCV'
 import type { Application, CV, CVType } from '../../types/domain'
 
@@ -102,6 +103,12 @@ function CVManager({ applications, onCVAssigned }: Props) {
       return
     }
 
+    // Walidacja URL dla typu LINK
+    if (linkFormData.type === 'LINK' && !isSafeUrl(linkFormData.externalUrl)) {
+      alert('Nieprawidłowy lub niebezpieczny link. Użyj https:// lub http://')
+      return
+    }
+
     createCVMutation.mutate({
       originalFileName: linkFormData.name,
       type: linkFormData.type,
@@ -121,7 +128,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
   // Pobierz/Otwórz CV
   const handleOpen = async (cv: CV) => {
-    if (cv.type === 'LINK' && cv.externalUrl) {
+    if (cv.type === 'LINK' && isSafeUrl(cv.externalUrl)) {
       window.open(cv.externalUrl, '_blank')
     } else if (cv.type === 'FILE' || !cv.type) {
       downloadCV(cv.id, cv.originalFileName ?? cv.fileName ?? 'CV')
@@ -188,6 +195,12 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
     if (!editFormData.name.trim()) {
       alert('Podaj nazwę CV')
+      return
+    }
+
+    // Walidacja URL dla typu LINK
+    if (selectedCv.type === 'LINK' && !isSafeUrl(editFormData.externalUrl)) {
+      alert('Nieprawidłowy lub niebezpieczny link. Użyj https:// lub http://')
       return
     }
 
