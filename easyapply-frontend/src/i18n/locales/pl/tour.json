@@ -1,0 +1,70 @@
+{
+  "steps": {
+    "welcome": {
+      "title": "👋 Witaj w EasyApply!",
+      "content": "Jestem Kuba i pokażę Ci teraz, jak korzystać z aplikacji do zarządzania procesem Twojej rekrutacji."
+    },
+    "kanban": {
+      "title": "📋 Tablica Kanban",
+      "content": "Tutaj wszystkie Twoje aplikacje są podzielone na statusy: Wysłane, W procesie oraz Zakończone."
+    },
+    "demoCard": {
+      "title": "🎯 Przykładowa aplikacja",
+      "content": "Dodałem dla Ciebie przykładową aplikację do Google. Użyję jej teraz, aby zaprezentowaać Ci wszystkie funkcje."
+    },
+    "dragDropMobileTitle": "👆 Przytrzymaj kartę",
+    "dragDropDesktopTitle": "🖱️ Przeciągnij kartę",
+    "dragDropMobileContent": "Przytrzymaj kartę (0.5s), aby zmienić jej status. Po przytrzymaniu pojawi się menu wyboru statusu.",
+    "dragDropDesktopContent": "Przeciągnaj karty między kolumnami, aby zmieniać status aplikacji. Po prostu złap kartę i przenieś ją do odpowiedniej kolumny.",
+    "clickCard": {
+      "title": "👁️ Kliknij w kartę",
+      "content": "Możesz kliknąć w daną aplikację, aby zobaczyć jej szczegóły..."
+    },
+    "detailsInfo": {
+      "title": "📋 Szczegóły aplikacji",
+      "content": "Tu znajdziesz wszystkie informacje o aplikacji: firmę, stanowisko, datę aplikacji, link do oferty, czy treść ogłoszenia."
+    },
+    "detailsNotes": {
+      "title": "📝 Sekcja notatek",
+      "content": "Tutaj możesz dodawać notatki do aplikacji - pytania z rozmów, uwagi o firmie, czy feedback po rozmowie."
+    },
+    "listView": {
+      "title": "📝 Lista aplikacji",
+      "content": "Tutaj znajdziesz wszystkie swoje aplikacje w formie listy. Możesz je sortować i filtrować."
+    },
+    "addApplication": {
+      "title": "➕ Dodawanie aplikacji",
+      "content": "Kliknij, aby dodać nową aplikację. Wypełnij dane firmy, stanowiska, i inne szczegóły."
+    },
+    "cvSection": {
+      "title": "📄 Zarządzanie CV",
+      "content": "Tutaj możesz dodawać swoje CV. Spokojnie... wszystkie dane są zapisane tylko w Twojej przeglądarce - bezpiecznie i lokalnie."
+    },
+    "cvAddButton": {
+      "title": "📎 Dodaj swoje CV",
+      "content": "Dodaj swoje CV. Możesz przesłać plik PDF, podać link do chmury (Google Drive, Dropbox) lub po prostu zanotować nazwę pliku."
+    },
+    "cvAssignOpen": {
+      "title": "🔗 Przypisywanie CV",
+      "content": "Możesz przypisać wybrane CV do konkretnej aplikacji."
+    },
+    "cvAssignModal": {
+      "title": "✅ Zatwierdź przypisanie",
+      "content": "Wybierz konkretną firmę i kliknij \"Przypisz\", aby zapisać powiązanie."
+    },
+    "badges": {
+      "title": "🏆 Odznaki",
+      "content": "Zbieraj odznaki za wytrwałość! I pamiętej... rekrutacja to skill, a nie jednorazowy test!"
+    },
+    "finish": {
+      "title": "🎉 Gotowe!",
+      "content": "Teraz znasz już wszystkie funkcje EasyApply. Powodzenia w poszukiwaniu pracy! Oni jeszcze nie wiedzą z kim zadzierają..."
+    }
+  },
+  "buttons": {
+    "next": "Dalej",
+    "prev": "Wstecz",
+    "finish": "Zakończ",
+    "skip": "Zamknij"
+  }
+}

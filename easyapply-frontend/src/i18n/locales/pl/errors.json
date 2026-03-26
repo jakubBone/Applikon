@@ -1,0 +1,40 @@
+{
+  "api": {
+    "fetchCurrentUser": "Błąd pobierania danych użytkownika",
+    "sessionExpired": "Sesja wygasła",
+    "fetchApplications": "Błąd pobierania aplikacji",
+    "createApplication": "Błąd dodawania aplikacji",
+    "updateApplication": "Błąd aktualizacji aplikacji",
+    "deleteApplication": "Błąd usuwania aplikacji",
+    "updateStatus": "Błąd zmiany statusu",
+    "updateStage": "Błąd zmiany etapu",
+    "addStage": "Błąd dodawania etapu",
+    "checkDuplicate": "Błąd sprawdzania duplikatów",
+    "fetchCVs": "Błąd pobierania CV",
+    "uploadCV": "Błąd uploadu CV",
+    "createCV": "Błąd tworzenia CV",
+    "updateCV": "Błąd aktualizacji CV",
+    "deleteCV": "Błąd usuwania CV",
+    "assignCV": "Błąd przypisania CV",
+    "downloadCV": "Błąd pobierania pliku",
+    "fetchNotes": "Błąd pobierania notatek",
+    "createNote": "Błąd dodawania notatki",
+    "updateNote": "Błąd aktualizacji notatki",
+    "deleteNote": "Błąd usuwania notatki",
+    "fetchStats": "Błąd pobierania statystyk"
+  },
+  "cv": {
+    "pdfOnly": "Dozwolone są tylko pliki PDF",
+    "fileTooLarge": "Plik nie może przekraczać 5MB",
+    "uploadError": "Błąd podczas uploadu",
+    "nameRequired": "Podaj nazwę CV",
+    "invalidUrl": "Nieprawidłowy lub niebezpieczny link. Użyj https:// lub http://",
+    "saveError": "Błąd podczas zapisywania",
+    "deleteError": "Błąd usuwania CV",
+    "deleteConfirm": "Czy na pewno chcesz usunąć to CV? Zostanie ono również usunięte z przypisanych aplikacji.",
+    "removeAssignConfirm": "Czy na pewno chcesz usunąć przypisanie CV?"
+  },
+  "notes": {
+    "deleteConfirm": "Czy na pewno chcesz usunąć tę notatkę?"
+  }
+}

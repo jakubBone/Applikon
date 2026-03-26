@@ -1,0 +1,31 @@
+{
+  "widget": {
+    "title": "🏅 Twoje odznaki",
+    "close": "Zamknij",
+    "rejections": "Odrzucone aplikacje ({{count}})",
+    "ghosting": "Bez odzewu ({{count}})",
+    "toUnlock": "{{count}}/{{threshold}} do odblokowania",
+    "next": "Następny: {{icon}} {{name}}",
+    "max": "MAX"
+  },
+  "sweetRevenge": {
+    "name": "Sweet Revenge",
+    "description": "Kto się śmieje ostatni, ten dostał robotę."
+  },
+  "names": {
+    "Rękawica": "Rękawica",
+    "Patelnia": "Patelnia",
+    "Niezniszczalny": "Niezniszczalny",
+    "Legenda Linkedina": "Legenda Linkedina",
+    "Statystyczna Pewność": "Statystyczna Pewność",
+    "Widmo": "Widmo",
+    "Cierpliwy Mnich": "Cierpliwy Mnich",
+    "Detektyw": "Detektyw",
+    "Człowiek-Duch": "Człowiek-Duch",
+    "Król Ciszy": "Król Ciszy"
+  },
+  "defaults": {
+    "firstRejection": "Rękawica",
+    "firstGhosting": "Widmo"
+  }
+}

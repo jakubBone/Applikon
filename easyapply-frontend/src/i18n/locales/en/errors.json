@@ -1,0 +1,40 @@
+{
+  "api": {
+    "fetchCurrentUser": "Failed to fetch user data",
+    "sessionExpired": "Session expired",
+    "fetchApplications": "Failed to fetch applications",
+    "createApplication": "Failed to create application",
+    "updateApplication": "Failed to update application",
+    "deleteApplication": "Failed to delete application",
+    "updateStatus": "Failed to update status",
+    "updateStage": "Failed to update stage",
+    "addStage": "Failed to add stage",
+    "checkDuplicate": "Failed to check duplicates",
+    "fetchCVs": "Failed to fetch CVs",
+    "uploadCV": "Failed to upload CV",
+    "createCV": "Failed to create CV",
+    "updateCV": "Failed to update CV",
+    "deleteCV": "Failed to delete CV",
+    "assignCV": "Failed to assign CV",
+    "downloadCV": "Failed to download file",
+    "fetchNotes": "Failed to fetch notes",
+    "createNote": "Failed to create note",
+    "updateNote": "Failed to update note",
+    "deleteNote": "Failed to delete note",
+    "fetchStats": "Failed to fetch statistics"
+  },
+  "cv": {
+    "pdfOnly": "Only PDF files are allowed",
+    "fileTooLarge": "File cannot exceed 5MB",
+    "uploadError": "Upload error",
+    "nameRequired": "Please provide a CV name",
+    "invalidUrl": "Invalid or unsafe link. Use https:// or http://",
+    "saveError": "Error while saving",
+    "deleteError": "Error deleting CV",
+    "deleteConfirm": "Are you sure you want to delete this CV? It will also be removed from assigned applications.",
+    "removeAssignConfirm": "Are you sure you want to remove the CV assignment?"
+  },
+  "notes": {
+    "deleteConfirm": "Are you sure you want to delete this note?"
+  }
+}

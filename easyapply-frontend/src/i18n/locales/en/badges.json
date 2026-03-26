@@ -1,0 +1,31 @@
+{
+  "widget": {
+    "title": "🏅 Your badges",
+    "close": "Close",
+    "rejections": "Rejected applications ({{count}})",
+    "ghosting": "No response ({{count}})",
+    "toUnlock": "{{count}}/{{threshold}} to unlock",
+    "next": "Next: {{icon}} {{name}}",
+    "max": "MAX"
+  },
+  "sweetRevenge": {
+    "name": "Sweet Revenge",
+    "description": "Who laughs last, laughs best — and got the job."
+  },
+  "names": {
+    "Rękawica": "The Gauntlet",
+    "Patelnia": "The Pan",
+    "Niezniszczalny": "Indestructible",
+    "Legenda Linkedina": "LinkedIn Legend",
+    "Statystyczna Pewność": "Statistical Certainty",
+    "Widmo": "The Ghost",
+    "Cierpliwy Mnich": "Patient Monk",
+    "Detektyw": "The Detective",
+    "Człowiek-Duch": "Ghost Man",
+    "Król Ciszy": "King of Silence"
+  },
+  "defaults": {
+    "firstRejection": "The Gauntlet",
+    "firstGhosting": "The Ghost"
+  }
+}
