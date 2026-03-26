@@ -18,9 +18,9 @@ export const setToken = (token: string): void => localStorage.setItem(TOKEN_KEY,
 export const clearToken = (): void => localStorage.removeItem(TOKEN_KEY)
 
 /**
- * Buduje nagłówki HTTP dla każdego żądania.
- * JWT access token jest wysyłany w headerze Authorization: Bearer.
- * Refresh token jest w httpOnly cookie — przeglądarka wysyła go automatycznie.
+ * Builds HTTP headers for each request.
+ * JWT access token is sent in the Authorization: Bearer header.
+ * Refresh token is in an httpOnly cookie — the browser sends it automatically.
  */
 const getHeaders = (contentType?: string): HeadersInit => {
   const headers: Record<string, string> = {}
@@ -35,8 +35,8 @@ const getHeaders = (contentType?: string): HeadersInit => {
 }
 
 /**
- * Wykonuje fetch i w razie 401 czyści token (wygasł lub nieważny).
- * Wyrzuca błąd — obsługa w wywołującym kodzie lub ErrorBoundary.
+ * Performs a fetch and on 401 clears the token (expired or invalid).
+ * Throws an error — handled in the calling code or ErrorBoundary.
  */
 const apiFetch = async (input: string, init?: RequestInit): Promise<Response> => {
   const response = await fetch(input, init)
@@ -54,7 +54,7 @@ const apiFetch = async (input: string, init?: RequestInit): Promise<Response> =>
 
 export const fetchCurrentUser = async (): Promise<User> => {
   const response = await apiFetch(`${API_URL}/auth/me`, { headers: getHeaders() })
-  if (!response.ok) throw new Error('Błąd pobierania danych użytkownika')
+  if (!response.ok) throw new Error('api.fetchCurrentUser')
   return response.json() as Promise<User>
 }
 
@@ -66,9 +66,9 @@ export const logout = async (): Promise<void> => {
 export const refreshToken = async (): Promise<string> => {
   const response = await fetch(`${API_URL}/auth/refresh`, {
     method: 'POST',
-    credentials: 'include', // wysyła httpOnly cookie z refresh tokenem
+    credentials: 'include',
   })
-  if (!response.ok) throw new Error('Sesja wygasła')
+  if (!response.ok) throw new Error('api.sessionExpired')
   const data = await response.json() as { accessToken: string }
   setToken(data.accessToken)
   return data.accessToken
@@ -80,7 +80,7 @@ export const refreshToken = async (): Promise<string> => {
 
 export const fetchApplications = async (): Promise<Application[]> => {
   const response = await apiFetch(`${API_URL}/applications`, { headers: getHeaders() })
-  if (!response.ok) throw new Error('Błąd pobierania aplikacji')
+  if (!response.ok) throw new Error('api.fetchApplications')
   return response.json() as Promise<Application[]>
 }
 
@@ -90,7 +90,7 @@ export const createApplication = async (data: ApplicationRequest): Promise<Appli
     headers: getHeaders('application/json'),
     body: JSON.stringify(data),
   })
-  if (!response.ok) throw new Error('Błąd dodawania aplikacji')
+  if (!response.ok) throw new Error('api.createApplication')
   return response.json() as Promise<Application>
 }
 
@@ -100,7 +100,7 @@ export const updateApplication = async (id: number, data: ApplicationRequest): P
     headers: getHeaders('application/json'),
     body: JSON.stringify(data),
   })
-  if (!response.ok) throw new Error('Błąd aktualizacji aplikacji')
+  if (!response.ok) throw new Error('api.updateApplication')
   return response.json() as Promise<Application>
 }
 
@@ -109,7 +109,7 @@ export const deleteApplication = async (id: number): Promise<void> => {
     method: 'DELETE',
     headers: getHeaders(),
   })
-  if (!response.ok) throw new Error('Błąd usuwania aplikacji')
+  if (!response.ok) throw new Error('api.deleteApplication')
 }
 
 export const updateApplicationStatus = async (id: number, status: string): Promise<Application> => {
@@ -118,7 +118,7 @@ export const updateApplicationStatus = async (id: number, status: string): Promi
     headers: getHeaders('application/json'),
     body: JSON.stringify({ status }),
   })
-  if (!response.ok) throw new Error('Błąd zmiany statusu')
+  if (!response.ok) throw new Error('api.updateStatus')
   return response.json() as Promise<Application>
 }
 
@@ -128,7 +128,7 @@ export const updateApplicationStage = async (id: number, data: StageUpdateReques
     headers: getHeaders('application/json'),
     body: JSON.stringify(data),
   })
-  if (!response.ok) throw new Error('Błąd zmiany etapu')
+  if (!response.ok) throw new Error('api.updateStage')
   return response.json() as Promise<Application>
 }
 
@@ -138,7 +138,7 @@ export const addStage = async (id: number, stageName: string): Promise<Applicati
     headers: getHeaders('application/json'),
     body: JSON.stringify({ stageName }),
   })
-  if (!response.ok) throw new Error('Błąd dodawania etapu')
+  if (!response.ok) throw new Error('api.addStage')
   return response.json() as Promise<Application>
 }
 
@@ -147,7 +147,7 @@ export const checkDuplicate = async (company: string, position: string): Promise
   const response = await apiFetch(`${API_URL}/applications/check-duplicate?${params}`, {
     headers: getHeaders(),
   })
-  if (!response.ok) throw new Error('Błąd sprawdzania duplikatów')
+  if (!response.ok) throw new Error('api.checkDuplicate')
   return response.json() as Promise<Application[]>
 }
 
@@ -157,7 +157,7 @@ export const checkDuplicate = async (company: string, position: string): Promise
 
 export const fetchCVs = async (): Promise<CV[]> => {
   const response = await apiFetch(`${API_URL}/cv`, { headers: getHeaders() })
-  if (!response.ok) throw new Error('Błąd pobierania CV')
+  if (!response.ok) throw new Error('api.fetchCVs')
   return response.json() as Promise<CV[]>
 }
 
@@ -166,10 +166,10 @@ export const uploadCV = async (file: File): Promise<CV> => {
   formData.append('file', file)
   const response = await apiFetch(`${API_URL}/cv/upload`, {
     method: 'POST',
-    headers: getHeaders(), // bez Content-Type — przeglądarka ustawi multipart/form-data z boundary
+    headers: getHeaders(), // no Content-Type — browser sets multipart/form-data with boundary
     body: formData,
   })
-  if (!response.ok) throw new Error('Błąd uploadu CV')
+  if (!response.ok) throw new Error('api.uploadCV')
   return response.json() as Promise<CV>
 }
 
@@ -179,7 +179,7 @@ export const createCV = async (data: { originalFileName: string; type: string; e
     headers: getHeaders('application/json'),
     body: JSON.stringify({ name: data.originalFileName, type: data.type, externalUrl: data.externalUrl }),
   })
-  if (!response.ok) throw new Error('Błąd tworzenia CV')
+  if (!response.ok) throw new Error('api.createCV')
   return response.json() as Promise<CV>
 }
 
@@ -189,7 +189,7 @@ export const updateCV = async (id: number, data: { originalFileName: string; ext
     headers: getHeaders('application/json'),
     body: JSON.stringify({ name: data.originalFileName, externalUrl: data.externalUrl }),
   })
-  if (!response.ok) throw new Error('Błąd aktualizacji CV')
+  if (!response.ok) throw new Error('api.updateCV')
   return response.json() as Promise<CV>
 }
 
@@ -198,7 +198,7 @@ export const deleteCV = async (id: number): Promise<void> => {
     method: 'DELETE',
     headers: getHeaders(),
   })
-  if (!response.ok) throw new Error('Błąd usuwania CV')
+  if (!response.ok) throw new Error('api.deleteCV')
 }
 
 export const assignCVToApplication = async (applicationId: number, cvId: number | null): Promise<Application> => {
@@ -207,7 +207,7 @@ export const assignCVToApplication = async (applicationId: number, cvId: number 
     headers: getHeaders('application/json'),
     body: JSON.stringify({ cvId }),
   })
-  if (!response.ok) throw new Error('Błąd przypisania CV')
+  if (!response.ok) throw new Error('api.assignCV')
   return response.json() as Promise<Application>
 }
 
@@ -215,7 +215,7 @@ export const downloadCV = async (id: number, fileName: string): Promise<void> =>
   const response = await apiFetch(`${API_URL}/cv/${id}/download`, {
     headers: getHeaders(),
   })
-  if (!response.ok) throw new Error('Błąd pobierania pliku')
+  if (!response.ok) throw new Error('api.downloadCV')
   const blob = await response.blob()
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -233,7 +233,7 @@ export const fetchNotes = async (applicationId: number): Promise<Note[]> => {
   const response = await apiFetch(`${API_URL}/applications/${applicationId}/notes`, {
     headers: getHeaders(),
   })
-  if (!response.ok) throw new Error('Błąd pobierania notatek')
+  if (!response.ok) throw new Error('api.fetchNotes')
   return response.json() as Promise<Note[]>
 }
 
@@ -243,7 +243,7 @@ export const createNote = async (applicationId: number, content: string, categor
     headers: getHeaders('application/json'),
     body: JSON.stringify({ content, category }),
   })
-  if (!response.ok) throw new Error('Błąd dodawania notatki')
+  if (!response.ok) throw new Error('api.createNote')
   return response.json() as Promise<Note>
 }
 
@@ -253,7 +253,7 @@ export const updateNote = async (noteId: number, content: string, category: Note
     headers: getHeaders('application/json'),
     body: JSON.stringify({ content, category }),
   })
-  if (!response.ok) throw new Error('Błąd aktualizacji notatki')
+  if (!response.ok) throw new Error('api.updateNote')
   return response.json() as Promise<Note>
 }
 
@@ -262,7 +262,7 @@ export const deleteNote = async (noteId: number): Promise<void> => {
     method: 'DELETE',
     headers: getHeaders(),
   })
-  if (!response.ok) throw new Error('Błąd usuwania notatki')
+  if (!response.ok) throw new Error('api.deleteNote')
 }
 
 // ============================================================
@@ -271,6 +271,6 @@ export const deleteNote = async (noteId: number): Promise<void> => {
 
 export const fetchBadgeStats = async (): Promise<BadgeStats> => {
   const response = await apiFetch(`${API_URL}/statistics/badges`, { headers: getHeaders() })
-  if (!response.ok) throw new Error('Błąd pobierania statystyk')
+  if (!response.ok) throw new Error('api.fetchStats')
   return response.json() as Promise<BadgeStats>
 }

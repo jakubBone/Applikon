@@ -119,7 +119,7 @@ describe('AuthProvider', () => {
     }
 
     expect(() => render(<BrokenComponent />)).toThrow(
-      'useAuth musi być używany wewnątrz AuthProvider'
+      'useAuth must be used within AuthProvider'
     )
 
     consoleSpy.mockRestore()

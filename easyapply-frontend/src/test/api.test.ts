@@ -57,7 +57,7 @@ describe('API Service', () => {
     it('fetchApplications - rzuca blad przy nieudanym zapytaniu', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 400 })
 
-      await expect(fetchApplications()).rejects.toThrow('Błąd pobierania aplikacji')
+      await expect(fetchApplications()).rejects.toThrow('api.fetchApplications')
     })
 
     it('createApplication - tworzy nowa aplikacje', async () => {
@@ -129,7 +129,7 @@ describe('API Service', () => {
     it('addStage - rzuca blad przy nieudanym zapytaniu', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 400 })
 
-      await expect(addStage(1, 'Test')).rejects.toThrow('Błąd dodawania etapu')
+      await expect(addStage(1, 'Test')).rejects.toThrow('api.addStage')
     })
 
     it('checkDuplicate - sprawdza duplikaty', async () => {
@@ -329,7 +329,7 @@ describe('API Service', () => {
     it('fetchBadgeStats - rzuca blad przy nieudanym zapytaniu', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 })
 
-      await expect(fetchBadgeStats()).rejects.toThrow('Błąd pobierania statystyk')
+      await expect(fetchBadgeStats()).rejects.toThrow('api.fetchStats')
     })
   })
 })

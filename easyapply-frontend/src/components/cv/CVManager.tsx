@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import './CVManager.css'
 import {
   assignCVToApplication,
@@ -14,6 +15,7 @@ interface Props {
 }
 
 function CVManager({ applications, onCVAssigned }: Props) {
+  const { t } = useTranslation('errors')
   // React Query — pobieranie i mutacje CV (zamiast ręcznego useState + useEffect + fetchCVs)
   const { data: cvList = [] } = useCVs()
   const uploadCVMutation = useUploadCV()
@@ -72,12 +74,12 @@ function CVManager({ applications, onCVAssigned }: Props) {
     if (!file) return
 
     if (file.type !== 'application/pdf') {
-      alert('Dozwolone są tylko pliki PDF')
+      alert(t('cv.pdfOnly'))
       return
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Plik nie może przekraczać 5MB')
+      alert(t('cv.fileTooLarge'))
       return
     }
 
@@ -89,7 +91,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
         e.target.value = ''
       },
       onError: () => {
-        alert('Błąd podczas uploadu')
+        alert(t('cv.uploadError'))
       },
     })
   }
@@ -99,13 +101,13 @@ function CVManager({ applications, onCVAssigned }: Props) {
     e.preventDefault()
 
     if (!linkFormData.name.trim()) {
-      alert('Podaj nazwę CV')
+      alert(t('cv.nameRequired'))
       return
     }
 
     // Walidacja URL dla typu LINK
     if (linkFormData.type === 'LINK' && !isSafeUrl(linkFormData.externalUrl)) {
-      alert('Nieprawidłowy lub niebezpieczny link. Użyj https:// lub http://')
+      alert(t('cv.invalidUrl'))
       return
     }
 
@@ -121,7 +123,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
         setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
       },
       onError: () => {
-        alert('Błąd podczas zapisywania')
+        alert(t('cv.saveError'))
       },
     })
   }
@@ -137,7 +139,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
   // Usuń CV
   const handleDelete = (cvId: number) => {
-    if (!confirm('Czy na pewno chcesz usunąć to CV? Zostanie ono również usunięte z przypisanych aplikacji.')) return
+    if (!confirm(t('cv.deleteConfirm'))) return
 
     deleteCVMutation.mutate(cvId, {
       onSuccess: () => {
@@ -147,7 +149,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
         onCVAssigned()
       },
       onError: () => {
-        alert('Błąd usuwania CV')
+        alert(t('cv.deleteError'))
       },
     })
   }
@@ -168,7 +170,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
   // Usuń przypisanie CV
   const handleRemoveAssignment = async (appId: number) => {
-    if (!confirm('Czy na pewno chcesz usunąć przypisanie CV?')) return
+    if (!confirm(t('cv.removeAssignConfirm'))) return
 
     try {
       await assignCVToApplication(appId, null)
@@ -194,13 +196,13 @@ function CVManager({ applications, onCVAssigned }: Props) {
     if (!selectedCv) return
 
     if (!editFormData.name.trim()) {
-      alert('Podaj nazwę CV')
+      alert(t('cv.nameRequired'))
       return
     }
 
     // Walidacja URL dla typu LINK
     if (selectedCv.type === 'LINK' && !isSafeUrl(editFormData.externalUrl)) {
-      alert('Nieprawidłowy lub niebezpieczny link. Użyj https:// lub http://')
+      alert(t('cv.invalidUrl'))
       return
     }
 
@@ -216,7 +218,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
         setShowEditModal(false)
       },
       onError: () => {
-        alert('Błąd podczas zapisywania')
+        alert(t('cv.saveError'))
       },
     })
   }
