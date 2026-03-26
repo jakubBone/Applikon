@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './ApplicationTable.css'
 import { STATUS_CONFIG } from '../../constants/applicationStatus'
 import type { Application } from '../../types/domain'
@@ -102,7 +102,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
     }
   }
 
-  const filteredApplications = applications.filter(app => {
+  const filteredApplications = useMemo(() => applications.filter(app => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       const matchesSearch =
@@ -115,9 +115,9 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
       return false
     }
     return true
-  })
+  }), [applications, searchQuery, statusFilter])
 
-  const sortedApplications = [...filteredApplications].sort((a, b) => {
+  const sortedApplications = useMemo(() => [...filteredApplications].sort((a, b) => {
     let aVal = (a as Record<string, unknown>)[sortField]
     let bVal = (b as Record<string, unknown>)[sortField]
 
@@ -134,12 +134,12 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
     if (aVal! < bVal!) return sortDirection === 'asc' ? -1 : 1
     if (aVal! > bVal!) return sortDirection === 'asc' ? 1 : -1
     return 0
-  })
+  }), [filteredApplications, sortField, sortDirection])
 
-  const statusCounts = applications.reduce<Record<string, number>>((acc, app) => {
+  const statusCounts = useMemo(() => applications.reduce<Record<string, number>>((acc, app) => {
     acc[app.status] = (acc[app.status] || 0) + 1
     return acc
-  }, {})
+  }, {}), [applications])
 
   const formatSalary = (app: Application): string => {
     if (!app.salaryMin) return '-'
