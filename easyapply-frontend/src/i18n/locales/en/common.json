@@ -111,7 +111,9 @@
     "rejectionBrakOdpowiedzi": "No response",
     "rejectionOdmowaMailowa": "Email rejection",
     "rejectionOdrzuceniePo": "Rejected after interview",
-    "rejectionInne": "Other reason"
+    "rejectionInne": "Other reason",
+    "swipeHint": "← Swipe →",
+    "movedTo": "✓ Moved to: {{status}}"
   },
   "statusConfig": {
     "WYSLANE": "Sent",

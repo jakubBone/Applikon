@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useTranslation } from 'react-i18next'
 import type { Application, StageUpdateRequest } from '../../types/domain'
 import { isMobile, PREDEFINED_STAGES, REJECTION_REASONS } from './types'
 
@@ -13,6 +14,7 @@ export interface ApplicationCardProps {
 }
 
 export function ApplicationCard({ application, isDragging, onClick, onStageChange, onLongPress }: ApplicationCardProps) {
+  const { t } = useTranslation()
   const [showStageDropdown, setShowStageDropdown] = useState(false)
   const [customStageInput, setCustomStageInput] = useState('')
   const [isLifting, setIsLifting] = useState(false)
@@ -135,7 +137,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {showHint && <div className="card-long-press-hint">👆 Przytrzymaj...</div>}
+      {showHint && <div className="card-long-press-hint">{t('kanban.longPressHint')}</div>}
       <div className="card-header">
         <div className="card-header-left">
           {isOffer && <span className="card-icon offer">✓</span>}
@@ -158,7 +160,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
             }}
           >
             <span className="stage-label">
-              {application.currentStage || 'Wybierz etap...'}
+              {application.currentStage || t('kanban.stageSelect')}
             </span>
             <span className="stage-arrow">{showStageDropdown ? '▲' : '▼'}</span>
           </button>
@@ -189,7 +191,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
               >
                 <input
                   type="text"
-                  placeholder="Inny etap..."
+                  placeholder={t('kanban.customStage')}
                   value={customStageInput}
                   onChange={(e) => setCustomStageInput(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
@@ -211,13 +213,13 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
       {/* Powód odmowy */}
       {isRejected && application.rejectionReason && (
         <div className="card-rejection">
-          💬 {REJECTION_REASONS.find(r => r.id === application.rejectionReason)?.label || application.rejectionReason}
+          💬 {t(REJECTION_REASONS.find(r => r.id === application.rejectionReason)?.labelKey ?? '') || application.rejectionReason}
         </div>
       )}
 
       {/* Data aplikacji */}
       <div className="card-date">
-        📅 Aplikowano: {new Date(application.appliedAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })}
+        📅 {t('kanban.cardDate')} {new Date(application.appliedAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })}
       </div>
     </div>
   )

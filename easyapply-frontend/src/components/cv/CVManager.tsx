@@ -15,8 +15,8 @@ interface Props {
 }
 
 function CVManager({ applications, onCVAssigned }: Props) {
-  const { t } = useTranslation('errors')
-  // React Query — pobieranie i mutacje CV (zamiast ręcznego useState + useEffect + fetchCVs)
+  const { t } = useTranslation()
+  const { t: tErrors } = useTranslation('errors')
   const { data: cvList = [] } = useCVs()
   const uploadCVMutation = useUploadCV()
   const createCVMutation = useCreateCV()
@@ -32,7 +32,6 @@ function CVManager({ applications, onCVAssigned }: Props) {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editFormData, setEditFormData] = useState({ name: '', externalUrl: '' })
 
-  // Synchronizuj selectedCv z danymi z cache (gdy React Query odświeży listę)
   useEffect(() => {
     if (selectedCv) {
       const updated = cvList.find(cv => cv.id === selectedCv.id)
@@ -40,46 +39,40 @@ function CVManager({ applications, onCVAssigned }: Props) {
     }
   }, [cvList])
 
-  // Grupowanie CV według typu
   const groupedCVs = {
     FILE: cvList.filter(cv => cv.type === 'FILE' || !cv.type),
     LINK: cvList.filter(cv => cv.type === 'LINK'),
     NOTE: cvList.filter(cv => cv.type === 'NOTE')
   }
 
-  // Bezpieczne wyodrębnianie hostname z URL (bez crash'u)
   const getHostname = (url: string | undefined): string => {
-    if (!url) return 'na komputerze'
+    if (!url) return t('cv.onComputer')
     try {
       return new URL(url).hostname || url
     } catch {
-      // Invalid URL — zwróć surowy URL zamiast crash'u
       return url
     }
   }
 
-  // Liczenie użyć CV
   const getUsageCount = (cvId: number): number => {
     return applications.filter(app => app.cvId === cvId).length
   }
 
-  // Aplikacje przypisane do wybranego CV
   const getAssignedApps = (cvId: number): Application[] => {
     return applications.filter(app => app.cvId === cvId)
   }
 
-  // Upload CV (plik)
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     if (file.type !== 'application/pdf') {
-      alert(t('cv.pdfOnly'))
+      alert(tErrors('cv.pdfOnly'))
       return
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert(t('cv.fileTooLarge'))
+      alert(tErrors('cv.fileTooLarge'))
       return
     }
 
@@ -91,23 +84,21 @@ function CVManager({ applications, onCVAssigned }: Props) {
         e.target.value = ''
       },
       onError: () => {
-        alert(t('cv.uploadError'))
+        alert(tErrors('cv.uploadError'))
       },
     })
   }
 
-  // Utwórz CV typu LINK lub NOTE
   const handleCreateLinkOrNote = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!linkFormData.name.trim()) {
-      alert(t('cv.nameRequired'))
+      alert(tErrors('cv.nameRequired'))
       return
     }
 
-    // Walidacja URL dla typu LINK
     if (linkFormData.type === 'LINK' && !isSafeUrl(linkFormData.externalUrl)) {
-      alert(t('cv.invalidUrl'))
+      alert(tErrors('cv.invalidUrl'))
       return
     }
 
@@ -123,12 +114,11 @@ function CVManager({ applications, onCVAssigned }: Props) {
         setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
       },
       onError: () => {
-        alert(t('cv.saveError'))
+        alert(tErrors('cv.saveError'))
       },
     })
   }
 
-  // Pobierz/Otwórz CV
   const handleOpen = async (cv: CV) => {
     if (cv.type === 'LINK' && isSafeUrl(cv.externalUrl)) {
       window.open(cv.externalUrl, '_blank')
@@ -137,9 +127,8 @@ function CVManager({ applications, onCVAssigned }: Props) {
     }
   }
 
-  // Usuń CV
   const handleDelete = (cvId: number) => {
-    if (!confirm(t('cv.deleteConfirm'))) return
+    if (!confirm(tErrors('cv.deleteConfirm'))) return
 
     deleteCVMutation.mutate(cvId, {
       onSuccess: () => {
@@ -149,12 +138,11 @@ function CVManager({ applications, onCVAssigned }: Props) {
         onCVAssigned()
       },
       onError: () => {
-        alert(t('cv.deleteError'))
+        alert(tErrors('cv.deleteError'))
       },
     })
   }
 
-  // Przypisz CV do aplikacji
   const handleAssign = async () => {
     if (!selectedAppForAssign || !selectedCv) return
 
@@ -164,23 +152,21 @@ function CVManager({ applications, onCVAssigned }: Props) {
       setShowAssignModal(false)
       setSelectedAppForAssign(null)
     } catch (error) {
-      console.error('Błąd przypisania CV:', error)
+      console.error('CV assignment error:', error)
     }
   }
 
-  // Usuń przypisanie CV
   const handleRemoveAssignment = async (appId: number) => {
-    if (!confirm(t('cv.removeAssignConfirm'))) return
+    if (!confirm(tErrors('cv.removeAssignConfirm'))) return
 
     try {
       await assignCVToApplication(appId, null)
       onCVAssigned()
     } catch (error) {
-      console.error('Błąd usuwania przypisania:', error)
+      console.error('CV assignment removal error:', error)
     }
   }
 
-  // Otwórz modal edycji
   const handleEditClick = () => {
     if (!selectedCv) return
     setEditFormData({
@@ -190,19 +176,17 @@ function CVManager({ applications, onCVAssigned }: Props) {
     setShowEditModal(true)
   }
 
-  // Zapisz edycję CV
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedCv) return
 
     if (!editFormData.name.trim()) {
-      alert(t('cv.nameRequired'))
+      alert(tErrors('cv.nameRequired'))
       return
     }
 
-    // Walidacja URL dla typu LINK
     if (selectedCv.type === 'LINK' && !isSafeUrl(editFormData.externalUrl)) {
-      alert(t('cv.invalidUrl'))
+      alert(tErrors('cv.invalidUrl'))
       return
     }
 
@@ -218,7 +202,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
         setShowEditModal(false)
       },
       onError: () => {
-        alert(t('cv.saveError'))
+        alert(tErrors('cv.saveError'))
       },
     })
   }
@@ -260,9 +244,9 @@ function CVManager({ applications, onCVAssigned }: Props) {
           <div className="cv-item-meta">
             {cv.type === 'FILE' || !cv.type ? formatSize(cv.fileSize) :
              cv.type === 'LINK' ? getHostname(cv.externalUrl) :
-             'na komputerze'}
+             t('cv.onComputer')}
             {' • '}
-            {usageCount > 0 ? `użyte ${usageCount}×` : 'nieużyte'}
+            {usageCount > 0 ? t('cv.usedTimes', { count: usageCount }) : t('cv.unused')}
           </div>
         </div>
       </div>
@@ -289,28 +273,26 @@ function CVManager({ applications, onCVAssigned }: Props) {
   return (
     <div className="cv-manager">
       <div className="cv-header">
-        <h2>Moje CV</h2>
+        <h2>{t('cv.title')}</h2>
         <button className="add-cv-btn" onClick={() => setShowAddModal(true)}>
-          + Dodaj CV
+          {t('cv.addBtn')}
         </button>
       </div>
 
       {cvList.length === 0 ? (
         <div className="cv-empty-state">
           <div className="empty-icon">📄</div>
-          <h3>Brak CV</h3>
-          <p>Dodaj swoje pierwsze CV, aby móc je przypisywać do aplikacji</p>
+          <h3>{t('cv.empty')}</h3>
+          <p>{t('cv.emptyDesc')}</p>
         </div>
       ) : (
         <div className="cv-layout">
-          {/* Lewa kolumna - lista CV */}
           <div className="cv-list-panel">
-            {renderGroup('Przesłane pliki', '📄', groupedCVs.FILE, 'FILE')}
-            {renderGroup('Linki zewnętrzne', '🔗', groupedCVs.LINK, 'LINK')}
-            {renderGroup('Na moim komputerze', '💻', groupedCVs.NOTE, 'NOTE')}
+            {renderGroup(t('cv.groupFiles'), '📄', groupedCVs.FILE, 'FILE')}
+            {renderGroup(t('cv.groupLinks'), '🔗', groupedCVs.LINK, 'LINK')}
+            {renderGroup(t('cv.groupLocal'), '💻', groupedCVs.NOTE, 'NOTE')}
           </div>
 
-          {/* Prawa kolumna - szczegóły */}
           <div className="cv-details-panel">
             {selectedCv ? (
               <>
@@ -320,26 +302,26 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
                 <div className="cv-details-info">
                   <div className="cv-detail-row">
-                    <span className="cv-detail-label">Typ:</span>
+                    <span className="cv-detail-label">{t('cv.detailType')}</span>
                     <span className="cv-detail-value">
-                      {selectedCv.type === 'FILE' || !selectedCv.type ? '📄 Plik PDF' :
-                       selectedCv.type === 'LINK' ? '🔗 Link zewnętrzny' : '💻 Na komputerze'}
+                      {selectedCv.type === 'FILE' || !selectedCv.type ? t('cv.detailTypePdf') :
+                       selectedCv.type === 'LINK' ? t('cv.detailTypeLink') : t('cv.detailTypeLocal')}
                     </span>
                   </div>
                   {(selectedCv.type === 'FILE' || !selectedCv.type) && selectedCv.fileSize && (
                     <div className="cv-detail-row">
-                      <span className="cv-detail-label">Rozmiar:</span>
+                      <span className="cv-detail-label">{t('cv.detailSize')}</span>
                       <span className="cv-detail-value">{formatSize(selectedCv.fileSize)}</span>
                     </div>
                   )}
                   {selectedCv.type === 'LINK' && selectedCv.externalUrl && (
                     <div className="cv-detail-row">
-                      <span className="cv-detail-label">Link:</span>
+                      <span className="cv-detail-label">{t('cv.detailLink')}</span>
                       <span className="cv-detail-value cv-link">{selectedCv.externalUrl}</span>
                     </div>
                   )}
                   <div className="cv-detail-row">
-                    <span className="cv-detail-label">Dodano:</span>
+                    <span className="cv-detail-label">{t('cv.detailAdded')}</span>
                     <span className="cv-detail-value">{formatDate(selectedCv.uploadedAt)}</span>
                   </div>
                 </div>
@@ -347,27 +329,27 @@ function CVManager({ applications, onCVAssigned }: Props) {
                 <div className="cv-details-actions">
                   {(selectedCv.type === 'FILE' || !selectedCv.type) && (
                     <button className="cv-action-btn primary" onClick={() => handleOpen(selectedCv)}>
-                      Pobierz
+                      {t('cv.download')}
                     </button>
                   )}
                   {selectedCv.type === 'LINK' && selectedCv.externalUrl && (
                     <button className="cv-action-btn primary" onClick={() => handleOpen(selectedCv)}>
-                      Otwórz link
+                      {t('cv.openLink')}
                     </button>
                   )}
                   {selectedCv.type !== 'FILE' && selectedCv.type && (
                     <button className="cv-action-btn secondary" onClick={handleEditClick}>
-                      Edytuj
+                      {t('notes.edit')}
                     </button>
                   )}
                   <button className="cv-action-btn danger" onClick={() => handleDelete(selectedCv.id)}>
-                    Usuń
+                    {t('cv.delete')}
                   </button>
                 </div>
 
                 <div className="cv-assignments-section">
                   <div className="cv-assignments-header">
-                    <h4>Przypisane do ({getAssignedApps(selectedCv.id).length})</h4>
+                    <h4>{t('cv.assignHeader', { count: getAssignedApps(selectedCv.id).length })}</h4>
                     <button
                       className="assign-btn"
                       onClick={() => {
@@ -375,12 +357,12 @@ function CVManager({ applications, onCVAssigned }: Props) {
                         setShowAssignModal(true)
                       }}
                     >
-                      + Przypisz
+                      {t('cv.assign')}
                     </button>
                   </div>
 
                   {getAssignedApps(selectedCv.id).length === 0 ? (
-                    <p className="no-assignments">To CV nie jest przypisane do żadnej aplikacji</p>
+                    <p className="no-assignments">{t('cv.unassigned')}</p>
                   ) : (
                     <div className="cv-assignments-list">
                       {getAssignedApps(selectedCv.id).map(app => (
@@ -392,7 +374,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
                           <button
                             className="remove-btn"
                             onClick={() => handleRemoveAssignment(app.id)}
-                            title="Usuń przypisanie"
+                            title={t('cv.removeAssignment')}
                           >
                             ✕
                           </button>
@@ -405,31 +387,31 @@ function CVManager({ applications, onCVAssigned }: Props) {
             ) : (
               <div className="cv-details-empty">
                 <div className="empty-icon">👈</div>
-                <p>Wybierz CV z listy, aby zobaczyć szczegóły</p>
+                <p>{t('cv.selectHint')}</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Modal dodawania CV */}
+      {/* Add CV modal */}
       {showAddModal && (
         <div className="modal-overlay" onClick={closeAddModal}>
           <div className="modal-content add-cv-modal" onClick={e => e.stopPropagation()}>
 
             {addStep === 'choose' && (
               <>
-                <h3>Jak chcesz dodać CV?</h3>
+                <h3>{t('cv.addModalTitle')}</h3>
                 <div className="add-cv-options">
                   <div className="add-cv-option" onClick={() => setAddStep('file')}>
                     <div className="option-icon">📁</div>
                     <div className="option-content">
-                      <h4>Prześlij plik</h4>
-                      <p>Zapisz plik PDF prywatnie w aplikacji</p>
+                      <h4>{t('cv.uploadOptionTitle')}</h4>
+                      <p>{t('cv.uploadOptionDesc')}</p>
                       <ul className="option-features">
-                        <li>Przechowywanie lokalne</li>
-                        <li>Tylko Ty masz dostęp</li>
-                        <li>Usuń kiedy chcesz</li>
+                        <li>{t('cv.uploadFeature1')}</li>
+                        <li>{t('cv.uploadFeature2')}</li>
+                        <li>{t('cv.uploadFeature3')}</li>
                       </ul>
                     </div>
                   </div>
@@ -437,18 +419,18 @@ function CVManager({ applications, onCVAssigned }: Props) {
                   <div className="add-cv-option" onClick={() => setAddStep('link')}>
                     <div className="option-icon">📝</div>
                     <div className="option-content">
-                      <h4>Nie przesyłaj pliku</h4>
-                      <p>Zapisz tylko informację, które CV wysłałeś</p>
+                      <h4>{t('cv.noteOptionTitle')}</h4>
+                      <p>{t('cv.noteOptionDesc')}</p>
                       <ul className="option-features">
-                        <li>Podaj link do Drive/Dropbox</li>
-                        <li>...lub tylko zanotuj nazwę pliku</li>
-                        <li>Plik zostaje na Twoim komputerze</li>
+                        <li>{t('cv.noteFeature1')}</li>
+                        <li>{t('cv.noteFeature2')}</li>
+                        <li>{t('cv.noteFeature3')}</li>
                       </ul>
                     </div>
                   </div>
                 </div>
                 <div className="modal-actions">
-                  <button onClick={closeAddModal}>Anuluj</button>
+                  <button onClick={closeAddModal}>{t('cv.cancel')}</button>
                 </div>
               </>
             )}
@@ -456,18 +438,18 @@ function CVManager({ applications, onCVAssigned }: Props) {
             {addStep === 'file' && (
               <>
                 <button className="back-link" onClick={() => setAddStep('choose')}>
-                  ← Wróć
+                  {t('cv.uploadModalBack')}
                 </button>
-                <h3>Prześlij CV</h3>
+                <h3>{t('cv.uploadModalTitle')}</h3>
 
                 <div className="upload-area">
                   <label className="upload-dropzone">
                     <div className="dropzone-content">
                       <span className="dropzone-icon">📄</span>
                       <span className="dropzone-text">
-                        {uploadCVMutation.isPending ? 'Wysyłanie...' : 'Kliknij lub przeciągnij plik PDF'}
+                        {uploadCVMutation.isPending ? t('cv.uploading') : t('cv.dropHint')}
                       </span>
-                      <span className="dropzone-hint">Maksymalnie 5MB</span>
+                      <span className="dropzone-hint">{t('cv.maxSize')}</span>
                     </div>
                     <input
                       type="file"
@@ -482,13 +464,13 @@ function CVManager({ applications, onCVAssigned }: Props) {
                 <div className="privacy-info">
                   <span className="privacy-icon">🔒</span>
                   <div>
-                    <strong>Twój plik jest bezpieczny</strong>
-                    <p>Zapisany lokalnie, tylko dla Ciebie. Możesz go usunąć w dowolnym momencie.</p>
+                    <strong>{t('cv.secureTitle')}</strong>
+                    <p>{t('cv.secureDesc')}</p>
                   </div>
                 </div>
 
                 <div className="modal-actions">
-                  <button onClick={closeAddModal}>Anuluj</button>
+                  <button onClick={closeAddModal}>{t('cv.cancel')}</button>
                 </div>
               </>
             )}
@@ -496,57 +478,53 @@ function CVManager({ applications, onCVAssigned }: Props) {
             {addStep === 'link' && (
               <>
                 <button className="back-link" onClick={() => setAddStep('choose')}>
-                  ← Wróć
+                  {t('cv.noteModalBack')}
                 </button>
-                <h3>Zapisz informację o CV</h3>
+                <h3>{t('cv.noteModalTitle')}</h3>
 
                 <form onSubmit={handleCreateLinkOrNote} className="link-form">
                   <div className="form-group">
-                    <label>Nazwa pliku CV *</label>
+                    <label>{t('cv.nameLabel')}</label>
                     <input
                       type="text"
                       value={linkFormData.name}
                       onChange={(e) => setLinkFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="np. CV_Junior_Java_2026.pdf"
+                      placeholder={t('cv.namePlaceholder')}
                       required
                     />
-                    <span className="form-hint">
-                      Wpisz nazwę pliku CV, który wysłałeś do tej firmy
-                    </span>
+                    <span className="form-hint">{t('cv.nameHint')}</span>
                   </div>
 
                   <div className="form-group">
-                    <label>Gdzie masz ten plik?</label>
+                    <label>{t('cv.locationLabel')}</label>
                     <div className="type-toggle">
                       <button
                         type="button"
                         className={linkFormData.type === 'LINK' ? 'active' : ''}
                         onClick={() => setLinkFormData(prev => ({ ...prev, type: 'LINK' }))}
                       >
-                        🔗 W chmurze (mam link)
+                        {t('cv.cloudBtn')}
                       </button>
                       <button
                         type="button"
                         className={linkFormData.type === 'NOTE' ? 'active' : ''}
                         onClick={() => setLinkFormData(prev => ({ ...prev, type: 'NOTE' }))}
                       >
-                        💻 Na moim komputerze
+                        {t('cv.localBtn')}
                       </button>
                     </div>
                   </div>
 
                   {linkFormData.type === 'LINK' && (
                     <div className="form-group">
-                      <label>Link do CV</label>
+                      <label>{t('cv.linkLabel')}</label>
                       <input
                         type="url"
                         value={linkFormData.externalUrl}
                         onChange={(e) => setLinkFormData(prev => ({ ...prev, externalUrl: e.target.value }))}
-                        placeholder="https://drive.google.com/..."
+                        placeholder={t('cv.linkPlaceholder')}
                       />
-                      <span className="form-hint">
-                        Wklej link do Google Drive, Dropbox, OneDrive itp.
-                      </span>
+                      <span className="form-hint">{t('cv.linkHint')}</span>
                     </div>
                   )}
 
@@ -555,21 +533,21 @@ function CVManager({ applications, onCVAssigned }: Props) {
                     <div>
                       {linkFormData.type === 'LINK' ? (
                         <>
-                          <strong>Plik zostaje w chmurze</strong>
-                          <p>Zapisujemy tylko link. Pamiętaj o ustawieniu udostępniania!</p>
+                          <strong>{t('cv.cloudInfoTitle')}</strong>
+                          <p>{t('cv.cloudInfoDesc')}</p>
                         </>
                       ) : (
                         <>
-                          <strong>Zapisujesz tylko nazwę pliku</strong>
-                          <p>Dzięki temu będziesz wiedzieć, które CV wysłałeś do tej firmy.</p>
+                          <strong>{t('cv.localInfoTitle')}</strong>
+                          <p>{t('cv.localInfoDesc')}</p>
                         </>
                       )}
                     </div>
                   </div>
 
                   <div className="modal-actions">
-                    <button type="button" onClick={closeAddModal}>Anuluj</button>
-                    <button type="submit" className="primary">Zapisz</button>
+                    <button type="button" onClick={closeAddModal}>{t('cv.cancel')}</button>
+                    <button type="submit" className="primary">{t('cv.save')}</button>
                   </div>
                 </form>
               </>
@@ -578,15 +556,17 @@ function CVManager({ applications, onCVAssigned }: Props) {
         </div>
       )}
 
-      {/* Modal przypisania CV */}
+      {/* Assign CV modal */}
       {showAssignModal && selectedCv && (
         <div className="modal-overlay" onClick={() => setShowAssignModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>Przypisz CV do aplikacji</h3>
+            <h3>{t('cv.assignModalTitle')}</h3>
             <p className="selected-cv-info">
-              Wybrane CV: <strong>{selectedCv.originalFileName}</strong>
+              {selectedCv
+                ? t('cv.assignSelected', { name: selectedCv.originalFileName })
+                : t('cv.assignSelectedNone')}
             </p>
-            <p>Wybierz aplikację:</p>
+            <p>{t('cv.assignChooseApp')}</p>
             <div className="app-select-list">
               {applications.filter(app => app.cvId !== selectedCv.id).map(app => (
                 <div
@@ -597,63 +577,61 @@ function CVManager({ applications, onCVAssigned }: Props) {
                   <strong>{app.company}</strong>
                   <span>{app.position}</span>
                   {app.cvFileName && (
-                    <span className="current-cv">Obecne CV: {app.cvFileName}</span>
+                    <span className="current-cv">{t('cv.assignCurrentCv', { name: app.cvFileName })}</span>
                   )}
                 </div>
               ))}
             </div>
             <div className="modal-actions">
-              <button onClick={() => setShowAssignModal(false)}>Anuluj</button>
+              <button onClick={() => setShowAssignModal(false)}>{t('cv.cancel')}</button>
               <button
                 className="primary assign-confirm-btn"
                 disabled={!selectedAppForAssign}
                 onClick={handleAssign}
               >
-                Przypisz
+                {t('cv.assignBtn')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal edycji CV */}
+      {/* Edit CV modal */}
       {showEditModal && selectedCv && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h3>Edytuj CV</h3>
+            <h3>{t('cv.editModalTitle')}</h3>
             <form onSubmit={handleEditSubmit} className="link-form">
               <div className="form-group">
-                <label>Nazwa CV *</label>
+                <label>{t('cv.editNameLabel')}</label>
                 <input
                   type="text"
                   value={editFormData.name}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="np. CV_Junior_Java_2026.pdf"
+                  placeholder={t('cv.namePlaceholder')}
                   required
                 />
               </div>
 
               {selectedCv.type === 'LINK' && (
                 <div className="form-group">
-                  <label>Link do CV</label>
+                  <label>{t('cv.linkLabel')}</label>
                   <input
                     type="url"
                     value={editFormData.externalUrl}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, externalUrl: e.target.value }))}
-                    placeholder="https://drive.google.com/..."
+                    placeholder={t('cv.linkPlaceholder')}
                   />
                 </div>
               )}
 
               {selectedCv.type === 'FILE' && (
-                <p className="form-hint edit-hint">
-                  Możesz zmienić tylko nazwę wyświetlaną. Plik pozostaje bez zmian.
-                </p>
+                <p className="form-hint edit-hint">{t('cv.editHint')}</p>
               )}
 
               <div className="modal-actions">
-                <button type="button" onClick={() => setShowEditModal(false)}>Anuluj</button>
-                <button type="submit" className="primary">Zapisz</button>
+                <button type="button" onClick={() => setShowEditModal(false)}>{t('cv.cancel')}</button>
+                <button type="submit" className="primary">{t('cv.save')}</button>
               </div>
             </form>
           </div>

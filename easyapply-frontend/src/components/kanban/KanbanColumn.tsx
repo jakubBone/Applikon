@@ -1,5 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useTranslation } from 'react-i18next'
 import type { Application } from '../../types/domain'
 import type { KanbanStatus } from './types'
 
@@ -10,6 +11,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ status, applications, children }: KanbanColumnProps) {
+  const { t } = useTranslation()
   const { setNodeRef } = useSortable({
     id: status.id,
     data: { type: 'column' }
@@ -18,7 +20,7 @@ export function KanbanColumn({ status, applications, children }: KanbanColumnPro
   return (
     <div className="kanban-column" ref={setNodeRef}>
       <div className="column-header" style={{ borderTopColor: status.color }}>
-        <h3>{status.label}</h3>
+        <h3>{t(status.labelKey)}</h3>
         <span className="column-count">{applications.length}</span>
       </div>
       <div className="column-content">

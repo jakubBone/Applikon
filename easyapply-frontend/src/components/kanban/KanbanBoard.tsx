@@ -11,6 +11,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
+import { useTranslation } from 'react-i18next'
 import type { Application, StageUpdateRequest } from '../../types/domain'
 import { isMobile, STATUSES } from './types'
 import { ApplicationCard } from './ApplicationCard'
@@ -29,6 +30,7 @@ interface KanbanBoardProps {
 }
 
 function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageChange, onCardClick }: KanbanBoardProps) {
+  const { t } = useTranslation()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [stageModalOpen, setStageModalOpen] = useState(false)
   const [endModalOpen, setEndModalOpen] = useState(false)
@@ -230,8 +232,8 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     if (navigator.vibrate) navigator.vibrate([50, 100, 50])
 
     // Success toast
-    const targetStatusLabel = STATUSES.find(s => s.id === targetStatus)?.label
-    showSuccessToast(`✓ Przeniesiono do: ${targetStatusLabel}`)
+    const targetStatusLabelKey = STATUSES.find(s => s.id === targetStatus)?.labelKey ?? ''
+    showSuccessToast(t('kanban.movedTo', { status: t(targetStatusLabelKey) }))
 
     setMoveModalOpen(false)
     setMoveModalCard(null)
@@ -293,7 +295,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
               onClick={() => scrollToColumn(idx)}
             >
               <span className="count">{getApplicationsByStatus(status.id).length}</span>
-              {status.label}
+              {t(status.labelKey)}
             </button>
           ))}
         </div>
@@ -347,7 +349,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
       {/* Mobile: Swipe hint */}
       {showSwipeHint && (
         <div className="swipe-hint">
-          ← Przesuń palcem →
+          {t('kanban.swipeHint')}
         </div>
       )}
 

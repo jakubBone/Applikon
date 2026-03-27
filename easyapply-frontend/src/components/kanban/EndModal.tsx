@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { StageUpdateRequest } from '../../types/domain'
 import { REJECTION_REASONS } from './types'
 
@@ -9,6 +10,7 @@ interface EndModalProps {
 }
 
 export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
+  const { t } = useTranslation()
   const [selectedOutcome, setSelectedOutcome] = useState<'OFERTA' | 'ODMOWA' | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionDetails, setRejectionDetails] = useState('')
@@ -34,7 +36,7 @@ export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content end-modal" onClick={e => e.stopPropagation()}>
-        <h3>Jak zakończył się proces?</h3>
+        <h3>{t('endModal.title')}</h3>
 
         <div className="outcome-options">
           <button
@@ -42,32 +44,32 @@ export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
             onClick={() => setSelectedOutcome('OFERTA')}
           >
             <span className="outcome-icon">✓</span>
-            <span>Oferta otrzymana</span>
+            <span>{t('endModal.offer')}</span>
           </button>
           <button
             className={`outcome-option rejected ${selectedOutcome === 'ODMOWA' ? 'selected' : ''}`}
             onClick={() => setSelectedOutcome('ODMOWA')}
           >
             <span className="outcome-icon">✗</span>
-            <span>Odmowa / Rezygnacja</span>
+            <span>{t('endModal.rejected')}</span>
           </button>
         </div>
 
         {selectedOutcome === 'ODMOWA' && (
           <div className="rejection-form">
-            <label>Powód:</label>
+            <label>{t('endModal.reason')}</label>
             <select
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
             >
-              <option value="">Wybierz powód...</option>
+              <option value="">{t('endModal.selectReason')}</option>
               {REJECTION_REASONS.map(reason => (
-                <option key={reason.id} value={reason.id}>{reason.label}</option>
+                <option key={reason.id} value={reason.id}>{t(reason.labelKey)}</option>
               ))}
             </select>
             {rejectionReason === 'INNE' && (
               <textarea
-                placeholder="Szczegóły (opcjonalnie)..."
+                placeholder={t('endModal.detailsPlaceholder')}
                 value={rejectionDetails}
                 onChange={(e) => setRejectionDetails(e.target.value)}
               />
@@ -76,13 +78,13 @@ export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
         )}
 
         <div className="modal-actions">
-          <button className="modal-close" onClick={onClose}>Anuluj</button>
+          <button className="modal-close" onClick={onClose}>{t('endModal.cancel')}</button>
           <button
             className="modal-submit"
             onClick={handleSubmit}
             disabled={!selectedOutcome || (selectedOutcome === 'ODMOWA' && !rejectionReason)}
           >
-            Zapisz
+            {t('endModal.save')}
           </button>
         </div>
       </div>

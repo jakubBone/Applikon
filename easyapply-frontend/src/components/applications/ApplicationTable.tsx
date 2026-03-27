@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import './ApplicationTable.css'
 import { STATUS_CONFIG } from '../../constants/applicationStatus'
 import type { Application } from '../../types/domain'
@@ -32,26 +33,16 @@ const formatDate = (dateString: string): string => {
   })
 }
 
-const getDaysSince = (dateString: string): string => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'Dzisiaj'
-  if (diffDays === 1) return '1 dzień'
-  return `${diffDays} dni`
-}
-
-const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
+const statusConfig: Record<string, { labelKey: string; color: string; bg: string }> = {
   ...STATUS_CONFIG,
-  // Stare statusy (kompatybilność wsteczna)
-  'ROZMOWA':   { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
-  'ZADANIE':   { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
-  'ODRZUCONE': { label: 'Odmowa',     color: '#95a5a6', bg: '#f5f5f5' },
+  // Legacy statuses (backwards compatibility)
+  'ROZMOWA':   { labelKey: 'statusConfig.ROZMOWA',   color: '#f39c12', bg: '#fef9e7' },
+  'ZADANIE':   { labelKey: 'statusConfig.ZADANIE',   color: '#f39c12', bg: '#fef9e7' },
+  'ODRZUCONE': { labelKey: 'statusConfig.ODRZUCONE', color: '#95a5a6', bg: '#f5f5f5' },
 }
 
 function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
+  const { t } = useTranslation()
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [sortField, setSortField] = useState('appliedAt')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
@@ -65,6 +56,17 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  const getDaysSince = (dateString: string): string => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) return t('table.today')
+    if (diffDays === 1) return t('table.oneDay')
+    return t('table.days', { count: diffDays })
+  }
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -166,8 +168,8 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
       return (
         <div className="empty-table">
           {applications.length === 0
-            ? 'Brak aplikacji. Dodaj pierwszą!'
-            : 'Brak wyników dla wybranych filtrów'}
+            ? t('table.empty')
+            : t('table.noResults')}
         </div>
       )
     }
@@ -228,7 +230,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
                   className="mobile-card-status"
                   style={{ backgroundColor: status.bg, color: status.color, borderColor: status.color }}
                 >
-                  {status.label}
+                  {t(status.labelKey)}
                 </span>
               </div>
             </div>
@@ -245,7 +247,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Szukaj po firmie, stanowisku..."
+            placeholder={t('table.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -258,7 +260,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
             className={`status-filter-btn ${statusFilter === 'ALL' ? 'active' : ''}`}
             onClick={() => setStatusFilter('ALL')}
           >
-            Wszystkie ({applications.length})
+            {t('table.filterAll', { count: applications.length })}
           </button>
           {Object.entries(statusConfig).map(([key, config]) => {
             const count = statusCounts[key] || 0
@@ -270,7 +272,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
                 onClick={() => setStatusFilter(key)}
                 style={{ '--status-color': config.color } as React.CSSProperties}
               >
-                {config.label} ({count})
+                {t(config.labelKey)} ({count})
               </button>
             )
           })}
@@ -279,18 +281,18 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
 
       {filteredApplications.length !== applications.length && (
         <div className="filter-info">
-          Wyświetlanie {filteredApplications.length} z {applications.length} aplikacji
+          {t('table.showing', { shown: filteredApplications.length, total: applications.length })}
         </div>
       )}
 
       {selectedIds.size > 0 && (
         <div className="selection-bar">
           <span className="selection-info">
-            Zaznaczono: {selectedIds.size} {selectedIds.size === 1 ? 'aplikację' : selectedIds.size < 5 ? 'aplikacje' : 'aplikacji'}
+            {t('table.selectedCount', { count: selectedIds.size })}
           </span>
           <div className="selection-actions">
             <button className="action-btn delete-btn" onClick={() => setShowDeleteConfirm(true)}>
-              Usuń zaznaczone
+              {t('table.deleteSelected')}
             </button>
           </div>
         </div>
@@ -299,17 +301,15 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
       {showDeleteConfirm && (
         <div className="confirm-modal-overlay">
           <div className="confirm-modal">
-            <h3>Potwierdzenie usunięcia</h3>
-            <p>
-              Czy na pewno chcesz usunąć {selectedIds.size} {selectedIds.size === 1 ? 'aplikację' : selectedIds.size < 5 ? 'aplikacje' : 'aplikacji'}?
-            </p>
-            <p className="confirm-warning">Ta operacja jest nieodwracalna.</p>
+            <h3>{t('table.confirmDeleteTitle')}</h3>
+            <p>{t('table.confirmDeleteMsg', { count: selectedIds.size })}</p>
+            <p className="confirm-warning">{t('table.confirmDeleteWarning')}</p>
             <div className="confirm-actions">
               <button className="confirm-btn cancel" onClick={() => setShowDeleteConfirm(false)}>
-                Anuluj
+                {t('table.cancel')}
               </button>
               <button className="confirm-btn delete" onClick={handleDeleteSelected}>
-                Usuń
+                {t('table.delete')}
               </button>
             </div>
           </div>
@@ -331,41 +331,41 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
                 <th className="sortable" onClick={() => handleSort('company')}>
                   <span className="th-content">
                     <span className="th-icon">🏢</span>
-                    Firma
+                    {t('table.colCompany')}
                     {sortField === 'company' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('position')}>
                   <span className="th-content">
                     <span className="th-icon">💼</span>
-                    Stanowisko
+                    {t('table.colPosition')}
                     {sortField === 'position' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('salaryMin')}>
                   <span className="th-content">
                     <span className="th-icon">💰</span>
-                    Wynagrodzenie
+                    {t('table.colSalary')}
                     {sortField === 'salaryMin' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th>
-                  <span className="th-content"><span className="th-icon">🔗</span>Źródło</span>
+                  <span className="th-content"><span className="th-icon">🔗</span>{t('table.colSource')}</span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('appliedAt')}>
                   <span className="th-content">
                     <span className="th-icon">📅</span>
-                    Data
+                    {t('table.colDate')}
                     {sortField === 'appliedAt' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
                 <th>
-                  <span className="th-content"><span className="th-icon">⏱️</span>Dni temu</span>
+                  <span className="th-content"><span className="th-icon">⏱️</span>{t('table.colDays')}</span>
                 </th>
                 <th className="sortable" onClick={() => handleSort('status')}>
                   <span className="th-content">
                     <span className="th-icon">📊</span>
-                    Status
+                    {t('table.colStatus')}
                     {sortField === 'status' && <span className="sort-arrow">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                   </span>
                 </th>
@@ -418,7 +418,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
                         className="status-badge"
                         style={{ backgroundColor: status.bg, color: status.color, borderColor: status.color }}
                       >
-                        {status.label}
+                        {t(status.labelKey)}
                       </span>
                     </td>
                     <td className="menu-col">
@@ -433,8 +433,8 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
           {sortedApplications.length === 0 && (
             <div className="empty-table">
               {applications.length === 0
-                ? 'Brak aplikacji. Dodaj pierwszą!'
-                : 'Brak wyników dla wybranych filtrów'}
+                ? t('table.empty')
+                : t('table.noResults')}
             </div>
           )}
         </>

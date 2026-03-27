@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { Currency, SalaryType } from '../../types/domain'
 
 export interface SalaryFormData {
@@ -15,10 +16,12 @@ interface Props {
 }
 
 export function SalaryFormSection({ data, onChange }: Props) {
+  const { t } = useTranslation()
+
   return (
     <div className="salary-section">
-      <label className="section-label">Zaproponowałeś wynagrodzenie</label>
-      <span className="section-hint">Kwota, którą zaproponowałeś/aś w aplikacji</span>
+      <label className="section-label">{t('salary.label')}</label>
+      <span className="section-hint">{t('salary.hint')}</span>
 
       <div className="salary-row">
         <div className="salary-inputs">
@@ -27,7 +30,7 @@ export function SalaryFormSection({ data, onChange }: Props) {
             name="salaryMin"
             value={data.salaryMin}
             onChange={onChange}
-            placeholder={data.isRange ? 'Od' : 'Kwota'}
+            placeholder={data.isRange ? t('salary.from') : t('salary.amount')}
             min="0"
             className="salary-input"
           />
@@ -37,7 +40,7 @@ export function SalaryFormSection({ data, onChange }: Props) {
               name="salaryMax"
               value={data.salaryMax}
               onChange={onChange}
-              placeholder="Do"
+              placeholder={t('salary.to')}
               min="0"
               className="salary-input"
             />
@@ -51,7 +54,7 @@ export function SalaryFormSection({ data, onChange }: Props) {
         </div>
         <label className="checkbox-label">
           <input type="checkbox" name="isRange" checked={data.isRange} onChange={onChange} />
-          Widełki
+          {t('salary.range')}
         </label>
       </div>
 
@@ -59,19 +62,19 @@ export function SalaryFormSection({ data, onChange }: Props) {
         <div className="option-group">
           <label className="toggle-label">
             <input type="radio" name="salaryType" value="BRUTTO" checked={data.salaryType === 'BRUTTO'} onChange={onChange} />
-            Brutto
+            {t('salary.brutto')}
           </label>
           <label className="toggle-label">
             <input type="radio" name="salaryType" value="NETTO" checked={data.salaryType === 'NETTO'} onChange={onChange} />
-            Netto
+            {t('salary.netto')}
           </label>
         </div>
         <select name="contractType" value={data.contractType} onChange={onChange} className="contract-select">
-          <option value="">Typ umowy</option>
+          <option value="">{t('salary.contractTypePlaceholder')}</option>
           <option value="B2B">B2B</option>
           <option value="UOP">UoP</option>
-          <option value="UZ">Umowa zlecenie</option>
-          <option value="INNA">Inna</option>
+          <option value="UZ">{t('salary.uzLabel')}</option>
+          <option value="INNA">{t('salary.otherLabel')}</option>
         </select>
       </div>
     </div>

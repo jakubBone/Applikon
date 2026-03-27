@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import KanbanBoard from './components/kanban/KanbanBoard'
 import CVManager from './components/cv/CVManager'
@@ -20,6 +21,7 @@ import './App.css'
 type View = 'kanban' | 'list' | 'cv' | 'details'
 
 export default function AppContent() {
+  const { t } = useTranslation()
   const [view, setView] = useState<View>('kanban')
   const [previousView, setPreviousView] = useState<View>('kanban')
   const [selectedAppId, setSelectedAppId] = useState<number | null>(null)
@@ -101,23 +103,23 @@ export default function AppContent() {
               className={`tab-btn ${view === 'kanban' ? 'active' : ''}`}
               onClick={() => setView('kanban')}
             >
-              Kanban
+              {t('nav.kanban')}
             </button>
             <button
               className={`tab-btn ${view === 'list' ? 'active' : ''}`}
               onClick={() => setView('list')}
             >
-              Lista
+              {t('nav.list')}
             </button>
             <button
               className={`tab-btn ${view === 'cv' ? 'active' : ''}`}
               onClick={() => setView('cv')}
             >
-              CV
+              {t('nav.cv')}
             </button>
           </div>
           <button className="add-btn" onClick={() => setShowForm(!showForm)}>
-            {showForm ? 'Zamknij' : '+ Dodaj aplikację'}
+            {showForm ? t('app.close') : t('app.addApplication')}
           </button>
         </div>
       )}
@@ -133,7 +135,7 @@ export default function AppContent() {
 
       <main className="main-content">
         {isLoading ? (
-          <p className="loading">Ładowanie...</p>
+          <p className="loading">{t('app.loading')}</p>
         ) : view === 'details' && selectedApp ? (
           <ApplicationDetails application={selectedApp} onBack={handleBackToList} />
         ) : view === 'kanban' ? (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Application } from '../../types/domain'
 import type { KanbanStatus } from './types'
 
@@ -12,6 +13,7 @@ interface MoveModalProps {
 }
 
 export function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicationsByStatus }: MoveModalProps) {
+  const { t } = useTranslation()
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicat
     <div className="move-modal" onClick={onClose}>
       <div className="move-modal-content" onClick={e => e.stopPropagation()}>
         <div className="move-modal-header">
-          <div className="move-modal-title">Zmień status aplikacji</div>
+          <div className="move-modal-title">{t('moveModal.title')}</div>
         </div>
 
         <div className="move-options">
@@ -53,8 +55,8 @@ export function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicat
                 <div className="move-option-radio"></div>
                 <div className="move-option-color" style={{ background: status.color }}></div>
                 <div className="move-option-text">
-                  <div className="move-option-name">{status.label}</div>
-                  <div className="move-option-count">{count} aplikacji</div>
+                  <div className="move-option-name">{t(status.labelKey)}</div>
+                  <div className="move-option-count">{t('moveModal.appCount', { count })}</div>
                 </div>
               </div>
             )
@@ -62,13 +64,13 @@ export function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicat
         </div>
 
         <div className="move-modal-actions">
-          <button className="move-modal-btn cancel" onClick={onClose}>Anuluj</button>
+          <button className="move-modal-btn cancel" onClick={onClose}>{t('moveModal.cancel')}</button>
           <button
             className="move-modal-btn confirm"
             onClick={handleMove}
             disabled={!selectedStatus || selectedStatus === currentStatus}
           >
-            Przenieś
+            {t('moveModal.move')}
           </button>
         </div>
       </div>

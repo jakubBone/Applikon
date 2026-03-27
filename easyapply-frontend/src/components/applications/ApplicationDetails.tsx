@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NotesList } from '../notes/NotesList'
 import { ApplicationForm } from './ApplicationForm'
 import { downloadCV } from '../../services/api'
@@ -41,6 +42,7 @@ function formatSalary(app: Application): string | null {
 }
 
 export function ApplicationDetails({ application, onBack }: Props) {
+  const { t } = useTranslation()
   const [showEditForm, setShowEditForm] = useState(false)
 
   const salary = formatSalary(application)
@@ -48,7 +50,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
   return (
     <div className="details-view">
       <button className="back-btn" onClick={onBack}>
-        ← Powrót
+        {t('details.back')}
       </button>
 
       <div className="details-header">
@@ -56,7 +58,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
           <div className="details-title-row">
             <h2>{application.company}</h2>
             <button className="edit-btn" onClick={() => setShowEditForm(true)}>
-              ✏️ Edytuj
+              {t('details.edit')}
             </button>
           </div>
           <p className="details-position">{application.position}</p>
@@ -65,7 +67,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
               className="status-badge large"
               style={{ backgroundColor: STATUS_CONFIG[application.status].color }}
             >
-              {STATUS_CONFIG[application.status].label}
+              {t(STATUS_CONFIG[application.status].labelKey)}
             </span>
             {application.currentStage && (
               <span className="current-stage-badge">{application.currentStage}</span>
@@ -73,7 +75,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
           </div>
           <div className="details-actions">
             <button className="back-btn-mobile" onClick={onBack}>
-              ← Powrót
+              {t('details.back')}
             </button>
           </div>
         </div>
@@ -89,40 +91,40 @@ export function ApplicationDetails({ application, onBack }: Props) {
 
       <div className="details-grid">
         <div className="details-info">
-          <h3>Informacje</h3>
+          <h3>{t('details.infoTitle')}</h3>
           <div className="info-list">
             {salary && (
               <div className="info-item">
-                <span className="label">Zaproponowałeś wynagrodzenie:</span>
+                <span className="label">{t('details.salary')}</span>
                 <span className="value salary">{salary}</span>
               </div>
             )}
             {application.source && (
               <div className="info-item">
-                <span className="label">Źródło:</span>
+                <span className="label">{t('details.source')}</span>
                 <span className="value">{application.source}</span>
               </div>
             )}
             <div className="info-item">
-              <span className="label">Data aplikacji:</span>
+              <span className="label">{t('details.date')}</span>
               <span className="value">{formatDate(application.appliedAt)}</span>
             </div>
             {application.link && isSafeUrl(application.link) && (
               <div className="info-item">
-                <span className="label">Link:</span>
+                <span className="label">{t('details.link')}</span>
                 <a
                   href={application.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="value link"
                 >
-                  Zobacz ofertę
+                  {t('details.viewOffer')}
                 </a>
               </div>
             )}
             {application.cvFileName && (
               <div className="info-item">
-                <span className="label">CV:</span>
+                <span className="label">{t('details.cv')}</span>
                 <span className="value cv-value">
                   {application.cvFileName}
                   {application.cvType === 'FILE' && (
@@ -130,7 +132,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
                       className="cv-download-btn"
                       onClick={() => downloadCV(application.cvId!, application.cvFileName!)}
                     >
-                      Pobierz
+                      {t('details.download')}
                     </button>
                   )}
                   {application.cvType === 'LINK' && application.cvExternalUrl && (
@@ -138,11 +140,11 @@ export function ApplicationDetails({ application, onBack }: Props) {
                       className="cv-download-btn cv-link-btn"
                       onClick={() => window.open(application.cvExternalUrl!, '_blank')}
                     >
-                      Otwórz
+                      {t('details.open')}
                     </button>
                   )}
                   {application.cvType === 'NOTE' && (
-                    <span className="cv-note-hint">(lokalnie)</span>
+                    <span className="cv-note-hint">{t('details.local')}</span>
                   )}
                 </span>
               </div>
@@ -151,7 +153,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
 
           {application.jobDescription && (
             <div className="job-description">
-              <h4>Treść ogłoszenia</h4>
+              <h4>{t('details.jobDescription')}</h4>
               <pre className="job-description-content">{application.jobDescription}</pre>
             </div>
           )}

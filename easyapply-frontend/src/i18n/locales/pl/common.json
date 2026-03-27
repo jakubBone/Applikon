@@ -113,7 +113,9 @@
     "rejectionBrakOdpowiedzi": "Brak odpowiedzi",
     "rejectionOdmowaMailowa": "Odmowa mailowa",
     "rejectionOdrzuceniePo": "Odrzucenie po rozmowie",
-    "rejectionInne": "Inny powód"
+    "rejectionInne": "Inny powód",
+    "swipeHint": "← Przesuń palcem →",
+    "movedTo": "✓ Przeniesiono do: {{status}}"
   },
   "statusConfig": {
     "WYSLANE": "Wysłane",

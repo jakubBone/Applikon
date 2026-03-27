@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useCreateApplication, useUpdateApplication } from '../../hooks/useApplications'
 import { checkDuplicate } from '../../services/api'
 import { SalaryFormSection } from './SalaryFormSection'
@@ -69,6 +70,7 @@ function toApplicationRequest(data: FormData) {
 }
 
 export function ApplicationForm({ mode, application, onClose }: Props) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState<FormData>(
     mode === 'edit' && application ? toFormData(application) : DEFAULT_FORM_DATA
   )
@@ -100,7 +102,7 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
         const lastApp = duplicates[0]
         const date = new Date(lastApp.appliedAt).toLocaleDateString('pl-PL')
         setDuplicateWarning({
-          message: `Już aplikowałeś do ${lastApp.company} na stanowisko ${lastApp.position} (${date})`,
+          message: t('form.duplicateWarning', { company: lastApp.company, position: lastApp.position, date }),
         })
         return false
       }
@@ -133,19 +135,19 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
   return (
     <div className="form-modal">
       <div className="form-modal-content large">
-        <h2>{mode === 'create' ? 'Dodaj nową aplikację' : 'Edytuj aplikację'}</h2>
+        <h2>{mode === 'create' ? t('form.titleCreate') : t('form.titleEdit')}</h2>
 
         {duplicateWarning && (
           <div className="duplicate-warning">
             <p>{duplicateWarning.message}</p>
-            <p>Czy chcesz kontynuować?</p>
+            <p>{t('form.duplicateContinue')}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="application-form">
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor={`${mode}-company`}>Firma *</label>
+              <label htmlFor={`${mode}-company`}>{t('form.company')}</label>
               <input
                 type="text"
                 id={`${mode}-company`}
@@ -153,13 +155,13 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
                 value={formData.company}
                 onChange={handleInputChange}
                 required
-                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Nazwa firmy nie może być pusta')}
+                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity(t('form.companyRequired'))}
                 onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
                 placeholder="np. Google"
               />
             </div>
             <div className="form-group">
-              <label htmlFor={`${mode}-position`}>Stanowisko *</label>
+              <label htmlFor={`${mode}-position`}>{t('form.position')}</label>
               <input
                 type="text"
                 id={`${mode}-position`}
@@ -167,7 +169,7 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
                 value={formData.position}
                 onChange={handleInputChange}
                 required
-                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Stanowisko nie może być puste')}
+                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity(t('form.positionRequired'))}
                 onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
                 placeholder="np. Junior Developer"
               />
@@ -178,7 +180,7 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor={`${mode}-source`}>Źródło</label>
+              <label htmlFor={`${mode}-source`}>{t('form.source')}</label>
               <input
                 type="text"
                 id={`${mode}-source`}
@@ -189,7 +191,7 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
               />
             </div>
             <div className="form-group">
-              <label htmlFor={`${mode}-link`}>Link do oferty</label>
+              <label htmlFor={`${mode}-link`}>{t('form.jobOfferLink')}</label>
               <input
                 type="url"
                 id={`${mode}-link`}
@@ -202,13 +204,13 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
           </div>
 
           <div className="form-group full-width">
-            <label htmlFor={`${mode}-jobDescription`}>Treść ogłoszenia</label>
+            <label htmlFor={`${mode}-jobDescription`}>{t('form.jobDescription')}</label>
             <textarea
               id={`${mode}-jobDescription`}
               name="jobDescription"
               value={formData.jobDescription}
               onChange={handleInputChange}
-              placeholder={mode === 'create' ? 'Wklej treść ogłoszenia (na wypadek gdy link wygaśnie)' : undefined}
+              placeholder={mode === 'create' ? t('form.jobDescriptionPlaceholder') : undefined}
               rows={8}
               className="job-description-textarea"
             />
@@ -216,12 +218,12 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
 
           <div className="form-actions">
             <button type="button" className="cancel-btn" onClick={onClose} disabled={isPending}>
-              Anuluj
+              {t('form.cancel')}
             </button>
             <button type="submit" className="submit-btn" disabled={isPending}>
               {mode === 'create'
-                ? duplicateWarning ? 'Kontynuuj mimo duplikatu' : 'Dodaj aplikację'
-                : 'Zapisz zmiany'}
+                ? duplicateWarning ? t('form.submitWithDuplicate') : t('form.submitCreate')
+                : t('form.submitEdit')}
             </button>
           </div>
         </form>
