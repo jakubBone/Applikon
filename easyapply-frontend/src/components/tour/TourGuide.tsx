@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import './TourGuide.css'
 
 interface TourStep {
@@ -18,153 +19,12 @@ interface TourStep {
   offsetY?: number
 }
 
-// Tour steps definition
-const getTourSteps = (isMobile: boolean): TourStep[] => [
-  {
-    id: 'welcome',
-    title: '👋 Witaj w EasyApply!',
-    content: 'Jestem Kuba i pokażę Ci teraz, jak korzystać z aplikacji do zarządzania procesem Twojej rekrutacji.',
-    target: null,
-    position: 'center',
-    needsView: 'kanban'
-  },
-  {
-    id: 'kanban',
-    title: '📋 Tablica Kanban',
-    content: 'Tutaj wszystkie Twoje aplikacje są podzielone na statusy: Wysłane, W procesie oraz Zakończone.',
-    target: '.tab-btn:first-child',
-    position: 'bottom',
-    needsView: 'kanban'
-  },
-  {
-    id: 'demo-card',
-    title: '🎯 Przykładowa aplikacja',
-    content: 'Dodałem dla Ciebie przykładową aplikację do Google. Użyję jej teraz, aby zaprezentowaać Ci wszystkie funkcje.',
-    target: '.kanban-card:first-child',
-    position: 'right',
-    scrollIntoView: true,
-    needsView: 'kanban'
-  },
-  {
-    id: 'drag-drop',
-    title: isMobile ? '👆 Przytrzymaj kartę' : '🖱️ Przeciągnij kartę',
-    content: isMobile
-      ? 'Przytrzymaj kartę (0.5s), aby zmienić jej status. Po przytrzymaniu pojawi się menu wyboru statusu.'
-      : 'Przeciągnaj karty między kolumnami, aby zmieniać status aplikacji. Po prostu złap kartę i przenieś ją do odpowiedniej kolumny.',
-    target: '.kanban-column',
-    position: 'top',
-    highlightMultiple: true,
-    needsView: 'kanban'
-  },
-  {
-    id: 'click-card',
-    title: '👁️ Kliknij w kartę',
-    content: 'Możesz kliknąć w daną aplikację, aby zobaczyć jej szczegóły...',
-    target: '.kanban-card:first-child',
-    position: 'right',
-    autoClick: true,
-    needsView: 'kanban'
-  },
-  {
-    id: 'details-info',
-    title: '📋 Szczegóły aplikacji',
-    content: 'Tu znajdziesz wszystkie informacje o aplikacji: firmę, stanowisko, datę aplikacji, link do oferty, czy treść ogłoszenia.',
-    target: '.details-info',
-    position: 'right',
-    scrollIntoView: true,
-    needsView: 'details'
-  },
-  {
-    id: 'details-notes',
-    title: '📝 Sekcja notatek',
-    content: 'Tutaj możesz dodawać notatki do aplikacji - pytania z rozmów, uwagi o firmie, czy feedback po rozmowie.',
-    target: '.details-notes',
-    position: 'left',
-    scrollIntoView: true,
-    needsView: 'details'
-  },
-  {
-    id: 'list-view',
-    title: '📝 Lista aplikacji',
-    content: 'Tutaj znajdziesz wszystkie swoje aplikacje w formie listy. Możesz je sortować i filtrować.',
-    target: '.tab-btn:nth-child(2)',
-    position: 'bottom',
-    needsView: 'list',
-    offsetY: 16
-  },
-  {
-    id: 'add-application',
-    title: '➕ Dodawanie aplikacji',
-    content: isMobile
-      ? 'Kliknij, aby dodać nową aplikację. Wypełnij dane firmy, stanowiska, i inne szczegóły.'
-      : 'Kliknij, aby dodać nową aplikację. Wypełnij dane firmy, stanowiska, i inne szczegóły.',
-    target: isMobile ? '.fab' : '.add-btn',
-    position: isMobile ? 'left' : 'bottom',
-    needsView: 'kanban',
-    avoidFab: isMobile,
-    compactOnMobile: true
-  },
-  {
-    id: 'cv-section',
-    title: '📄 Zarządzanie CV',
-    content: 'Tutaj możesz dodawać swoje CV. Spokojnie... wszystkie dane są zapisane tylko w Twojej przeglądarce - bezpiecznie i lokalnie.',
-    target: '.tab-btn:nth-child(3)',
-    position: 'bottom',
-    needsView: 'cv'
-  },
-  {
-    id: 'cv-add-button',
-    title: '📎 Dodaj swoje CV',
-    content: 'Dodaj swoje CV. Możesz przesłać plik PDF, podać link do chmury (Google Drive, Dropbox) lub po prostu zanotować nazwę pliku.',
-    target: '.add-cv-btn',
-    position: 'bottom',
-    needsView: 'cv',
-    compactOnMobile: true
-  },
-  {
-    id: 'cv-assign-open',
-    title: '🔗 Przypisywanie CV',
-    content: 'Możesz przypisać wybrane CV do konkretnej aplikacji.',
-    target: '.assign-btn',
-    position: 'right',
-    needsView: 'cv',
-    autoClick: true,
-    compactOnMobile: true,
-    extraSpacing: 40
-  },
-  {
-    id: 'cv-assign-modal',
-    title: '✅ Zatwierdź przypisanie',
-    content: 'Wybierz konkretną firmę i kliknij "Przypisz", aby zapisać powiązanie.',
-    target: '.assign-confirm-btn',
-    position: 'bottom',
-    needsView: 'cv',
-    compactOnMobile: true,
-    extraSpacing: 40
-  },
-  {
-    id: 'badges',
-    title: '🏆 Odznaki',
-    content: 'Zbieraj odznaki za wytrwałość! I pamiętej... rekrutacja to skill, a nie jednorazowy test!',
-    target: '.badge-widget',
-    position: 'left',
-    needsView: 'kanban'
-  },
-  {
-    id: 'finish',
-    title: '🎉 Gotowe!',
-    content: 'Teraz znasz już wszystkie funkcje EasyApply. Powodzenia w poszukiwaniu pracy! Oni jeszcze nie wiedzą z kim zadzierają...',
-    target: null,
-    position: 'center',
-    needsView: 'kanban'
-  }
-]
-
 interface TourGuideProps {
   onComplete?: () => void
 }
 
 function TourGuide({ onComplete }: TourGuideProps) {
+  const { t } = useTranslation('tour')
   const [isActive, setIsActive] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
@@ -172,7 +32,144 @@ function TourGuide({ onComplete }: TourGuideProps) {
   const tooltipRef = useRef<HTMLDivElement>(null)
   const transitioningRef = useRef(false)
 
-  const steps = getTourSteps(isMobile)
+  const getTourSteps = (): TourStep[] => [
+    {
+      id: 'welcome',
+      title: t('steps.welcome.title'),
+      content: t('steps.welcome.content'),
+      target: null,
+      position: 'center',
+      needsView: 'kanban'
+    },
+    {
+      id: 'kanban',
+      title: t('steps.kanban.title'),
+      content: t('steps.kanban.content'),
+      target: '.tab-btn:first-child',
+      position: 'bottom',
+      needsView: 'kanban'
+    },
+    {
+      id: 'demo-card',
+      title: t('steps.demoCard.title'),
+      content: t('steps.demoCard.content'),
+      target: '.kanban-card:first-child',
+      position: 'right',
+      scrollIntoView: true,
+      needsView: 'kanban'
+    },
+    {
+      id: 'drag-drop',
+      title: isMobile ? t('steps.dragDropMobileTitle') : t('steps.dragDropDesktopTitle'),
+      content: isMobile ? t('steps.dragDropMobileContent') : t('steps.dragDropDesktopContent'),
+      target: '.kanban-column',
+      position: 'top',
+      highlightMultiple: true,
+      needsView: 'kanban'
+    },
+    {
+      id: 'click-card',
+      title: t('steps.clickCard.title'),
+      content: t('steps.clickCard.content'),
+      target: '.kanban-card:first-child',
+      position: 'right',
+      autoClick: true,
+      needsView: 'kanban'
+    },
+    {
+      id: 'details-info',
+      title: t('steps.detailsInfo.title'),
+      content: t('steps.detailsInfo.content'),
+      target: '.details-info',
+      position: 'right',
+      scrollIntoView: true,
+      needsView: 'details'
+    },
+    {
+      id: 'details-notes',
+      title: t('steps.detailsNotes.title'),
+      content: t('steps.detailsNotes.content'),
+      target: '.details-notes',
+      position: 'left',
+      scrollIntoView: true,
+      needsView: 'details'
+    },
+    {
+      id: 'list-view',
+      title: t('steps.listView.title'),
+      content: t('steps.listView.content'),
+      target: '.tab-btn:nth-child(2)',
+      position: 'bottom',
+      needsView: 'list',
+      offsetY: 16
+    },
+    {
+      id: 'add-application',
+      title: t('steps.addApplication.title'),
+      content: t('steps.addApplication.content'),
+      target: isMobile ? '.fab' : '.add-btn',
+      position: isMobile ? 'left' : 'bottom',
+      needsView: 'kanban',
+      avoidFab: isMobile,
+      compactOnMobile: true
+    },
+    {
+      id: 'cv-section',
+      title: t('steps.cvSection.title'),
+      content: t('steps.cvSection.content'),
+      target: '.tab-btn:nth-child(3)',
+      position: 'bottom',
+      needsView: 'cv'
+    },
+    {
+      id: 'cv-add-button',
+      title: t('steps.cvAddButton.title'),
+      content: t('steps.cvAddButton.content'),
+      target: '.add-cv-btn',
+      position: 'bottom',
+      needsView: 'cv',
+      compactOnMobile: true
+    },
+    {
+      id: 'cv-assign-open',
+      title: t('steps.cvAssignOpen.title'),
+      content: t('steps.cvAssignOpen.content'),
+      target: '.assign-btn',
+      position: 'right',
+      needsView: 'cv',
+      autoClick: true,
+      compactOnMobile: true,
+      extraSpacing: 40
+    },
+    {
+      id: 'cv-assign-modal',
+      title: t('steps.cvAssignModal.title'),
+      content: t('steps.cvAssignModal.content'),
+      target: '.assign-confirm-btn',
+      position: 'bottom',
+      needsView: 'cv',
+      compactOnMobile: true,
+      extraSpacing: 40
+    },
+    {
+      id: 'badges',
+      title: t('steps.badges.title'),
+      content: t('steps.badges.content'),
+      target: '.badge-widget',
+      position: 'left',
+      needsView: 'kanban'
+    },
+    {
+      id: 'finish',
+      title: t('steps.finish.title'),
+      content: t('steps.finish.content'),
+      target: null,
+      position: 'center',
+      needsView: 'kanban'
+    }
+  ]
+
+  const steps = getTourSteps()
 
   useEffect(() => {
     const tourShown = localStorage.getItem('tour_guide_completed')
@@ -472,7 +469,7 @@ function TourGuide({ onComplete }: TourGuideProps) {
       >
         <div className="tour-tooltip-header">
           <h3>{step.title}</h3>
-          <button className="tour-close-btn" onClick={handleSkip} aria-label="Zamknij">
+          <button className="tour-close-btn" onClick={handleSkip} aria-label={t('buttons.skip')}>
             ✕
           </button>
         </div>
@@ -497,11 +494,11 @@ function TourGuide({ onComplete }: TourGuideProps) {
           <div className="tour-actions">
             {currentStep > 0 && (
               <button className="tour-btn tour-btn-secondary" onClick={handlePrevious}>
-                Wstecz
+                {t('buttons.prev')}
               </button>
             )}
             <button className="tour-btn tour-btn-primary" onClick={handleNext}>
-              {currentStep === steps.length - 1 ? 'Zakończ' : 'Dalej'}
+              {currentStep === steps.length - 1 ? t('buttons.finish') : t('buttons.next')}
             </button>
           </div>
         </div>
