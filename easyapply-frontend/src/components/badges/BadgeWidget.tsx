@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useBadgeStats } from '../../hooks/useBadgeStats'
 import type { BadgeInfo } from '../../types/domain'
 
@@ -33,6 +34,7 @@ interface BadgeRowProps {
 const FIRST_THRESHOLD = 5
 
 function BadgeRow({ badge, count, type }: BadgeRowProps) {
+  const { t } = useTranslation('badges')
   const isGhosting = type === 'ghosting'
   const hasAchieved = Boolean(badge?.name)
   const isMaxed = hasAchieved && !badge?.nextThreshold
@@ -41,7 +43,16 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
   const progressTarget = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
   const progressLabel = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
 
-  const nextName = hasAchieved ? badge?.nextBadgeName : (isGhosting ? 'Widmo' : 'Rękawica')
+  // API name (Polish) — used for icon lookup
+  const nextBadgeApiName = hasAchieved ? badge?.nextBadgeName : (isGhosting ? 'Widmo' : 'Rękawica')
+  // Translated name — used for display
+  const nextBadgeDisplayName = hasAchieved
+    ? (badge?.nextBadgeName ? t(`names.${badge.nextBadgeName}`) : undefined)
+    : (isGhosting ? t('defaults.firstGhosting') : t('defaults.firstRejection'))
+
+  const displayName = hasAchieved
+    ? t(`names.${badge?.name}`)
+    : (isGhosting ? t('defaults.firstGhosting') : t('defaults.firstRejection'))
 
   return (
     <div className="badge-row">
@@ -51,10 +62,10 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
         </span>
         <div className="badge-row-info">
           <div className="badge-row-name">
-            {hasAchieved ? badge?.name : (isGhosting ? 'Widmo' : 'Rękawica')}
+            {displayName}
           </div>
           <div className="badge-row-description">
-            {hasAchieved ? badge?.description : `${count}/${FIRST_THRESHOLD} do odblokowania`}
+            {hasAchieved ? badge?.description : t('widget.toUnlock', { count, threshold: FIRST_THRESHOLD })}
           </div>
           <div className="badge-row-progress">
             <div className={`badge-progress-bar ${isGhosting ? 'ghosting' : ''}`}>
@@ -65,19 +76,20 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
             </div>
             <span className="badge-progress-count">{count}/{progressLabel ?? '∞'}</span>
           </div>
-          {!isMaxed && nextName && (
+          {!isMaxed && nextBadgeApiName && (
             <div className="badge-row-next-line">
-              Następny: {getIconForBadge(nextName)} {nextName}
+              {t('widget.next', { icon: getIconForBadge(nextBadgeApiName), name: nextBadgeDisplayName })}
             </div>
           )}
         </div>
       </div>
-      {isMaxed && <div className="badge-row-max">MAX</div>}
+      {isMaxed && <div className="badge-row-max">{t('widget.max')}</div>}
     </div>
   )
 }
 
 export function BadgeWidget() {
+  const { t } = useTranslation('badges')
   const [expanded, setExpanded] = useState(false)
   const { data: stats } = useBadgeStats()
 
@@ -89,7 +101,7 @@ export function BadgeWidget() {
   return (
     <div className="badge-widget">
       <div className="badge-widget-header" onClick={() => setExpanded(!expanded)}>
-        <span className="badge-header-title">🏅 Twoje odznaki</span>
+        <span className="badge-header-title">{t('widget.title')}</span>
         <span className="badge-expand-arrow">{expanded ? '▲' : '▼'}</span>
       </div>
 
@@ -97,14 +109,14 @@ export function BadgeWidget() {
         <div className="badge-modal" onClick={() => setExpanded(false)}>
           <div className="badge-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="badge-modal-header">
-              <div className="badge-modal-title">🏅 Twoje odznaki</div>
+              <div className="badge-modal-title">{t('widget.title')}</div>
             </div>
 
             <div className="badge-modal-body">
-              <div className="badge-section-label">Odrzucone aplikacje ({totalRejections})</div>
+              <div className="badge-section-label">{t('widget.rejections', { count: totalRejections })}</div>
               <BadgeRow badge={rejectionBadge} count={totalRejections} type="rejection" />
 
-              <div className="badge-section-label">Bez odzewu ({totalGhosting})</div>
+              <div className="badge-section-label">{t('widget.ghosting', { count: totalGhosting })}</div>
               <BadgeRow badge={ghostingBadge} count={totalGhosting} type="ghosting" />
 
               {sweetRevengeUnlocked && (
@@ -112,8 +124,8 @@ export function BadgeWidget() {
                   <div className="badge-row-left">
                     <span className="badge-row-icon special">🏆</span>
                     <div className="badge-row-info">
-                      <div className="badge-row-name special">Sweet Revenge</div>
-                      <div className="badge-row-description">Kto się śmieje ostatni, ten dostał robotę.</div>
+                      <div className="badge-row-name special">{t('sweetRevenge.name')}</div>
+                      <div className="badge-row-description">{t('sweetRevenge.description')}</div>
                     </div>
                   </div>
                 </div>
@@ -122,7 +134,7 @@ export function BadgeWidget() {
 
             <div className="badge-modal-actions">
               <button className="badge-modal-btn" onClick={() => setExpanded(false)}>
-                Zamknij
+                {t('widget.close')}
               </button>
             </div>
           </div>
