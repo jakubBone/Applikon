@@ -72,7 +72,7 @@ class NoteControllerTest {
 
     @Test
     @Order(1)
-    @DisplayName("POST /api/applications/{id}/notes - tworzy notatke kategorii PYTANIA")
+    @DisplayName("POST /api/applications/{id}/notes - creates note of category PYTANIA")
     void createNote_CategoryPytania_Success() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Pytali o Spring Boot i Docker");
@@ -91,7 +91,7 @@ class NoteControllerTest {
 
     @Test
     @Order(2)
-    @DisplayName("POST /api/applications/{id}/notes - tworzy notatke kategorii FEEDBACK")
+    @DisplayName("POST /api/applications/{id}/notes - creates note of category FEEDBACK")
     void createNote_CategoryFeedback_Success() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Pozytywny feedback od rekrutera");
@@ -106,7 +106,7 @@ class NoteControllerTest {
 
     @Test
     @Order(3)
-    @DisplayName("POST /api/applications/{id}/notes - tworzy notatke kategorii INNE")
+    @DisplayName("POST /api/applications/{id}/notes - creates note of category INNE")
     void createNote_CategoryInne_Success() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Kontakt: rekruter@example.com");
@@ -121,7 +121,7 @@ class NoteControllerTest {
 
     @Test
     @Order(4)
-    @DisplayName("POST /api/applications/{id}/notes - walidacja: pusta notatka zwraca 400")
+    @DisplayName("POST /api/applications/{id}/notes - validation: empty note returns 400")
     void createNote_EmptyContent_ReturnsBadRequest() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "");
@@ -136,7 +136,7 @@ class NoteControllerTest {
 
     @Test
     @Order(5)
-    @DisplayName("GET /api/applications/{id}/notes - zwraca notatki posortowane od najnowszych")
+    @DisplayName("GET /api/applications/{id}/notes - returns notes sorted newest first")
     void getNotes_ReturnsSortedByDateDesc() throws Exception {
         createTestNote("Notatka 1", NoteCategory.PYTANIA);
         Thread.sleep(10);
@@ -154,7 +154,7 @@ class NoteControllerTest {
 
     @Test
     @Order(6)
-    @DisplayName("PUT /api/notes/{id} - edytuje notatke")
+    @DisplayName("PUT /api/notes/{id} - updates note content and category")
     void updateNote_ChangesContentAndCategory() throws Exception {
         Note note = createTestNote("Stara tresc", NoteCategory.INNE);
 
@@ -172,7 +172,7 @@ class NoteControllerTest {
 
     @Test
     @Order(7)
-    @DisplayName("DELETE /api/notes/{id} - usuwa notatke")
+    @DisplayName("DELETE /api/notes/{id} - removes note")
     void deleteNote_RemovesFromDatabase() throws Exception {
         Note note = createTestNote("Do usuniecia", NoteCategory.INNE);
         Long id = note.getId();
@@ -185,7 +185,7 @@ class NoteControllerTest {
 
     @Test
     @Order(8)
-    @DisplayName("GET /api/applications/{id}/notes - zwraca pusta liste dla aplikacji bez notatek")
+    @DisplayName("GET /api/applications/{id}/notes - returns empty list when no notes")
     void getNotes_NoNotes_ReturnsEmptyList() throws Exception {
         mockMvc.perform(get("/api/applications/" + testApplication.getId() + "/notes"))
                 .andExpect(status().isOk())
@@ -194,7 +194,7 @@ class NoteControllerTest {
 
     @Test
     @Order(9)
-    @DisplayName("POST /api/applications/{id}/notes - domyslna kategoria INNE")
+    @DisplayName("POST /api/applications/{id}/notes - defaults to category INNE when not provided")
     void createNote_NoCategoryProvided_DefaultsToInne() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Notatka bez kategorii");

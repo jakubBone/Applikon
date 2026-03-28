@@ -68,7 +68,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(1)
-    @DisplayName("POST /api/applications - tworzy aplikacje z widelkami wynagrodzen")
+    @DisplayName("POST /api/applications - creates application with salary range")
     void createApplication_WithSalaryRange_ReturnsCreated() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("company", "Google");
@@ -100,7 +100,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(2)
-    @DisplayName("POST /api/applications - walidacja: brak company zwraca 400")
+    @DisplayName("POST /api/applications - validation: missing company returns 400")
     void createApplication_WithoutCompany_ReturnsBadRequest() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("position", "Dev");
@@ -116,7 +116,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(3)
-    @DisplayName("POST /api/applications - walidacja: ujemna stawka zwraca 400")
+    @DisplayName("POST /api/applications - validation: negative salary returns 400")
     void createApplication_WithNegativeSalary_ReturnsBadRequest() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("company", "Test");
@@ -132,7 +132,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(4)
-    @DisplayName("GET /api/applications - zwraca liste aplikacji")
+    @DisplayName("GET /api/applications - returns list of applications")
     void getAllApplications_ReturnsListOfApplications() throws Exception {
         createTestApplication("Google", "Dev");
         createTestApplication("Meta", "Engineer");
@@ -145,7 +145,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(5)
-    @DisplayName("GET /api/applications/{id} - zwraca szczegoly aplikacji")
+    @DisplayName("GET /api/applications/{id} - returns application details")
     void getApplicationById_ReturnsApplication() throws Exception {
         Application app = createTestApplication("Google", "Dev");
 
@@ -157,7 +157,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(6)
-    @DisplayName("GET /api/applications/{id} - nieistniejace ID zwraca 404")
+    @DisplayName("GET /api/applications/{id} - non-existent ID returns 404")
     void getApplicationById_NotFound_Returns404() throws Exception {
         mockMvc.perform(get("/api/applications/99999"))
                 .andExpect(status().isNotFound())
@@ -166,7 +166,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(7)
-    @DisplayName("PUT /api/applications/{id} - aktualizuje aplikacje")
+    @DisplayName("PUT /api/applications/{id} - updates application")
     void updateApplication_ReturnsUpdatedApplication() throws Exception {
         Application app = createTestApplication("Google", "Dev");
 
@@ -190,7 +190,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(8)
-    @DisplayName("DELETE /api/applications/{id} - usuwa aplikacje")
+    @DisplayName("DELETE /api/applications/{id} - removes application")
     void deleteApplication_RemovesFromDatabase() throws Exception {
         Application app = createTestApplication("ToDelete", "Dev");
         Long id = app.getId();
@@ -205,7 +205,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(9)
-    @DisplayName("GET /api/applications/check-duplicate - wykrywa duplikaty")
+    @DisplayName("GET /api/applications/check-duplicate - detects duplicates")
     void checkDuplicate_FindsExistingApplication() throws Exception {
         createTestApplication("Google", "Junior Dev");
 
@@ -219,7 +219,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(10)
-    @DisplayName("GET /api/applications/check-duplicate - duplikaty sa case-insensitive")
+    @DisplayName("GET /api/applications/check-duplicate - duplicates are case-insensitive")
     void checkDuplicate_CaseInsensitive() throws Exception {
         createTestApplication("Google", "Junior Dev");
 
@@ -234,7 +234,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(11)
-    @DisplayName("PATCH /api/applications/{id}/status - zmienia status aplikacji")
+    @DisplayName("PATCH /api/applications/{id}/status - changes application status")
     void updateStatus_ChangesApplicationStatus() throws Exception {
         Application app = createTestApplication("Google", "Dev");
 
@@ -250,7 +250,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(12)
-    @DisplayName("PATCH /api/applications/{id}/stage - zmiana na W_PROCESIE z etapem")
+    @DisplayName("PATCH /api/applications/{id}/stage - transition to W_PROCESIE with stage")
     void updateStage_ToInProcess_SetsStage() throws Exception {
         Application app = createTestApplication("Google", "Dev");
 
@@ -268,7 +268,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(13)
-    @DisplayName("PATCH /api/applications/{id}/stage - zmiana etapu (Rozmowa techniczna)")
+    @DisplayName("PATCH /api/applications/{id}/stage - changes current stage")
     void updateStage_ChangeStage_UpdatesCurrentStage() throws Exception {
         Application app = createTestApplication("Google", "Dev");
         app.setStatus(ApplicationStatus.W_PROCESIE);
@@ -288,7 +288,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(14)
-    @DisplayName("PATCH /api/applications/{id}/stage - zmiana na ODMOWA z powodem")
+    @DisplayName("PATCH /api/applications/{id}/stage - transition to ODMOWA with rejection reason")
     void updateStage_ToRejection_SetsReason() throws Exception {
         Application app = createTestApplication("Google", "Dev");
 
@@ -306,7 +306,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(15)
-    @DisplayName("PATCH /api/applications/{id}/stage - zmiana na OFERTA")
+    @DisplayName("PATCH /api/applications/{id}/stage - transition to OFERTA")
     void updateStage_ToOffer_SetsStatus() throws Exception {
         Application app = createTestApplication("Google", "Dev");
 
@@ -322,7 +322,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(16)
-    @DisplayName("PATCH /api/applications/{id}/stage - cofniecie do WYSLANE resetuje dane")
+    @DisplayName("PATCH /api/applications/{id}/stage - rollback to WYSLANE clears stage data")
     void updateStage_BackToSent_ClearsData() throws Exception {
         Application app = createTestApplication("Google", "Dev");
         app.setStatus(ApplicationStatus.ODMOWA);
@@ -346,7 +346,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(17)
-    @DisplayName("POST /api/applications/{id}/stage - dodaje nowy etap do historii")
+    @DisplayName("POST /api/applications/{id}/stage - adds new stage to history")
     void addStage_AddsNewStageToHistory() throws Exception {
         Application app = createTestApplication("Google", "Dev");
         app.setStatus(ApplicationStatus.W_PROCESIE);
@@ -366,7 +366,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(18)
-    @DisplayName("POST /api/applications/{id}/stage - zwraca 404 dla nieistniejącej aplikacji")
+    @DisplayName("POST /api/applications/{id}/stage - returns 404 for non-existent application")
     void addStage_NotFound_Returns404() throws Exception {
         Map<String, Object> stageRequest = new HashMap<>();
         stageRequest.put("stageName", "Test");
@@ -381,7 +381,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(19)
-    @DisplayName("PATCH /api/applications/{id}/cv - przypisuje CV do aplikacji")
+    @DisplayName("PATCH /api/applications/{id}/cv - assigns CV to application")
     void assignCV_ToApplication_Success() throws Exception {
         Application app = createTestApplication("Google", "Dev");
         CV cv = createTestCV("TestCV.pdf", CVType.NOTE);
@@ -399,7 +399,7 @@ class ApplicationControllerTest {
 
     @Test
     @Order(20)
-    @DisplayName("PATCH /api/applications/{id}/cv - usuwa przypisanie CV (null)")
+    @DisplayName("PATCH /api/applications/{id}/cv - removes CV assignment (null)")
     void removeCV_FromApplication_Success() throws Exception {
         CV cv = createTestCV("TestCV.pdf", CVType.NOTE);
         Application app = createTestApplication("Google", "Dev");

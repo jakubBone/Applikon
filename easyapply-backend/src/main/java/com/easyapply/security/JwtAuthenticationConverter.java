@@ -10,17 +10,17 @@ import java.util.Collections;
 import java.util.UUID;
 
 /**
- * Konwerter JWT → obiekt Authentication (Spring Security).
+ * Converts a validated JWT into a Spring Security Authentication object.
  *
- * Spring Security po zwalidowaniu JWT wywołuje ten konwerter,
- * żeby zamienić token w obiekt Authentication trzymany w SecurityContext.
+ * After validating the JWT, Spring Security calls this converter to transform
+ * the token into an Authentication object stored in the SecurityContext.
  *
- * Wyciągamy userId (sub), email i name z claims tokenu i budujemy
- * AuthenticatedUser, który trafia do @AuthenticationPrincipal w kontrolerach.
+ * We extract userId (sub), email, and name from the token claims and build
+ * an AuthenticatedUser, which is then available via @AuthenticationPrincipal in controllers.
  *
- * Jak to działa technicznie:
- * JwtAuthenticationToken.getPrincipal() zwraca domyślnie sam obiekt Jwt.
- * Nadpisujemy to przez podklasę z własnym getPrincipal().
+ * Technical detail:
+ * JwtAuthenticationToken.getPrincipal() returns the raw Jwt object by default.
+ * We override this by using a subclass with a custom getPrincipal().
  */
 @Component
 public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
@@ -33,13 +33,13 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractAuthen
 
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(userId, email, name);
 
-        // Zwracamy specjalny token, którego getPrincipal() = AuthenticatedUser
+        // Returns a token whose getPrincipal() = AuthenticatedUser
         return new AuthenticatedUserToken(jwt, authenticatedUser);
     }
 
     /**
-     * Wewnętrzna podklasa JwtAuthenticationToken z AuthenticatedUser jako principal.
-     * Dzięki temu @AuthenticationPrincipal AuthenticatedUser user "po prostu działa".
+     * Inner subclass of JwtAuthenticationToken with AuthenticatedUser as the principal.
+     * This makes @AuthenticationPrincipal AuthenticatedUser work out of the box.
      */
     static class AuthenticatedUserToken extends JwtAuthenticationToken {
 

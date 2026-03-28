@@ -13,15 +13,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * Filtr HTTP dodający userId do MDC (Mapped Diagnostic Context) na czas trwania requestu.
+ * HTTP filter that adds the userId to the MDC (Mapped Diagnostic Context) for the duration of the request.
  *
- * MDC to mechanizm SLF4J/Logback, który pozwala dołączyć do każdego logu
- * dane kontekstowe (np. userId) bez jawnego przekazywania ich do każdej metody.
- * Wartości z MDC są automatycznie drukowane w każdej linii logu jeśli pattern
- * Logbacka zawiera %X{userId}.
+ * MDC is an SLF4J/Logback mechanism that attaches contextual data (e.g. userId) to every log line
+ * without passing it explicitly through every method call.
+ * MDC values are printed automatically in each log line when the Logback pattern contains %X{userId}.
  *
- * Filtr działa po Spring Security (SecurityContextHolder jest już wypełniony),
- * więc może bezpiecznie odczytać dane zalogowanego użytkownika.
+ * This filter runs after Spring Security (SecurityContextHolder is already populated),
+ * so it can safely read the authenticated user's data.
  */
 @Component
 public class MdcUserFilter extends OncePerRequestFilter {
@@ -41,9 +40,9 @@ public class MdcUserFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } finally {
-            // ZAWSZE czyść MDC po zakończeniu requestu.
-            // Pule wątków (thread pool) reużywają wątki — bez czyszczenia
-            // następny request na tym samym wątku zobaczyłby userId poprzedniego użytkownika.
+            // ALWAYS clear MDC after the request completes.
+            // Thread pools reuse threads — without clearing, the next request
+            // on the same thread would see the previous user's userId.
             MDC.remove(MDC_KEY);
         }
     }

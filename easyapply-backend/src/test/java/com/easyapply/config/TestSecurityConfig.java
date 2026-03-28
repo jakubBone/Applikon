@@ -9,20 +9,20 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Testowa konfiguracja bezpieczeństwa — aktywna wyłącznie dla profilu "test".
+ * Test security configuration — active only for the "test" profile.
  *
- * Problem do rozwiązania:
- *   Główny SecurityConfig wymaga JWT dla KAŻDEGO żądania (.anyRequest().authenticated()).
- *   Testy kontrolerów nie generują prawdziwych tokenów JWT — dostawałyby 401.
+ * Problem to solve:
+ *   The main SecurityConfig requires JWT for EVERY request (.anyRequest().authenticated()).
+ *   Controller tests do not generate real JWT tokens — they would all receive 401.
  *
- * Rozwiązanie:
- *   Rejestrujemy drugi SecurityFilterChain z @Order(1) (wyższy priorytet niż domyślny 100).
- *   Spring Security wybiera PIERWSZY pasujący łańcuch filtrów — ten z Order(1) dopasowuje
- *   wszystkie żądania i je przepuszcza. Główny łańcuch (Order 100) nie jest w testach używany.
+ * Solution:
+ *   Register a second SecurityFilterChain with @Order(1) (higher priority than the default 100).
+ *   Spring Security selects the FIRST matching filter chain — this one with Order(1) matches
+ *   all requests and permits them. The main chain (Order 100) is not used in tests.
  *
- * Uwaga: Autentykacja użytkownika w kontrolerach (@AuthenticationPrincipal) jest obsługiwana
- *   osobno przez adnotację @WithMockAuthenticatedUser, która wstrzykuje obiekt AuthenticatedUser
- *   do SecurityContext przed każdym testem.
+ * Note: User authentication in controllers (@AuthenticationPrincipal) is handled separately
+ *   by the @WithMockAuthenticatedUser annotation, which injects an AuthenticatedUser object
+ *   into the SecurityContext before each test.
  */
 @Configuration
 @Profile("test")

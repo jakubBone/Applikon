@@ -4,7 +4,7 @@ public enum NoteCategory {
     PYTANIA,
     FEEDBACK,
     INNE,
-    // Legacy - dla kompatybilności ze starymi danymi
+    // Legacy — kept for backward compatibility with old data
     PYTANIE,
     KONTAKT
 }

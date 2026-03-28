@@ -17,20 +17,20 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 /**
- * Handler wywoływany po udanym zalogowaniu przez Google.
+ * Handler invoked after a successful Google login.
  *
- * Odpowiada za:
- * 1. Pobranie User z bazy (na podstawie google_id)
- * 2. Wygenerowanie access token (JWT, 15 min)
- * 3. Wygenerowanie refresh token (opaque UUID)
- * 4. Zapisanie refresh token w bazie (przy userze)
- * 5. Ustawienie refresh token w httpOnly cookie
- * 6. Przekierowanie frontendu do /auth/callback?token=<JWT>
+ * Responsibilities:
+ * 1. Load the User from the database (by google_id)
+ * 2. Generate an access token (JWT, 15 min)
+ * 3. Generate a refresh token (opaque UUID)
+ * 4. Persist the refresh token in the database (attached to the user)
+ * 5. Set the refresh token as an httpOnly cookie
+ * 6. Redirect the frontend to /auth/callback?token=<JWT>
  *
- * Dlaczego redirect z tokenem w URL?
- * OAuth2 to przepływ oparty na przekierowaniach (redirect-based).
- * Spring nie może "zwrócić" JSON do frontendu po OAuth2 — musi przekierować.
- * Frontend odbiera token z URL, usuwa go z paska adresu i trzyma w pamięci.
+ * Why redirect with the token in the URL?
+ * OAuth2 is a redirect-based flow. Spring cannot "return" JSON to the frontend
+ * after OAuth2 — it must redirect. The frontend reads the token from the URL,
+ * removes it from the address bar, and keeps it in memory.
  */
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -64,26 +64,26 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         User user = userService.findOrCreateUser(googleId, email, name);
 
-        // Generuj tokeny
+        // Generate tokens
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken();
 
-        // Zapisz refresh token w bazie
+        // Persist the refresh token
         LocalDateTime expiry = LocalDateTime.now().plusDays(refreshTokenExpiryDays);
         userService.saveRefreshToken(user, refreshToken, expiry);
 
-        // Ustaw refresh token jako httpOnly cookie
+        // Set refresh token as an httpOnly cookie
         Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
-        refreshCookie.setHttpOnly(true);    // JavaScript nie może go odczytać
-        refreshCookie.setSecure(true);      // Tylko HTTPS
-        refreshCookie.setPath("/api/auth"); // Cookie wysyłane tylko do /api/auth
-        refreshCookie.setAttribute("SameSite", "Strict"); // CSRF protection: wysyłaj tylko z easyapply.com
+        refreshCookie.setHttpOnly(true);    // not accessible to JavaScript (XSS protection)
+        refreshCookie.setSecure(true);      // HTTPS only
+        refreshCookie.setPath("/api/auth"); // sent only to /api/auth
+        refreshCookie.setAttribute("SameSite", "Strict"); // CSRF protection: only from easyapply.com
         refreshCookie.setMaxAge(refreshTokenExpiryDays * 24 * 60 * 60);
         response.addCookie(refreshCookie);
 
         log.info("User {} logged in via Google", user.getEmail());
 
-        // Przekieruj frontend z access tokenem w URL
+        // Redirect frontend with the access token in the URL
         String redirectUrl = frontendUrl + "/auth/callback?token=" + accessToken;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }

@@ -3,15 +3,15 @@ package com.easyapply.security;
 import java.util.UUID;
 
 /**
- * Obiekt reprezentujący zalogowanego użytkownika w kontekście żądania.
+ * Represents the authenticated user within a request context.
  *
- * Spring Security po zwalidowaniu JWT wstrzykuje ten obiekt
- * bezpośrednio do metod kontrolerów via @AuthenticationPrincipal:
+ * After validating the JWT, Spring Security injects this object
+ * directly into controller methods via @AuthenticationPrincipal:
  *
  *   public ResponseEntity<?> getApplications(@AuthenticationPrincipal AuthenticatedUser user) {
- *       // user.id() = UUID użytkownika z bazy
+ *       // user.id() = user's UUID from the database
  *   }
  *
- * Zbudowany z claims tokenu JWT przez JwtAuthenticationConverter.
+ * Built from JWT claims by JwtAuthenticationConverter.
  */
 public record AuthenticatedUser(UUID id, String email, String name) {}

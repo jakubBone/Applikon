@@ -68,7 +68,7 @@ class CVControllerTest {
 
     @Test
     @Order(1)
-    @DisplayName("GET /api/cv - zwraca liste wszystkich CV")
+    @DisplayName("GET /api/cv - returns list of all CVs")
     void getAllCVs_ReturnsListOfCVs() throws Exception {
         createTestCV("CV1.pdf", CVType.FILE);
         createTestCV("CV2.pdf", CVType.LINK);
@@ -83,7 +83,7 @@ class CVControllerTest {
 
     @Test
     @Order(2)
-    @DisplayName("POST /api/cv - tworzy CV typu LINK")
+    @DisplayName("POST /api/cv - creates CV of type LINK")
     void createCV_TypeLink_Success() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("name", "CV_Frontend.pdf");
@@ -102,7 +102,7 @@ class CVControllerTest {
 
     @Test
     @Order(3)
-    @DisplayName("POST /api/cv - tworzy CV typu NOTE (bez URL)")
+    @DisplayName("POST /api/cv - creates CV of type NOTE (no URL)")
     void createCV_TypeNote_Success() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("name", "CV_Local.pdf");
@@ -120,7 +120,7 @@ class CVControllerTest {
 
     @Test
     @Order(4)
-    @DisplayName("GET /api/cv/{id} - zwraca szczegoly CV")
+    @DisplayName("GET /api/cv/{id} - returns CV details")
     void getCVById_ReturnsCV() throws Exception {
         CV cv = createTestCV("TestCV.pdf", CVType.FILE);
 
@@ -133,7 +133,7 @@ class CVControllerTest {
 
     @Test
     @Order(5)
-    @DisplayName("PUT /api/cv/{id} - aktualizuje nazwe i URL CV")
+    @DisplayName("PUT /api/cv/{id} - updates CV name and URL")
     void updateCV_ChangesNameAndUrl() throws Exception {
         CV cv = createTestCV("OldName.pdf", CVType.LINK);
         cv.setExternalUrl("https://old.url");
@@ -153,7 +153,7 @@ class CVControllerTest {
 
     @Test
     @Order(6)
-    @DisplayName("DELETE /api/cv/{id} - usuwa CV")
+    @DisplayName("DELETE /api/cv/{id} - removes CV")
     void deleteCV_RemovesFromDatabase() throws Exception {
         CV cv = createTestCV("ToDelete.pdf", CVType.NOTE);
         Long id = cv.getId();
@@ -166,7 +166,7 @@ class CVControllerTest {
 
     @Test
     @Order(7)
-    @DisplayName("POST /api/cv/upload - walidacja: tylko PDF dozwolony")
+    @DisplayName("POST /api/cv/upload - validation: only PDF allowed")
     void uploadCV_NonPDF_ReturnsBadRequest() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -181,7 +181,7 @@ class CVControllerTest {
 
     @Test
     @Order(8)
-    @DisplayName("POST /api/cv/upload - upload pliku PDF")
+    @DisplayName("POST /api/cv/upload - uploads PDF file")
     void uploadCV_ValidPDF_Success() throws Exception {
         byte[] pdfContent = "%PDF-1.4\n%Test PDF content\n%%EOF".getBytes();
 
@@ -202,7 +202,7 @@ class CVControllerTest {
 
     @Test
     @Order(9)
-    @DisplayName("GET /api/cv - grupowanie CV wedlug typu")
+    @DisplayName("GET /api/cv - returns CVs of different types")
     void getAllCVs_ContainsDifferentTypes() throws Exception {
         createTestCV("File.pdf", CVType.FILE);
         createTestCV("Link.pdf", CVType.LINK);

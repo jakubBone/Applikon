@@ -13,14 +13,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 /**
- * Serwis odpowiedzialny za generowanie i walidację tokenów JWT.
+ * Service responsible for generating and validating JWT tokens.
  *
- * Używamy RS256 (asymetryczny):
- * - klucz prywatny (RSAKey) → podpisuje tokeny (tylko backend zna)
- * - klucz publiczny → weryfikuje tokeny (można udostępnić np. fronendowi)
+ * Uses RS256 (asymmetric):
+ * - private key (RSAKey) → signs tokens (only the backend holds this)
+ * - public key → verifies tokens (can be shared with clients if needed)
  *
- * JwtEncoder  = Spring-owy encoder (produkuje tokeny)
- * JwtDecoder  = Spring-owy decoder (weryfikuje tokeny) — skonfigurowany w SecurityConfig
+ * JwtEncoder = Spring encoder (produces tokens)
+ * JwtDecoder = Spring decoder (verifies tokens) — configured in SecurityConfig
  */
 @Service
 public class JwtService {
@@ -37,14 +37,14 @@ public class JwtService {
     }
 
     /**
-     * Generuje access token dla zalogowanego użytkownika.
+     * Generates an access token for the authenticated user.
      *
-     * Payload (claims) tokenu:
-     * - sub  = UUID użytkownika (subject — kto to jest)
-     * - email, name = dane profilowe
-     * - iss  = issuer (kto wystawił token)
-     * - iat  = issued at (kiedy wystawiono)
-     * - exp  = expiry (kiedy wygasa)
+     * Token payload (claims):
+     * - sub   = user UUID (subject — who this is)
+     * - email, name = profile data
+     * - iss   = issuer (who issued the token)
+     * - iat   = issued at (when it was issued)
+     * - exp   = expiry (when it expires)
      */
     public String generateAccessToken(User user) {
         Instant now = Instant.now();
@@ -62,9 +62,9 @@ public class JwtService {
     }
 
     /**
-     * Generuje refresh token — losowe UUID.
-     * Sam token jest nieprzezroczysty (opaque), nie zawiera danych.
-     * Przechowywany w httpOnly cookie po stronie klienta.
+     * Generates a refresh token — a random UUID.
+     * The token is opaque and carries no data.
+     * Stored in an httpOnly cookie on the client side.
      */
     public String generateRefreshToken() {
         return UUID.randomUUID().toString();

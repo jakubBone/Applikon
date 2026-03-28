@@ -8,15 +8,15 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 /**
- * Serwis ładujący dane użytkownika po udanym logowaniu przez Google.
+ * Loads user data after a successful Google login.
  *
- * Przepływ:
- * 1. Użytkownik przeklikał okno Google i zaakceptował uprawnienia
- * 2. Google wysłał kod autoryzacyjny do Spring Security
- * 3. Spring wymienił kod na access token Google i pobrał profil użytkownika
- * 4. Spring wywołuje loadUser() — tu wchodzimy
- * 5. Robimy "upsert": tworzymy nowego usera lub aktualizujemy istniejącego
- * 6. Zwracamy OAuth2User (Spring potrzebuje go do dalszego przetwarzania)
+ * Flow:
+ * 1. User completed the Google consent screen
+ * 2. Google sent an authorization code to Spring Security
+ * 3. Spring exchanged the code for a Google access token and fetched the user profile
+ * 4. Spring calls loadUser() — this is where we enter
+ * 5. We perform an upsert: create a new user or update the existing one
+ * 6. Return the OAuth2User (Spring needs it for further processing)
  */
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -29,15 +29,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        // Pobierz profil użytkownika od Google (id, email, name, picture)
+        // Fetch user profile from Google (id, email, name, picture)
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        // Wyciągnij potrzebne dane z profilu Google
-        String googleId = oAuth2User.getAttribute("sub");   // unikalny ID w Google
+        // Extract required fields from the Google profile
+        String googleId = oAuth2User.getAttribute("sub");   // unique Google ID
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
-        // Upsert: znajdź lub stwórz usera w naszej bazie
+        // Upsert: find or create the user in our database
         userService.findOrCreateUser(googleId, email, name);
 
         return oAuth2User;

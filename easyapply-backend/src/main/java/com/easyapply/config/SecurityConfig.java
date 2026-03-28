@@ -29,15 +29,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 /**
- * Centralna konfiguracja Spring Security.
+ * Central Spring Security configuration.
  *
- * Odpowiada za:
- * 1. Generowanie pary kluczy RSA do podpisywania JWT (RS256)
- * 2. Konfigurację JwtEncoder i JwtDecoder (beany używane przez JwtService i filtr Security)
- * 3. Reguły dostępu do endpointów (kto może, kto nie może)
- * 4. Konfigurację OAuth2 Login (Google)
- * 5. Konfigurację OAuth2 Resource Server (walidacja JWT przy każdym żądaniu)
- * 6. CORS (zastępuje stary CorsConfig.java — Security musi wiedzieć o CORS przed sprawdzeniem auth)
+ * Responsible for:
+ * 1. Generating the RSA key pair for signing JWTs (RS256)
+ * 2. Configuring JwtEncoder and JwtDecoder (used by JwtService and the Security filter)
+ * 3. Endpoint access rules (who can and cannot access)
+ * 4. OAuth2 Login configuration (Google)
+ * 5. OAuth2 Resource Server configuration (JWT validation on every request)
+ * 6. CORS (replaces the old CorsConfig.java — Security must handle CORS before checking auth)
  */
 @Configuration
 @EnableWebSecurity
@@ -58,10 +58,10 @@ public class SecurityConfig {
 
     // =====================================================================
     // RSA KEY PAIR
-    // Generujemy przy starcie aplikacji. W środowisku produkcyjnym można
-    // załadować z env (PEM), ale dla uproszczenia generujemy in-memory.
-    // Konsekwencja: po restarcie serwera stare JWT przestają być ważne
-    // (akceptowalne — access token i tak żyje 15 minut).
+    // Generated at application startup. In production this can be loaded
+    // from an env variable (PEM), but for simplicity we generate in-memory.
+    // Consequence: after a server restart old JWTs become invalid
+    // (acceptable — the access token lives only 15 minutes anyway).
     // =====================================================================
     @Bean
     public RSAKey rsaKey() throws Exception {
@@ -71,8 +71,8 @@ public class SecurityConfig {
     }
 
     /**
-     * JWKSource to "skarbiec kluczy" — Nimbus (biblioteka JWT pod spodem)
-     * pyta go: "jakim kluczem mam podpisać/zweryfikować token?"
+     * JWKSource is the "key vault" — Nimbus (the underlying JWT library)
+     * asks it: "which key should I use to sign/verify this token?"
      */
     @Bean
     public JWKSource<SecurityContext> jwkSource(RSAKey rsaKey) {
@@ -81,8 +81,8 @@ public class SecurityConfig {
     }
 
     /**
-     * JwtEncoder — tworzy (podpisuje) tokeny JWT.
-     * Używany przez JwtService.generateAccessToken().
+     * JwtEncoder — creates (signs) JWT tokens.
+     * Used by JwtService.generateAccessToken().
      */
     @Bean
     public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
@@ -90,9 +90,9 @@ public class SecurityConfig {
     }
 
     /**
-     * JwtDecoder — weryfikuje tokeny JWT przy każdym żądaniu API.
-     * Spring Security automatycznie wywołuje go dla każdego requestu
-     * z headerem "Authorization: Bearer <token>".
+     * JwtDecoder — verifies JWT tokens on every API request.
+     * Spring Security automatically calls it for every request
+     * with the "Authorization: Bearer <token>" header.
      */
     @Bean
     public JwtDecoder jwtDecoder(RSAKey rsaKey) throws Exception {
@@ -101,10 +101,10 @@ public class SecurityConfig {
 
     // =====================================================================
     // SECURITY FILTER CHAIN
-    // Tutaj definiujemy WSZYSTKIE reguły bezpieczeństwa aplikacji.
-    // Pomijamy ten bean w profilu "test" — TestSecurityConfig dostarcza własny
-    // łańcuch z permitAll(). Pozostałe beany (RSAKey, JwtEncoder, JwtDecoder)
-    // pozostają aktywne we wszystkich profilach, bo JwtService ich wymaga.
+    // Defines ALL security rules for the application.
+    // Skipped in the "test" profile — TestSecurityConfig provides its own
+    // chain with permitAll(). The other beans (RSAKey, JwtEncoder, JwtDecoder)
+    // remain active in all profiles because JwtService depends on them.
     // =====================================================================
     @Bean
     @Profile("!test")
@@ -113,34 +113,34 @@ public class SecurityConfig {
             JwtDecoder jwtDecoder,
             OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
         return http
-                // CSRF wyłączone — używamy JWT (bezstanowe), nie sesji/cookies z formularzy
+                // CSRF disabled — we use JWT (stateless), not session/form cookies
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // CORS — Spring Security musi znać reguły CORS zanim sprawdzi autentykację
+                // CORS — Spring Security must know CORS rules before checking authentication
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // Bezstanowe sesje — żadnych HttpSession, tylko JWT
+                // Stateless sessions — no HttpSession, JWT only
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Reguły dostępu do endpointów
+                // Endpoint access rules
                 .authorizeHttpRequests(auth -> auth
-                        // Endpointy publiczne
+                        // Public endpoints
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        // Wszystko inne wymaga JWT
+                        // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
 
-                // OAuth2 Login — obsługa przekierowania Google
+                // OAuth2 Login — handles Google redirect
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
 
-                // OAuth2 Resource Server — walidacja JWT przy każdym żądaniu /api/**
+                // OAuth2 Resource Server — validates JWT on every /api/** request
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder)
@@ -151,8 +151,8 @@ public class SecurityConfig {
 
     // =====================================================================
     // CORS CONFIGURATION
-    // Zastępuje stary CorsConfig.java. Spring Security musi obsługiwać CORS
-    // na poziomie filtrów (przed sprawdzeniem auth), nie na poziomie MVC.
+    // Replaces the old CorsConfig.java. Spring Security must handle CORS
+    // at the filter level (before auth checks), not at the MVC level.
     // =====================================================================
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

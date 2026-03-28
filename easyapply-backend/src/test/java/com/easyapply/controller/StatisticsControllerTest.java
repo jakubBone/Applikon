@@ -62,7 +62,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(1)
-    @DisplayName("GET /api/statistics/badges - zwraca statystyki odznak (brak danych)")
+    @DisplayName("GET /api/statistics/badges - returns badge stats (no data)")
     void getBadges_NoData_ReturnsZeros() throws Exception {
         mockMvc.perform(get("/api/statistics/badges"))
                 .andExpect(status().isOk())
@@ -76,8 +76,8 @@ class StatisticsControllerTest {
 
     @Test
     @Order(2)
-    @DisplayName("GET /api/statistics/badges - odznaka Rękawica przy 5 odmowach")
-    void getBadges_5Rejections_ReturnsRękawica() throws Exception {
+    @DisplayName("GET /api/statistics/badges - first rejection badge unlocked at 5 rejections")
+    void getBadges_5Rejections_ReturnsFirstRejectionBadge() throws Exception {
         for (int i = 0; i < 5; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
         }
@@ -94,7 +94,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(3)
-    @DisplayName("GET /api/statistics/badges - odznaka Patelnia przy 10 odmowach")
+    @DisplayName("GET /api/statistics/badges - second rejection badge unlocked at 10 rejections")
     void getBadges_10Rejections_ReturnsPatelnia() throws Exception {
         for (int i = 0; i < 10; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
@@ -110,7 +110,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(4)
-    @DisplayName("GET /api/statistics/badges - odznaka Widmo przy 5 ghostingach")
+    @DisplayName("GET /api/statistics/badges - first ghosting badge unlocked at 5 ghostings")
     void getBadges_5Ghostings_ReturnsWidmo() throws Exception {
         for (int i = 0; i < 5; i++) {
             createRejectedApplication("Company" + i, RejectionReason.BRAK_ODPOWIEDZI);
@@ -127,7 +127,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(5)
-    @DisplayName("GET /api/statistics/badges - Sweet Revenge przy 10+ odmowach i 1 ofercie")
+    @DisplayName("GET /api/statistics/badges - Sweet Revenge unlocked with 10+ rejections and 1 offer")
     void getBadges_10RejectionsAnd1Offer_UnlocksSweetRevenge() throws Exception {
         for (int i = 0; i < 10; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
@@ -143,7 +143,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(6)
-    @DisplayName("GET /api/statistics/badges - Sweet Revenge NIE odblokowane przy 5 odmowach i ofercie")
+    @DisplayName("GET /api/statistics/badges - Sweet Revenge NOT unlocked with 5 rejections and 1 offer")
     void getBadges_5RejectionsAnd1Offer_SweetRevengeNotUnlocked() throws Exception {
         for (int i = 0; i < 5; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
@@ -159,7 +159,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(7)
-    @DisplayName("GET /api/statistics/badges - rozne typy odmow liczone oddzielnie")
+    @DisplayName("GET /api/statistics/badges - different rejection types counted separately")
     void getBadges_MixedRejectionTypes_CountedCorrectly() throws Exception {
         for (int i = 0; i < 3; i++) {
             createRejectedApplication("Ghost" + i, RejectionReason.BRAK_ODPOWIEDZI);
@@ -176,7 +176,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(8)
-    @DisplayName("GET /api/statistics/badges - postep do nastepnej odznaki")
+    @DisplayName("GET /api/statistics/badges - shows progress toward next badge")
     void getBadges_ShowsProgressToNextBadge() throws Exception {
         for (int i = 0; i < 7; i++) {
             createRejectedApplication("Company" + i, RejectionReason.ODMOWA_MAILOWA);
@@ -192,7 +192,7 @@ class StatisticsControllerTest {
 
     @Test
     @Order(9)
-    @DisplayName("GET /api/statistics/badges - liczy tylko ODMOWA (nie WYSLANE/W_PROCESIE)")
+    @DisplayName("GET /api/statistics/badges - counts only ODMOWA status (not WYSLANE/W_PROCESIE)")
     void getBadges_OnlyCountsRejectedStatus() throws Exception {
         createRejectedApplication("Rejected1", RejectionReason.ODMOWA_MAILOWA);
         createRejectedApplication("Rejected2", RejectionReason.ODMOWA_MAILOWA);

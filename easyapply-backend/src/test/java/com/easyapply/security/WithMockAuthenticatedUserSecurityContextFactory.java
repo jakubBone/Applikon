@@ -10,18 +10,18 @@ import java.util.Collections;
 import java.util.UUID;
 
 /**
- * Fabryka SecurityContext dla @WithMockAuthenticatedUser.
+ * SecurityContext factory for @WithMockAuthenticatedUser.
  *
- * Spring Security Test wywołuje createSecurityContext() przed każdym testem oznaczonym
- * @WithMockAuthenticatedUser. Tworzymy tu SecurityContext z Authentication, gdzie:
- *   - principal = AuthenticatedUser (nasz własny rekord z id/email/name)
- *   - credentials = null (brak hasła — to mock, nie prawdziwe logowanie)
- *   - authorities = pusta lista (brak ról — w naszej aplikacji nie używamy)
+ * Spring Security Test calls createSecurityContext() before each test annotated with
+ * @WithMockAuthenticatedUser. Here we build a SecurityContext with an Authentication where:
+ *   - principal   = AuthenticatedUser (our custom record with id/email/name)
+ *   - credentials = null (no password — this is a mock, not a real login)
+ *   - authorities = empty list (no roles — not used in this application)
  *
- * Używamy UsernamePasswordAuthenticationToken jako nośnika Authentication, bo:
- *   - Jest standardowym, niemutowalnym kontenerem Authentication w Spring Security
- *   - Nie wymaga prawdziwego JWT ani OAuth2 — wystarczy na potrzeby testów
- *   - Spring's @AuthenticationPrincipal odczyta principal niezależnie od typu Authentication
+ * We use UsernamePasswordAuthenticationToken as the Authentication carrier because:
+ *   - It is a standard, immutable Authentication container in Spring Security
+ *   - It requires no real JWT or OAuth2 — sufficient for testing purposes
+ *   - Spring's @AuthenticationPrincipal reads the principal regardless of the Authentication type
  */
 public class WithMockAuthenticatedUserSecurityContextFactory
         implements WithSecurityContextFactory<WithMockAuthenticatedUser> {
