@@ -5,6 +5,7 @@ import { ApplicationForm } from './ApplicationForm'
 import { downloadCV } from '../../services/api'
 import { isSafeUrl } from '../../utils/urlValidator'
 import { STATUS_CONFIG } from '../../constants/applicationStatus'
+import { translateStageName } from '../kanban/types'
 import type { Application } from '../../types/domain'
 
 interface Props {
@@ -12,8 +13,8 @@ interface Props {
   onBack: () => void
 }
 
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('pl-PL', {
+function formatDate(dateString: string, locale: string): string {
+  return new Date(dateString).toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -22,12 +23,12 @@ function formatDate(dateString: string): string {
   })
 }
 
-function formatSalary(app: Application): string | null {
+function formatSalary(app: Application, locale: string): string | null {
   if (!app.salaryMin) return null
 
-  let salaryStr = app.salaryMin.toLocaleString('pl-PL')
+  let salaryStr = app.salaryMin.toLocaleString(locale)
   if (app.salaryMax) {
-    salaryStr += ` - ${app.salaryMax.toLocaleString('pl-PL')}`
+    salaryStr += ` - ${app.salaryMax.toLocaleString(locale)}`
   }
   salaryStr += ` ${app.currency ?? 'PLN'}`
 
@@ -42,10 +43,10 @@ function formatSalary(app: Application): string | null {
 }
 
 export function ApplicationDetails({ application, onBack }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [showEditForm, setShowEditForm] = useState(false)
 
-  const salary = formatSalary(application)
+  const salary = formatSalary(application, i18n.language)
 
   return (
     <div className="details-view">
@@ -70,7 +71,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
               {t(STATUS_CONFIG[application.status].labelKey)}
             </span>
             {application.currentStage && (
-              <span className="current-stage-badge">{application.currentStage}</span>
+              <span className="current-stage-badge">{translateStageName(application.currentStage, t)}</span>
             )}
           </div>
           <div className="details-actions">
@@ -107,7 +108,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
             )}
             <div className="info-item">
               <span className="label">{t('details.date')}</span>
-              <span className="value">{formatDate(application.appliedAt)}</span>
+              <span className="value">{formatDate(application.appliedAt, i18n.language)}</span>
             </div>
             {application.link && isSafeUrl(application.link) && (
               <div className="info-item">

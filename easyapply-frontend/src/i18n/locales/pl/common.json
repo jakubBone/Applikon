@@ -114,6 +114,17 @@
     "message": "Przepraszamy, aplikacja napotkała błąd.",
     "reload": "Odśwież stronę"
   },
+  "stage": {
+    "hrInterview": "Rozmowa z HR",
+    "technicalInterview": "Rozmowa techniczna",
+    "managerInterview": "Rozmowa z managerem",
+    "recruitmentTask": "Zadanie rekrutacyjne",
+    "finalInterview": "Rozmowa finalna",
+    "modalTitle": "Wybierz etap rekrutacji",
+    "customPlaceholder": "Inny etap...",
+    "customAdd": "Dodaj",
+    "cancel": "Anuluj"
+  },
   "kanban": {
     "statusWYSLANE": "Wysłane",
     "statusW_PROCESIE": "W procesie",

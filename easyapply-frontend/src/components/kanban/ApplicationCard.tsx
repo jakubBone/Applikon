@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useTranslation } from 'react-i18next'
 import type { Application, StageUpdateRequest } from '../../types/domain'
-import { isMobile, PREDEFINED_STAGES, REJECTION_REASONS } from './types'
+import { isMobile, PREDEFINED_STAGES, REJECTION_REASONS, translateStageName, normalizeStageKey } from './types'
 
 export interface ApplicationCardProps {
   application: Application
@@ -14,7 +14,7 @@ export interface ApplicationCardProps {
 }
 
 export function ApplicationCard({ application, isDragging, onClick, onStageChange, onLongPress }: ApplicationCardProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [showStageDropdown, setShowStageDropdown] = useState(false)
   const [customStageInput, setCustomStageInput] = useState('')
   const [isLifting, setIsLifting] = useState(false)
@@ -160,7 +160,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
             }}
           >
             <span className="stage-label">
-              {application.currentStage || t('kanban.stageSelect')}
+              {application.currentStage ? translateStageName(application.currentStage, t) : t('kanban.stageSelect')}
             </span>
             <span className="stage-arrow">{showStageDropdown ? '▲' : '▼'}</span>
           </button>
@@ -172,16 +172,16 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
             >
               {PREDEFINED_STAGES.map(stage => (
                 <button
-                  key={stage}
-                  className={`stage-dropdown-item ${application.currentStage === stage ? 'active' : ''}`}
+                  key={stage.key}
+                  className={`stage-dropdown-item ${normalizeStageKey(application.currentStage) === stage.key ? 'active' : ''}`}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    handleStageSelect(stage)
+                    handleStageSelect(stage.key)
                   }}
                 >
-                  {application.currentStage === stage && <span className="check-icon">✓</span>}
-                  {stage}
+                  {normalizeStageKey(application.currentStage) === stage.key && <span className="check-icon">✓</span>}
+                  {t(stage.labelKey)}
                 </button>
               ))}
               <form
@@ -221,7 +221,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
 
       {/* Data aplikacji */}
       <div className="card-date">
-        📅 {t('kanban.cardDate')} {new Date(application.appliedAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })}
+        📅 {t('kanban.cardDate')} {new Date(application.appliedAt).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}
       </div>
     </div>
   )

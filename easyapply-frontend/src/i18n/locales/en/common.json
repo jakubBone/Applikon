@@ -112,6 +112,17 @@
     "message": "Sorry, the application encountered an error.",
     "reload": "Reload page"
   },
+  "stage": {
+    "hrInterview": "HR Interview",
+    "technicalInterview": "Technical Interview",
+    "managerInterview": "Manager Interview",
+    "recruitmentTask": "Recruitment Task",
+    "finalInterview": "Final Interview",
+    "modalTitle": "Select recruitment stage",
+    "customPlaceholder": "Other stage...",
+    "customAdd": "Add",
+    "cancel": "Cancel"
+  },
   "kanban": {
     "statusWYSLANE": "Sent",
     "statusW_PROCESIE": "In progress",

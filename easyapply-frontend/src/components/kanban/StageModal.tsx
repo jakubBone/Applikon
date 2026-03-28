@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { PREDEFINED_STAGES } from './types'
+import { useTranslation } from 'react-i18next'
+import { PREDEFINED_STAGES, normalizeStageKey } from './types'
 
 interface StageModalProps {
   isOpen: boolean
@@ -9,12 +10,13 @@ interface StageModalProps {
 }
 
 export function StageModal({ isOpen, onClose, onSelect, currentStage }: StageModalProps) {
+  const { t } = useTranslation()
   const [customStage, setCustomStage] = useState('')
 
   if (!isOpen) return null
 
-  const handleSelect = (stage: string) => {
-    onSelect(stage)
+  const handleSelect = (stageKey: string) => {
+    onSelect(stageKey)
     onClose()
   }
 
@@ -30,28 +32,28 @@ export function StageModal({ isOpen, onClose, onSelect, currentStage }: StageMod
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <h3>Wybierz etap rekrutacji</h3>
+        <h3>{t('stage.modalTitle')}</h3>
         <div className="stage-options">
           {PREDEFINED_STAGES.map(stage => (
             <button
-              key={stage}
-              className={`stage-option ${currentStage === stage ? 'active' : ''}`}
-              onClick={() => handleSelect(stage)}
+              key={stage.key}
+              className={`stage-option ${normalizeStageKey(currentStage) === stage.key ? 'active' : ''}`}
+              onClick={() => handleSelect(stage.key)}
             >
-              {stage}
+              {t(stage.labelKey)}
             </button>
           ))}
         </div>
         <form onSubmit={handleCustomSubmit} className="custom-stage">
           <input
             type="text"
-            placeholder="Inny etap..."
+            placeholder={t('stage.customPlaceholder')}
             value={customStage}
             onChange={(e) => setCustomStage(e.target.value)}
           />
-          <button type="submit" disabled={!customStage.trim()}>Dodaj</button>
+          <button type="submit" disabled={!customStage.trim()}>{t('stage.customAdd')}</button>
         </form>
-        <button className="modal-close" onClick={onClose}>Anuluj</button>
+        <button className="modal-close" onClick={onClose}>{t('stage.cancel')}</button>
       </div>
     </div>
   )
