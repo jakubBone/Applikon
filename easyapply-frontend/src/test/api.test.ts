@@ -18,6 +18,7 @@ import {
   deleteNote,
   fetchBadgeStats
 } from '../services/api'
+import type { StageUpdateRequest } from '../types/domain'
 
 const API_URL = 'http://localhost:8080/api'
 
@@ -94,7 +95,7 @@ describe('API Service', () => {
     })
 
     it('updateApplicationStage - zmienia etap aplikacji', async () => {
-      const stageData = { status: 'W_PROCESIE', currentStage: 'Rozmowa z HR' }
+      const stageData: StageUpdateRequest = { status: 'W_PROCESIE', currentStage: 'Rozmowa z HR' }
       const updatedApp = { id: 1, currentStage: 'Rozmowa z HR' }
       mockFetch(updatedApp)
 

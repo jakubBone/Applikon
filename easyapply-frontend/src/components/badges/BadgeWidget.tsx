@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { ParseKeys } from 'i18next'
 import { useBadgeStats } from '../../hooks/useBadgeStats'
 import type { BadgeInfo } from '../../types/domain'
 
@@ -47,11 +48,11 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
   const nextBadgeApiName = hasAchieved ? badge?.nextBadgeName : (isGhosting ? 'Widmo' : 'Rękawica')
   // Translated name — used for display
   const nextBadgeDisplayName = hasAchieved
-    ? (badge?.nextBadgeName ? t(`names.${badge.nextBadgeName}`) : undefined)
+    ? (badge?.nextBadgeName ? t(`names.${badge.nextBadgeName}` as unknown as ParseKeys<'badges'>) : undefined)
     : (isGhosting ? t('defaults.firstGhosting') : t('defaults.firstRejection'))
 
-  const displayName = hasAchieved
-    ? t(`names.${badge?.name}`)
+  const displayName: string = hasAchieved
+    ? t(`names.${badge?.name ?? ''}` as unknown as ParseKeys<'badges'>)
     : (isGhosting ? t('defaults.firstGhosting') : t('defaults.firstRejection'))
 
   return (

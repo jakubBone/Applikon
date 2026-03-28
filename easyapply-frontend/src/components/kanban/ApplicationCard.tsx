@@ -213,7 +213,9 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
       {/* Powód odmowy */}
       {isRejected && application.rejectionReason && (
         <div className="card-rejection">
-          💬 {t(REJECTION_REASONS.find(r => r.id === application.rejectionReason)?.labelKey ?? '') || application.rejectionReason}
+          💬 {REJECTION_REASONS.find(r => r.id === application.rejectionReason)?.labelKey
+            ? t(REJECTION_REASONS.find(r => r.id === application.rejectionReason)!.labelKey)
+            : application.rejectionReason}
         </div>
       )}
 

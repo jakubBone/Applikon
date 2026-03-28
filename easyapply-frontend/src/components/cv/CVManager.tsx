@@ -121,7 +121,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
   const handleOpen = async (cv: CV) => {
     if (cv.type === 'LINK' && isSafeUrl(cv.externalUrl)) {
-      window.open(cv.externalUrl, '_blank')
+      window.open(cv.externalUrl ?? undefined, '_blank')
     } else if (cv.type === 'FILE' || !cv.type) {
       downloadCV(cv.id, cv.originalFileName ?? cv.fileName ?? 'CV')
     }
@@ -243,7 +243,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
           <div className="cv-item-name">{cv.originalFileName}</div>
           <div className="cv-item-meta">
             {cv.type === 'FILE' || !cv.type ? formatSize(cv.fileSize) :
-             cv.type === 'LINK' ? getHostname(cv.externalUrl) :
+             cv.type === 'LINK' ? getHostname(cv.externalUrl ?? undefined) :
              t('cv.onComputer')}
             {' • '}
             {usageCount > 0 ? t('cv.usedTimes', { count: usageCount }) : t('cv.unused')}

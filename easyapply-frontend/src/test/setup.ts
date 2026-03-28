@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { vi, beforeEach } from 'vitest'
 import '../i18n'
 
 // Mock fetch API for tests

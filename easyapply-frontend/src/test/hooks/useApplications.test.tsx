@@ -7,8 +7,6 @@ import {
   useCreateApplication,
   useCheckDuplicate,
 } from '../../hooks/useApplications'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error - test-utils is a JSX file without types
 import { createTestQueryClient } from '../test-utils'
 
 vi.mock('../../services/api', () => ({

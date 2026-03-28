@@ -4,7 +4,7 @@ import { useCreateApplication, useUpdateApplication } from '../../hooks/useAppli
 import { checkDuplicate } from '../../services/api'
 import { SalaryFormSection } from './SalaryFormSection'
 import type { SalaryFormData } from './SalaryFormSection'
-import type { Application } from '../../types/domain'
+import type { Application, ContractType } from '../../types/domain'
 
 interface FormData extends SalaryFormData {
   company: string
@@ -62,7 +62,7 @@ function toApplicationRequest(data: FormData) {
     salaryMax: data.isRange && data.salaryMax ? parseInt(data.salaryMax) : null,
     currency: data.currency,
     salaryType: data.salaryMin ? data.salaryType : null,
-    contractType: data.contractType || null,
+    contractType: (data.contractType || null) as ContractType | null,
     source: data.source || null,
     link: data.link || null,
     jobDescription: data.jobDescription || null,

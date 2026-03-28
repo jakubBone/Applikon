@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { ParseKeys } from 'i18next'
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../hooks/useNotes'
 import type { NoteCategory } from '../../types/domain'
 import './NotesList.css'
 
-const CATEGORIES: { value: NoteCategory; labelKey: string; color: string; bg: string }[] = [
+const CATEGORIES: { value: NoteCategory; labelKey: ParseKeys<'common'>; color: string; bg: string }[] = [
   { value: 'PYTANIA', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
   { value: 'FEEDBACK', labelKey: 'notes.catFeedback', color: '#27ae60', bg: '#eafaf1' },
   { value: 'INNE', labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
 ]
 
-const LEGACY_CATEGORY_MAP: Record<string, typeof CATEGORIES[number]> = {
+const LEGACY_CATEGORY_MAP: Record<string, { value: NoteCategory; labelKey: ParseKeys<'common'>; color: string; bg: string }> = {
   'PYTANIE': { value: 'PYTANIA', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
   'KONTAKT': { value: 'INNE', labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
 }

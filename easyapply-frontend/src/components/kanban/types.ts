@@ -1,8 +1,10 @@
+import type { ParseKeys } from 'i18next'
+
 export const isMobile = () => window.innerWidth <= 768
 
 export interface KanbanStatus {
   id: string
-  labelKey: string
+  labelKey: ParseKeys<'common'>
   color: string
 }
 
@@ -20,7 +22,7 @@ export const PREDEFINED_STAGES = [
   'Rozmowa finalna',
 ]
 
-export const REJECTION_REASONS = [
+export const REJECTION_REASONS: { id: string; labelKey: ParseKeys<'common'> }[] = [
   { id: 'BRAK_ODPOWIEDZI', labelKey: 'kanban.rejectionBrakOdpowiedzi' },
   { id: 'ODMOWA_MAILOWA', labelKey: 'kanban.rejectionOdmowaMailowa' },
   { id: 'ODRZUCENIE_PO_ROZMOWIE', labelKey: 'kanban.rejectionOdrzuceniePo' },

@@ -4,7 +4,6 @@ import {
   DragOverlay,
   closestCorners,
   KeyboardSensor,
-  PointerSensor,
   TouchSensor,
   MouseSensor,
   useSensor,
@@ -37,7 +36,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   const [pendingApplication, setPendingApplication] = useState<Application | null>(null)
 
   // Mobile states
-  const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const [showSwipeHint] = useState(false)
   const [moveModalOpen, setMoveModalOpen] = useState(false)
   const [moveModalCard, setMoveModalCard] = useState<Application | null>(null)
   const [successToast, setSuccessToast] = useState<string | null>(null)
@@ -172,23 +171,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     }
   }
 
-  // Mobile: Animated hint (first time)
-  const showAnimatedHint = () => {
-    setShowSwipeHint(true)
-    const board = kanbanBoardRef.current
-    if (board) {
-      setTimeout(() => {
-        board.scrollTo({ left: 250, behavior: 'smooth' })
-        setTimeout(() => {
-          board.scrollTo({ left: 0, behavior: 'smooth' })
-          setTimeout(() => {
-            setShowSwipeHint(false)
-          }, 800)
-        }, 1000)
-      }, 500)
-    }
-  }
-
   // Mobile: Long press handler
   const handleLongPress = (application: Application) => {
     if (!isMobile()) return
@@ -232,8 +214,8 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     if (navigator.vibrate) navigator.vibrate([50, 100, 50])
 
     // Success toast
-    const targetStatusLabelKey = STATUSES.find(s => s.id === targetStatus)?.labelKey ?? ''
-    showSuccessToast(t('kanban.movedTo', { status: t(targetStatusLabelKey) }))
+    const targetStatusConfig = STATUSES.find(s => s.id === targetStatus)
+    showSuccessToast(t('kanban.movedTo', { status: targetStatusConfig ? t(targetStatusConfig.labelKey) : targetStatus }))
 
     setMoveModalOpen(false)
     setMoveModalCard(null)

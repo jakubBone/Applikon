@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { ParseKeys } from 'i18next'
 import './ApplicationTable.css'
 import { STATUS_CONFIG } from '../../constants/applicationStatus'
 import type { Application } from '../../types/domain'
@@ -33,7 +34,7 @@ const formatDate = (dateString: string): string => {
   })
 }
 
-const statusConfig: Record<string, { labelKey: string; color: string; bg: string }> = {
+const statusConfig: Record<string, { labelKey: ParseKeys<'common'>; color: string; bg: string }> = {
   ...STATUS_CONFIG,
   // Legacy statuses (backwards compatibility)
   'ROZMOWA':   { labelKey: 'statusConfig.ROZMOWA',   color: '#f39c12', bg: '#fef9e7' },
@@ -120,8 +121,8 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
   }), [applications, searchQuery, statusFilter])
 
   const sortedApplications = useMemo(() => [...filteredApplications].sort((a, b) => {
-    let aVal = (a as Record<string, unknown>)[sortField]
-    let bVal = (b as Record<string, unknown>)[sortField]
+    let aVal = (a as unknown as Record<string, unknown>)[sortField]
+    let bVal = (b as unknown as Record<string, unknown>)[sortField]
 
     if (sortField === 'salaryMin') {
       aVal = (aVal as number) || 0
