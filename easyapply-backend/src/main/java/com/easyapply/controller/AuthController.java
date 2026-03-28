@@ -8,23 +8,23 @@ import com.easyapply.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
 
 /**
- * Endpointy autentykacji.
+ * Authentication endpoints.
  *
- * /api/auth/me      — zwraca dane zalogowanego użytkownika (wymaga JWT)
- * /api/auth/refresh — wydaje nowy access token na podstawie refresh token cookie
- * /api/auth/logout  — unieważnia refresh token
+ * /api/auth/me      — returns the currently authenticated user's profile (requires JWT)
+ * /api/auth/refresh — issues a new access token based on the refresh token cookie
+ * /api/auth/logout  — invalidates the refresh token
  *
- * Endpoint logowania (/oauth2/authorization/google) obsługuje Spring Security automatycznie —
- * nie potrzebujemy go tu implementować.
+ * The login endpoint (/oauth2/authorization/google) is handled automatically by Spring Security.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -32,15 +32,17 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final MessageSource messageSource;
 
-    public AuthController(UserService userService, JwtService jwtService) {
+    public AuthController(UserService userService, JwtService jwtService, MessageSource messageSource) {
         this.userService = userService;
         this.jwtService = jwtService;
+        this.messageSource = messageSource;
     }
 
     /**
-     * Zwraca profil zalogowanego użytkownika.
-     * @AuthenticationPrincipal wstrzykuje AuthenticatedUser zbudowany przez JwtAuthenticationConverter
+     * Returns the authenticated user's profile.
+     * @AuthenticationPrincipal injects the AuthenticatedUser built by JwtAuthenticationConverter.
      */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
@@ -49,34 +51,33 @@ public class AuthController {
     }
 
     /**
-     * Wydaje nowy access token na podstawie refresh token przesłanego w httpOnly cookie.
+     * Issues a new access token based on the refresh token sent in an httpOnly cookie.
      *
-     * Dlaczego cookie, a nie body?
-     * Cookie httpOnly nie jest dostępne dla JavaScript (ochrona przed XSS).
-     * Przeglądarka wysyła je automatycznie przy każdym żądaniu do /api/auth.
+     * Why a cookie and not the request body?
+     * An httpOnly cookie is not accessible to JavaScript (protection against XSS).
+     * The browser sends it automatically with every request to /api/auth.
      */
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request) {
         String refreshToken = extractRefreshTokenFromCookie(request);
 
         if (refreshToken == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Brak refresh token"));
+            return ResponseEntity.status(401).body(Map.of("error",
+                    messageSource.getMessage("error.token.missing", null, LocaleContextHolder.getLocale())));
         }
 
-        // Znajdź użytkownika po refresh token i sprawdź ważność
-        // Szukamy przez UserRepository — musimy dodać metodę findByRefreshToken
-        // Na razie używamy uproszczonego podejścia przez UserService
         try {
             User user = userService.findByValidRefreshToken(refreshToken);
             String newAccessToken = jwtService.generateAccessToken(user);
             return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
         } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Nieprawidłowy lub wygasły refresh token"));
+            return ResponseEntity.status(401).body(Map.of("error",
+                    messageSource.getMessage("error.token.invalid", null, LocaleContextHolder.getLocale())));
         }
     }
 
     /**
-     * Wylogowuje użytkownika: czyści refresh token w bazie i usuwa cookie.
+     * Logs out the user: clears the refresh token in the database and removes the cookie.
      */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
@@ -86,7 +87,7 @@ public class AuthController {
         User user = userService.getById(authenticatedUser.id());
         userService.clearRefreshToken(user);
 
-        // Usuń cookie po stronie klienta (max-age=0)
+        // Clear the cookie on the client side (max-age=0)
         Cookie cookie = new Cookie("refresh_token", "");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
