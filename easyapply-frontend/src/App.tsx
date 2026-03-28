@@ -8,11 +8,11 @@ import { AuthCallbackPage } from './pages/AuthCallbackPage'
 import { DashboardPage } from './pages/DashboardPage'
 
 /**
- * QueryClient — globalny klient zarządzający cache'm zapytań.
+ * QueryClient — global client managing query cache.
  *
- * staleTime: 30s — dane są "świeże" przez 30 sekund, React Query nie wysyła
- *   ponownego zapytania jeśli dane są w cache i nie starsze niż 30s.
- * retry: 1 — przy błędzie sieci próbuje jeszcze raz zanim rzuci błąd.
+ * staleTime: 30s — data is "fresh" for 30 seconds, React Query won't
+ *   refetch if data is cached and newer than 30s.
+ * retry: 1 — retries once on network error before throwing.
  */
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,8 +24,8 @@ const queryClient = new QueryClient({
 })
 
 /**
- * Korzeń aplikacji — tylko routing i providerzy.
- * Zero logiki biznesowej.
+ * App root — routing and providers only.
+ * No business logic.
  */
 export default function App() {
   return (
@@ -34,11 +34,11 @@ export default function App() {
         <AuthProvider>
           <ErrorBoundary>
             <Routes>
-              {/* Publiczne */}
+              {/* Public routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-              {/* Chronione */}
+              {/* Protected routes */}
               <Route
                 path="/dashboard"
                 element={
@@ -48,7 +48,7 @@ export default function App() {
                 }
               />
 
-              {/* Domyślne przekierowanie */}
+              {/* Default redirects */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>

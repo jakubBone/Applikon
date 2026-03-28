@@ -31,7 +31,7 @@ describe('BadgeWidget', () => {
       expect(container.firstChild).toBeNull()
     })
 
-    it('renderuje nagłówek z ikoną odznak', () => {
+    it('renders header with badge icon', () => {
       vi.mocked(useBadgeStats).mockReturnValue({ data: mockStats() } as never)
 
       render(<BadgeWidget />)
@@ -39,7 +39,7 @@ describe('BadgeWidget', () => {
       expect(screen.getByText(/Twoje odznaki/)).toBeInTheDocument()
     })
 
-    it('jest domyślnie zwinięty', () => {
+    it('is collapsed by default', () => {
       vi.mocked(useBadgeStats).mockReturnValue({ data: mockStats({ totalRejections: 5 }) } as never)
 
       render(<BadgeWidget />)
@@ -47,7 +47,7 @@ describe('BadgeWidget', () => {
       expect(screen.queryByText(/Odrzucone aplikacje/)).not.toBeInTheDocument()
     })
 
-    it('rozwija się po kliknięciu nagłówka', () => {
+    it('expands on header click', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,
@@ -65,7 +65,7 @@ describe('BadgeWidget', () => {
   // ==================== REJECTION BADGE Tests ====================
 
   describe('Rejection Badges', () => {
-    it('wyświetla "Rękawica" przy 5 odmowach', () => {
+    it('displays "Rękawica" at 5 rejections', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,
@@ -87,7 +87,7 @@ describe('BadgeWidget', () => {
       expect(screen.getByText('🥊')).toBeInTheDocument()
     })
 
-    it('wyświetla następną odznakę do zdobycia', () => {
+    it('displays next badge to earn', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 7,
@@ -108,7 +108,7 @@ describe('BadgeWidget', () => {
       expect(screen.getByText(/Następny.*Patelnia/)).toBeInTheDocument()
     })
 
-    it('pokazuje MAX gdy osiągnięto najwyższą odznakę', () => {
+    it('shows MAX when highest badge is reached', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 100,
@@ -133,7 +133,7 @@ describe('BadgeWidget', () => {
   // ==================== GHOSTING BADGE Tests ====================
 
   describe('Ghosting Badges', () => {
-    it('wyświetla "Widmo" przy 5 ghostingach', () => {
+    it('displays "Widmo" at 5 ghostings', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,
@@ -156,7 +156,7 @@ describe('BadgeWidget', () => {
       expect(screen.getByText('Widmo')).toBeInTheDocument()
     })
 
-    it('wyświetla liczbę ghostingów', () => {
+    it('displays ghosting count', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 10,
@@ -176,7 +176,7 @@ describe('BadgeWidget', () => {
   // ==================== SWEET REVENGE Tests ====================
 
   describe('Sweet Revenge', () => {
-    it('wyświetla Sweet Revenge gdy odblokowane', () => {
+    it('displays Sweet Revenge when unlocked', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 15,
@@ -195,7 +195,7 @@ describe('BadgeWidget', () => {
       expect(screen.getByText(/Kto się śmieje ostatni/)).toBeInTheDocument()
     })
 
-    it('nie wyświetla Sweet Revenge gdy nie odblokowane', () => {
+    it('does not display Sweet Revenge when locked', () => {
       vi.mocked(useBadgeStats).mockReturnValue({
         data: mockStats({
           totalRejections: 5,

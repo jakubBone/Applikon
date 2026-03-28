@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import { AuthProvider, useAuth } from '../../auth/AuthProvider'
 
-// Mockujemy cały moduł api — AuthProvider nie powinien dotykać prawdziwego fetch
+// Mock entire api module — AuthProvider shouldn't touch real fetch
 vi.mock('../../services/api', () => ({
   getToken: vi.fn(),
   fetchCurrentUser: vi.fn(),
@@ -13,7 +13,7 @@ import * as api from '../../services/api'
 
 const mockUser = { id: '1', email: 'test@example.com', name: 'Test User' }
 
-// Komponent pomocniczy wystawiający stan hooka do assertów
+// Helper component that exposes hook state for assertions
 function AuthStateDisplay() {
   const { user, isLoading, isAuthenticated } = useAuth()
   if (isLoading) return <div>loading</div>
@@ -30,7 +30,7 @@ describe('AuthProvider', () => {
     vi.resetAllMocks()
   })
 
-  it('bez tokenu — isAuthenticated: false, nie wywołuje fetchCurrentUser', async () => {
+  it('without token — isAuthenticated: false, does not call fetchCurrentUser', async () => {
     vi.mocked(api.getToken).mockReturnValue(null)
 
     render(
@@ -45,7 +45,7 @@ describe('AuthProvider', () => {
     expect(api.fetchCurrentUser).not.toHaveBeenCalled()
   })
 
-  it('z ważnym tokenem — pobiera usera i ustawia isAuthenticated: true', async () => {
+  it('with valid token — fetches user and sets isAuthenticated: true', async () => {
     vi.mocked(api.getToken).mockReturnValue('valid-token')
     vi.mocked(api.fetchCurrentUser).mockResolvedValue(mockUser)
 
@@ -55,7 +55,7 @@ describe('AuthProvider', () => {
       </AuthProvider>
     )
 
-    // Podczas ładowania powinien być spinner / loading state
+    // While loading, should show loading state
     expect(screen.getByText('loading')).toBeInTheDocument()
 
     await waitFor(() => {
@@ -64,7 +64,7 @@ describe('AuthProvider', () => {
     })
   })
 
-  it('z nieważnym tokenem — wywołuje clearToken i pozostaje niezalogowany', async () => {
+  it('with invalid token — calls clearToken and stays unauthenticated', async () => {
     vi.mocked(api.getToken).mockReturnValue('expired-token')
     vi.mocked(api.fetchCurrentUser).mockRejectedValue(new Error('Unauthorized'))
 
@@ -80,7 +80,7 @@ describe('AuthProvider', () => {
     expect(api.clearToken).toHaveBeenCalledOnce()
   })
 
-  it('signOut — czyści token i resetuje stan usera do null', async () => {
+  it('signOut — clears token and resets user state to null', async () => {
     vi.mocked(api.getToken).mockReturnValue('valid-token')
     vi.mocked(api.fetchCurrentUser).mockResolvedValue(mockUser)
 
@@ -110,7 +110,7 @@ describe('AuthProvider', () => {
     expect(api.clearToken).toHaveBeenCalled()
   })
 
-  it('useAuth poza AuthProvider — rzuca błąd z czytelnym komunikatem', () => {
+  it('useAuth outside AuthProvider — throws error with readable message', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     function BrokenComponent() {

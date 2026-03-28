@@ -1,5 +1,5 @@
 // ============================================================
-// Typy domenowe EasyApply — odzwierciedlają odpowiedzi backendu
+// EasyApply domain types — mirror backend response shapes
 // ============================================================
 
 export type ApplicationStatus = 'WYSLANE' | 'W_PROCESIE' | 'OFERTA' | 'ODMOWA'
@@ -76,7 +76,7 @@ export interface User {
 }
 
 // ============================================================
-// Typy żądań (request bodies)
+// Request types (request bodies)
 // ============================================================
 
 export interface ApplicationRequest {
@@ -103,7 +103,7 @@ export interface StageUpdateRequest {
 // Badge / statystyki
 // ============================================================
 
-// Odzwierciedla BadgeResponse.java z backendu
+// Mirrors BadgeResponse.java from the backend
 export interface BadgeInfo {
   name: string
   icon: string
@@ -114,7 +114,7 @@ export interface BadgeInfo {
   nextBadgeName: string | null
 }
 
-// Odzwierciedla BadgeStatsResponse.java z backendu
+// Mirrors BadgeStatsResponse.java from the backend
 export interface BadgeStats {
   rejectionBadge: BadgeInfo | null
   ghostingBadge: BadgeInfo | null

@@ -4,8 +4,8 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { ProtectedRoute } from '../../auth/ProtectedRoute'
 import { useAuth } from '../../auth/AuthProvider'
 
-// Mockujemy useAuth — ProtectedRoute testujemy w izolacji od logiki pobierania usera.
-// Interesuje nas wyłącznie zachowanie na podstawie wartości zwracanych przez hook.
+// Mock useAuth — test ProtectedRoute in isolation from user fetch logic.
+// We only care about behavior based on hook return values.
 vi.mock('../../auth/AuthProvider', () => ({
   useAuth: vi.fn(),
 }))
@@ -13,20 +13,20 @@ vi.mock('../../auth/AuthProvider', () => ({
 const mockUseAuth = vi.mocked(useAuth)
 
 /**
- * Renderuje ProtectedRoute w realistycznym środowisku routera.
- * Trasa /login imituje stronę logowania — dzięki temu możemy sprawdzić
- * czy Navigate faktycznie tam trafia.
+ * Renders ProtectedRoute in a realistic router environment.
+ * /login route mimics the login page — this lets us verify
+ * that Navigate actually routes there.
  */
 function renderProtectedRoute() {
   return render(
     <MemoryRouter initialEntries={['/dashboard']}>
       <Routes>
-        <Route path="/login" element={<div>Strona logowania</div>} />
+        <Route path="/login" element={<div>Login page</div>} />
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <div>Chroniona treść</div>
+              <div>Protected content</div>
             </ProtectedRoute>
           }
         />
@@ -36,7 +36,7 @@ function renderProtectedRoute() {
 }
 
 describe('ProtectedRoute', () => {
-  it('podczas ładowania — renderuje null (zapobiega flash przekierowania)', () => {
+  it('while loading — renders null (prevents redirect flash)', () => {
     mockUseAuth.mockReturnValue({
       isLoading: true,
       isAuthenticated: false,
@@ -48,7 +48,7 @@ describe('ProtectedRoute', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('niezalogowany — przekierowuje na /login', () => {
+  it('unauthenticated — redirects to /login', () => {
     mockUseAuth.mockReturnValue({
       isLoading: false,
       isAuthenticated: false,
@@ -57,11 +57,11 @@ describe('ProtectedRoute', () => {
     })
 
     renderProtectedRoute()
-    expect(screen.getByText('Strona logowania')).toBeInTheDocument()
-    expect(screen.queryByText('Chroniona treść')).not.toBeInTheDocument()
+    expect(screen.getByText('Login page')).toBeInTheDocument()
+    expect(screen.queryByText('Protected content')).not.toBeInTheDocument()
   })
 
-  it('zalogowany — renderuje chronioną treść', () => {
+  it('authenticated — renders protected content', () => {
     mockUseAuth.mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
@@ -70,7 +70,7 @@ describe('ProtectedRoute', () => {
     })
 
     renderProtectedRoute()
-    expect(screen.getByText('Chroniona treść')).toBeInTheDocument()
-    expect(screen.queryByText('Strona logowania')).not.toBeInTheDocument()
+    expect(screen.getByText('Protected content')).toBeInTheDocument()
+    expect(screen.queryByText('Login page')).not.toBeInTheDocument()
   })
 })

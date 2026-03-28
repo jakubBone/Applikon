@@ -44,12 +44,12 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   const kanbanBoardRef = useRef<HTMLDivElement>(null)
 
   // Enhanced sensors for better mobile support
-  // Na mobile wyłączamy TouchSensor, żeby long-press działał bez konfliktów
+  // On mobile, disable TouchSensor so long-press works without conflicts
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: { distance: 10 }
     }),
-    // WYŁĄCZ TouchSensor na mobile - long press wtedy zadziała
+    // DISABLE TouchSensor on mobile - long press will work then
     ...(isMobile() ? [] : [
       useSensor(TouchSensor, {
         activationConstraint: {
@@ -61,13 +61,13 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     useSensor(KeyboardSensor)
   )
 
-  // Sortowanie po dacie aplikacji (najnowsze na górze)
+  // Sort by application date (newest first)
   const sortByDate = (apps: Application[]): Application[] => {
     return [...apps].sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
   }
 
-  // Grupowanie aplikacji według statusu (łączymy OFERTA i ODMOWA w ZAKONCZONE)
-  // Obsługuje też stare statusy: ROZMOWA, ZADANIE -> W_PROCESIE, ODRZUCONE -> ZAKONCZONE
+  // Group applications by status (merge OFERTA and ODMOWA into ZAKONCZONE)
+  // Also handles legacy statuses: ROZMOWA, ZADANIE -> W_PROCESIE, ODRZUCONE -> ZAKONCZONE
   const getApplicationsByStatus = (statusId: string): Application[] => {
     let filtered: Application[]
     if (statusId === 'ZAKONCZONE') {
@@ -126,24 +126,24 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
 
     const currentColumn = getColumnByStatus(activeApp.status)
 
-    // Jeśli nie ma zmiany kolumny, nic nie rób
+    // If no column change, do nothing
     if (!targetColumn || targetColumn === currentColumn) return
 
-    // Obsługa przejścia do W_PROCESIE
+    // Handle transition to W_PROCESIE
     if (targetColumn === 'W_PROCESIE') {
       setPendingApplication(activeApp)
       setStageModalOpen(true)
       return
     }
 
-    // Obsługa przejścia do ZAKONCZONE
+    // Handle transition to ZAKONCZONE
     if (targetColumn === 'ZAKONCZONE') {
       setPendingApplication(activeApp)
       setEndModalOpen(true)
       return
     }
 
-    // Obsługa przejścia do WYSLANE (cofnięcie - czyści wszystkie dane)
+    // Handle transition to WYSLANE (revert - clears all data)
     if (targetColumn === 'WYSLANE') {
       onStageChange(activeApp.id, {
         status: 'WYSLANE',
@@ -182,7 +182,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   const handleMoveCard = (targetStatus: string) => {
     if (!moveModalCard) return
 
-    // Obsługa przejścia do W_PROCESIE
+    // Handle transition to W_PROCESIE
     if (targetStatus === 'W_PROCESIE') {
       setPendingApplication(moveModalCard)
       setStageModalOpen(true)
@@ -191,7 +191,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
       return
     }
 
-    // Obsługa przejścia do ZAKONCZONE
+    // Handle transition to ZAKONCZONE
     if (targetStatus === 'ZAKONCZONE') {
       setPendingApplication(moveModalCard)
       setEndModalOpen(true)
@@ -200,7 +200,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
       return
     }
 
-    // Obsługa przejścia do WYSLANE (cofnięcie)
+    // Handle transition to WYSLANE (revert)
     if (targetStatus === 'WYSLANE') {
       onStageChange(moveModalCard.id, {
         status: 'WYSLANE',

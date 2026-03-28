@@ -22,7 +22,7 @@ import type { StageUpdateRequest } from '../types/domain'
 
 const API_URL = 'http://localhost:8080/api'
 
-// Helper: mockuje globalny fetch z odpowiedzią ok
+// Helper: mocks global fetch with ok response
 const mockFetch = (body: unknown) => {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
@@ -39,7 +39,7 @@ describe('API Service', () => {
   // ==================== Applications API ====================
 
   describe('Applications API', () => {
-    it('fetchApplications - pobiera liste aplikacji', async () => {
+    it('fetchApplications - fetches list of applications', async () => {
       const mockApplications = [
         { id: 1, company: 'Google', position: 'Dev' },
         { id: 2, company: 'Meta', position: 'Engineer' }
@@ -55,13 +55,13 @@ describe('API Service', () => {
       expect(result).toEqual(mockApplications)
     })
 
-    it('fetchApplications - rzuca blad przy nieudanym zapytaniu', async () => {
+    it('fetchApplications - throws error on failed request', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 400 })
 
       await expect(fetchApplications()).rejects.toThrow('api.fetchApplications')
     })
 
-    it('createApplication - tworzy nowa aplikacje', async () => {
+    it('createApplication - creates new application', async () => {
       const newApp = { company: 'Google', position: 'Dev', salaryMin: 8000 }
       const createdApp = { id: 1, ...newApp, status: 'WYSLANE' }
       mockFetch(createdApp)
@@ -78,7 +78,7 @@ describe('API Service', () => {
       expect(result).toEqual(createdApp)
     })
 
-    it('updateApplicationStatus - zmienia status aplikacji', async () => {
+    it('updateApplicationStatus - changes application status', async () => {
       const updatedApp = { id: 1, status: 'W_PROCESIE' }
       mockFetch(updatedApp)
 
@@ -94,7 +94,7 @@ describe('API Service', () => {
       expect(result).toEqual(updatedApp)
     })
 
-    it('updateApplicationStage - zmienia etap aplikacji', async () => {
+    it('updateApplicationStage - changes application stage', async () => {
       const stageData: StageUpdateRequest = { status: 'W_PROCESIE', currentStage: 'Rozmowa z HR' }
       const updatedApp = { id: 1, currentStage: 'Rozmowa z HR' }
       mockFetch(updatedApp)
@@ -111,7 +111,7 @@ describe('API Service', () => {
       expect(result).toEqual(updatedApp)
     })
 
-    it('addStage - dodaje nowy etap do aplikacji', async () => {
+    it('addStage - adds new stage to application', async () => {
       const updatedApp = { id: 1, currentStage: 'Rozmowa techniczna' }
       mockFetch(updatedApp)
 
@@ -127,13 +127,13 @@ describe('API Service', () => {
       expect(result).toEqual(updatedApp)
     })
 
-    it('addStage - rzuca blad przy nieudanym zapytaniu', async () => {
+    it('addStage - throws error on failed request', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 400 })
 
       await expect(addStage(1, 'Test')).rejects.toThrow('api.addStage')
     })
 
-    it('checkDuplicate - sprawdza duplikaty', async () => {
+    it('checkDuplicate - checks duplicates', async () => {
       const duplicates = [{ id: 1, company: 'Google', position: 'Dev' }]
       mockFetch(duplicates)
 
@@ -146,7 +146,7 @@ describe('API Service', () => {
       expect(result).toEqual(duplicates)
     })
 
-    it('updateApplication - aktualizuje aplikacje', async () => {
+    it('updateApplication - updates application', async () => {
       const updateData = { company: 'Google Updated', position: 'Senior Dev' }
       const updatedApp = { id: 1, ...updateData }
       mockFetch(updatedApp)
@@ -163,7 +163,7 @@ describe('API Service', () => {
       expect(result).toEqual(updatedApp)
     })
 
-    it('deleteApplication - usuwa aplikacje', async () => {
+    it('deleteApplication - deletes application', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
       await deleteApplication(1)
@@ -178,7 +178,7 @@ describe('API Service', () => {
   // ==================== CV API ====================
 
   describe('CV API', () => {
-    it('fetchCVs - pobiera liste CV', async () => {
+    it('fetchCVs - fetches list of CVs', async () => {
       const mockCVs = [
         { id: 1, originalFileName: 'CV1.pdf', type: 'FILE' },
         { id: 2, originalFileName: 'CV2.pdf', type: 'LINK' }
@@ -194,7 +194,7 @@ describe('API Service', () => {
       expect(result).toEqual(mockCVs)
     })
 
-    it('uploadCV - uploaduje plik CV', async () => {
+    it('uploadCV - uploads CV file', async () => {
       const file = new File(['content'], 'test.pdf', { type: 'application/pdf' })
       const uploadedCV = { id: 1, originalFileName: 'test.pdf', type: 'FILE' }
       mockFetch(uploadedCV)
@@ -208,7 +208,7 @@ describe('API Service', () => {
       expect(result).toEqual(uploadedCV)
     })
 
-    it('deleteCV - usuwa CV', async () => {
+    it('deleteCV - deletes CV', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
       await deleteCV(1)
@@ -219,7 +219,7 @@ describe('API Service', () => {
       )
     })
 
-    it('assignCVToApplication - przypisuje CV do aplikacji', async () => {
+    it('assignCVToApplication - assigns CV to application', async () => {
       const updatedApp = { id: 1, cvId: 5 }
       mockFetch(updatedApp)
 
@@ -235,14 +235,14 @@ describe('API Service', () => {
       expect(result).toEqual(updatedApp)
     })
 
-    it('downloadCV - wywołuje fetch na poprawny endpoint z tokenem', async () => {
+    it('downloadCV - calls fetch with correct endpoint and token', async () => {
       const mockBlob = new Blob(['file content'], { type: 'application/pdf' })
       ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         blob: () => Promise.resolve(mockBlob),
       })
 
-      // Mockujemy URL.createObjectURL bo jsdom go nie wspiera
+      // Mock URL.createObjectURL because jsdom doesn't support it
       const mockCreateObjectURL = vi.fn().mockReturnValue('blob:mock-url')
       const mockRevokeObjectURL = vi.fn()
       global.URL.createObjectURL = mockCreateObjectURL
@@ -260,7 +260,7 @@ describe('API Service', () => {
   // ==================== Notes API ====================
 
   describe('Notes API', () => {
-    it('fetchNotes - pobiera notatki dla aplikacji', async () => {
+    it('fetchNotes - fetches notes for application', async () => {
       const mockNotes = [
         { id: 1, content: 'Notatka 1', category: 'PYTANIA' },
         { id: 2, content: 'Notatka 2', category: 'FEEDBACK' }
@@ -276,7 +276,7 @@ describe('API Service', () => {
       expect(result).toEqual(mockNotes)
     })
 
-    it('createNote - tworzy nowa notatke', async () => {
+    it('createNote - creates new note', async () => {
       const createdNote = { id: 1, content: 'Test', category: 'INNE' }
       mockFetch(createdNote)
 
@@ -292,7 +292,7 @@ describe('API Service', () => {
       expect(result).toEqual(createdNote)
     })
 
-    it('deleteNote - usuwa notatke', async () => {
+    it('deleteNote - deletes note', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: true })
 
       await deleteNote(1)
@@ -307,7 +307,7 @@ describe('API Service', () => {
   // ==================== Statistics API ====================
 
   describe('Statistics API', () => {
-    it('fetchBadgeStats - pobiera statystyki odznak', async () => {
+    it('fetchBadgeStats - fetches badge statistics', async () => {
       const mockStats = {
         rejectionCount: 5,
         ghostingCount: 3,
@@ -327,7 +327,7 @@ describe('API Service', () => {
       expect(result).toEqual(mockStats)
     })
 
-    it('fetchBadgeStats - rzuca blad przy nieudanym zapytaniu', async () => {
+    it('fetchBadgeStats - throws error on failed request', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 })
 
       await expect(fetchBadgeStats()).rejects.toThrow('api.fetchStats')

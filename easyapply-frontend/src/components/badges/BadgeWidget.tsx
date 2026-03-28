@@ -31,7 +31,7 @@ interface BadgeRowProps {
   type: 'rejection' | 'ghosting'
 }
 
-// Próg pierwszej odznaki — taki sam dla odrzuceń i ghostingu
+// First badge threshold — the same for rejections and ghosting
 const FIRST_THRESHOLD = 5
 
 function BadgeRow({ badge, count, type }: BadgeRowProps) {
@@ -40,7 +40,7 @@ function BadgeRow({ badge, count, type }: BadgeRowProps) {
   const hasAchieved = Boolean(badge?.name)
   const isMaxed = hasAchieved && !badge?.nextThreshold
 
-  // Cel paska: gdy brak odznaki — próg pierwszej (5); gdy mamy — próg następnej
+  // Progress bar target: no badge yet — first threshold (5); badge earned — next threshold
   const progressTarget = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
   const progressLabel = hasAchieved ? (badge?.nextThreshold ?? null) : FIRST_THRESHOLD
 
@@ -94,7 +94,7 @@ export function BadgeWidget() {
   const [expanded, setExpanded] = useState(false)
   const { data: stats } = useBadgeStats()
 
-  // Nie renderuj nic jeśli dane jeszcze nie są gotowe
+  // Render nothing if data is not ready yet
   if (!stats) return null
 
   const { rejectionBadge, ghostingBadge, sweetRevengeUnlocked, totalRejections, totalGhosting } = stats

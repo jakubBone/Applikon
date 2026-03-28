@@ -50,7 +50,7 @@ describe('Kanban Board Functionality', () => {
     })
 
     it('should display applications in correct columns', () => {
-      // Google should be in Wysłane column
+      // Google should be in Sent column
       cy.get('.kanban-column').first().within(() => {
         cy.contains('Google').should('be.visible')
       })

@@ -15,9 +15,9 @@ interface AuthContextValue {
 }
 
 // ============================================================
-// Kontekst
-// createContext z undefined jako wartość startowa — wymusza użycie
-// hooka useAuth() tylko wewnątrz AuthProvider (sprawdzamy niżej).
+// Context
+// createContext with undefined as initial value — enforces that
+// useAuth() is only used inside AuthProvider (checked below).
 // ============================================================
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -35,8 +35,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Przy starcie aplikacji sprawdzamy czy mamy token i pobieramy dane usera.
-    // Jeśli token wygasł lub nie istnieje — user pozostaje null.
+    // On app start, check if we have a token and fetch the user data.
+    // If the token has expired or doesn't exist — user stays null.
     const token = getToken()
     if (!token) {
       setIsLoading(false)
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     fetchCurrentUser()
       .then(setUser)
       .catch(() => {
-        // Token nieważny — czyścimy i user zostaje niezalogowany
+        // Invalid token — clear it and leave user unauthenticated
         clearToken()
       })
       .finally(() => setIsLoading(false))

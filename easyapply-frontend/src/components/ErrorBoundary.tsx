@@ -1,19 +1,19 @@
 import { Component, ReactNode } from 'react'
 
 /**
- * Error Boundary — łapie błędy w React komponentach
+ * Error Boundary — catches errors in React components
  *
- * Analogia do Javy: try/catch dla całego poddrzewa komponentów.
+ * Java analogy: try/catch for the entire component subtree.
  *
- * Kiedy React komponent wysypie się błędem, Error Boundary:
- * 1. Łapie błąd w componentDidCatch()
- * 2. Ustawia hasError = true
- * 3. Pokazuje fallback UI zamiast białego ekranu
+ * When a React component throws, the Error Boundary:
+ * 1. Catches the error in componentDidCatch()
+ * 2. Sets hasError = true
+ * 3. Renders a fallback UI instead of a blank screen
  *
- * Uwaga: Error Boundary NIE łapie:
- * - Błędy event listenerów (użyj try/catch wewnątrz handlera)
- * - Błędy w asynchronicznych callbackach (użyj try/catch w Promise)
- * - Błędy w samym Error Boundary (nieskończona pętla)
+ * Note: Error Boundary does NOT catch:
+ * - Errors in event listeners (use try/catch inside the handler)
+ * - Errors in async callbacks (use try/catch in Promise)
+ * - Errors inside the Error Boundary itself (infinite loop)
  */
 
 interface Props {
@@ -32,13 +32,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    // React automatycznie wołamy to gdy dziecko wysypie się
-    // Zwraca nowy state, React go ustawia
+    // React calls this automatically when a child throws
+    // Returns new state, React applies it
     return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Tutaj możesz zalogować błąd do serwisu
+    // Here you can log the error to an error reporting service
     console.error('Error caught by boundary:', error, errorInfo)
   }
 

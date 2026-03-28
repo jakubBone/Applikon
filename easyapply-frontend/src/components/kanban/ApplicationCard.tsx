@@ -23,7 +23,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
   const pressTimerRef = useRef<number | null>(null)
   const touchMovedRef = useRef<boolean>(false)
 
-  // Zamknij dropdown przy kliknięciu poza
+  // Close dropdown on outside click
   useEffect(() => {
     if (!showStageDropdown) return
 
@@ -88,8 +88,8 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
   const handleTouchEnd = () => {
     if (pressTimerRef.current !== null) clearTimeout(pressTimerRef.current)
     if (!touchMovedRef.current && !showHint) {
-      // Quick tap - normal click behavior (jeśli nie było long press)
-      // Nic nie robimy, bo to drag & drop event
+      // Quick tap - normal click behavior (no long press occurred)
+      // Do nothing — this is handled as a drag & drop event
     }
     setTimeout(() => {
       if (!document.querySelector('.move-modal')) {
@@ -148,7 +148,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
       </div>
       <p className="card-position">{application.position}</p>
 
-      {/* Aktualny etap dla W_PROCESIE z możliwością zmiany */}
+      {/* Current stage for W_PROCESIE with option to change */}
       {isInProcess && (
         <div className="card-stage-section" ref={dropdownRef}>
           <button
@@ -210,7 +210,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
         </div>
       )}
 
-      {/* Powód odmowy */}
+      {/* Rejection reason */}
       {isRejected && application.rejectionReason && (
         <div className="card-rejection">
           💬 {REJECTION_REASONS.find(r => r.id === application.rejectionReason)?.labelKey

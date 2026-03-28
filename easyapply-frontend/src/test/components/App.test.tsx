@@ -46,7 +46,7 @@ describe('App Component', () => {
   // ==================== INITIAL RENDERING Tests ====================
 
   describe('Initial Rendering', () => {
-    it('renderuje nagłówek aplikacji', async () => {
+    it('renders app header', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -62,7 +62,7 @@ describe('App Component', () => {
       })
     })
 
-    it('renderuje zakładki widoku (Kanban, Lista, CV)', async () => {
+    it('renders view tabs (Kanban, Lista, CV)', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -72,7 +72,7 @@ describe('App Component', () => {
       })
     })
 
-    it('pokazuje komunikat ładowania', async () => {
+    it('shows loading message', async () => {
       // Delay the API response
       vi.mocked(api.fetchApplications).mockImplementation(() => new Promise(() => {}))
 
@@ -93,7 +93,7 @@ describe('App Component', () => {
   // ==================== VIEW SWITCHING Tests ====================
 
   describe('View Switching', () => {
-    it('przełącza na widok listy', async () => {
+    it('switches to list view', async () => {
       vi.mocked(api.fetchApplications).mockResolvedValue([
         { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() } as never
       ])
@@ -112,7 +112,7 @@ describe('App Component', () => {
       })
     })
 
-    it('przełącza na widok CV', async () => {
+    it('switches to CV view', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -130,7 +130,7 @@ describe('App Component', () => {
   // ==================== APPLICATION FORM Tests ====================
 
   describe('Application Form', () => {
-    it('otwiera formularz po kliknięciu przycisku', async () => {
+    it('opens form on button click', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -144,7 +144,7 @@ describe('App Component', () => {
       })
     })
 
-    it('zamyka formularz po kliknięciu Anuluj', async () => {
+    it('closes form on Cancel click', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -162,7 +162,7 @@ describe('App Component', () => {
       })
     })
 
-    it('wyświetla pola formularza', async () => {
+    it('displays form fields', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -177,7 +177,7 @@ describe('App Component', () => {
       })
     })
 
-    it('tworzy aplikację po wypełnieniu formularza', async () => {
+    it('creates application after filling form', async () => {
       const user = userEvent.setup()
 
       vi.mocked(api.createApplication).mockResolvedValue({
@@ -213,7 +213,7 @@ describe('App Component', () => {
   // ==================== DUPLICATE CHECKING Tests ====================
 
   describe('Duplicate Checking', () => {
-    it('wyświetla ostrzeżenie o duplikacie', async () => {
+    it('displays duplicate warning', async () => {
       const user = userEvent.setup()
 
       vi.mocked(api.checkDuplicate).mockResolvedValue([
@@ -241,7 +241,7 @@ describe('App Component', () => {
       })
     })
 
-    it('pozwala kontynuować mimo duplikatu', async () => {
+    it('allows continuing despite duplicate', async () => {
       const user = userEvent.setup()
 
       vi.mocked(api.checkDuplicate).mockResolvedValue([
@@ -289,7 +289,7 @@ describe('App Component', () => {
   // ==================== SALARY FORM Tests ====================
 
   describe('Salary Form', () => {
-    it('pokazuje pojedyncze pole kwoty domyślnie', async () => {
+    it('shows single amount field by default', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -302,7 +302,7 @@ describe('App Component', () => {
       })
     })
 
-    it('pokazuje widełki po zaznaczeniu checkboxa', async () => {
+    it('shows salary range after checkbox check', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -320,7 +320,7 @@ describe('App Component', () => {
       })
     })
 
-    it('zawiera wybór waluty', async () => {
+    it('includes currency selection', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -337,7 +337,7 @@ describe('App Component', () => {
   // ==================== APPLICATION LIST Tests ====================
 
   describe('Application List', () => {
-    it('wyświetla aplikacje w widoku Kanban', async () => {
+    it('displays applications in Kanban view', async () => {
       vi.mocked(api.fetchApplications).mockResolvedValue([
         { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() } as never,
         { id: 2, company: 'Meta', position: 'Engineer', status: 'W_PROCESIE', appliedAt: new Date().toISOString() } as never
@@ -351,7 +351,7 @@ describe('App Component', () => {
       })
     })
 
-    it('wyświetla kolumny Kanban', async () => {
+    it('displays Kanban columns', async () => {
       vi.mocked(api.fetchApplications).mockResolvedValue([])
 
       renderApp()
@@ -367,7 +367,7 @@ describe('App Component', () => {
   // ==================== ERROR HANDLING Tests ====================
 
   describe('Error Handling', () => {
-    it('obsługuje błąd pobierania aplikacji — aplikacja nie crashuje', async () => {
+    it('handles fetch error — app does not crash', async () => {
       vi.mocked(api.fetchApplications).mockRejectedValue(new Error('Network error'))
 
       renderApp()
@@ -378,7 +378,7 @@ describe('App Component', () => {
       })
     })
 
-    it('obsługuje błąd tworzenia aplikacji — formularz pozostaje otwarty', async () => {
+    it('handles create error — form stays open', async () => {
       const user = userEvent.setup()
 
       vi.mocked(api.createApplication).mockRejectedValue(new Error('Create failed'))

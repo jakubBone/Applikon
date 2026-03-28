@@ -1,36 +1,36 @@
 /**
- * URL Validator — zabezpieczenie przed XSS przez javascript: i data: schemy
+ * URL Validator — protection against XSS via javascript: and data: schemes
  *
- * Analogia do Javy: sanitizer/validator (jak Spring Security czy OWASP)
+ * Java analogy: sanitizer/validator (like Spring Security or OWASP)
  */
 
 /**
- * Sprawdza czy URL jest bezpieczny do otwarcia w href lub window.open()
+ * Checks whether a URL is safe to open in href or window.open()
  *
- * Odrzuca:
- * - javascript: (mogą wykonać kod)
- * - data: (mogą infekcji)
- * - inne niebezpieczne schematy
+ * Rejects:
+ * - javascript: (can execute code)
+ * - data: (can be used for injection)
+ * - other dangerous schemes
  *
- * Akceptuje:
- * - https:// (preferowany)
- * - http:// (akceptowalny)
+ * Accepts:
+ * - https:// (preferred)
+ * - http:// (acceptable)
  *
- * Używa URL() konstruktora (jak Java URI) aby prawidłowo sparsować schemat.
+ * Uses the URL() constructor (like Java URI) to properly parse the scheme.
  */
 export function isSafeUrl(url: string | undefined | null): boolean {
   if (!url) return false
 
   try {
-    // URL() konstruktor sparsuje URL — podobnie jak new URL() w Javie
-    // Wyrzuca błąd jeśli URL jest złe sformułowany
+    // URL() constructor parses the URL — similar to new URL() in Java
+    // Throws if the URL is malformed
     const parsed = new URL(url)
 
-    // Sprawdź schemat (protocol) — powinien być http: lub https:
-    // (URL.protocol zawiera dwukropek, np. "https:")
+    // Check the scheme (protocol) — must be http: or https:
+    // (URL.protocol includes the colon, e.g. "https:")
     return parsed.protocol === 'http:' || parsed.protocol === 'https:'
   } catch {
-    // Jeśli URL się nie parsuje (zły format) — odrzuć
+    // If the URL cannot be parsed (bad format) — reject it
     return false
   }
 }

@@ -59,7 +59,7 @@ describe('Application CRUD Operations', () => {
       cy.get('input[name="salaryMin"]').should('have.length', 1)
       cy.get('input[name="salaryMax"]').should('not.exist')
 
-      // Check the widełki checkbox
+      // Check the salary range checkbox
       cy.get('input[name="isRange"]').check()
 
       // Now both inputs should be visible

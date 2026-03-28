@@ -29,8 +29,8 @@ const mockApplications = [
 ]
 
 /**
- * Tworzymy świeży QueryClient dla każdego testu przez factory.
- * Gdybyśmy użyli jednego klienta, cache z jednego testu zatruwałby kolejny.
+ * Create a fresh QueryClient for each test via factory.
+ * If we used one client, cache from one test would poison the next.
  */
 function createWrapper() {
   const queryClient = createTestQueryClient()
@@ -42,7 +42,7 @@ function createWrapper() {
 describe('useApplications', () => {
   beforeEach(() => { vi.resetAllMocks() })
 
-  it('pobiera i zwraca listę aplikacji', async () => {
+  it('fetches and returns list of applications', async () => {
     vi.mocked(api.fetchApplications).mockResolvedValue(mockApplications as any)
 
     const { result } = renderHook(() => useApplications(), { wrapper: createWrapper() })
@@ -55,7 +55,7 @@ describe('useApplications', () => {
     expect(api.fetchApplications).toHaveBeenCalledOnce()
   })
 
-  it('ustawia isError gdy serwer zwraca błąd', async () => {
+  it('sets isError when server returns error', async () => {
     vi.mocked(api.fetchApplications).mockRejectedValue(new Error('Server error'))
 
     const { result } = renderHook(() => useApplications(), { wrapper: createWrapper() })
@@ -68,7 +68,7 @@ describe('useApplications', () => {
 describe('useCreateApplication', () => {
   beforeEach(() => { vi.resetAllMocks() })
 
-  it('wywołuje createApplication z przekazanymi danymi', async () => {
+  it('calls createApplication with provided data', async () => {
     const newApp = { id: 3, company: 'Apple', position: 'iOS Dev', status: 'WYSLANE' }
     vi.mocked(api.fetchApplications).mockResolvedValue([])
     vi.mocked(api.createApplication).mockResolvedValue(newApp as any)
@@ -89,7 +89,7 @@ describe('useCreateApplication', () => {
 describe('useCheckDuplicate', () => {
   beforeEach(() => { vi.resetAllMocks() })
 
-  it('nie wysyła zapytania gdy company jest puste', () => {
+  it('does not send query when company is empty', () => {
     vi.mocked(api.checkDuplicate).mockResolvedValue([])
 
     const { result } = renderHook(
@@ -97,12 +97,12 @@ describe('useCheckDuplicate', () => {
       { wrapper: createWrapper() }
     )
 
-    // fetchStatus: 'idle' oznacza że query jest wyłączone (enabled: false)
+    // fetchStatus: 'idle' means the query is disabled (enabled: false)
     expect(result.current.fetchStatus).toBe('idle')
     expect(api.checkDuplicate).not.toHaveBeenCalled()
   })
 
-  it('nie wysyła zapytania gdy position jest puste', () => {
+  it('does not send query when position is empty', () => {
     vi.mocked(api.checkDuplicate).mockResolvedValue([])
 
     const { result } = renderHook(
@@ -114,7 +114,7 @@ describe('useCheckDuplicate', () => {
     expect(api.checkDuplicate).not.toHaveBeenCalled()
   })
 
-  it('wysyła zapytanie gdy oba pola są wypełnione', async () => {
+  it('sends query when both fields are filled', async () => {
     vi.mocked(api.checkDuplicate).mockResolvedValue([])
 
     const { result } = renderHook(
@@ -126,7 +126,7 @@ describe('useCheckDuplicate', () => {
     expect(api.checkDuplicate).toHaveBeenCalledWith('Google', 'Dev')
   })
 
-  it('zwraca duplikaty gdy firma i stanowisko już istnieje', async () => {
+  it('returns duplicates when company and position already exists', async () => {
     const duplicate = [{ id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE' }]
     vi.mocked(api.checkDuplicate).mockResolvedValue(duplicate as any)
 

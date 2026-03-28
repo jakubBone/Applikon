@@ -12,7 +12,7 @@ import {
 } from '../services/api'
 import type { ApplicationRequest, StageUpdateRequest } from '../types/domain'
 
-// Klucze zapytań — centralne miejsce, eliminuje literówki przy invalidacji cache
+// Query keys — central location, eliminates typos when invalidating cache
 export const applicationKeys = {
   all: ['applications'] as const,
   duplicates: (company: string, position: string) =>
@@ -20,12 +20,12 @@ export const applicationKeys = {
 }
 
 /**
- * useApplications — pobiera listę wszystkich aplikacji użytkownika.
+ * useApplications — fetches list of all user applications.
  *
- * useQuery automatycznie:
- * - zarządza stanem loading/error/data
- * - cache'uje wyniki (staleTime z QueryClient)
- * - odświeża dane przy powrocie do zakładki (refetchOnWindowFocus)
+ * useQuery automatically:
+ * - manages loading/error/data state
+ * - caches results (staleTime from QueryClient)
+ * - refreshes data on tab return (refetchOnWindowFocus)
  */
 export function useApplications() {
   return useQuery({
@@ -35,11 +35,11 @@ export function useApplications() {
 }
 
 /**
- * useCreateApplication — tworzy nową aplikację.
+ * useCreateApplication — creates a new application.
  *
  * useMutation:
- * - onSuccess: unieważnia cache aplikacji → React Query automatycznie
- *   ponownie pobierze listę, widok odświeży się bez ręcznego setState
+ * - onSuccess: invalidates application cache → React Query automatically
+ *   refetches the list, view updates without manual setState
  */
 export function useCreateApplication() {
   const queryClient = useQueryClient()
@@ -122,8 +122,8 @@ export function useCheckDuplicate(company: string, position: string) {
   return useQuery({
     queryKey: applicationKeys.duplicates(company, position),
     queryFn: () => checkDuplicate(company, position),
-    // Odpytuj tylko gdy oba pola są wypełnione
+    // Query only when both fields are filled
     enabled: company.length > 0 && position.length > 0,
-    staleTime: 0, // Duplikaty zawsze sprawdzaj na świeżo
+    staleTime: 0, // Always check duplicates fresh
   })
 }

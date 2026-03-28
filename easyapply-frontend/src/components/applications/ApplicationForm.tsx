@@ -107,7 +107,7 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
         return false
       }
     } catch {
-      // Nie blokuj wysyłania przy błędzie sprawdzania duplikatów
+      // Don't block submission on duplicate check error
     }
     return true
   }
