@@ -23,7 +23,7 @@ describe('BadgeWidget', () => {
   // ==================== RENDERING Tests ====================
 
   describe('Rendering', () => {
-    it('nie renderuje nic gdy brak danych', () => {
+    it('renders nothing when data is missing', () => {
       vi.mocked(useBadgeStats).mockReturnValue({ data: undefined } as never)
 
       const { container } = render(<BadgeWidget />)
@@ -215,7 +215,7 @@ describe('BadgeWidget', () => {
   // ==================== ERROR HANDLING Tests ====================
 
   describe('Error Handling', () => {
-    it('nie renderuje nic gdy hook zwraca brak danych', () => {
+    it('renders nothing when hook returns no data', () => {
       vi.mocked(useBadgeStats).mockReturnValue({ data: undefined, error: new Error('API Error') } as never)
 
       const { container } = render(<BadgeWidget />)

@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { setToken } from '../services/api'
 
 /**
- * Strona wywoływana po udanym logowaniu Google.
+ * Page called after a successful Google login.
  *
- * Backend przekierowuje na: /auth/callback?token=<JWT>
- * Ta strona:
- * 1. Wyciąga token z URL parametru
- * 2. Zapisuje go w localStorage
- * 3. Przekierowuje na dashboard
+ * Backend redirects to: /auth/callback?token=<JWT>
+ * This page:
+ * 1. Extracts the token from the URL parameter
+ * 2. Saves it in localStorage
+ * 3. Redirects to the dashboard
  */
 export function AuthCallbackPage() {
   const navigate = useNavigate()

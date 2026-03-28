@@ -90,9 +90,9 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   }
 
   const getColumnByStatus = (status: string): string => {
-    // Nowe statusy
+    // New statuses
     if (status === 'OFERTA' || status === 'ODMOWA') return 'ZAKONCZONE'
-    // Stare statusy (kompatybilność wsteczna)
+    // Legacy statuses (backward compatibility)
     if (status === 'ODRZUCONE') return 'ZAKONCZONE'
     if (status === 'ROZMOWA' || status === 'ZADANIE') return 'W_PROCESIE'
     return status
@@ -113,7 +113,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
 
     let targetColumn: string | null = null
 
-    // Sprawdź czy upuszczono na kartę lub kolumnę
+    // Check if dropped on a card or a column
     const overApp = findApplication(over.id as string)
     if (overApp) {
       targetColumn = getColumnByStatus(overApp.status)

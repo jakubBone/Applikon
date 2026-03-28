@@ -52,7 +52,7 @@ describe('Application CRUD Operations', () => {
       })
     })
 
-    it('should show salary range when widełki checkbox is checked', () => {
+    it('should show salary range when salary range checkbox is checked', () => {
       cy.get('[data-cy="add-application-btn"]').click()
 
       // Initially only one salary input

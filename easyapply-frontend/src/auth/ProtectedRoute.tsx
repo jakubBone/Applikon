@@ -7,12 +7,12 @@ interface ProtectedRouteProps {
 }
 
 /**
- * Chroni trasę przed niezalogowanymi użytkownikami.
+ * Guards a route against unauthenticated users.
  *
- * Scenariusze:
- * - Trwa weryfikacja tokenu (isLoading) → pokazujemy pusty ekran (unikamy flash przekierowania)
- * - Niezalogowany → redirect do /login
- * - Zalogowany → renderujemy dzieci
+ * Scenarios:
+ * - Token verification in progress (isLoading) → render nothing (avoid redirect flash)
+ * - Not authenticated → redirect to /login
+ * - Authenticated → render children
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth()

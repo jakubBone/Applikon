@@ -5,8 +5,8 @@ import LanguageSwitcher from '../components/LanguageSwitcher'
 import '../App.css'
 
 /**
- * Publiczna strona logowania.
- * Jeśli user już zalogowany — przekieruj od razu na dashboard.
+ * Public login page.
+ * If the user is already authenticated — redirect to dashboard immediately.
  */
 export function LoginPage() {
   const { t } = useTranslation()

@@ -16,14 +16,14 @@ declare global {
 }
 
 /**
- * cy.login() — symuluje zalogowanego użytkownika bez przechodzenia przez OAuth2.
+ * cy.login() — simulates a logged-in user without going through OAuth2.
  *
- * Działanie:
- * 1. Ustawia fake JWT token w localStorage zanim aplikacja się załaduje
- *    (onBeforeLoad gwarantuje że token jest PRZED inicjalizacją AuthProvider)
- * 2. Przechwytuje GET /api/auth/me i zwraca mock usera
- *    (AuthProvider wywoła ten endpoint przy starcie, musimy odpowiedzieć)
- * 3. Odwiedza stronę główną i czeka na zakończenie weryfikacji tożsamości
+ * How it works:
+ * 1. Sets a fake JWT token in localStorage before the app loads
+ *    (onBeforeLoad ensures the token is present BEFORE AuthProvider initializes)
+ * 2. Intercepts GET /api/auth/me and returns a mock user
+ *    (AuthProvider calls this endpoint on startup, we need to respond)
+ * 3. Visits the main page and waits for identity verification to complete
  */
 Cypress.Commands.add('login', (path = '/') => {
   const mockUser = { id: '1', email: 'test@example.com', name: 'Test User' }

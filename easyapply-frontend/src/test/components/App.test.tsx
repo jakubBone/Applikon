@@ -54,7 +54,7 @@ describe('App Component', () => {
       })
     })
 
-    it('renderuje przycisk dodawania aplikacji', async () => {
+    it('renders add application button', async () => {
       renderApp()
 
       await waitFor(() => {
@@ -81,7 +81,7 @@ describe('App Component', () => {
       expect(screen.getByText('Ładowanie...')).toBeInTheDocument()
     })
 
-    it('pobiera aplikacje przy montowaniu', async () => {
+    it('fetches applications on mount', async () => {
       renderApp()
 
       await waitFor(() => {
