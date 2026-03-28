@@ -10,6 +10,8 @@ import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +27,19 @@ public class ApplicationService {
     private final NoteService noteService;
     private final StageHistoryRepository stageHistoryRepository;
     private final UserRepository userRepository;
+    private final MessageSource messageSource;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
             NoteService noteService,
             StageHistoryRepository stageHistoryRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            MessageSource messageSource) {
         this.applicationRepository = applicationRepository;
         this.noteService = noteService;
         this.stageHistoryRepository = stageHistoryRepository;
         this.userRepository = userRepository;
+        this.messageSource = messageSource;
     }
 
     @Transactional
@@ -42,7 +47,7 @@ public class ApplicationService {
         log.info("Creating application for user={}, company={}", userId, request.company());
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
 
         Application application = new Application();
         application.setUser(user);
@@ -191,6 +196,6 @@ public class ApplicationService {
 
     private Application getApplicationByIdAndUserId(Long id, UUID userId) {
         return applicationRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + id + " nie została znaleziona"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.application.notFound", new Object[]{id}, LocaleContextHolder.getLocale())));
     }
 }

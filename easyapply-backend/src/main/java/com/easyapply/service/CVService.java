@@ -11,6 +11,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -34,40 +36,43 @@ public class CVService {
     private final CVRepository cvRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
+    private final MessageSource messageSource;
     private final Path uploadDir;
 
     public CVService(
             CVRepository cvRepository,
             ApplicationRepository applicationRepository,
             UserRepository userRepository,
+            MessageSource messageSource,
             @Value("${app.upload.dir:uploads/cv}") String uploadDir) {
         this.cvRepository = cvRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
+        this.messageSource = messageSource;
         this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
 
         try {
             Files.createDirectories(this.uploadDir);
         } catch (IOException e) {
-            throw new RuntimeException("Nie można utworzyć katalogu uploads", e);
+            throw new RuntimeException(messageSource.getMessage("error.upload.dirCreate", null, java.util.Locale.ENGLISH), e);
         }
     }
 
     @Transactional
     public CV uploadCV(MultipartFile file, UUID userId) throws IOException {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("Plik nie może być pusty");
+            throw new IllegalArgumentException(messageSource.getMessage("error.cv.empty", null, LocaleContextHolder.getLocale()));
         }
         String contentType = file.getContentType();
         if (contentType == null || !contentType.equals("application/pdf")) {
-            throw new IllegalArgumentException("Dozwolone są tylko pliki PDF");
+            throw new IllegalArgumentException(messageSource.getMessage("error.cv.pdfOnly", null, LocaleContextHolder.getLocale()));
         }
         if (file.getSize() > 5 * 1024 * 1024) {
-            throw new IllegalArgumentException("Plik nie może przekraczać 5MB");
+            throw new IllegalArgumentException(messageSource.getMessage("error.cv.tooLarge", null, LocaleContextHolder.getLocale()));
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
 
         String originalFileName = file.getOriginalFilename();
         String fileName = UUID.randomUUID() + "_" + originalFileName;
@@ -90,14 +95,14 @@ public class CVService {
     @Transactional
     public CV createCV(String name, CVType type, String externalUrl, UUID userId) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Nazwa CV nie może być pusta");
+            throw new IllegalArgumentException(messageSource.getMessage("error.cv.nameRequired", null, LocaleContextHolder.getLocale()));
         }
         if (type == CVType.FILE) {
-            throw new IllegalArgumentException("Użyj metody uploadCV dla plików");
+            throw new IllegalArgumentException(messageSource.getMessage("error.cv.useUpload", null, LocaleContextHolder.getLocale()));
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
 
         CV cv = new CV();
         cv.setUser(user);
@@ -106,7 +111,7 @@ public class CVService {
 
         if (type == CVType.LINK) {
             if (externalUrl == null || externalUrl.trim().isEmpty()) {
-                throw new IllegalArgumentException("URL jest wymagany dla typu LINK");
+                throw new IllegalArgumentException(messageSource.getMessage("error.cv.urlRequired", null, LocaleContextHolder.getLocale()));
             }
             cv.setExternalUrl(externalUrl.trim());
         }
@@ -122,7 +127,7 @@ public class CVService {
     @Transactional(readOnly = true)
     public CV findById(Long id, UUID userId) {
         return cvRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new EntityNotFoundException("CV o ID " + id + " nie zostało znalezione"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.cv.notFound", new Object[]{id}, LocaleContextHolder.getLocale())));
     }
 
     @Transactional(readOnly = true)
@@ -131,7 +136,7 @@ public class CVService {
         Path filePath = Paths.get(cv.getFilePath());
         Resource resource = new UrlResource(filePath.toUri());
         if (!resource.exists()) {
-            throw new EntityNotFoundException("Plik CV nie istnieje na dysku");
+            throw new EntityNotFoundException(messageSource.getMessage("error.cv.fileNotFound", null, LocaleContextHolder.getLocale()));
         }
         return resource;
     }
@@ -183,6 +188,6 @@ public class CVService {
 
     private Application getApplicationByIdAndUserId(Long applicationId, UUID userId) {
         return applicationRepository.findByIdAndUserId(applicationId, userId)
-                .orElseThrow(() -> new EntityNotFoundException("Aplikacja o ID " + applicationId + " nie została znaleziona"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.application.notFound", new Object[]{applicationId}, LocaleContextHolder.getLocale())));
     }
 }

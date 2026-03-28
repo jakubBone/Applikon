@@ -7,6 +7,8 @@ import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,14 +23,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
     private final StageHistoryRepository stageHistoryRepository;
+    private final MessageSource messageSource;
 
     public UserService(
             UserRepository userRepository,
             ApplicationRepository applicationRepository,
-            StageHistoryRepository stageHistoryRepository) {
+            StageHistoryRepository stageHistoryRepository,
+            MessageSource messageSource) {
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.stageHistoryRepository = stageHistoryRepository;
+        this.messageSource = messageSource;
     }
 
     /**
@@ -83,10 +88,10 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findByValidRefreshToken(String refreshToken) {
         User user = userRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new EntityNotFoundException("Nieprawidłowy refresh token"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.token.invalid", null, LocaleContextHolder.getLocale())));
 
         if (!user.isRefreshTokenValid(refreshToken)) {
-            throw new IllegalStateException("Refresh token wygasł");
+            throw new IllegalStateException(messageSource.getMessage("error.token.expired", null, LocaleContextHolder.getLocale()));
         }
 
         return user;

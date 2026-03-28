@@ -161,7 +161,7 @@ class ApplicationControllerTest {
     void getApplicationById_NotFound_Returns404() throws Exception {
         mockMvc.perform(get("/api/applications/99999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.detail").value(containsString("znaleziona")));
+                .andExpect(jsonPath("$.detail").value(containsString("not found")));
     }
 
     @Test

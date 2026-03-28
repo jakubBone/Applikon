@@ -10,6 +10,7 @@ import com.easyapply.entity.User;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.NoteRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.context.MessageSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,6 +21,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -48,6 +53,9 @@ class NoteServiceTest {
     @Mock
     private ApplicationRepository applicationRepository;
 
+    @Mock
+    private MessageSource messageSource;
+
     @InjectMocks
     private NoteService noteService;
 
@@ -58,6 +66,17 @@ class NoteServiceTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(messageSource.getMessage(anyString(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(java.util.Locale.class)))
+                .thenAnswer(inv -> {
+                    String key = inv.getArgument(0);
+                    Object[] args = inv.getArgument(1);
+                    if (args != null) {
+                        String result = key;
+                        for (Object arg : args) result += " " + arg;
+                        return result;
+                    }
+                    return key;
+                });
         testApplication = new Application();
         setField(testApplication, "id", 1L);
         User testUser = new User("test@example.com", "Test User", "google-test");

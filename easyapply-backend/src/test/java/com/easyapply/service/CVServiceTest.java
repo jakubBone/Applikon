@@ -9,6 +9,7 @@ import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.CVRepository;
 import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.context.MessageSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -55,6 +56,9 @@ class CVServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private MessageSource messageSource;
+
     @Captor
     private ArgumentCaptor<CV> cvCaptor;
 
@@ -66,7 +70,12 @@ class CVServiceTest {
 
     @BeforeEach
     void setUp() {
-        cvService = new CVService(cvRepository, applicationRepository, userRepository, tempDir.toString());
+        org.mockito.Mockito.lenient().when(messageSource.getMessage(
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(java.util.Locale.class)))
+            .thenAnswer(inv -> inv.getArgument(0));
+        cvService = new CVService(cvRepository, applicationRepository, userRepository, messageSource, tempDir.toString());
         testUser = new User("cv@test.com", "CV User", "google-cv");
         setField(testUser, "id", TEST_USER_ID);
     }
