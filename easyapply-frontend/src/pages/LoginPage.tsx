@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthProvider'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 import '../App.css'
 
 /**
@@ -21,6 +22,9 @@ export function LoginPage() {
 
   return (
     <div className="login-page">
+      <div className="login-lang-switcher">
+        <LanguageSwitcher />
+      </div>
       <div className="login-container">
         <div className="login-logo">
           <img src="/favicon.svg" alt="EasyApply" />

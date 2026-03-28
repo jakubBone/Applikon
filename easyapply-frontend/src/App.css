@@ -39,6 +39,70 @@ html, body {
   justify-self: start;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.language-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lang-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.05em;
+}
+
+.lang-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.lang-btn.active {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.8);
+  color: white;
+}
+
+.lang-divider {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.login-lang-switcher {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+}
+
+.login-lang-switcher .lang-btn {
+  border-color: #ccc;
+  color: #666;
+}
+
+.login-lang-switcher .lang-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.login-lang-switcher .lang-btn.active {
+  background: #e8e8e8;
+  border-color: #999;
+  color: #333;
+}
+
 .header h1 {
   font-size: 1.75rem;
   margin: 0;
@@ -1318,6 +1382,7 @@ html, body {
    ============================================================ */
 
 .login-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;

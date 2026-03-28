@@ -8,6 +8,7 @@ import { BadgeWidget } from './components/badges/BadgeWidget'
 import TourGuide from './components/tour/TourGuide'
 import { ApplicationForm } from './components/applications/ApplicationForm'
 import { ApplicationDetails } from './components/applications/ApplicationDetails'
+import LanguageSwitcher from './components/LanguageSwitcher'
 import {
   useApplications,
   useUpdateStatus,
@@ -91,7 +92,10 @@ export default function AppContent() {
             <img src="/logo-trim.png" alt="EasyApply logo" className="logo" />
           </div>
         </div>
-        <BadgeWidget />
+        <div className="header-right">
+          <LanguageSwitcher />
+          <BadgeWidget />
+        </div>
       </header>
 
       <TourGuide />

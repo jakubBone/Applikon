@@ -8,6 +8,7 @@ import type {
   StageUpdateRequest,
   User,
 } from '../types/domain'
+import i18n from '../i18n'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
@@ -31,6 +32,7 @@ const getHeaders = (contentType?: string): HeadersInit => {
   if (contentType) {
     headers['Content-Type'] = contentType
   }
+  headers['Accept-Language'] = i18n.language
   return headers
 }
 
