@@ -31,7 +31,7 @@
   pointer-events: none;
 }
 
-/* Spotlight - podświetlenie elementu (bez ciemnego overlay) */
+/* Spotlight - highlights the target element (without dark overlay) */
 .tour-spotlight {
   position: fixed;
   background: rgba(255, 255, 255, 0.1);
@@ -292,9 +292,9 @@
     padding: 0.75rem 1.25rem 1.25rem;
   }
 
-  /* Unikanie FABa - dodatkowy padding gdy tooltip może zasłaniać FAB */
+  /* FAB avoidance - extra padding when tooltip may overlap the FAB */
   .tour-tooltip.avoid-fab:not(.compact) {
-    padding-bottom: 80px; /* Wysokość FABa (56px) + 24px margines */
+    padding-bottom: 80px; /* FAB height (56px) + 24px margin */
     bottom: 80px !important;
   }
 

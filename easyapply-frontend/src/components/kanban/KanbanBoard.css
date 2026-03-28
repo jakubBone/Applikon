@@ -57,7 +57,7 @@
     flex-shrink: 0;
   }
 
-  /* Gradient fade on edges - wyłączone, powoduje blur */
+  /* Gradient fade on edges - disabled, causes blur */
   .kanban-board-container::before,
   .kanban-board-container::after {
     display: none;
@@ -306,7 +306,7 @@
   color: #856404;
 }
 
-/* Dropdown etapów */
+/* Stage dropdown */
 .stage-dropdown {
   position: absolute;
   top: 100%;
@@ -349,7 +349,7 @@
   color: #27ae60;
 }
 
-/* Formularz własnego etapu */
+/* Custom stage form */
 .custom-stage-form {
   display: flex;
   gap: 0.25rem;
@@ -391,7 +391,7 @@
   cursor: not-allowed;
 }
 
-/* Powód odmowy */
+/* Rejection reason */
 .card-rejection {
   margin-top: 0.5rem;
   padding: 0.35rem 0.5rem;
@@ -451,7 +451,7 @@
   color: #333;
 }
 
-/* Opcje etapów */
+/* Stage options */
 .stage-options {
   display: flex;
   flex-direction: column;
@@ -480,7 +480,7 @@
   background: #e8f4fc;
 }
 
-/* Własny etap */
+/* Custom stage */
 .custom-stage {
   display: flex;
   gap: 0.5rem;
@@ -535,7 +535,7 @@
   background: #e9ecef;
 }
 
-/* Modal zakończenia */
+/* End modal */
 .end-modal {
   min-width: 360px;
 }
@@ -694,7 +694,7 @@
     padding: 6px 12px;
     background: white;
     border: 1px solid #e0e0e0;
-    border-radius: 20px; /* Zaokrąglone jak pigułki */
+    border-radius: 20px; /* Pill shape */
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -716,7 +716,7 @@
   }
 
   .kanban-nav-btn.active {
-    background: #2c3e50; /* Ciemne tło jak w Lista */
+    background: #2c3e50; /* Dark background matching List view */
     border-color: #2c3e50;
     color: white;
     font-weight: 600;
