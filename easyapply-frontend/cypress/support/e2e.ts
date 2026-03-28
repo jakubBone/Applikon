@@ -33,6 +33,8 @@ Cypress.Commands.add('login', (path = '/') => {
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem('easyapply_token', 'fake-test-token')
+      win.localStorage.setItem('i18nextLng', 'pl')
+      win.localStorage.setItem('tour_guide_completed', 'true')
     },
   })
 
@@ -62,13 +64,38 @@ Cypress.Commands.add('waitForApi', () => {
 })
 
 // API intercepts
+// Default response bodies prevent requests from reaching the real backend with
+// a fake token, which would return 401 and trigger apiFetch's window.location redirect.
 Cypress.Commands.add('interceptApi', () => {
-  cy.intercept('GET', '/api/applications').as('getApplications')
-  cy.intercept('POST', '/api/applications').as('createApplication')
-  cy.intercept('PATCH', '/api/applications/*/status').as('updateStatus')
-  cy.intercept('PATCH', '/api/applications/*/stage').as('updateStage')
-  cy.intercept('DELETE', '/api/applications/*').as('deleteApplication')
-  cy.intercept('GET', '/api/statistics/badges').as('getBadges')
-  cy.intercept('GET', '/api/cv').as('getCVs')
-  cy.intercept('GET', '/api/applications/check-duplicate*').as('checkDuplicate')
+  cy.intercept('GET', '/api/applications', { body: [] }).as('getApplications')
+  cy.intercept('POST', '/api/applications', (req) => {
+    req.reply({ statusCode: 201, body: { id: 999, ...req.body, status: 'WYSLANE' } })
+  }).as('createApplication')
+  cy.intercept('PUT', '/api/applications/*', (req) => {
+    req.reply({ statusCode: 200, body: { id: 1, ...req.body } })
+  }).as('updateApplication')
+  cy.intercept('PATCH', '/api/applications/*/status', (req) => {
+    req.reply({ statusCode: 200, body: {} })
+  }).as('updateStatus')
+  cy.intercept('PATCH', '/api/applications/*/stage', (req) => {
+    req.reply({ statusCode: 200, body: { id: 1, ...req.body } })
+  }).as('updateStage')
+  cy.intercept('DELETE', '/api/applications/*', { statusCode: 204 }).as('deleteApplication')
+  cy.intercept('GET', '/api/applications/*/notes', { body: [] }).as('getNotes')
+  cy.intercept('POST', '/api/applications/*/notes', (req) => {
+    req.reply({ statusCode: 201, body: { id: 1, ...req.body } })
+  }).as('createNote')
+  cy.intercept('GET', '/api/statistics/badges', {
+    body: {
+      totalRejections: 0,
+      totalGhosting: 0,
+      totalOffers: 0,
+      sweetRevengeUnlocked: false,
+      rejectionBadge: { name: null },
+      ghostingBadge: { name: null },
+    },
+  }).as('getBadges')
+  cy.intercept('GET', '/api/cv', { body: [] }).as('getCVs')
+  cy.intercept('DELETE', '/api/cv/*', { statusCode: 204 }).as('deleteCV')
+  cy.intercept('GET', '/api/applications/check-duplicate*', { body: [] }).as('checkDuplicate')
 })

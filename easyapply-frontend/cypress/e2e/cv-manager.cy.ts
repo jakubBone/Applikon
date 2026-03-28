@@ -55,7 +55,7 @@ describe('CV Manager', () => {
       cy.wait('@getCVsWithData')
 
       // Different types should be distinguishable
-      cy.get('.cv-list, .cv-items').should('exist')
+      cy.get('.cv-list-panel').should('exist')
     })
   })
 
@@ -73,7 +73,7 @@ describe('CV Manager', () => {
 
       cy.get('[data-cy="add-cv-btn"]').click()
 
-      cy.get('.cv-form, .add-cv-form, form').should('be.visible')
+      cy.get('.add-cv-modal').should('be.visible')
     })
   })
 
@@ -86,14 +86,10 @@ describe('CV Manager', () => {
       cy.get('[data-cy="tab-cv"]').click()
       cy.wait('@getCVsWithData')
 
-      // Find delete button for first CV
-      cy.contains('CV_Frontend.pdf')
-        .parents('.cv-item, .cv-card, tr')
-        .find('button, .delete-btn')
-        .first()
-        .click()
-
-      // Note: May need to confirm deletion
+      // Select the CV item to show detail panel, then click delete
+      cy.on('window:confirm', () => true)
+      cy.contains('.cv-item', 'CV_Frontend.pdf').click()
+      cy.get('.cv-action-btn.danger').click()
     })
   })
 

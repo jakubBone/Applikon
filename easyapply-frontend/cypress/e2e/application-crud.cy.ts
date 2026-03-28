@@ -23,8 +23,8 @@ describe('Application CRUD Operations', () => {
     it('should create a new application with required fields', () => {
       cy.get('[data-cy="add-application-btn"]').click()
 
-      cy.get('#company').type('Google')
-      cy.get('#position').type('Junior Developer')
+      cy.get('#create-company').type('Google')
+      cy.get('#create-position').type('Junior Developer')
 
       cy.get('[data-cy="form-submit-btn"]').click()
 
@@ -37,8 +37,8 @@ describe('Application CRUD Operations', () => {
     it('should create application with salary information', () => {
       cy.get('[data-cy="add-application-btn"]').click()
 
-      cy.get('#company').type('Meta')
-      cy.get('#position').type('Software Engineer')
+      cy.get('#create-company').type('Meta')
+      cy.get('#create-position').type('Software Engineer')
       cy.get('input[name="salaryMin"]').type('10000')
       cy.get('select[name="currency"]').select('EUR')
 
@@ -70,8 +70,8 @@ describe('Application CRUD Operations', () => {
     it('should create application with salary range', () => {
       cy.get('[data-cy="add-application-btn"]').click()
 
-      cy.get('#company').type('Stripe')
-      cy.get('#position').type('Backend Dev')
+      cy.get('#create-company').type('Stripe')
+      cy.get('#create-position').type('Backend Dev')
       cy.get('input[name="isRange"]').check()
       cy.get('[data-cy="salary-from"]').type('15000')
       cy.get('[data-cy="salary-to"]').type('25000')
@@ -100,16 +100,16 @@ describe('Application CRUD Operations', () => {
       }).as('checkDuplicateWithResult')
 
       cy.get('[data-cy="add-application-btn"]').click()
-      cy.get('#company').type('Google')
-      cy.get('#position').type('Developer')
+      cy.get('#create-company').type('Google')
+      cy.get('#create-position').type('Developer')
 
       cy.get('[data-cy="form-submit-btn"]').click()
 
       cy.wait('@checkDuplicateWithResult')
 
-      // Warning should be shown
-      cy.contains('Już aplikowałeś do Google').should('be.visible')
-      cy.contains('Kontynuuj mimo duplikatu').should('be.visible')
+      // Warning should be shown (scroll into view — form modal may overflow)
+      cy.contains('Już aplikowałeś do Google').scrollIntoView().should('be.visible')
+      cy.contains('Kontynuuj mimo duplikatu').scrollIntoView().should('be.visible')
     })
 
     it('should allow creating duplicate after confirmation', () => {
@@ -124,8 +124,8 @@ describe('Application CRUD Operations', () => {
       }).as('checkDuplicateWithResult')
 
       cy.get('[data-cy="add-application-btn"]').click()
-      cy.get('#company').type('Google')
-      cy.get('#position').type('Developer')
+      cy.get('#create-company').type('Google')
+      cy.get('#create-position').type('Developer')
 
       cy.get('[data-cy="form-submit-btn"]').click()
       cy.wait('@checkDuplicateWithResult')

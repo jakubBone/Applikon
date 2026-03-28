@@ -98,38 +98,38 @@ describe('Kanban Board Functionality', () => {
     it('should display salary information in details', () => {
       cy.contains('.kanban-card', 'Google').click()
 
-      cy.contains('Proponowane wynagrodzenie').should('be.visible')
+      cy.contains('Zaproponowałeś wynagrodzenie').should('be.visible')
       cy.contains('10 000').should('be.visible') // Polish number format
     })
   })
 
   describe('Stage Change', () => {
     it('should show stage dropdown when clicking stage button', () => {
-      // Find the application card and its stage button
-      cy.contains('.kanban-card', 'Google').within(() => {
-        cy.get('.stage-btn, .add-stage-btn').click()
+      // Meta is W_PROCESIE — stage selector button only renders for in-progress cards
+      cy.contains('.kanban-card', 'Meta').within(() => {
+        cy.get('.stage-selector-btn').click()
       })
 
       // Stage options should appear
-      cy.contains('Rozmowa z HR').should('be.visible')
+      cy.get('.stage-dropdown').should('be.visible')
     })
 
     it('should allow selecting a predefined stage', () => {
-      cy.intercept('PATCH', '/api/applications/1/stage', {
+      cy.intercept('PATCH', '/api/applications/2/stage', {
         body: {
-          id: 1,
-          company: 'Google',
-          position: 'Frontend Dev',
+          id: 2,
+          company: 'Meta',
+          position: 'Backend Dev',
           status: 'W_PROCESIE',
-          currentStage: 'Rozmowa techniczna'
+          currentStage: 'stage.technicalInterview'
         }
       }).as('updateStageResponse')
 
-      cy.contains('.kanban-card', 'Google').within(() => {
-        cy.get('.stage-btn, .add-stage-btn').click()
+      cy.contains('.kanban-card', 'Meta').within(() => {
+        cy.get('.stage-selector-btn').click()
       })
 
-      cy.get('.stage-dropdown, .stage-options').contains('Rozmowa techniczna').click()
+      cy.get('.stage-dropdown').contains('Rozmowa techniczna').click()
 
       cy.wait('@updateStageResponse')
     })
