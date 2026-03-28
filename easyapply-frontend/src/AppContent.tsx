@@ -100,25 +100,28 @@ export default function AppContent() {
         <div className="toolbar">
           <div className="view-tabs">
             <button
+              data-cy="tab-kanban"
               className={`tab-btn ${view === 'kanban' ? 'active' : ''}`}
               onClick={() => setView('kanban')}
             >
               {t('nav.kanban')}
             </button>
             <button
+              data-cy="tab-lista"
               className={`tab-btn ${view === 'list' ? 'active' : ''}`}
               onClick={() => setView('list')}
             >
               {t('nav.list')}
             </button>
             <button
+              data-cy="tab-cv"
               className={`tab-btn ${view === 'cv' ? 'active' : ''}`}
               onClick={() => setView('cv')}
             >
               {t('nav.cv')}
             </button>
           </div>
-          <button className="add-btn" onClick={() => setShowForm(!showForm)}>
+          <button data-cy="add-application-btn" className="add-btn" onClick={() => setShowForm(!showForm)}>
             {showForm ? t('app.close') : t('app.addApplication')}
           </button>
         </div>

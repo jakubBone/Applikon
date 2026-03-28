@@ -100,7 +100,7 @@ export function BadgeWidget() {
 
   return (
     <div className="badge-widget">
-      <div className="badge-widget-header" onClick={() => setExpanded(!expanded)}>
+      <div data-cy="badge-widget-header" className="badge-widget-header" onClick={() => setExpanded(!expanded)}>
         <span className="badge-header-title">{t('widget.title')}</span>
         <span className="badge-expand-arrow">{expanded ? '▲' : '▼'}</span>
       </div>

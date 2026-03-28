@@ -217,10 +217,10 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="cancel-btn" onClick={onClose} disabled={isPending}>
+            <button data-cy="form-cancel-btn" type="button" className="cancel-btn" onClick={onClose} disabled={isPending}>
               {t('form.cancel')}
             </button>
-            <button type="submit" className="submit-btn" disabled={isPending}>
+            <button data-cy="form-submit-btn" type="submit" className="submit-btn" disabled={isPending}>
               {mode === 'create'
                 ? duplicateWarning ? t('form.submitWithDuplicate') : t('form.submitCreate')
                 : t('form.submitEdit')}

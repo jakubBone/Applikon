@@ -170,7 +170,7 @@ describe('Kanban Board Functionality', () => {
       cy.get('#edit-company').clear().type('Google Updated')
       cy.get('#edit-position').clear().type('Senior Frontend Dev')
 
-      cy.get('button[type="submit"]').contains('Zapisz zmiany').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
 
       cy.wait('@updateApplication').its('request.body').should('deep.include', {
         company: 'Google Updated',

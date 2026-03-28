@@ -47,7 +47,7 @@ describe('Badge Widget', () => {
       cy.wait('@getBadgesWithData')
 
       // Click to expand
-      cy.contains('Twoje odznaki').click()
+      cy.get('[data-cy="badge-widget-header"]').click()
 
       // Should show badge details
       cy.contains('Odrzucone aplikacje').should('be.visible')
@@ -80,7 +80,7 @@ describe('Badge Widget', () => {
       cy.wait('@getApplications')
       cy.wait('@getBadgesWithGhosting')
 
-      cy.contains('Twoje odznaki').click()
+      cy.get('[data-cy="badge-widget-header"]').click()
 
       cy.contains('Bez odzewu').should('be.visible')
       cy.contains('Widmo').should('be.visible')
@@ -113,7 +113,7 @@ describe('Badge Widget', () => {
       cy.wait('@getApplications')
       cy.wait('@getBadgesWithSweetRevenge')
 
-      cy.contains('Twoje odznaki').click()
+      cy.get('[data-cy="badge-widget-header"]').click()
 
       cy.contains('Sweet Revenge').should('be.visible')
       cy.contains('Kto się śmieje ostatni').should('be.visible')
@@ -139,7 +139,7 @@ describe('Badge Widget', () => {
       cy.wait('@getApplications')
       cy.wait('@getBadgesNoSweetRevenge')
 
-      cy.contains('Twoje odznaki').click()
+      cy.get('[data-cy="badge-widget-header"]').click()
 
       cy.contains('Sweet Revenge').should('not.exist')
     })
@@ -169,7 +169,7 @@ describe('Badge Widget', () => {
       cy.wait('@getApplications')
       cy.wait('@getBadgesWithProgress')
 
-      cy.contains('Twoje odznaki').click()
+      cy.get('[data-cy="badge-widget-header"]').click()
 
       // Should show next badge info
       cy.contains('Patelnia').should('be.visible')
@@ -199,7 +199,7 @@ describe('Badge Widget', () => {
       cy.wait('@getApplications')
       cy.wait('@getBadgesMax')
 
-      cy.contains('Twoje odznaki').click()
+      cy.get('[data-cy="badge-widget-header"]').click()
 
       cy.contains('Statystyczna Pewność').should('be.visible')
       cy.contains('MAX').should('be.visible')
@@ -244,10 +244,10 @@ describe('Badge Widget', () => {
         }
       }).as('getBadgesUpdated')
 
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
       cy.get('#company').type('Test Company')
       cy.get('#position').type('Test Position')
-      cy.get('button[type="submit"]').contains('Dodaj aplikację').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
 
       // Badge widget should refresh
       cy.wait('@getBadgesUpdated')

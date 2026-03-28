@@ -26,6 +26,7 @@ export function SalaryFormSection({ data, onChange }: Props) {
       <div className="salary-row">
         <div className="salary-inputs">
           <input
+            data-cy="salary-from"
             type="number"
             name="salaryMin"
             value={data.salaryMin}
@@ -36,6 +37,7 @@ export function SalaryFormSection({ data, onChange }: Props) {
           />
           {data.isRange && (
             <input
+              data-cy="salary-to"
               type="number"
               name="salaryMax"
               value={data.salaryMax}

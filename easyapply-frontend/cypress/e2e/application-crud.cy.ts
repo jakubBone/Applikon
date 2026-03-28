@@ -8,25 +8,25 @@ describe('Application CRUD Operations', () => {
 
   describe('Create Application', () => {
     it('should open the application form', () => {
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
       cy.get('.form-modal').should('be.visible')
       cy.contains('Dodaj nową aplikację').should('be.visible')
     })
 
     it('should close the form when clicking Cancel', () => {
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
       cy.get('.form-modal').should('be.visible')
-      cy.get('button').contains('Anuluj').click()
+      cy.get('[data-cy="form-cancel-btn"]').click()
       cy.get('.form-modal').should('not.exist')
     })
 
     it('should create a new application with required fields', () => {
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
 
       cy.get('#company').type('Google')
       cy.get('#position').type('Junior Developer')
 
-      cy.get('button[type="submit"]').contains('Dodaj aplikację').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
 
       cy.wait('@createApplication').its('request.body').should('deep.include', {
         company: 'Google',
@@ -35,14 +35,14 @@ describe('Application CRUD Operations', () => {
     })
 
     it('should create application with salary information', () => {
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
 
       cy.get('#company').type('Meta')
       cy.get('#position').type('Software Engineer')
       cy.get('input[name="salaryMin"]').type('10000')
       cy.get('select[name="currency"]').select('EUR')
 
-      cy.get('button[type="submit"]').contains('Dodaj aplikację').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
 
       cy.wait('@createApplication').its('request.body').should('deep.include', {
         company: 'Meta',
@@ -53,7 +53,7 @@ describe('Application CRUD Operations', () => {
     })
 
     it('should show salary range when widełki checkbox is checked', () => {
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
 
       // Initially only one salary input
       cy.get('input[name="salaryMin"]').should('have.length', 1)
@@ -63,20 +63,20 @@ describe('Application CRUD Operations', () => {
       cy.get('input[name="isRange"]').check()
 
       // Now both inputs should be visible
-      cy.get('input[placeholder="Od"]').should('be.visible')
-      cy.get('input[placeholder="Do"]').should('be.visible')
+      cy.get('[data-cy="salary-from"]').should('be.visible')
+      cy.get('[data-cy="salary-to"]').should('be.visible')
     })
 
     it('should create application with salary range', () => {
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
 
       cy.get('#company').type('Stripe')
       cy.get('#position').type('Backend Dev')
       cy.get('input[name="isRange"]').check()
-      cy.get('input[placeholder="Od"]').type('15000')
-      cy.get('input[placeholder="Do"]').type('25000')
+      cy.get('[data-cy="salary-from"]').type('15000')
+      cy.get('[data-cy="salary-to"]').type('25000')
 
-      cy.get('button[type="submit"]').contains('Dodaj aplikację').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
 
       cy.wait('@createApplication').its('request.body').should('deep.include', {
         company: 'Stripe',
@@ -99,11 +99,11 @@ describe('Application CRUD Operations', () => {
         }]
       }).as('checkDuplicateWithResult')
 
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
       cy.get('#company').type('Google')
       cy.get('#position').type('Developer')
 
-      cy.get('button[type="submit"]').contains('Dodaj aplikację').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
 
       cy.wait('@checkDuplicateWithResult')
 
@@ -123,15 +123,15 @@ describe('Application CRUD Operations', () => {
         }]
       }).as('checkDuplicateWithResult')
 
-      cy.get('button').contains('+ Dodaj aplikację').click()
+      cy.get('[data-cy="add-application-btn"]').click()
       cy.get('#company').type('Google')
       cy.get('#position').type('Developer')
 
-      cy.get('button[type="submit"]').contains('Dodaj aplikację').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
       cy.wait('@checkDuplicateWithResult')
 
       // Confirm creation despite duplicate
-      cy.get('button').contains('Kontynuuj mimo duplikatu').click()
+      cy.get('[data-cy="form-submit-btn"]').click()
 
       cy.wait('@createApplication')
     })
@@ -139,20 +139,20 @@ describe('Application CRUD Operations', () => {
 
   describe('View Switching', () => {
     it('should switch to list view', () => {
-      cy.get('.tab-btn').contains('Lista').click()
+      cy.get('[data-cy="tab-lista"]').click()
       cy.get('table').should('be.visible')
     })
 
     it('should switch to CV view', () => {
-      cy.get('.tab-btn').contains('CV').click()
+      cy.get('[data-cy="tab-cv"]').click()
       cy.contains('Moje CV').should('be.visible')
     })
 
     it('should switch back to Kanban view', () => {
-      cy.get('.tab-btn').contains('Lista').click()
+      cy.get('[data-cy="tab-lista"]').click()
       cy.get('table').should('be.visible')
 
-      cy.get('.tab-btn').contains('Kanban').click()
+      cy.get('[data-cy="tab-kanban"]').click()
       cy.get('.kanban-board').should('be.visible')
     })
   })

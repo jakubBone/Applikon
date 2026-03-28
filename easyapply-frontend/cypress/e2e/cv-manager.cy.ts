@@ -35,14 +35,14 @@ describe('CV Manager', () => {
 
   describe('CV View', () => {
     it('should navigate to CV view', () => {
-      cy.get('.tab-btn').contains('CV').click()
+      cy.get('[data-cy="tab-cv"]').click()
       cy.wait('@getCVsWithData')
 
       cy.contains('Moje CV').should('be.visible')
     })
 
     it('should display list of CVs', () => {
-      cy.get('.tab-btn').contains('CV').click()
+      cy.get('[data-cy="tab-cv"]').click()
       cy.wait('@getCVsWithData')
 
       cy.contains('CV_Frontend.pdf').should('be.visible')
@@ -51,7 +51,7 @@ describe('CV Manager', () => {
     })
 
     it('should show CV type indicators', () => {
-      cy.get('.tab-btn').contains('CV').click()
+      cy.get('[data-cy="tab-cv"]').click()
       cy.wait('@getCVsWithData')
 
       // Different types should be distinguishable
@@ -61,17 +61,17 @@ describe('CV Manager', () => {
 
   describe('CV Upload', () => {
     it('should show upload button', () => {
-      cy.get('.tab-btn').contains('CV').click()
+      cy.get('[data-cy="tab-cv"]').click()
       cy.wait('@getCVsWithData')
 
-      cy.contains('Dodaj CV').should('be.visible')
+      cy.get('[data-cy="add-cv-btn"]').should('be.visible')
     })
 
     it('should show upload form when clicking add button', () => {
-      cy.get('.tab-btn').contains('CV').click()
+      cy.get('[data-cy="tab-cv"]').click()
       cy.wait('@getCVsWithData')
 
-      cy.contains('Dodaj CV').click()
+      cy.get('[data-cy="add-cv-btn"]').click()
 
       cy.get('.cv-form, .add-cv-form, form').should('be.visible')
     })
@@ -83,7 +83,7 @@ describe('CV Manager', () => {
         statusCode: 204
       }).as('deleteCV')
 
-      cy.get('.tab-btn').contains('CV').click()
+      cy.get('[data-cy="tab-cv"]').click()
       cy.wait('@getCVsWithData')
 
       // Find delete button for first CV
