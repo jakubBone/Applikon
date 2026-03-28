@@ -98,7 +98,19 @@
     "loading": "Loading notes...",
     "catPytania": "Interview questions",
     "catFeedback": "Feedback",
-    "catInne": "Other"
+    "catInne": "Other",
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} min ago",
+      "hoursAgo": "{{count}} h ago",
+      "yesterday": "Yesterday",
+      "daysAgo": "{{count}} days ago"
+    }
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "Sorry, the application encountered an error.",
+    "reload": "Reload page"
   },
   "kanban": {
     "statusWYSLANE": "Sent",

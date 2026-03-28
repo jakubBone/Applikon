@@ -1,4 +1,5 @@
 import { Component, ReactNode } from 'react'
+import i18n from '../i18n'
 
 /**
  * Error Boundary — catches errors in React components
@@ -53,8 +54,8 @@ export class ErrorBoundary extends Component<Props, State> {
           borderRadius: '5px',
           margin: '20px'
         }}>
-          <h2>Coś poszło nie tak</h2>
-          <p>Przepraszamy, aplikacja napotkała błąd.</p>
+          <h2>{i18n.t('errorBoundary.title')}</h2>
+          <p>{i18n.t('errorBoundary.message')}</p>
           <p style={{ fontSize: '12px', color: '#6c757d' }}>
             {this.state.error?.message}
           </p>
@@ -69,7 +70,7 @@ export class ErrorBoundary extends Component<Props, State> {
               cursor: 'pointer'
             }}
           >
-            Odśwież stronę
+            {i18n.t('errorBoundary.reload')}
           </button>
         </div>
       )

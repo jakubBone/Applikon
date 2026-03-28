@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { ParseKeys } from 'i18next'
+import type { ParseKeys, TFunction } from 'i18next'
+import i18n from '../../i18n'
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../hooks/useNotes'
 import type { NoteCategory } from '../../types/domain'
 import './NotesList.css'
@@ -19,18 +20,18 @@ const LEGACY_CATEGORY_MAP: Record<string, { value: NoteCategory; labelKey: Parse
 const getCategoryConfig = (category: string) =>
   LEGACY_CATEGORY_MAP[category] ?? CATEGORIES.find(c => c.value === category) ?? CATEGORIES[2]
 
-const getRelativeTime = (dateString: string): string => {
+const getRelativeTime = (dateString: string, t: TFunction): string => {
   const diffMs = Date.now() - new Date(dateString).getTime()
   const diffMins = Math.floor(diffMs / 60_000)
   const diffHours = Math.floor(diffMs / 3_600_000)
   const diffDays = Math.floor(diffMs / 86_400_000)
 
-  if (diffMins < 1) return 'Przed chwilą'
-  if (diffMins < 60) return `${diffMins} min temu`
-  if (diffHours < 24) return `${diffHours} godz. temu`
-  if (diffDays === 1) return 'Wczoraj'
-  if (diffDays < 7) return `${diffDays} dni temu`
-  return new Date(dateString).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  if (diffMins < 1) return t('notes.time.justNow')
+  if (diffMins < 60) return t('notes.time.minutesAgo', { count: diffMins })
+  if (diffHours < 24) return t('notes.time.hoursAgo', { count: diffHours })
+  if (diffDays === 1) return t('notes.time.yesterday')
+  if (diffDays < 7) return t('notes.time.daysAgo', { count: diffDays })
+  return new Date(dateString).toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 interface NotesListProps {
@@ -149,7 +150,7 @@ export function NotesList({ applicationId }: NotesListProps) {
                       <span className="category-tag" style={{ backgroundColor: catConfig.bg, color: catConfig.color }}>
                         {t(catConfig.labelKey)}
                       </span>
-                      <span className="note-date">{getRelativeTime(note.createdAt)}</span>
+                      <span className="note-date">{getRelativeTime(note.createdAt, t)}</span>
                     </div>
                     <div className="note-content">{note.content}</div>
                     <div className="note-actions">

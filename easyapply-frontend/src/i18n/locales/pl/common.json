@@ -100,7 +100,19 @@
     "loading": "Ładowanie notatek...",
     "catPytania": "Pytania z rozmowy",
     "catFeedback": "Feedback",
-    "catInne": "Inne"
+    "catInne": "Inne",
+    "time": {
+      "justNow": "Przed chwilą",
+      "minutesAgo": "{{count}} min temu",
+      "hoursAgo": "{{count}} godz. temu",
+      "yesterday": "Wczoraj",
+      "daysAgo": "{{count}} dni temu"
+    }
+  },
+  "errorBoundary": {
+    "title": "Coś poszło nie tak",
+    "message": "Przepraszamy, aplikacja napotkała błąd.",
+    "reload": "Odśwież stronę"
   },
   "kanban": {
     "statusWYSLANE": "Wysłane",
