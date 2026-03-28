@@ -91,12 +91,12 @@ public class CVController {
     }
 
     public record CVCreateRequest(
-            @NotBlank(message = "Nazwa CV nie może być pusta") String name,
+            @NotBlank(message = "{validation.cv.name.required}") String name,
             CVType type,
             String externalUrl) {}
 
     public record CVUpdateRequest(
-            @NotBlank(message = "Nazwa CV nie może być pusta") String name,
+            @NotBlank(message = "{validation.cv.name.required}") String name,
             String externalUrl) {}
 
     public record CVResponse(

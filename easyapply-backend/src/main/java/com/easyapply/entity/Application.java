@@ -19,20 +19,20 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Nazwa firmy nie może być pusta")
+    @NotBlank(message = "{validation.company.required}")
     @Column(nullable = false)
     private String company;
 
-    @NotBlank(message = "Nazwa stanowiska nie może być pusta")
+    @NotBlank(message = "{validation.position.required}")
     @Column(nullable = false)
     private String position;
 
     private String link;
 
-    @Min(value = 0, message = "Stawka musi być dodatnia")
+    @Min(value = 0, message = "{validation.salary.positive}")
     private Integer salaryMin;
 
-    @Min(value = 0, message = "Stawka musi być dodatnia")
+    @Min(value = 0, message = "{validation.salary.positive}")
     private Integer salaryMax;
 
     private String currency;

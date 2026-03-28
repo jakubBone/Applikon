@@ -111,5 +111,5 @@ public class ApplicationController {
     }
 
     public record AssignCVRequest(Long cvId) {}
-    public record AddStageRequest(@NotBlank(message = "Nazwa etapu nie może być pusta") String stageName) {}
+    public record AddStageRequest(@NotBlank(message = "{validation.stage.required}") String stageName) {}
 }

@@ -16,7 +16,7 @@ public class Note {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Treść notatki nie może być pusta")
+    @NotBlank(message = "{validation.note.required}")
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 

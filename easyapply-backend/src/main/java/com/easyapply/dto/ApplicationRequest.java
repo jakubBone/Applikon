@@ -7,11 +7,11 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 public record ApplicationRequest(
-        @NotBlank(message = "Nazwa firmy nie może być pusta") String company,
-        @NotBlank(message = "Nazwa stanowiska nie może być pusta") String position,
+        @NotBlank(message = "{validation.company.required}") String company,
+        @NotBlank(message = "{validation.position.required}") String position,
         String link,
-        @Min(value = 0, message = "Stawka musi być dodatnia") Integer salaryMin,
-        @Min(value = 0, message = "Stawka musi być dodatnia") Integer salaryMax,
+        @Min(value = 0, message = "{validation.salary.positive}") Integer salaryMin,
+        @Min(value = 0, message = "{validation.salary.positive}") Integer salaryMax,
         String currency,
         SalaryType salaryType,
         ContractType contractType,
