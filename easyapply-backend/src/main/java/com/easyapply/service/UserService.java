@@ -37,12 +37,12 @@ public class UserService {
     }
 
     /**
-     * Upsert użytkownika na podstawie google_id.
+     * Upserts a user based on their google_id.
      *
-     * Logika:
-     * - Szukamy usera po google_id
-     * - Jeśli istnieje: aktualizujemy email i name (mógł zmienić w Google)
-     * - Jeśli nie istnieje: tworzymy nowego i dodajemy mu demo aplikację
+     * Logic:
+     * - Look up user by google_id
+     * - If found: update email and name (may have changed in Google)
+     * - If not found: create a new user and add a demo application
      */
     @Transactional
     public User findOrCreateUser(String googleId, String email, String name) {
@@ -64,13 +64,13 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getByGoogleId(String googleId) {
         return userRepository.findByGoogleId(googleId)
-                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
     }
 
     @Transactional(readOnly = true)
     public User getById(UUID id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Użytkownik nie znaleziony"));
+                .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
     }
 
     @Transactional
@@ -99,8 +99,7 @@ public class UserService {
 
     // =========================================================================
     // DEMO APPLICATION
-    // Tworzona automatycznie dla każdego nowego użytkownika.
-    // Logika przeniesiona z frontendu (ensureDemoApplication w api.js) na backend.
+    // Created automatically for every new user on first login.
     // =========================================================================
     private void createDemoApplication(User user) {
         Application demo = new Application();
@@ -118,26 +117,26 @@ public class UserService {
         demo.setJobDescription("""
                 🚀 Junior Software Developer (Java)
 
-                Szukamy pasjonata programowania, który dołączy do naszego zespołu!
+                We are looking for a passionate developer to join our team!
 
-                Wymagania:
-                • Znajomość Java 11+
-                • Podstawy Spring Boot
+                Requirements:
+                • Java 11+
+                • Spring Boot basics
                 • Git, SQL
-                • Chęć do nauki
+                • Willingness to learn
 
-                Oferujemy:
-                • Pracę zdalną lub hybrydową
-                • Mentoring senior developerów
-                • Budżet na szkolenia
-                • Sprzęt według potrzeb
+                We offer:
+                • Remote or hybrid work
+                • Mentoring from senior developers
+                • Training budget
+                • Equipment of your choice
 
-                To jest przykładowa aplikacja — możesz ją usunąć lub zmodyfikować!
+                This is a sample application — feel free to delete or modify it!
                 """);
 
         Application saved = applicationRepository.save(demo);
 
-        StageHistory initialStage = new StageHistory(saved, "Wysłane");
+        StageHistory initialStage = new StageHistory(saved, "Sent");
         stageHistoryRepository.save(initialStage);
 
         log.info("Demo application created for new user {}", user.getEmail());
