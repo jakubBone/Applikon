@@ -48,8 +48,8 @@ export const normalizeStageKey = (name: string | null | undefined): string => {
 }
 
 export const REJECTION_REASONS: { id: string; labelKey: ParseKeys<'common'> }[] = [
-  { id: 'NO_RESPONSE',             labelKey: 'kanban.rejectionBrakOdpowiedzi' },
-  { id: 'EMAIL_REJECTION',         labelKey: 'kanban.rejectionOdmowaMailowa' },
-  { id: 'REJECTED_AFTER_INTERVIEW', labelKey: 'kanban.rejectionOdrzuceniePo' },
-  { id: 'OTHER',                   labelKey: 'kanban.rejectionInne' },
+  { id: 'NO_RESPONSE',              labelKey: 'kanban.rejectionNoResponse' },
+  { id: 'EMAIL_REJECTION',          labelKey: 'kanban.rejectionEmailRejection' },
+  { id: 'REJECTED_AFTER_INTERVIEW', labelKey: 'kanban.rejectionAfterInterview' },
+  { id: 'OTHER',                    labelKey: 'kanban.rejectionOther' },
 ]

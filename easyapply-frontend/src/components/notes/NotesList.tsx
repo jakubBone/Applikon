@@ -7,16 +7,16 @@ import type { NoteCategory } from '../../types/domain'
 import './NotesList.css'
 
 const CATEGORIES: { value: NoteCategory; labelKey: ParseKeys<'common'>; color: string; bg: string }[] = [
-  { value: 'QUESTIONS', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
+  { value: 'QUESTIONS', labelKey: 'notes.catQuestions', color: '#3498db', bg: '#ebf5fb' },
   { value: 'FEEDBACK',  labelKey: 'notes.catFeedback', color: '#27ae60', bg: '#eafaf1' },
-  { value: 'OTHER',     labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
+  { value: 'OTHER',     labelKey: 'notes.catOther', color: '#95a5a6', bg: '#f4f6f6' },
 ]
 
 const LEGACY_CATEGORY_MAP: Record<string, { value: NoteCategory; labelKey: ParseKeys<'common'>; color: string; bg: string }> = {
-  'PYTANIA': { value: 'QUESTIONS', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
-  'PYTANIE': { value: 'QUESTIONS', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
-  'INNE':    { value: 'OTHER',     labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
-  'KONTAKT': { value: 'OTHER',     labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
+  'PYTANIA': { value: 'QUESTIONS', labelKey: 'notes.catQuestions', color: '#3498db', bg: '#ebf5fb' },
+  'PYTANIE': { value: 'QUESTIONS', labelKey: 'notes.catQuestions', color: '#3498db', bg: '#ebf5fb' },
+  'INNE':    { value: 'OTHER',     labelKey: 'notes.catOther', color: '#95a5a6', bg: '#f4f6f6' },
+  'KONTAKT': { value: 'OTHER',     labelKey: 'notes.catOther', color: '#95a5a6', bg: '#f4f6f6' },
 }
 
 const getCategoryConfig = (category: string) =>

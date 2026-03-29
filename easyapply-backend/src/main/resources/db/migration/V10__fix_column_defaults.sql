@@ -1,0 +1,2 @@
+ALTER TABLE applications ALTER COLUMN status   SET DEFAULT 'SENT';
+ALTER TABLE notes        ALTER COLUMN category SET DEFAULT 'OTHER';
