@@ -112,7 +112,7 @@ class ApplicationServiceTest {
         app.setSalaryMin(10000);
         app.setSalaryMax(15000);
         app.setCurrency("PLN");
-        app.setSalaryType(SalaryType.BRUTTO);
+        app.setSalaryType(SalaryType.GROSS);
         app.setContractType(ContractType.B2B);
         app.setSalarySource(SalarySource.FROM_POSTING);
         app.setStatus(ApplicationStatus.WYSLANE);
@@ -127,7 +127,7 @@ class ApplicationServiceTest {
                 10000,
                 15000,
                 "PLN",
-                SalaryType.BRUTTO,
+                SalaryType.GROSS,
                 ContractType.B2B,
                 SalarySource.FROM_POSTING,
                 "LinkedIn",
@@ -230,7 +230,7 @@ class ApplicationServiceTest {
                     20000,
                     30000,
                     "EUR",
-                    SalaryType.NETTO,
+                    SalaryType.NET,
                     ContractType.UOP,
                     SalarySource.MY_PROPOSAL,
                     "Referral",

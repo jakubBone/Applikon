@@ -6,7 +6,7 @@ export type ApplicationStatus = 'WYSLANE' | 'W_PROCESIE' | 'OFERTA' | 'ODMOWA'
 
 export type ContractType = 'UOP' | 'B2B' | 'UZ' | 'UOD' | 'INNE'
 
-export type SalaryType = 'BRUTTO' | 'NETTO'
+export type SalaryType = 'GROSS' | 'NET'
 
 export type Currency = 'PLN' | 'EUR' | 'USD' | 'GBP'
 

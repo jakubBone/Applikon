@@ -1,6 +1,6 @@
 package com.easyapply.entity;
 
 public enum SalaryType {
-    BRUTTO,
-    NETTO
+    GROSS,
+    NET
 }

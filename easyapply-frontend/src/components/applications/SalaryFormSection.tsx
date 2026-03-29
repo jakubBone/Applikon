@@ -63,11 +63,11 @@ export function SalaryFormSection({ data, onChange }: Props) {
       <div className="salary-options">
         <div className="option-group">
           <label className="toggle-label">
-            <input type="radio" name="salaryType" value="BRUTTO" checked={data.salaryType === 'BRUTTO'} onChange={onChange} />
+            <input type="radio" name="salaryType" value="GROSS" checked={data.salaryType === 'GROSS'} onChange={onChange} />
             {t('salary.brutto')}
           </label>
           <label className="toggle-label">
-            <input type="radio" name="salaryType" value="NETTO" checked={data.salaryType === 'NETTO'} onChange={onChange} />
+            <input type="radio" name="salaryType" value="NET" checked={data.salaryType === 'NET'} onChange={onChange} />
             {t('salary.netto')}
           </label>
         </div>

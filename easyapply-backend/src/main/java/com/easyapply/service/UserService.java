@@ -109,7 +109,7 @@ public class UserService {
         demo.setSalaryMin(7000);
         demo.setSalaryMax(8000);
         demo.setCurrency("PLN");
-        demo.setSalaryType(SalaryType.NETTO);
+        demo.setSalaryType(SalaryType.NET);
         demo.setContractType(ContractType.UOP);
         demo.setSource("JustJoinIT");
         demo.setLink("https://justjoin.it/");

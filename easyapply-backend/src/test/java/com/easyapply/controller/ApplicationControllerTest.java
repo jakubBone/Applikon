@@ -76,7 +76,7 @@ class ApplicationControllerTest {
         request.put("salaryMin", 8000);
         request.put("salaryMax", 12000);
         request.put("currency", "PLN");
-        request.put("salaryType", "BRUTTO");
+        request.put("salaryType", "GROSS");
         request.put("contractType", "B2B");
         request.put("link", "https://careers.google.com/123");
         request.put("source", "LinkedIn");
@@ -92,7 +92,7 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.salaryMin").value(8000))
                 .andExpect(jsonPath("$.salaryMax").value(12000))
                 .andExpect(jsonPath("$.currency").value("PLN"))
-                .andExpect(jsonPath("$.salaryType").value("BRUTTO"))
+                .andExpect(jsonPath("$.salaryType").value("GROSS"))
                 .andExpect(jsonPath("$.contractType").value("B2B"))
                 .andExpect(jsonPath("$.status").value("WYSLANE"))
                 .andExpect(jsonPath("$.appliedAt").exists());
