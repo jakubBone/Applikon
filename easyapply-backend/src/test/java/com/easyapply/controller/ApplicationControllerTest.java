@@ -94,7 +94,7 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.currency").value("PLN"))
                 .andExpect(jsonPath("$.salaryType").value("GROSS"))
                 .andExpect(jsonPath("$.contractType").value("B2B"))
-                .andExpect(jsonPath("$.status").value("WYSLANE"))
+                .andExpect(jsonPath("$.status").value("SENT"))
                 .andExpect(jsonPath("$.appliedAt").exists());
     }
 
@@ -239,13 +239,13 @@ class ApplicationControllerTest {
         Application app = createTestApplication("Google", "Dev");
 
         Map<String, Object> statusRequest = new HashMap<>();
-        statusRequest.put("status", "W_PROCESIE");
+        statusRequest.put("status", "IN_PROGRESS");
 
         mockMvc.perform(patch("/api/applications/" + app.getId() + "/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(statusRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("W_PROCESIE"));
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
     }
 
     @Test
@@ -255,14 +255,14 @@ class ApplicationControllerTest {
         Application app = createTestApplication("Google", "Dev");
 
         Map<String, Object> stageRequest = new HashMap<>();
-        stageRequest.put("status", "W_PROCESIE");
+        stageRequest.put("status", "IN_PROGRESS");
         stageRequest.put("currentStage", "Rozmowa z HR");
 
         mockMvc.perform(patch("/api/applications/" + app.getId() + "/stage")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(stageRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("W_PROCESIE"))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
                 .andExpect(jsonPath("$.currentStage").value("Rozmowa z HR"));
     }
 
@@ -271,12 +271,12 @@ class ApplicationControllerTest {
     @DisplayName("PATCH /api/applications/{id}/stage - changes current stage")
     void updateStage_ChangeStage_UpdatesCurrentStage() throws Exception {
         Application app = createTestApplication("Google", "Dev");
-        app.setStatus(ApplicationStatus.W_PROCESIE);
+        app.setStatus(ApplicationStatus.IN_PROGRESS);
         app.setCurrentStage("Rozmowa z HR");
         applicationRepository.save(app);
 
         Map<String, Object> stageRequest = new HashMap<>();
-        stageRequest.put("status", "W_PROCESIE");
+        stageRequest.put("status", "IN_PROGRESS");
         stageRequest.put("currentStage", "Rozmowa techniczna");
 
         mockMvc.perform(patch("/api/applications/" + app.getId() + "/stage")
@@ -293,14 +293,14 @@ class ApplicationControllerTest {
         Application app = createTestApplication("Google", "Dev");
 
         Map<String, Object> stageRequest = new HashMap<>();
-        stageRequest.put("status", "ODMOWA");
+        stageRequest.put("status", "REJECTED");
         stageRequest.put("rejectionReason", "NO_RESPONSE");
 
         mockMvc.perform(patch("/api/applications/" + app.getId() + "/stage")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(stageRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ODMOWA"))
+                .andExpect(jsonPath("$.status").value("REJECTED"))
                 .andExpect(jsonPath("$.rejectionReason").value("NO_RESPONSE"));
     }
 
@@ -311,13 +311,13 @@ class ApplicationControllerTest {
         Application app = createTestApplication("Google", "Dev");
 
         Map<String, Object> stageRequest = new HashMap<>();
-        stageRequest.put("status", "OFERTA");
+        stageRequest.put("status", "OFFER");
 
         mockMvc.perform(patch("/api/applications/" + app.getId() + "/stage")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(stageRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("OFERTA"));
+                .andExpect(jsonPath("$.status").value("OFFER"));
     }
 
     @Test
@@ -325,13 +325,13 @@ class ApplicationControllerTest {
     @DisplayName("PATCH /api/applications/{id}/stage - rollback to WYSLANE clears stage data")
     void updateStage_BackToSent_ClearsData() throws Exception {
         Application app = createTestApplication("Google", "Dev");
-        app.setStatus(ApplicationStatus.ODMOWA);
+        app.setStatus(ApplicationStatus.REJECTED);
         app.setRejectionReason(RejectionReason.NO_RESPONSE);
         app.setCurrentStage("Rozmowa techniczna");
         applicationRepository.save(app);
 
         Map<String, Object> stageRequest = new HashMap<>();
-        stageRequest.put("status", "WYSLANE");
+        stageRequest.put("status", "SENT");
         stageRequest.put("currentStage", null);
         stageRequest.put("rejectionReason", null);
 
@@ -339,7 +339,7 @@ class ApplicationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(stageRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("WYSLANE"))
+                .andExpect(jsonPath("$.status").value("SENT"))
                 .andExpect(jsonPath("$.currentStage").isEmpty())
                 .andExpect(jsonPath("$.rejectionReason").isEmpty());
     }
@@ -349,7 +349,7 @@ class ApplicationControllerTest {
     @DisplayName("POST /api/applications/{id}/stage - adds new stage to history")
     void addStage_AddsNewStageToHistory() throws Exception {
         Application app = createTestApplication("Google", "Dev");
-        app.setStatus(ApplicationStatus.W_PROCESIE);
+        app.setStatus(ApplicationStatus.IN_PROGRESS);
         applicationRepository.save(app);
 
         Map<String, Object> stageRequest = new HashMap<>();
@@ -425,7 +425,7 @@ class ApplicationControllerTest {
         app.setPosition(position);
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
-        app.setStatus(ApplicationStatus.WYSLANE);
+        app.setStatus(ApplicationStatus.SENT);
         app.setUser(testUser);
         return applicationRepository.save(app);
     }

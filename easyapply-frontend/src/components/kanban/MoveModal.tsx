@@ -18,13 +18,13 @@ export function MoveModal({ isOpen, onClose, card, statuses, onMove, getApplicat
 
   useEffect(() => {
     if (card) {
-      setSelectedStatus(card.status === 'OFERTA' || card.status === 'ODMOWA' ? 'ZAKONCZONE' : card.status)
+      setSelectedStatus(card.status === 'OFFER' || card.status === 'REJECTED' ? 'FINISHED' : card.status)
     }
   }, [card])
 
   if (!isOpen || !card) return null
 
-  const currentStatus = card.status === 'OFERTA' || card.status === 'ODMOWA' ? 'ZAKONCZONE' : card.status
+  const currentStatus = card.status === 'OFFER' || card.status === 'REJECTED' ? 'FINISHED' : card.status
 
   const handleMove = () => {
     if (selectedStatus && selectedStatus !== currentStatus) {

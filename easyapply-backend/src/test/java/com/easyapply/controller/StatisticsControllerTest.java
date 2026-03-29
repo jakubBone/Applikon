@@ -192,13 +192,13 @@ class StatisticsControllerTest {
 
     @Test
     @Order(9)
-    @DisplayName("GET /api/statistics/badges - counts only ODMOWA status (not WYSLANE/W_PROCESIE)")
+    @DisplayName("GET /api/statistics/badges - counts only REJECTED status (not SENT/IN_PROGRESS)")
     void getBadges_OnlyCountsRejectedStatus() throws Exception {
         createRejectedApplication("Rejected1", RejectionReason.EMAIL_REJECTION);
         createRejectedApplication("Rejected2", RejectionReason.EMAIL_REJECTION);
 
-        createTestApplication("Sent", ApplicationStatus.WYSLANE);
-        createTestApplication("InProcess", ApplicationStatus.W_PROCESIE);
+        createTestApplication("Sent", ApplicationStatus.SENT);
+        createTestApplication("InProcess", ApplicationStatus.IN_PROGRESS);
         createOfferApplication("Offer");
 
         mockMvc.perform(get("/api/statistics/badges"))
@@ -215,7 +215,7 @@ class StatisticsControllerTest {
         app.setPosition("Developer");
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
-        app.setStatus(ApplicationStatus.ODMOWA);
+        app.setStatus(ApplicationStatus.REJECTED);
         app.setRejectionReason(reason);
         app.setUser(testUser);
         return applicationRepository.save(app);
@@ -227,7 +227,7 @@ class StatisticsControllerTest {
         app.setPosition("Developer");
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
-        app.setStatus(ApplicationStatus.OFERTA);
+        app.setStatus(ApplicationStatus.OFFER);
         app.setUser(testUser);
         return applicationRepository.save(app);
     }

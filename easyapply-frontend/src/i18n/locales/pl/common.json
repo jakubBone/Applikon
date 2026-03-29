@@ -130,9 +130,9 @@
     "cancel": "Anuluj"
   },
   "kanban": {
-    "statusWYSLANE": "Wysłane",
-    "statusW_PROCESIE": "W procesie",
-    "statusZAKONCZONE": "Zakończone",
+    "statusSENT": "Wysłane",
+    "statusIN_PROGRESS": "W procesie",
+    "statusFINISHED": "Zakończone",
     "stageSelect": "Wybierz etap...",
     "customStage": "Inny etap...",
     "cardDate": "Aplikowano:",
@@ -145,13 +145,10 @@
     "movedTo": "✓ Przeniesiono do: {{status}}"
   },
   "statusConfig": {
-    "WYSLANE": "Wysłane",
-    "W_PROCESIE": "W procesie",
-    "OFERTA": "Oferta otrzymana",
-    "ODMOWA": "Odmowa",
-    "ROZMOWA": "W procesie",
-    "ZADANIE": "W procesie",
-    "ODRZUCONE": "Odmowa"
+    "SENT": "Wysłane",
+    "IN_PROGRESS": "W procesie",
+    "OFFER": "Oferta otrzymana",
+    "REJECTED": "Odmowa"
   },
   "endModal": {
     "title": "Jak zakończył się proces?",

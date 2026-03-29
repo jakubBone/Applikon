@@ -36,10 +36,6 @@ const formatDate = (dateString: string): string => {
 
 const statusConfig: Record<string, { labelKey: ParseKeys<'common'>; color: string; bg: string }> = {
   ...STATUS_CONFIG,
-  // Legacy statuses (backwards compatibility)
-  'ROZMOWA':   { labelKey: 'statusConfig.ROZMOWA',   color: '#f39c12', bg: '#fef9e7' },
-  'ZADANIE':   { labelKey: 'statusConfig.ZADANIE',   color: '#f39c12', bg: '#fef9e7' },
-  'ODRZUCONE': { labelKey: 'statusConfig.ODRZUCONE', color: '#95a5a6', bg: '#f5f5f5' },
 }
 
 function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
@@ -186,7 +182,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
     return (
       <div className="mobile-card-list">
         {sortedApplications.map(app => {
-          const status = statusConfig[app.status] || statusConfig['WYSLANE']
+          const status = statusConfig[app.status] || statusConfig['SENT']
           const companyColor = getCompanyColor(app.company)
           const isSelected = selectedIds.has(app.id)
 
@@ -383,7 +379,7 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
             </thead>
             <tbody>
               {sortedApplications.map(app => {
-                const status = statusConfig[app.status] || statusConfig['WYSLANE']
+                const status = statusConfig[app.status] || statusConfig['SENT']
                 const companyColor = getCompanyColor(app.company)
 
                 return (

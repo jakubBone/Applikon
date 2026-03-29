@@ -63,7 +63,7 @@ public class ApplicationService {
         application.setSource(request.source());
         application.setJobDescription(request.jobDescription());
         application.setAgency(request.agency());
-        application.setStatus(ApplicationStatus.WYSLANE);
+        application.setStatus(ApplicationStatus.SENT);
 
         Application saved = applicationRepository.save(application);
         stageHistoryRepository.save(new StageHistory(saved, "Wysłane"));
@@ -100,15 +100,15 @@ public class ApplicationService {
 
         application.setStatus(newStatus);
 
-        if (newStatus == ApplicationStatus.WYSLANE) {
+        if (newStatus == ApplicationStatus.SENT) {
             application.setCurrentStage(null);
             application.setRejectionReason(null);
             application.setRejectionDetails(null);
             stageHistoryRepository.deleteByApplicationId(application.getId());
         }
 
-        if (newStatus == ApplicationStatus.W_PROCESIE) {
-            if (oldStatus == ApplicationStatus.OFERTA || oldStatus == ApplicationStatus.ODMOWA) {
+        if (newStatus == ApplicationStatus.IN_PROGRESS) {
+            if (oldStatus == ApplicationStatus.OFFER || oldStatus == ApplicationStatus.REJECTED) {
                 application.setRejectionReason(null);
                 application.setRejectionDetails(null);
             }
@@ -117,13 +117,13 @@ public class ApplicationService {
             }
         }
 
-        if (newStatus == ApplicationStatus.OFERTA) {
+        if (newStatus == ApplicationStatus.OFFER) {
             application.setCurrentStage(null);
             application.setRejectionReason(null);
             application.setRejectionDetails(null);
         }
 
-        if (newStatus == ApplicationStatus.ODMOWA) {
+        if (newStatus == ApplicationStatus.REJECTED) {
             application.setCurrentStage(null);
             application.setRejectionReason(request.rejectionReason());
             application.setRejectionDetails(request.rejectionDetails());
@@ -151,7 +151,7 @@ public class ApplicationService {
 
         markCurrentStageCompleted(application);
         application.setCurrentStage(stageName);
-        application.setStatus(ApplicationStatus.W_PROCESIE);
+        application.setStatus(ApplicationStatus.IN_PROGRESS);
 
         stageHistoryRepository.save(new StageHistory(application, stageName));
 

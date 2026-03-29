@@ -24,8 +24,8 @@ vi.mock('../../services/api', () => ({
 import * as api from '../../services/api'
 
 const mockApplications = [
-  { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE' },
-  { id: 2, company: 'Meta', position: 'Engineer', status: 'W_PROCESIE' },
+  { id: 1, company: 'Google', position: 'Dev', status: 'SENT' },
+  { id: 2, company: 'Meta', position: 'Engineer', status: 'IN_PROGRESS' },
 ]
 
 /**
@@ -69,7 +69,7 @@ describe('useCreateApplication', () => {
   beforeEach(() => { vi.resetAllMocks() })
 
   it('calls createApplication with provided data', async () => {
-    const newApp = { id: 3, company: 'Apple', position: 'iOS Dev', status: 'WYSLANE' }
+    const newApp = { id: 3, company: 'Apple', position: 'iOS Dev', status: 'SENT' }
     vi.mocked(api.fetchApplications).mockResolvedValue([])
     vi.mocked(api.createApplication).mockResolvedValue(newApp as any)
 
@@ -127,7 +127,7 @@ describe('useCheckDuplicate', () => {
   })
 
   it('returns duplicates when company and position already exists', async () => {
-    const duplicate = [{ id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE' }]
+    const duplicate = [{ id: 1, company: 'Google', position: 'Dev', status: 'SENT' }]
     vi.mocked(api.checkDuplicate).mockResolvedValue(duplicate as any)
 
     const { result } = renderHook(

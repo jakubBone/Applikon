@@ -50,7 +50,7 @@ public class Application {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ApplicationStatus status = ApplicationStatus.WYSLANE;
+    private ApplicationStatus status = ApplicationStatus.SENT;
 
     @Column(columnDefinition = "TEXT")
     private String jobDescription;

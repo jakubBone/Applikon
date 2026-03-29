@@ -106,7 +106,7 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
 
   const handleStageSelect = (stage: string) => {
     onStageChange(application.id, {
-      status: 'W_PROCESIE',
+      status: 'IN_PROGRESS',
       currentStage: stage
     })
     setShowStageDropdown(false)
@@ -121,9 +121,9 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
     }
   }
 
-  const isOffer = application.status === 'OFERTA'
-  const isRejected = application.status === 'ODMOWA'
-  const isInProcess = application.status === 'W_PROCESIE'
+  const isOffer = application.status === 'OFFER'
+  const isRejected = application.status === 'REJECTED'
+  const isInProcess = application.status === 'IN_PROGRESS'
 
   return (
     <div

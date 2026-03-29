@@ -9,9 +9,9 @@ export interface KanbanStatus {
 }
 
 export const STATUSES: KanbanStatus[] = [
-  { id: 'WYSLANE', labelKey: 'kanban.statusWYSLANE', color: '#3498db' },
-  { id: 'W_PROCESIE', labelKey: 'kanban.statusW_PROCESIE', color: '#f39c12' },
-  { id: 'ZAKONCZONE', labelKey: 'kanban.statusZAKONCZONE', color: '#95a5a6' },
+  { id: 'SENT',        labelKey: 'kanban.statusSENT',        color: '#3498db' },
+  { id: 'IN_PROGRESS', labelKey: 'kanban.statusIN_PROGRESS', color: '#f39c12' },
+  { id: 'FINISHED',    labelKey: 'kanban.statusFINISHED',    color: '#95a5a6' },
 ]
 
 export const PREDEFINED_STAGES: { key: string; labelKey: ParseKeys<'common'> }[] = [

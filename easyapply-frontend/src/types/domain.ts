@@ -2,7 +2,7 @@
 // EasyApply domain types — mirror backend response shapes
 // ============================================================
 
-export type ApplicationStatus = 'WYSLANE' | 'W_PROCESIE' | 'OFERTA' | 'ODMOWA'
+export type ApplicationStatus = 'SENT' | 'IN_PROGRESS' | 'OFFER' | 'REJECTED'
 
 export type ContractType = 'B2B' | 'EMPLOYMENT' | 'MANDATE' | 'OTHER'
 

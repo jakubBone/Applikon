@@ -11,18 +11,18 @@ interface EndModalProps {
 
 export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
   const { t } = useTranslation()
-  const [selectedOutcome, setSelectedOutcome] = useState<'OFERTA' | 'ODMOWA' | null>(null)
+  const [selectedOutcome, setSelectedOutcome] = useState<'OFFER' | 'REJECTED' | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectionDetails, setRejectionDetails] = useState('')
 
   if (!isOpen) return null
 
   const handleSubmit = () => {
-    if (selectedOutcome === 'OFERTA') {
-      onSelect({ status: 'OFERTA' })
-    } else if (selectedOutcome === 'ODMOWA') {
+    if (selectedOutcome === 'OFFER') {
+      onSelect({ status: 'OFFER' })
+    } else if (selectedOutcome === 'REJECTED') {
       onSelect({
-        status: 'ODMOWA',
+        status: 'REJECTED',
         rejectionReason: rejectionReason || 'OTHER',
         rejectionDetails: rejectionDetails || null
       })
@@ -40,22 +40,22 @@ export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
 
         <div className="outcome-options">
           <button
-            className={`outcome-option offer ${selectedOutcome === 'OFERTA' ? 'selected' : ''}`}
-            onClick={() => setSelectedOutcome('OFERTA')}
+            className={`outcome-option offer ${selectedOutcome === 'OFFER' ? 'selected' : ''}`}
+            onClick={() => setSelectedOutcome('OFFER')}
           >
             <span className="outcome-icon">✓</span>
             <span>{t('endModal.offer')}</span>
           </button>
           <button
-            className={`outcome-option rejected ${selectedOutcome === 'ODMOWA' ? 'selected' : ''}`}
-            onClick={() => setSelectedOutcome('ODMOWA')}
+            className={`outcome-option rejected ${selectedOutcome === 'REJECTED' ? 'selected' : ''}`}
+            onClick={() => setSelectedOutcome('REJECTED')}
           >
             <span className="outcome-icon">✗</span>
             <span>{t('endModal.rejected')}</span>
           </button>
         </div>
 
-        {selectedOutcome === 'ODMOWA' && (
+        {selectedOutcome === 'REJECTED' && (
           <div className="rejection-form">
             <label>{t('endModal.reason')}</label>
             <select
@@ -82,7 +82,7 @@ export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
           <button
             className="modal-submit"
             onClick={handleSubmit}
-            disabled={!selectedOutcome || (selectedOutcome === 'ODMOWA' && !rejectionReason)}
+            disabled={!selectedOutcome || (selectedOutcome === 'REJECTED' && !rejectionReason)}
           >
             {t('endModal.save')}
           </button>

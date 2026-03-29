@@ -70,14 +70,14 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   // Also handles legacy statuses: ROZMOWA, ZADANIE -> W_PROCESIE, ODRZUCONE -> ZAKONCZONE
   const getApplicationsByStatus = (statusId: string): Application[] => {
     let filtered: Application[]
-    if (statusId === 'ZAKONCZONE') {
+    if (statusId === 'FINISHED') {
       filtered = applications.filter(app =>
-        app.status === 'OFERTA' ||
-        app.status === 'ODMOWA'
+        app.status === 'OFFER' ||
+        app.status === 'REJECTED'
       )
-    } else if (statusId === 'W_PROCESIE') {
+    } else if (statusId === 'IN_PROGRESS') {
       filtered = applications.filter(app =>
-        app.status === 'W_PROCESIE'
+        app.status === 'IN_PROGRESS'
       )
     } else {
       filtered = applications.filter(app => app.status === statusId)
@@ -91,10 +91,10 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
 
   const getColumnByStatus = (status: string): string => {
     // New statuses
-    if (status === 'OFERTA' || status === 'ODMOWA') return 'ZAKONCZONE'
+    if (status === 'OFFER' || status === 'REJECTED') return 'FINISHED'
     // Legacy statuses (backward compatibility)
-    if (status === 'ODRZUCONE') return 'ZAKONCZONE'
-    if (status === 'ROZMOWA' || status === 'ZADANIE') return 'W_PROCESIE'
+    if (status === 'REJECTED') return 'FINISHED'
+    if (status === 'IN_PROGRESS' || status === 'IN_PROGRESS') return 'IN_PROGRESS'
     return status
   }
 
@@ -130,23 +130,23 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     if (!targetColumn || targetColumn === currentColumn) return
 
     // Handle transition to W_PROCESIE
-    if (targetColumn === 'W_PROCESIE') {
+    if (targetColumn === 'IN_PROGRESS') {
       setPendingApplication(activeApp)
       setStageModalOpen(true)
       return
     }
 
     // Handle transition to ZAKONCZONE
-    if (targetColumn === 'ZAKONCZONE') {
+    if (targetColumn === 'FINISHED') {
       setPendingApplication(activeApp)
       setEndModalOpen(true)
       return
     }
 
     // Handle transition to WYSLANE (revert - clears all data)
-    if (targetColumn === 'WYSLANE') {
+    if (targetColumn === 'SENT') {
       onStageChange(activeApp.id, {
-        status: 'WYSLANE',
+        status: 'SENT',
         currentStage: null,
         rejectionReason: null,
         rejectionDetails: null
@@ -157,7 +157,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
   const handleStageSelect = (stageName: string) => {
     if (pendingApplication) {
       onStageChange(pendingApplication.id, {
-        status: 'W_PROCESIE',
+        status: 'IN_PROGRESS',
         currentStage: stageName
       })
       setPendingApplication(null)
@@ -183,7 +183,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     if (!moveModalCard) return
 
     // Handle transition to W_PROCESIE
-    if (targetStatus === 'W_PROCESIE') {
+    if (targetStatus === 'IN_PROGRESS') {
       setPendingApplication(moveModalCard)
       setStageModalOpen(true)
       setMoveModalOpen(false)
@@ -192,7 +192,7 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     }
 
     // Handle transition to ZAKONCZONE
-    if (targetStatus === 'ZAKONCZONE') {
+    if (targetStatus === 'FINISHED') {
       setPendingApplication(moveModalCard)
       setEndModalOpen(true)
       setMoveModalOpen(false)
@@ -201,9 +201,9 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
     }
 
     // Handle transition to WYSLANE (revert)
-    if (targetStatus === 'WYSLANE') {
+    if (targetStatus === 'SENT') {
       onStageChange(moveModalCard.id, {
-        status: 'WYSLANE',
+        status: 'SENT',
         currentStage: null,
         rejectionReason: null,
         rejectionDetails: null

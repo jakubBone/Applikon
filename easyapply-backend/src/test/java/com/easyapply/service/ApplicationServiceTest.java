@@ -115,7 +115,7 @@ class ApplicationServiceTest {
         app.setSalaryType(SalaryType.GROSS);
         app.setContractType(ContractType.B2B);
         app.setSalarySource(SalarySource.FROM_POSTING);
-        app.setStatus(ApplicationStatus.WYSLANE);
+        app.setStatus(ApplicationStatus.SENT);
         return app;
     }
 
@@ -155,7 +155,7 @@ class ApplicationServiceTest {
             Application captured = appCaptor.getValue();
             assertEquals("Google", captured.getCompany());
             assertEquals("Java Dev", captured.getPosition());
-            assertEquals(ApplicationStatus.WYSLANE, captured.getStatus());
+            assertEquals(ApplicationStatus.SENT, captured.getStatus());
             assertNotNull(captured.getUser());
             assertEquals("Google", response.company());
         }
@@ -257,7 +257,7 @@ class ApplicationServiceTest {
             when(applicationRepository.save(any(Application.class))).thenReturn(existing);
 
             StageUpdateRequest request = new StageUpdateRequest(
-                    ApplicationStatus.ODMOWA,
+                    ApplicationStatus.REJECTED,
                     null,
                     RejectionReason.NO_RESPONSE,
                     "No feedback"
@@ -267,7 +267,7 @@ class ApplicationServiceTest {
 
             verify(applicationRepository).save(appCaptor.capture());
             Application captured = appCaptor.getValue();
-            assertEquals(ApplicationStatus.ODMOWA, captured.getStatus());
+            assertEquals(ApplicationStatus.REJECTED, captured.getStatus());
             assertEquals(RejectionReason.NO_RESPONSE, captured.getRejectionReason());
             assertNull(captured.getCurrentStage());
             assertEquals(RejectionReason.NO_RESPONSE, response.rejectionReason());
@@ -276,7 +276,7 @@ class ApplicationServiceTest {
         @Test
         void updateStage_toWyslane_clearsFlowDataAndHistory() {
             Application existing = app(12L, "Google", "Dev");
-            existing.setStatus(ApplicationStatus.ODMOWA);
+            existing.setStatus(ApplicationStatus.REJECTED);
             existing.setCurrentStage("HR call");
             existing.setRejectionReason(RejectionReason.EMAIL_REJECTION);
             existing.setRejectionDetails("No fit");
@@ -286,12 +286,12 @@ class ApplicationServiceTest {
 
             ApplicationResponse response = applicationService.updateStage(
                     12L,
-                    new StageUpdateRequest(ApplicationStatus.WYSLANE, null, null, null),
+                    new StageUpdateRequest(ApplicationStatus.SENT, null, null, null),
                     TEST_USER_ID
             );
 
             verify(stageHistoryRepository).deleteByApplicationId(12L);
-            assertEquals(ApplicationStatus.WYSLANE, response.status());
+            assertEquals(ApplicationStatus.SENT, response.status());
             assertNull(response.currentStage());
             assertNull(response.rejectionReason());
         }

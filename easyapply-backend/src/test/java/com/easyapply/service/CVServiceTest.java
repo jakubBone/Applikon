@@ -106,7 +106,7 @@ class CVServiceTest {
         setField(app, "id", id);
         app.setCompany("Google");
         app.setPosition("Developer");
-        app.setStatus(ApplicationStatus.WYSLANE);
+        app.setStatus(ApplicationStatus.SENT);
         return app;
     }
 

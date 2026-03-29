@@ -214,7 +214,7 @@ class NoteControllerTest {
         app.setPosition("TestPosition");
         app.setSalaryMin(5000);
         app.setCurrency("PLN");
-        app.setStatus(ApplicationStatus.WYSLANE);
+        app.setStatus(ApplicationStatus.SENT);
         app.setUser(testUser);
         return applicationRepository.save(app);
     }

@@ -95,7 +95,7 @@ describe('App Component', () => {
   describe('View Switching', () => {
     it('switches to list view', async () => {
       vi.mocked(api.fetchApplications).mockResolvedValue([
-        { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() } as never
+        { id: 1, company: 'Google', position: 'Dev', status: 'SENT', appliedAt: new Date().toISOString() } as never
       ])
 
       renderApp()
@@ -184,7 +184,7 @@ describe('App Component', () => {
         id: 1,
         company: 'Google',
         position: 'Developer',
-        status: 'WYSLANE',
+        status: 'SENT',
         appliedAt: new Date().toISOString()
       } as never)
 
@@ -257,7 +257,7 @@ describe('App Component', () => {
         id: 2,
         company: 'Google',
         position: 'Developer',
-        status: 'WYSLANE',
+        status: 'SENT',
         appliedAt: new Date().toISOString()
       } as never)
 
@@ -339,8 +339,8 @@ describe('App Component', () => {
   describe('Application List', () => {
     it('displays applications in Kanban view', async () => {
       vi.mocked(api.fetchApplications).mockResolvedValue([
-        { id: 1, company: 'Google', position: 'Dev', status: 'WYSLANE', appliedAt: new Date().toISOString() } as never,
-        { id: 2, company: 'Meta', position: 'Engineer', status: 'W_PROCESIE', appliedAt: new Date().toISOString() } as never
+        { id: 1, company: 'Google', position: 'Dev', status: 'SENT', appliedAt: new Date().toISOString() } as never,
+        { id: 2, company: 'Meta', position: 'Engineer', status: 'IN_PROGRESS', appliedAt: new Date().toISOString() } as never
       ])
 
       renderApp()

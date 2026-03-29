@@ -128,9 +128,9 @@
     "cancel": "Cancel"
   },
   "kanban": {
-    "statusWYSLANE": "Sent",
-    "statusW_PROCESIE": "In progress",
-    "statusZAKONCZONE": "Finished",
+    "statusSENT": "Sent",
+    "statusIN_PROGRESS": "In progress",
+    "statusFINISHED": "Finished",
     "stageSelect": "Select stage...",
     "customStage": "Other stage...",
     "cardDate": "Applied:",
@@ -143,13 +143,10 @@
     "movedTo": "✓ Moved to: {{status}}"
   },
   "statusConfig": {
-    "WYSLANE": "Sent",
-    "W_PROCESIE": "In progress",
-    "OFERTA": "Offer received",
-    "ODMOWA": "Rejected",
-    "ROZMOWA": "In progress",
-    "ZADANIE": "In progress",
-    "ODRZUCONE": "Rejected"
+    "SENT": "Sent",
+    "IN_PROGRESS": "In progress",
+    "OFFER": "Offer received",
+    "REJECTED": "Rejected"
   },
   "endModal": {
     "title": "How did the process end?",

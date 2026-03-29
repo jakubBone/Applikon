@@ -84,7 +84,7 @@ class NoteServiceTest {
         testApplication.setUser(testUser);
         testApplication.setCompany("Google");
         testApplication.setPosition("Developer");
-        testApplication.setStatus(ApplicationStatus.WYSLANE);
+        testApplication.setStatus(ApplicationStatus.SENT);
     }
 
     private static void setField(Object target, String fieldName, Object value) {

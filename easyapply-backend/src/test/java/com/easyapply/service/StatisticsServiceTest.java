@@ -36,8 +36,8 @@ class StatisticsServiceTest {
     private void mockStats(int rejections, int ghostings, int offers) {
         when(applicationRepository.getApplicationStats(
                 TEST_USER_ID,
-                ApplicationStatus.ODMOWA,
-                ApplicationStatus.OFERTA,
+                ApplicationStatus.REJECTED,
+                ApplicationStatus.OFFER,
                 RejectionReason.NO_RESPONSE
         )).thenReturn(new Object[]{rejections, ghostings, offers});
     }

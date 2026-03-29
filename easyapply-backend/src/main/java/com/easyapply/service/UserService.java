@@ -113,7 +113,7 @@ public class UserService {
         demo.setContractType(ContractType.EMPLOYMENT);
         demo.setSource("JustJoinIT");
         demo.setLink("https://justjoin.it/");
-        demo.setStatus(ApplicationStatus.WYSLANE);
+        demo.setStatus(ApplicationStatus.SENT);
         demo.setJobDescription("""
                 🚀 Junior Software Developer (Java)
 
