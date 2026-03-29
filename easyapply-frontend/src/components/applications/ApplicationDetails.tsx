@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTranslation, type TFunction } from 'react-i18next'
 import { NotesList } from '../notes/NotesList'
 import { ApplicationForm } from './ApplicationForm'
 import { downloadCV } from '../../services/api'
@@ -23,7 +23,14 @@ function formatDate(dateString: string, locale: string): string {
   })
 }
 
-function formatSalary(app: Application, locale: string): string | null {
+const CONTRACT_TYPE_KEYS: Record<string, string> = {
+  B2B: 'salary.contractB2B',
+  EMPLOYMENT: 'salary.contractEmployment',
+  MANDATE: 'salary.contractMandate',
+  OTHER: 'salary.contractOther',
+}
+
+function formatSalary(app: Application, locale: string, t: TFunction): string | null {
   if (!app.salaryMin) return null
 
   let salaryStr = app.salaryMin.toLocaleString(locale)
@@ -34,7 +41,7 @@ function formatSalary(app: Application, locale: string): string | null {
 
   const extras: string[] = []
   if (app.salaryType) extras.push(app.salaryType.toLowerCase())
-  if (app.contractType) extras.push(app.contractType)
+  if (app.contractType) extras.push(t((CONTRACT_TYPE_KEYS[app.contractType] ?? 'salary.contractOther') as Parameters<typeof t>[0]))
   if (extras.length > 0) {
     salaryStr += ` (${extras.join(', ')})`
   }
@@ -46,7 +53,7 @@ export function ApplicationDetails({ application, onBack }: Props) {
   const { t, i18n } = useTranslation()
   const [showEditForm, setShowEditForm] = useState(false)
 
-  const salary = formatSalary(application, i18n.language)
+  const salary = formatSalary(application, i18n.language, t)
 
   return (
     <div className="details-view">

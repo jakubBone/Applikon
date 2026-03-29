@@ -73,10 +73,10 @@ export function SalaryFormSection({ data, onChange }: Props) {
         </div>
         <select name="contractType" value={data.contractType} onChange={onChange} className="contract-select">
           <option value="">{t('salary.contractTypePlaceholder')}</option>
-          <option value="B2B">B2B</option>
-          <option value="UOP">UoP</option>
-          <option value="UZ">{t('salary.uzLabel')}</option>
-          <option value="INNA">{t('salary.otherLabel')}</option>
+          <option value="B2B">{t('salary.contractB2B')}</option>
+          <option value="EMPLOYMENT">{t('salary.contractEmployment')}</option>
+          <option value="MANDATE">{t('salary.contractMandate')}</option>
+          <option value="OTHER">{t('salary.contractOther')}</option>
         </select>
       </div>
     </div>

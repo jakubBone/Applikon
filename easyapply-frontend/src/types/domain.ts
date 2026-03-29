@@ -4,7 +4,7 @@
 
 export type ApplicationStatus = 'WYSLANE' | 'W_PROCESIE' | 'OFERTA' | 'ODMOWA'
 
-export type ContractType = 'UOP' | 'B2B' | 'UZ' | 'UOD' | 'INNE'
+export type ContractType = 'B2B' | 'EMPLOYMENT' | 'MANDATE' | 'OTHER'
 
 export type SalaryType = 'GROSS' | 'NET'
 

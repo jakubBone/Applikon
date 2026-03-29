@@ -231,7 +231,7 @@ class ApplicationServiceTest {
                     30000,
                     "EUR",
                     SalaryType.NET,
-                    ContractType.UOP,
+                    ContractType.EMPLOYMENT,
                     SalarySource.MY_PROPOSAL,
                     "Referral",
                     "Updated desc",

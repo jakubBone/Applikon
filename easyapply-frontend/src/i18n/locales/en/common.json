@@ -42,7 +42,11 @@
     "netto": "Net",
     "contractTypePlaceholder": "Contract type",
     "uzLabel": "Contract of mandate",
-    "otherLabel": "Other"
+    "otherLabel": "Other",
+    "contractB2B": "B2B",
+    "contractEmployment": "Employment contract",
+    "contractMandate": "Contract of mandate",
+    "contractOther": "Other"
   },
   "table": {
     "search": "Search by company, position...",

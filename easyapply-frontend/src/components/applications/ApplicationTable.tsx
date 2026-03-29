@@ -155,7 +155,15 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
 
     const extras: string[] = []
     if (app.salaryType) extras.push(app.salaryType.toLowerCase())
-    if (app.contractType) extras.push(app.contractType)
+    if (app.contractType) {
+      const contractKeys: Record<string, string> = {
+        B2B: 'salary.contractB2B',
+        EMPLOYMENT: 'salary.contractEmployment',
+        MANDATE: 'salary.contractMandate',
+        OTHER: 'salary.contractOther',
+      }
+      extras.push(t((contractKeys[app.contractType] ?? 'salary.contractOther') as Parameters<typeof t>[0]))
+    }
 
     if (extras.length > 0) {
       salaryStr += ` (${extras.join(', ')})`

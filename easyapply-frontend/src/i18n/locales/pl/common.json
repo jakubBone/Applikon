@@ -42,7 +42,11 @@
     "netto": "Netto",
     "contractTypePlaceholder": "Typ umowy",
     "uzLabel": "Umowa zlecenie",
-    "otherLabel": "Inna"
+    "otherLabel": "Inna",
+    "contractB2B": "B2B",
+    "contractEmployment": "Umowa o pracę",
+    "contractMandate": "Umowa zlecenie",
+    "contractOther": "Inna"
   },
   "table": {
     "search": "Szukaj po firmie, stanowisku...",
