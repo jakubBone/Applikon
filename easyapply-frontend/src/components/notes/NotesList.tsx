@@ -59,7 +59,7 @@ export function NotesList({ applicationId }: NotesListProps) {
     if (!newNote.trim()) return
     createNote.mutate(
       { content: newNote.trim(), category: newCategory },
-      { onSuccess: () => { setNewNote(''); setNewCategory('PYTANIA') } }
+      { onSuccess: () => { setNewNote(''); setNewCategory('QUESTIONS') } }
     )
   }
 
