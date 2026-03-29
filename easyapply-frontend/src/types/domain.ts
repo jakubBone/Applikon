@@ -14,7 +14,7 @@ export type RejectionReason = 'NO_RESPONSE' | 'EMAIL_REJECTION' | 'REJECTED_AFTE
 
 export type CVType = 'FILE' | 'LINK' | 'NOTE'
 
-export type NoteCategory = 'PYTANIA' | 'FEEDBACK' | 'INNE'
+export type NoteCategory = 'QUESTIONS' | 'FEEDBACK' | 'OTHER'
 
 // ============================================================
 // Encje

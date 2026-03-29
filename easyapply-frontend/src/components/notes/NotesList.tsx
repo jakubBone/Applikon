@@ -7,14 +7,16 @@ import type { NoteCategory } from '../../types/domain'
 import './NotesList.css'
 
 const CATEGORIES: { value: NoteCategory; labelKey: ParseKeys<'common'>; color: string; bg: string }[] = [
-  { value: 'PYTANIA', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
-  { value: 'FEEDBACK', labelKey: 'notes.catFeedback', color: '#27ae60', bg: '#eafaf1' },
-  { value: 'INNE', labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
+  { value: 'QUESTIONS', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
+  { value: 'FEEDBACK',  labelKey: 'notes.catFeedback', color: '#27ae60', bg: '#eafaf1' },
+  { value: 'OTHER',     labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
 ]
 
 const LEGACY_CATEGORY_MAP: Record<string, { value: NoteCategory; labelKey: ParseKeys<'common'>; color: string; bg: string }> = {
-  'PYTANIE': { value: 'PYTANIA', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
-  'KONTAKT': { value: 'INNE', labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
+  'PYTANIA': { value: 'QUESTIONS', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
+  'PYTANIE': { value: 'QUESTIONS', labelKey: 'notes.catPytania', color: '#3498db', bg: '#ebf5fb' },
+  'INNE':    { value: 'OTHER',     labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
+  'KONTAKT': { value: 'OTHER',     labelKey: 'notes.catInne', color: '#95a5a6', bg: '#f4f6f6' },
 }
 
 const getCategoryConfig = (category: string) =>
@@ -42,10 +44,10 @@ export function NotesList({ applicationId }: NotesListProps) {
   const { t } = useTranslation()
   const { t: tErrors } = useTranslation('errors')
   const [newNote, setNewNote] = useState('')
-  const [newCategory, setNewCategory] = useState<NoteCategory>('PYTANIA')
+  const [newCategory, setNewCategory] = useState<NoteCategory>('QUESTIONS')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editContent, setEditContent] = useState('')
-  const [editCategory, setEditCategory] = useState<NoteCategory>('PYTANIA')
+  const [editCategory, setEditCategory] = useState<NoteCategory>('QUESTIONS')
 
   const { data: notes = [], isLoading } = useNotes(applicationId)
   const createNote = useCreateNote(applicationId)

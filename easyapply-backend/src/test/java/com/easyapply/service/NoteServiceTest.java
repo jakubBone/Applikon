@@ -113,28 +113,28 @@ class NoteServiceTest {
         @Test
         void create_withCategory_returnsMappedResponse() {
             when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
-            when(noteRepository.save(any(Note.class))).thenReturn(note(11L, "Test content", NoteCategory.PYTANIA));
+            when(noteRepository.save(any(Note.class))).thenReturn(note(11L, "Test content", NoteCategory.QUESTIONS));
 
-            NoteResponse response = noteService.create(1L, new NoteRequest("Test content", NoteCategory.PYTANIA), TEST_USER_ID);
+            NoteResponse response = noteService.create(1L, new NoteRequest("Test content", NoteCategory.QUESTIONS), TEST_USER_ID);
 
             verify(noteRepository).save(noteCaptor.capture());
             Note captured = noteCaptor.getValue();
             assertEquals("Test content", captured.getContent());
-            assertEquals(NoteCategory.PYTANIA, captured.getCategory());
+            assertEquals(NoteCategory.QUESTIONS, captured.getCategory());
 
             assertEquals("Test content", response.content());
-            assertEquals(NoteCategory.PYTANIA, response.category());
+            assertEquals(NoteCategory.QUESTIONS, response.category());
             assertEquals(1L, response.applicationId());
         }
 
         @Test
         void create_withoutCategory_defaultsToInne() {
             when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
-            when(noteRepository.save(any(Note.class))).thenReturn(note(12L, "No category", NoteCategory.INNE));
+            when(noteRepository.save(any(Note.class))).thenReturn(note(12L, "No category", NoteCategory.OTHER));
 
             NoteResponse response = noteService.create(1L, new NoteRequest("No category", null), TEST_USER_ID);
 
-            assertEquals(NoteCategory.INNE, response.category());
+            assertEquals(NoteCategory.OTHER, response.category());
         }
 
         @Test
@@ -143,7 +143,7 @@ class NoteServiceTest {
 
             assertThrows(
                     EntityNotFoundException.class,
-                    () -> noteService.create(999L, new NoteRequest("test", NoteCategory.INNE), TEST_USER_ID)
+                    () -> noteService.create(999L, new NoteRequest("test", NoteCategory.OTHER), TEST_USER_ID)
             );
             verify(noteRepository, never()).save(any(Note.class));
         }
@@ -157,7 +157,7 @@ class NoteServiceTest {
             when(applicationRepository.existsByIdAndUserId(1L, TEST_USER_ID)).thenReturn(true);
             when(noteRepository.findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc(1L, TEST_USER_ID)).thenReturn(List.of(
                     note(2L, "Newest", NoteCategory.FEEDBACK),
-                    note(1L, "Older", NoteCategory.INNE)
+                    note(1L, "Older", NoteCategory.OTHER)
             ));
 
             List<NoteResponse> result = noteService.findByApplicationId(1L, TEST_USER_ID);
@@ -170,12 +170,12 @@ class NoteServiceTest {
         @Test
         void findById_returnsMappedNote() {
             when(noteRepository.findByIdAndApplicationUserId(1L, TEST_USER_ID))
-                    .thenReturn(Optional.of(note(1L, "Content", NoteCategory.PYTANIA)));
+                    .thenReturn(Optional.of(note(1L, "Content", NoteCategory.QUESTIONS)));
 
             NoteResponse response = noteService.findById(1L, TEST_USER_ID);
 
             assertEquals("Content", response.content());
-            assertEquals(NoteCategory.PYTANIA, response.category());
+            assertEquals(NoteCategory.QUESTIONS, response.category());
         }
     }
 
@@ -217,7 +217,7 @@ class NoteServiceTest {
             when(noteRepository.save(any(Note.class))).thenReturn(note(
                     101L,
                     "Stawka zmieniona: 5000 PLN -> 7000 PLN",
-                    NoteCategory.INNE
+                    NoteCategory.OTHER
             ));
 
             NoteResponse response = noteService.createSalaryChangeNote(1L, 5000, "PLN", 7000, "PLN", TEST_USER_ID);
@@ -231,7 +231,7 @@ class NoteServiceTest {
         @Test
         void createSalaryChangeNote_handlesNulls() {
             when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
-            when(noteRepository.save(any(Note.class))).thenReturn(note(102L, "any", NoteCategory.INNE));
+            when(noteRepository.save(any(Note.class))).thenReturn(note(102L, "any", NoteCategory.OTHER));
 
             NoteResponse response = noteService.createSalaryChangeNote(1L, null, null, 7000, "EUR", TEST_USER_ID);
 

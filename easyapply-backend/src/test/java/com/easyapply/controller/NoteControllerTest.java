@@ -72,11 +72,11 @@ class NoteControllerTest {
 
     @Test
     @Order(1)
-    @DisplayName("POST /api/applications/{id}/notes - creates note of category PYTANIA")
-    void createNote_CategoryPytania_Success() throws Exception {
+    @DisplayName("POST /api/applications/{id}/notes - creates note of category QUESTIONS")
+    void createNote_CategoryQuestions_Success() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Pytali o Spring Boot i Docker");
-        request.put("category", "PYTANIA");
+        request.put("category", "QUESTIONS");
 
         mockMvc.perform(post("/api/applications/" + testApplication.getId() + "/notes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -84,7 +84,7 @@ class NoteControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.content").value("Pytali o Spring Boot i Docker"))
-                .andExpect(jsonPath("$.category").value("PYTANIA"))
+                .andExpect(jsonPath("$.category").value("QUESTIONS"))
                 .andExpect(jsonPath("$.applicationId").value(testApplication.getId()))
                 .andExpect(jsonPath("$.createdAt").exists());
     }
@@ -106,17 +106,17 @@ class NoteControllerTest {
 
     @Test
     @Order(3)
-    @DisplayName("POST /api/applications/{id}/notes - creates note of category INNE")
+    @DisplayName("POST /api/applications/{id}/notes - creates note of category OTHER")
     void createNote_CategoryInne_Success() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Kontakt: rekruter@example.com");
-        request.put("category", "INNE");
+        request.put("category", "OTHER");
 
         mockMvc.perform(post("/api/applications/" + testApplication.getId() + "/notes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.category").value("INNE"));
+                .andExpect(jsonPath("$.category").value("OTHER"));
     }
 
     @Test
@@ -125,7 +125,7 @@ class NoteControllerTest {
     void createNote_EmptyContent_ReturnsBadRequest() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "");
-        request.put("category", "INNE");
+        request.put("category", "OTHER");
 
         mockMvc.perform(post("/api/applications/" + testApplication.getId() + "/notes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -138,11 +138,11 @@ class NoteControllerTest {
     @Order(5)
     @DisplayName("GET /api/applications/{id}/notes - returns notes sorted newest first")
     void getNotes_ReturnsSortedByDateDesc() throws Exception {
-        createTestNote("Notatka 1", NoteCategory.PYTANIA);
+        createTestNote("Notatka 1", NoteCategory.QUESTIONS);
         Thread.sleep(10);
         createTestNote("Notatka 2", NoteCategory.FEEDBACK);
         Thread.sleep(10);
-        createTestNote("Notatka 3", NoteCategory.INNE);
+        createTestNote("Notatka 3", NoteCategory.OTHER);
 
         mockMvc.perform(get("/api/applications/" + testApplication.getId() + "/notes"))
                 .andExpect(status().isOk())
@@ -156,25 +156,25 @@ class NoteControllerTest {
     @Order(6)
     @DisplayName("PUT /api/notes/{id} - updates note content and category")
     void updateNote_ChangesContentAndCategory() throws Exception {
-        Note note = createTestNote("Stara tresc", NoteCategory.INNE);
+        Note note = createTestNote("Stara tresc", NoteCategory.OTHER);
 
         Map<String, Object> updateRequest = new HashMap<>();
         updateRequest.put("content", "Nowa tresc notatki");
-        updateRequest.put("category", "PYTANIA");
+        updateRequest.put("category", "QUESTIONS");
 
         mockMvc.perform(put("/api/notes/" + note.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("Nowa tresc notatki"))
-                .andExpect(jsonPath("$.category").value("PYTANIA"));
+                .andExpect(jsonPath("$.category").value("QUESTIONS"));
     }
 
     @Test
     @Order(7)
     @DisplayName("DELETE /api/notes/{id} - removes note")
     void deleteNote_RemovesFromDatabase() throws Exception {
-        Note note = createTestNote("Do usuniecia", NoteCategory.INNE);
+        Note note = createTestNote("Do usuniecia", NoteCategory.OTHER);
         Long id = note.getId();
 
         mockMvc.perform(delete("/api/notes/" + id))
@@ -194,7 +194,7 @@ class NoteControllerTest {
 
     @Test
     @Order(9)
-    @DisplayName("POST /api/applications/{id}/notes - defaults to category INNE when not provided")
+    @DisplayName("POST /api/applications/{id}/notes - defaults to category OTHER when not provided")
     void createNote_NoCategoryProvided_DefaultsToInne() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("content", "Notatka bez kategorii");
@@ -203,7 +203,7 @@ class NoteControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.category").value("INNE"));
+                .andExpect(jsonPath("$.category").value("OTHER"));
     }
 
     // ==================== Helper methods ====================

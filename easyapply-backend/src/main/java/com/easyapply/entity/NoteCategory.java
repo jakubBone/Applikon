@@ -1,10 +1,7 @@
 package com.easyapply.entity;
 
 public enum NoteCategory {
-    PYTANIA,
+    QUESTIONS,
     FEEDBACK,
-    INNE,
-    // Legacy — kept for backward compatibility with old data
-    PYTANIE,
-    KONTAKT
+    OTHER
 }

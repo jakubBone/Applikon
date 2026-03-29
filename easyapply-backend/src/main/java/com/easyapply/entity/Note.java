@@ -25,8 +25,8 @@ public class Note {
     private Application application;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "VARCHAR(255) DEFAULT 'INNE'")
-    private NoteCategory category = NoteCategory.INNE;
+    @Column(columnDefinition = "VARCHAR(255) DEFAULT 'OTHER'")
+    private NoteCategory category = NoteCategory.OTHER;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -38,13 +38,13 @@ public class Note {
     public Note(String content, Application application) {
         this.content = content;
         this.application = application;
-        this.category = NoteCategory.INNE;
+        this.category = NoteCategory.OTHER;
     }
 
     public Note(String content, Application application, NoteCategory category) {
         this.content = content;
         this.application = application;
-        this.category = category != null ? category : NoteCategory.INNE;
+        this.category = category != null ? category : NoteCategory.OTHER;
     }
 
     // Getters and Setters
@@ -85,6 +85,6 @@ public class Note {
     }
 
     public void setCategory(NoteCategory category) {
-        this.category = category != null ? category : NoteCategory.INNE;
+        this.category = category != null ? category : NoteCategory.OTHER;
     }
 }
