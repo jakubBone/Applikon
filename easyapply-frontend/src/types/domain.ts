@@ -10,7 +10,7 @@ export type SalaryType = 'BRUTTO' | 'NETTO'
 
 export type Currency = 'PLN' | 'EUR' | 'USD' | 'GBP'
 
-export type RejectionReason = 'BRAK_ODPOWIEDZI' | 'ODRZUCONO_CV' | 'ODRZUCONO_NA_ROZMOWIE' | 'WYCOFANIE' | 'INNE'
+export type RejectionReason = 'NO_RESPONSE' | 'EMAIL_REJECTION' | 'REJECTED_AFTER_INTERVIEW' | 'OTHER'
 
 export type CVType = 'FILE' | 'LINK' | 'NOTE'
 

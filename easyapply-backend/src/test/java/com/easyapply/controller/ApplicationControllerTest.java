@@ -294,14 +294,14 @@ class ApplicationControllerTest {
 
         Map<String, Object> stageRequest = new HashMap<>();
         stageRequest.put("status", "ODMOWA");
-        stageRequest.put("rejectionReason", "BRAK_ODPOWIEDZI");
+        stageRequest.put("rejectionReason", "NO_RESPONSE");
 
         mockMvc.perform(patch("/api/applications/" + app.getId() + "/stage")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(stageRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ODMOWA"))
-                .andExpect(jsonPath("$.rejectionReason").value("BRAK_ODPOWIEDZI"));
+                .andExpect(jsonPath("$.rejectionReason").value("NO_RESPONSE"));
     }
 
     @Test
@@ -326,7 +326,7 @@ class ApplicationControllerTest {
     void updateStage_BackToSent_ClearsData() throws Exception {
         Application app = createTestApplication("Google", "Dev");
         app.setStatus(ApplicationStatus.ODMOWA);
-        app.setRejectionReason(RejectionReason.BRAK_ODPOWIEDZI);
+        app.setRejectionReason(RejectionReason.NO_RESPONSE);
         app.setCurrentStage("Rozmowa techniczna");
         applicationRepository.save(app);
 

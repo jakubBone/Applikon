@@ -259,7 +259,7 @@ class ApplicationServiceTest {
             StageUpdateRequest request = new StageUpdateRequest(
                     ApplicationStatus.ODMOWA,
                     null,
-                    RejectionReason.BRAK_ODPOWIEDZI,
+                    RejectionReason.NO_RESPONSE,
                     "No feedback"
             );
 
@@ -268,9 +268,9 @@ class ApplicationServiceTest {
             verify(applicationRepository).save(appCaptor.capture());
             Application captured = appCaptor.getValue();
             assertEquals(ApplicationStatus.ODMOWA, captured.getStatus());
-            assertEquals(RejectionReason.BRAK_ODPOWIEDZI, captured.getRejectionReason());
+            assertEquals(RejectionReason.NO_RESPONSE, captured.getRejectionReason());
             assertNull(captured.getCurrentStage());
-            assertEquals(RejectionReason.BRAK_ODPOWIEDZI, response.rejectionReason());
+            assertEquals(RejectionReason.NO_RESPONSE, response.rejectionReason());
         }
 
         @Test
@@ -278,7 +278,7 @@ class ApplicationServiceTest {
             Application existing = app(12L, "Google", "Dev");
             existing.setStatus(ApplicationStatus.ODMOWA);
             existing.setCurrentStage("HR call");
-            existing.setRejectionReason(RejectionReason.ODMOWA_MAILOWA);
+            existing.setRejectionReason(RejectionReason.EMAIL_REJECTION);
             existing.setRejectionDetails("No fit");
 
             when(applicationRepository.findByIdAndUserId(12L, TEST_USER_ID)).thenReturn(Optional.of(existing));

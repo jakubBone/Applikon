@@ -23,7 +23,7 @@ export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
     } else if (selectedOutcome === 'ODMOWA') {
       onSelect({
         status: 'ODMOWA',
-        rejectionReason: rejectionReason || 'INNE',
+        rejectionReason: rejectionReason || 'OTHER',
         rejectionDetails: rejectionDetails || null
       })
     }
@@ -67,7 +67,7 @@ export function EndModal({ isOpen, onClose, onSelect }: EndModalProps) {
                 <option key={reason.id} value={reason.id}>{t(reason.labelKey)}</option>
               ))}
             </select>
-            {rejectionReason === 'INNE' && (
+            {rejectionReason === 'OTHER' && (
               <textarea
                 placeholder={t('endModal.detailsPlaceholder')}
                 value={rejectionDetails}

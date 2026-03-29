@@ -38,7 +38,7 @@ class StatisticsServiceTest {
                 TEST_USER_ID,
                 ApplicationStatus.ODMOWA,
                 ApplicationStatus.OFERTA,
-                RejectionReason.BRAK_ODPOWIEDZI
+                RejectionReason.NO_RESPONSE
         )).thenReturn(new Object[]{rejections, ghostings, offers});
     }
 

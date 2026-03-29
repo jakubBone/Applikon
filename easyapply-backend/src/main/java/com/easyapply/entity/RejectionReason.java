@@ -1,8 +1,8 @@
 package com.easyapply.entity;
 
 public enum RejectionReason {
-    BRAK_ODPOWIEDZI,
-    ODMOWA_MAILOWA,
-    ODRZUCENIE_PO_ROZMOWIE,
-    INNE
+    NO_RESPONSE,
+    EMAIL_REJECTION,
+    REJECTED_AFTER_INTERVIEW,
+    OTHER
 }

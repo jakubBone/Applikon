@@ -48,7 +48,7 @@ public class StatisticsService {
     @Transactional(readOnly = true)
     public BadgeStatsResponse getBadgeStats(UUID userId) {
         Object[] stats = normalizeStats(applicationRepository.getApplicationStats(
-                userId, ApplicationStatus.ODMOWA, ApplicationStatus.OFERTA, RejectionReason.BRAK_ODPOWIEDZI));
+                userId, ApplicationStatus.ODMOWA, ApplicationStatus.OFERTA, RejectionReason.NO_RESPONSE));
         
         int rejectionCount = getStatValue(stats, 0);
         int ghostingCount = getStatValue(stats, 1);
