@@ -190,7 +190,7 @@ Identyczny jak przy froncie. Każda zmiana musi przejść przez ten proces:
 | Etap | Temat | Nauka | CR naprawione w tym etapie |
 |------|-------|-------|---------------------------|
 | 1 | Przegląd architektury — przepływ i elementy | ✅ | — |
-| 2 | Security — OAuth2, JWT, ciasteczka | ⬜ | CR-5, CR-3 (backend) |
+| 2 | Security — OAuth2, JWT, ciasteczka | ✅ | CR-5, CR-3 (backend) |
 | 3 | Security — walidacja danych i plików | ⬜ | CR-1, CR-B1, CR-B2, CR-B3 |
 | 4 | Jakość kodu i wzorce | ⬜ | CR-10, CR-B4, CR-B5, CR-B6, CR-B7, CR-B8, CR-B9, CR-B10 |
 | 5 | Testy — przegląd, uzupełnienie, pokrycie | ⬜ | — |
@@ -209,8 +209,8 @@ Po zakończeniu każdego etapu Claude pyta:
 | ID | Problem | Plik(i) | Etap | Status | Przetestowane |
 |----|---------|---------|------|--------|---------------|
 | CR-1 | Path traversal przy uploadzie CV | `CVService.java` | 3 | ⬜ | ⬜ |
-| CR-5 | Brak SameSite na ciasteczku refresh_token | `OAuth2AuthenticationSuccessHandler.java` | 2 | ⬜ | ⬜ |
-| CR-3 | Kontrakt refresh tokena — backend zwraca `"token"` zamiast `"accessToken"` | `AuthController.java` | 2 | ⬜ | ⬜ |
+| CR-5 | Brak SameSite na ciasteczku refresh_token | `OAuth2AuthenticationSuccessHandler.java` | 2 | ✅ | ✅ |
+| CR-3 | Kontrakt refresh tokena — backend zwraca `"token"` zamiast `"accessToken"` | `AuthController.java` | 2 | ✅ | ✅ |
 | CR-B1 | Brak walidacji URL-i w backendzie (externalUrl w CV) | `CVService.java` | 3 | ⬜ | ⬜ |
 | CR-B3 | Walidacja plików oparta tylko na Content-Type, brak magic bytes | `CVService.java` | 3 | ⬜ | ⬜ |
 
