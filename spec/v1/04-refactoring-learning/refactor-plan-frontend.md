@@ -4,7 +4,7 @@
 
 Ten dokument jest przewodnikiem nauki dla Jakuba — autora projektu EasyApply.
 Jakub jest backendowcem (Java/Spring), który napisał tę aplikację z pomocą Claude Code.
-Nie zna frontendu. Chce zrozumieć jak działa frontend, żeby móc o nim rozmawiać na rozmowach rekrutacyjnych.
+Z natury jest backendowcem, więc, chce zrozumieć jak działa frontend na poziomie podstawowym.
 
 **Dokumenty źródłowe:**
 - `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — ten plik (plan nauki + postęp)

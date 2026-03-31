@@ -31,7 +31,6 @@ public class StageHistory {
 
     private LocalDateTime completedAt;
 
-    // Constructors
     public StageHistory() {}
 
     public StageHistory(Application application, String stageName) {
@@ -40,7 +39,6 @@ public class StageHistory {
         this.completed = false;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

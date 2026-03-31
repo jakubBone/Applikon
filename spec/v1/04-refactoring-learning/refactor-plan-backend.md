@@ -4,10 +4,10 @@
 
 Ten dokument jest przewodnikiem nauki backendu dla Jakuba — autora projektu EasyApply.
 Jakub jest junior Java developerem. Zna Spring Boot na poziomie podstawowym/średnim.
-Backend został napisany z pomocą AI — Jakub rozumie ogólną architekturę, ale nie zna
-wszystkich szczegółów implementacji. Główne luki: security, walidacja, wzorce projektowe.
+Backend został napisany z pomocą AI — Jakub rozumie ogólną architekturę, ale nie chce zgłębić 
+głębiej wszystkie szczegóły implementacji. Główne luki: security, walidacja, wzorce projektowe.
 
-**Cel:** Zrozumieć przepływ backendu, naprawić problemy z Code Review, uzupełnić luki
+**Cel:** Zrozumieć lepiej przepływ backendu, naprawić problemy z Code Review, uzupełnić luki
 w security. Nie uczymy od zera — tłumaczymy to, co wymaga wyjaśnienia.
 
 **Dokumenty źródłowe:**

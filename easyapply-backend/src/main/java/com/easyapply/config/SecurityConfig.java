@@ -37,7 +37,7 @@ import java.util.List;
  * 3. Endpoint access rules (who can and cannot access)
  * 4. OAuth2 Login configuration (Google)
  * 5. OAuth2 Resource Server configuration (JWT validation on every request)
- * 6. CORS (replaces the old CorsConfig.java — Security must handle CORS before checking auth)
+ * 6. CORS (Security must handle CORS before checking auth)
  */
 @Configuration
 @EnableWebSecurity
@@ -151,8 +151,7 @@ public class SecurityConfig {
 
     // =====================================================================
     // CORS CONFIGURATION
-    // Replaces the old CorsConfig.java. Spring Security must handle CORS
-    // at the filter level (before auth checks), not at the MVC level.
+    // Spring Security must handle CORS at the filter level (before auth checks)
     // =====================================================================
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
