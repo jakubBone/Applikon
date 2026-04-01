@@ -2,16 +2,16 @@
 <configuration>
 
     <!--
-        Importujemy domyślne ustawienia Spring Boot (kolory w konsoli, poziomy logowania).
-        Rozszerzamy je o MDC z userId zamiast pisać konfigurację od zera.
+        Import Spring Boot defaults (console colors, log levels).
+        We extend them with MDC userId instead of writing the config from scratch.
     -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
 
     <!--
-        %X{userId} — wartość z MDC pod kluczem "userId".
-        Jeśli użytkownik nie jest zalogowany (np. /api/auth/refresh), pole jest puste.
-        Separator ":-" oznacza: użyj "anonymous" jeśli klucz nie istnieje.
+        %X{userId} — value from MDC under the "userId" key.
+        If the user is not logged in (e.g. /api/auth/refresh), the field is empty.
+        The ":-" separator means: use "anonymous" if the key does not exist.
     -->
     <property name="CONSOLE_LOG_PATTERN"
               value="%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%X{userId:-anonymous}]){cyan} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
@@ -20,7 +20,7 @@
         <appender-ref ref="CONSOLE"/>
     </root>
 
-    <!-- Redukuj szum od Hibernate i Spring Security w logach -->
+    <!-- Reduce noise from Hibernate and Spring Security in logs -->
     <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
     </logger>
