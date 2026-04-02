@@ -87,7 +87,7 @@ Jakub jest backendowcem (Java, Spring Boot). Wygenerował frontend React z pomoc
 ---
 
 ## POST 3 — Struktura spec/ w repozytorium
-**Status: gotowy do publikacji**
+**Opublikowany**
 
 ---
 
@@ -99,25 +99,46 @@ W moim projekcie EasyApply katalog `spec/` wygląda tak:
 
 ```
 spec/
-  v1/
-    01-vision/        ← brief: problem, użytkownik, zakres MVP
-    02-implementation/ ← plan: kroki techniczne, definicja "done"
-    03-review/        ← code review: bezpieczeństwo, wzorce, jakość
-    04-refactoring-learning/      ← plany nauki + notatki (osobno backend i frontend)
-    05-additional-features/i18n/ ← dodatkowe ficzery po MVP: każdy własny mini-cykl spec → build
+  v1/                        ← MVP: monolit Spring Boot
+    01-vision/               ← brief: problem, użytkownik, zakres MVP
+    02-implementation/       ← plan: kroki techniczne, definicja "done"
+    03-review/               ← code review: bezpieczeństwo, wzorce, jakość
+    04-refactoring-learning/ ← plan nauki po CR + notatki (backend i frontend)
+    05-additional-features/  ← ficzery spoza MVP: każdy własny mini-cykl (spec → build → test)
   v2/
-    vision.md         ← architektura mikrousług: Kafka, 6 serwisów, Redis
-  README.md           ← tabela statusów całego projektu
+    vision.md                ← AI / Mikrousługi / Kafka - świadoma decyzja (mój rozwój)
+  README.md                  ← statusy faz projektu
 ```
 
-Każda wersja ma własny lifecycle. V1 to monolit — zbudowany, zrecenzowany, refaktoryzowany. V2 to mikrousługi — na razie tylko vision, własny cykl zacznie się gdy V1 będzie domknięte.
+Każda wersja to osobny lifecycle. V1 — monolit MVP — jest zbudowany,
+zrecenzowany i teraz refaktoryzowany z nauką. V2 to zaprojektowana
+wizja architektoniczna. Na razie tylko vision — własny cykl spec
+zacznie się gdy V1 będzie domknięte.
 
 Kilka rzeczy, które nie są oczywiste:
 
-`04-refactoring-learning/` powstał z code review. CR wskazał luki (security, wzorce, AOP) — zamiast ślepo fixować, najpierw powstawał plan nauki, który tłumaczy mechanizm błędu, a dopiero potem fix. Efekt: naprawione i zrozumiane.
+`04-refactoring-learning/` powstał z code review. CR wskazał luki
+(security, wzorce, jakość) — zamiast ślepo fixować, najpierw powstawał
+plan nauki tłumaczący mechanizm błędu, a dopiero potem fix.
+Efekt: naprawione i zrozumiane.
 
-`05-features/i18n/` to osobny mini-cykl wewnątrz V1 — backend-plan, frontend-plan, enum-rename-plan. Feature dodany po MVP, ale traktowany jak pełnoprawna iteracja ze swoją specyfikacją.
+`05-additional-features/` to ficzery odkryte już po zamknięciu MVP —
+np. i18n, o którym w ogóle nie myślałem planując aplikację. Każdy
+traktowany jak pełnoprawna iteracja ze swoją specyfikacją:
+brief → plan → build → test.
 
-`README.md` to jedyne miejsce z aktualnym statusem projektu. Nie aktualizuję briefu, nie tworzę changelogów. Jedna tabela, dwa wiersze (V1 i V2), statusy per faza.
+`README.md` to jedyne miejsce z aktualnym statusem faz projektu.
+Jedna tabela, dwa wiersze (V1 i V2), statusy per faza.
+Jeden rzut oka i wiem, gdzie jestem.
 
-Spec nie jest dokumentacją po fakcie. To jest mapa, która istnieje zanim zaczyna się kod.
+Spec nie jest dokumentacją po fakcie. To mapa, która istnieje
+zanim zaczyna się kod.
+
+
+## POST 4 — Struktura spec/ w repozytorium
+**Do napisania**
+Implementacja i18n
+
+
+
+

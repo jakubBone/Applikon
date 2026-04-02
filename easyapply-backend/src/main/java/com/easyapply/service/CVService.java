@@ -70,12 +70,19 @@ public class CVService {
         if (file.getSize() > 5 * 1024 * 1024) {
             throw new IllegalArgumentException(messageSource.getMessage("error.cv.tooLarge", null, LocaleContextHolder.getLocale()));
         }
+        byte[] header = new byte[5];
+        if (file.getInputStream().read(header) < 5
+                || header[0] != 0x25 || header[1] != 0x50
+                || header[2] != 0x44 || header[3] != 0x46
+                || header[4] != 0x2D) {
+            throw new IllegalArgumentException(messageSource.getMessage("error.cv.pdfOnly", null, LocaleContextHolder.getLocale()));
+        }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
 
         String originalFileName = file.getOriginalFilename();
-        String fileName = UUID.randomUUID() + "_" + originalFileName;
+        String fileName = UUID.randomUUID() + ".pdf";
         Path filePath = uploadDir.resolve(fileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
@@ -113,7 +120,11 @@ public class CVService {
             if (externalUrl == null || externalUrl.trim().isEmpty()) {
                 throw new IllegalArgumentException(messageSource.getMessage("error.cv.urlRequired", null, LocaleContextHolder.getLocale()));
             }
-            cv.setExternalUrl(externalUrl.trim());
+            String trimmedUrl = externalUrl.trim();
+            if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+                throw new IllegalArgumentException(messageSource.getMessage("error.cv.urlInvalid", null, LocaleContextHolder.getLocale()));
+            }
+            cv.setExternalUrl(trimmedUrl);
         }
 
         return cvRepository.save(cv);
@@ -180,7 +191,11 @@ public class CVService {
             cv.setOriginalFileName(name.trim());
         }
         if (cv.getType() == CVType.LINK && externalUrl != null) {
-            cv.setExternalUrl(externalUrl.trim());
+            String trimmedUrl = externalUrl.trim();
+            if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+                throw new IllegalArgumentException(messageSource.getMessage("error.cv.urlInvalid", null, LocaleContextHolder.getLocale()));
+            }
+            cv.setExternalUrl(trimmedUrl);
         }
 
         return cvRepository.save(cv);

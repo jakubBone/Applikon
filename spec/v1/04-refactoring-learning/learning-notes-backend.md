@@ -391,3 +391,106 @@ Naprawione: `refreshCookie.setAttribute("SameSite", "Strict")` w `OAuth2Authenti
 | `OAuth2AuthenticationSuccessHandler.java` | Generuje JWT, ustawia cookie po OAuth2 |
 | `ApplicationController.java` | Przykład użycia @AuthenticationPrincipal |
 | `ApplicationService.java` | Przykład @Transactional |
+
+---
+
+## Etap 3 — Security: walidacja danych i plików
+
+### CR-1 — Path traversal
+
+`file.getOriginalFilename()` zwraca nazwę podaną przez klienta — atakujący może wpisać `/etc/passwd` lub `../../etc/cron.d/backdoor`.
+
+`Path.resolve()` z absolutną ścieżką ignoruje `uploadDir` i zapisuje plik gdzie atakujący chce.
+
+**Fix:** Na dysk idzie tylko `UUID.randomUUID() + ".pdf"`. Oryginalna nazwa jest już w bazie (`originalFileName`), nie musi być w ścieżce pliku.
+
+```java
+// PRZED (luka)
+String fileName = UUID.randomUUID() + "_" + originalFileName;
+
+// PO (bezpieczne)
+String fileName = UUID.randomUUID() + ".pdf";
+```
+
+### CR-B3 — Magic bytes
+
+`Content-Type` nagłówek ustawia klient — atakujący może wysłać `.exe` z `Content-Type: application/pdf`.
+
+Magic bytes = pierwsze bajty pliku identyfikują jego rzeczywisty typ. PDF zawsze zaczyna się od `%PDF-` (`25 50 44 46 2D`).
+
+**Fix:** Czytamy pierwsze 5 bajtów z `file.getInputStream()` i porównujemy z `%PDF-`. Oba muszą zgadzać: Content-Type + magic bytes.
+
+```java
+byte[] header = new byte[5];
+if (file.getInputStream().read(header) < 5
+        || header[0] != 0x25 || header[1] != 0x50
+        || header[2] != 0x44 || header[3] != 0x46
+        || header[4] != 0x2D) {
+    throw new IllegalArgumentException(...);
+}
+```
+
+`MultipartFile.getInputStream()` można wywołać wielokrotnie (plik tymczasowy na dysku) — `Files.copy` poniżej działa poprawnie.
+
+### CR-B1 — Walidacja URL-i (defense in depth)
+
+Frontend waliduje URL — ale API jest publiczne, ktoś może wysłać request z pominięciem frontendu.
+
+`javascript:alert(document.cookie)` zapisany jako `externalUrl` → frontend renderuje `<a href="javascript:...">` → XSS przy kliknięciu.
+
+**Fix:** URL musi zaczynać się od `http://` lub `https://`. Dotyczy zarówno `createCV` jak i `updateCV`.
+
+```java
+if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+    throw new IllegalArgumentException(...);
+}
+```
+
+### CR-B2 — @NotNull na StageUpdateRequest
+
+Brak `@NotNull` na `status` → `null` przechodzi do serwisu → NPE → 500 Internal Server Error.
+
+**Fix:** `@NotNull ApplicationStatus status` w `StageUpdateRequest.java`. Bean Validation łapie null przed wywołaniem metody serwisu → 400 Bad Request z czytelnym komunikatem.
+
+Zasada: walidację stawiamy na granicy systemu (DTO/API), nie wewnątrz serwisu.
+
+### Pliki kluczowe
+
+| Plik | Co zmieniono |
+|------|-------------|
+| `CVService.java` | CR-1 (UUID filename), CR-B3 (magic bytes), CR-B1 (URL validation) |
+| `StageUpdateRequest.java` | CR-B2 (@NotNull na status) |
+| `messages.properties` / `messages_pl.properties` | Nowy komunikat `error.cv.urlInvalid` |
+
+---
+
+## Etap 4 — Jakość kodu i wzorce
+
+### Spring AOP i proxy
+
+AOP (Aspect-Oriented Programming) = dodanie zachowania do wielu metod bez modyfikowania każdej z nich.
+
+Spring przy starcie aplikacji tworzy **proxy** — dynamiczną podklasę Twojego beana (CGLIB). Kiedy wstrzykujesz `@Autowired ApplicationService`, dostajesz proxy, nie oryginał.
+
+```
+Controller → applicationService (PROXY) → otwiera transakcję → super.addStage() (Twój kod) → commit/rollback
+```
+
+Proxy nadpisuje metody (`@Override`) żeby dodać logikę przed/po. Dlatego:
+- **prywatna metoda** — Java nie pozwala jej nadpisać w podklasie → proxy jej nie widzi → `@Transactional` ignorowany
+- **`this.metoda()`** — wywołanie bezpośrednio na obiekcie, omija proxy → `@Transactional` ignorowany
+
+### `@Transactional(readOnly = true)`
+
+Mówi Hibernate: "ta transakcja tylko czyta". Hibernate wyłącza **dirty checking** (sprawdzanie czy encje się zmieniły przed commitem). Lżejsze i szybsze dla metod `findAll...`.
+
+### CR-10 — naprawione
+
+Usunięto `@Transactional` z prywatnej metody `markCurrentStageCompleted()` w `ApplicationService.java:148`.
+Adnotacja była ignorowana (prywatna metoda) i myląca — metoda zawsze działa w transakcji `addStage()`.
+
+### Pliki kluczowe
+
+| Plik | Co zmieniono |
+|------|-------------|
+| `ApplicationService.java` | CR-10: usunięto `@Transactional` z `markCurrentStageCompleted()` |

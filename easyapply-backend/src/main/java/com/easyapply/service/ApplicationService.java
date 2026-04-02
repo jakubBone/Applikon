@@ -133,6 +133,18 @@ public class ApplicationService {
     }
 
     @Transactional
+    public ApplicationResponse addStage(Long id, String stageName, UUID userId) {
+        Application application = getApplicationByIdAndUserId(id, userId);
+
+        markCurrentStageCompleted(application);
+        application.setCurrentStage(stageName);
+        application.setStatus(ApplicationStatus.IN_PROGRESS);
+
+        stageHistoryRepository.save(new StageHistory(application, stageName));
+
+        return ApplicationResponse.fromEntity(applicationRepository.save(application));
+    }
+
     private void markCurrentStageCompleted(Application application) {
         if (application.getCurrentStage() != null) {
             stageHistoryRepository.findByApplicationIdOrderByCreatedAtAsc(application.getId()).stream()
@@ -145,18 +157,7 @@ public class ApplicationService {
         }
     }
 
-    @Transactional
-    public ApplicationResponse addStage(Long id, String stageName, UUID userId) {
-        Application application = getApplicationByIdAndUserId(id, userId);
 
-        markCurrentStageCompleted(application);
-        application.setCurrentStage(stageName);
-        application.setStatus(ApplicationStatus.IN_PROGRESS);
-
-        stageHistoryRepository.save(new StageHistory(application, stageName));
-
-        return ApplicationResponse.fromEntity(applicationRepository.save(application));
-    }
 
     @Transactional(readOnly = true)
     public List<ApplicationResponse> findDuplicates(UUID userId, String company, String position) {
