@@ -402,12 +402,7 @@ część to "nice to have" (Object[] → projection).
    - W tym przypadku: brak praktycznego wpływu (wywołana z transakcyjnej metody),
      ale adnotacja jest myląca — usuwamy
 
-2. **Stage history nie aktualizowana (CR-B6):**
-   - `updateStage()` — zmienia status, ale nie tworzy wpisu w `stage_history`
-   - `addStage()` — tworzy wpis w historii, ale nie jest wywoływana z UI przy drag&drop
-   - Ujednolicamy: `updateStage()` powinno zapisywać do historii
-
-3. **user_id nullable (CR-B7):**
+2. **user_id nullable (CR-B7):**
    - Migracja V4 dodaje kolumnę jako nullable ("na razie, bo istniejące wiersze mają null")
    - Ale nigdy nie dodaje NOT NULL
    - Tworzymy nową migrację: backfill + ALTER TABLE SET NOT NULL
@@ -445,7 +440,6 @@ część to "nice to have" (Object[] → projection).
 
 **CR do naprawy (ważne):**
 - **CR-10:** Usunięcie @Transactional z prywatnej metody
-- **CR-B6:** updateStage() zapisuje do stage_history
 - **CR-B7:** Nowa migracja — NOT NULL na user_id
 - **CR-B9:** Błędy walidacji jako mapa pól
 
