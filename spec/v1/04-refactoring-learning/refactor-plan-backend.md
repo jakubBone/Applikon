@@ -220,7 +220,6 @@ Po zakończeniu każdego etapu Claude pyta:
 |----|---------|---------|------|--------|---------------|
 | CR-B2 | Brak @NotNull na status w StageUpdateRequest | `StageUpdateRequest.java` | 3 | ✅ | ✅ |
 | CR-10 | @Transactional na prywatnej metodzie (AOP ignoruje) | `ApplicationService.java` | 4 | ✅ | ✅ |
-| CR-B6 | updateStage() nie zapisuje do stage_history | `ApplicationService.java` | 4 | ⬜ | ⬜ |
 | CR-B7 | user_id nullable — brak NOT NULL constraint | nowa migracja Flyway | 4 | ⬜ | ⬜ |
 | CR-B9 | Błędy walidacji jako string zamiast mapy pól | `GlobalExceptionHandler.java` | 4 | ⬜ | ⬜ |
 
