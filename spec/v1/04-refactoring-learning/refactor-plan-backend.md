@@ -192,7 +192,7 @@ Identyczny jak przy froncie. Każda zmiana musi przejść przez ten proces:
 | 1 | Przegląd architektury — przepływ i elementy | ✅ | — |
 | 2 | Security — OAuth2, JWT, ciasteczka | ✅ | CR-5, CR-3 (backend) |
 | 3 | Security — walidacja danych i plików | ✅ | CR-1, CR-B1, CR-B2, CR-B3 |
-| 4 | Jakość kodu i wzorce | ⬜ | CR-10, CR-B4, CR-B5, CR-B6, CR-B7, CR-B8, CR-B9, CR-B10 |
+| 4 | Jakość kodu i wzorce | ⬜ | CR-10, CR-B4, CR-B5, CR-B7, CR-B8, CR-B9, CR-B10 |
 | 5 | Testy — przegląd, uzupełnienie, pokrycie | ⬜ | — |
 
 Po zakończeniu każdego etapu Claude pyta:
@@ -220,7 +220,7 @@ Po zakończeniu każdego etapu Claude pyta:
 |----|---------|---------|------|--------|---------------|
 | CR-B2 | Brak @NotNull na status w StageUpdateRequest | `StageUpdateRequest.java` | 3 | ✅ | ✅ |
 | CR-10 | @Transactional na prywatnej metodzie (AOP ignoruje) | `ApplicationService.java` | 4 | ✅ | ✅ |
-| CR-B7 | user_id nullable — brak NOT NULL constraint | nowa migracja Flyway | 4 | ⬜ | ⬜ |
+| CR-B7 | user_id nullable — brak NOT NULL constraint | nowa migracja Flyway | 4 | ✅ | ✅ |
 | CR-B9 | Błędy walidacji jako string zamiast mapy pól | `GlobalExceptionHandler.java` | 4 | ⬜ | ⬜ |
 
 ### 🟢 Nice to have (jakość kodu)

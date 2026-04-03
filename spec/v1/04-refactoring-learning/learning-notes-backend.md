@@ -489,8 +489,41 @@ Mówi Hibernate: "ta transakcja tylko czyta". Hibernate wyłącza **dirty checki
 Usunięto `@Transactional` z prywatnej metody `markCurrentStageCompleted()` w `ApplicationService.java:148`.
 Adnotacja była ignorowana (prywatna metoda) i myląca — metoda zawsze działa w transakcji `addStage()`.
 
+### CR-B7 — user_id NOT NULL
+
+Migracja V4 dodała `user_id` jako nullable ("na razie, bo istniejące wiersze mają null") i nigdy nie wymusiła NOT NULL. Skutek: baza nie chroniła przed wstawieniem rekordu bez właściciela.
+
+**Fix:** Migracja V11 — usuwa osierocone wiersze (bez `user_id`), potem `ALTER TABLE ... SET NOT NULL` na `applications` i `cvs`.
+
+Zasada: **historycznych migracji Flyway nie edytujemy** — Flyway weryfikuje checksumę każdego zastosowanego pliku. Zmiana komentarzy w V2/V4 wywołałaby `checksum mismatch` na produkcji.
+
+### GlobalExceptionHandler — jak działa
+
+`@RestControllerAdvice` = Spring wie, że ta klasa obsługuje wyjątki ze wszystkich kontrolerów.
+`extends ResponseEntityExceptionHandler` = dziedziczysz po klasie bazowej Spring MVC, która już obsługuje wewnętrzne wyjątki (np. `MethodArgumentNotValidException`). Możesz nadpisywać jej metody przez `@Override`.
+`@Order(HIGHEST_PRECEDENCE)` = jeśli byłoby kilka handlerów — ten ma pierwszeństwo.
+
+**Kto rzuca, kto łapie:**
+
+| Kto rzuca | Gdzie w kodzie | Kto łapie |
+|-----------|----------------|-----------|
+| Spring (`@Valid` fail) | automatycznie przy wejściu do kontrolera | `handleMethodArgumentNotValid` |
+| `new EntityNotFoundException(...)` | w serwisach, gdy brak w bazie | `handleEntityNotFoundException` |
+| `new IllegalArgumentException(...)` | CVService (path traversal, magic bytes, URL) | `handleIllegalArgumentException` |
+| Cokolwiek innego | gdziekolwiek | `handleGenericException` |
+
+**ProblemDetail** = klasa Spring (RFC 9457). Zamiast własnego JSON-a używasz gotowej struktury:
+```json
+{ "status": 400, "title": "...", "detail": "..." }
+```
+`problem.setProperty("errors", mapa)` — dodaje własne pole do response.
+
+**MessageSource** = mechanizm tłumaczeń. Klucze trzymasz w `messages.properties` / `messages_pl.properties`,
+`messageSource.getMessage("klucz", null, locale)` zwraca tekst w języku usera.
+
 ### Pliki kluczowe
 
 | Plik | Co zmieniono |
 |------|-------------|
 | `ApplicationService.java` | CR-10: usunięto `@Transactional` z `markCurrentStageCompleted()` |
+| `V11__user_id_not_null.sql` | CR-B7: NOT NULL na `user_id` w `applications` i `cvs` |
