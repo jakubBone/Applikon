@@ -541,10 +541,36 @@ Po: mapa `pole → komunikat` w `errors`, `detail` = stały string `"Validation 
 `problem.setProperty("errors", mapa)` — RFC 9457, dodaje własne pole do ProblemDetail.
 `Collectors.toMap(..., (first, second) -> first)` — merge function gdy dwa błędy dla tego samego pola (bierz pierwszy).
 
+### CR-B4 — Object[] → projection
+
+JPQL constructor expression: `SELECT new com.easyapply.dto.ApplicationStats(SUM(...), ...)` zwraca typowany rekord zamiast `Object[]`.
+
+`ApplicationStats` używa `Long` (nie `long`) bo SQL `SUM` może zwrócić `NULL` gdy nie ma wierszy.
+Metody `rejections()`, `ghosting()`, `offers()` obsługują null → 0.
+
+Stare `normalizeStats()` i `getStatValue()` w serwisie zostały usunięte.
+
+### CR-B5 — Równoległe tablice → record BadgeDefinition
+
+Przed: 4 tablice per typ odznaki (`NAMES`, `ICONS`, `DESCRIPTIONS`, `THRESHOLDS`) — zsynchronizowane po indeksie.
+Po: `record BadgeDefinition(String name, String icon, String description, int threshold)` — jeden obiekt na odznakę.
+
+`BadgeDefinition` jest `private record` wewnątrz `StatisticsService` — nie jest potrzebna poza serwisem.
+
+### CR-B10 — Komentarze przy regułach biznesowych
+
+Komentarze wyjaśniają **dlaczego** dana reguła istnieje, nie **co** robi kod.
+Przykład: `// Rolling back to SENT resets the entire recruitment progress — stages are no longer relevant as the process starts from scratch.`
+
+Komentarze w kodzie zawsze po **angielsku**.
+
 ### Pliki kluczowe
 
 | Plik | Co zmieniono |
 |------|-------------|
-| `ApplicationService.java` | CR-10: usunięto `@Transactional` z `markCurrentStageCompleted()` |
+| `ApplicationService.java` | CR-10: usunięto `@Transactional` z `markCurrentStageCompleted()`; CR-B10: komentarze |
 | `V11__user_id_not_null.sql` | CR-B7: NOT NULL na `user_id` w `applications` i `cvs` |
 | `GlobalExceptionHandler.java` | CR-B9: błędy walidacji jako mapa pól |
+| `ApplicationStats.java` (nowy) | CR-B4: projection dla zapytania statystycznego |
+| `StatisticsService.java` | CR-B4: Object[] → ApplicationStats; CR-B5: tablice → BadgeDefinition[] |
+| `ApplicationRepository.java` | CR-B4: constructor expression w JPQL |

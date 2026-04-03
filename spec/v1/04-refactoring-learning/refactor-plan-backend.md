@@ -192,7 +192,7 @@ Identyczny jak przy froncie. Każda zmiana musi przejść przez ten proces:
 | 1 | Przegląd architektury — przepływ i elementy | ✅ | — |
 | 2 | Security — OAuth2, JWT, ciasteczka | ✅ | CR-5, CR-3 (backend) |
 | 3 | Security — walidacja danych i plików | ✅ | CR-1, CR-B1, CR-B2, CR-B3 |
-| 4 | Jakość kodu i wzorce | ⬜ | CR-10, CR-B4, CR-B5, CR-B7, CR-B8, CR-B9, CR-B10 |
+| 4 | Jakość kodu i wzorce | ✅ | CR-10, CR-B4, CR-B5, CR-B7, CR-B8, CR-B9, CR-B10 |
 | 5 | Testy — przegląd, uzupełnienie, pokrycie | ⬜ | — |
 
 Po zakończeniu każdego etapu Claude pyta:
@@ -227,10 +227,10 @@ Po zakończeniu każdego etapu Claude pyta:
 
 | ID | Problem | Plik(i) | Etap | Status | Przetestowane |
 |----|---------|---------|------|--------|---------------|
-| CR-B4 | Object[] w zapytaniu statystycznym → projection/DTO | `ApplicationRepository.java`, `StatisticsService.java` | 4 | ⬜ | ⬜ |
-| CR-B5 | 5 równoległych tablic w StatisticsService → record Badge | `StatisticsService.java` | 4 | ⬜ | ⬜ |
-| CR-B8 | Deprecated enums w NoteCategory (PYTANIE, KONTAKT) | `NoteCategory.java` + migracja | 4 | ⬜ | ⬜ |
-| CR-B10 | Brak komentarzy przy regułach biznesowych w updateStage() | `ApplicationService.java` | 4 | ⬜ | ⬜ |
+| CR-B4 | Object[] w zapytaniu statystycznym → projection/DTO | `ApplicationRepository.java`, `StatisticsService.java` | 4 | ✅ | ✅ |
+| CR-B5 | 5 równoległych tablic w StatisticsService → record Badge | `StatisticsService.java` | 4 | ✅ | ✅ |
+| CR-B8 | Deprecated enums w NoteCategory (PYTANIE, KONTAKT) | `NoteCategory.java` + migracja | 4 | ✅ | ✅ |
+| CR-B10 | Brak komentarzy przy regułach biznesowych w updateStage() | `ApplicationService.java` | 4 | ✅ | ✅ |
 
 **Legenda:**
 - **Status** ⬜/✅ — czy zmiana w kodzie została wprowadzona
