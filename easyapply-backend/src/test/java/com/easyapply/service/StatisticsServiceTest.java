@@ -1,5 +1,6 @@
 package com.easyapply.service;
 
+import com.easyapply.dto.ApplicationStats;
 import com.easyapply.dto.BadgeResponse;
 import com.easyapply.dto.BadgeStatsResponse;
 import com.easyapply.entity.ApplicationStatus;
@@ -39,7 +40,7 @@ class StatisticsServiceTest {
                 ApplicationStatus.REJECTED,
                 ApplicationStatus.OFFER,
                 RejectionReason.NO_RESPONSE
-        )).thenReturn(new Object[]{rejections, ghostings, offers});
+        )).thenReturn(new ApplicationStats((long) rejections, (long) ghostings, (long) offers));
     }
 
     @Nested

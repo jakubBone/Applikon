@@ -101,6 +101,8 @@ public class ApplicationService {
         application.setStatus(newStatus);
 
         if (newStatus == ApplicationStatus.SENT) {
+            // Rolling back to SENT resets the entire recruitment progress —
+            // stages are no longer relevant as the process starts from scratch.
             application.setCurrentStage(null);
             application.setRejectionReason(null);
             application.setRejectionDetails(null);
@@ -109,21 +111,26 @@ public class ApplicationService {
 
         if (newStatus == ApplicationStatus.IN_PROGRESS) {
             if (oldStatus == ApplicationStatus.OFFER || oldStatus == ApplicationStatus.REJECTED) {
+                // Resuming the process after an offer or rejection (e.g. re-engagement) —
+                // previous outcome data is no longer valid.
                 application.setRejectionReason(null);
                 application.setRejectionDetails(null);
             }
             if (request.currentStage() != null) {
+                // Stage can be provided alongside the status change (e.g. "In progress — technical interview").
                 application.setCurrentStage(request.currentStage());
             }
         }
 
         if (newStatus == ApplicationStatus.OFFER) {
+            // An offer marks the end of the stage-based process — the active stage is no longer relevant.
             application.setCurrentStage(null);
             application.setRejectionReason(null);
             application.setRejectionDetails(null);
         }
 
         if (newStatus == ApplicationStatus.REJECTED) {
+            // Rejection ends the process — we store the reason, but the recruitment stage is cleared.
             application.setCurrentStage(null);
             application.setRejectionReason(request.rejectionReason());
             application.setRejectionDetails(request.rejectionDetails());

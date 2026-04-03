@@ -1,5 +1,6 @@
 package com.easyapply.repository;
 
+import com.easyapply.dto.ApplicationStats;
 import com.easyapply.entity.Application;
 import com.easyapply.entity.ApplicationStatus;
 import com.easyapply.entity.RejectionReason;
@@ -28,12 +29,12 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     boolean existsByIdAndUserId(Long id, UUID userId);
 
-    @Query("SELECT " +
+    @Query("SELECT new com.easyapply.dto.ApplicationStats(" +
             "SUM(CASE WHEN a.status = :odmowa THEN 1 ELSE 0 END), " +
             "SUM(CASE WHEN a.status = :odmowa AND a.rejectionReason = :ghosting THEN 1 ELSE 0 END), " +
-            "SUM(CASE WHEN a.status = :oferta THEN 1 ELSE 0 END) " +
+            "SUM(CASE WHEN a.status = :oferta THEN 1 ELSE 0 END)) " +
             "FROM Application a WHERE a.user.id = :userId")
-    Object[] getApplicationStats(
+    ApplicationStats getApplicationStats(
             @Param("userId") UUID userId,
             @Param("odmowa") ApplicationStatus odmowa,
             @Param("oferta") ApplicationStatus oferta,
