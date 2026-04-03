@@ -131,7 +131,7 @@ class NoteControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value(containsString("required")));
+                .andExpect(jsonPath("$.errors.content").value(containsString("required")));
     }
 
     @Test

@@ -111,7 +111,7 @@ class ApplicationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value(containsString("Company name")));
+                .andExpect(jsonPath("$.errors.company").value(containsString("Company name")));
     }
 
     @Test
@@ -127,7 +127,7 @@ class ApplicationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value(containsString("positive")));
+                .andExpect(jsonPath("$.errors.salaryMin").value(containsString("positive")));
     }
 
     @Test

@@ -521,9 +521,30 @@ Zasada: **historycznych migracji Flyway nie edytujemy** — Flyway weryfikuje ch
 **MessageSource** = mechanizm tłumaczeń. Klucze trzymasz w `messages.properties` / `messages_pl.properties`,
 `messageSource.getMessage("klucz", null, locale)` zwraca tekst w języku usera.
 
+### CR-B9 — Błędy walidacji jako mapa pól
+
+Przed: wszystkie błędy w jednym stringu w `detail` → frontend nie wiedział które pole podświetlić.
+
+Po: mapa `pole → komunikat` w `errors`, `detail` = stały string `"Validation failed"`.
+
+```json
+{
+  "status": 400,
+  "title": "Błąd walidacji",
+  "detail": "Validation failed",
+  "errors": {
+    "company": "Company name is required"
+  }
+}
+```
+
+`problem.setProperty("errors", mapa)` — RFC 9457, dodaje własne pole do ProblemDetail.
+`Collectors.toMap(..., (first, second) -> first)` — merge function gdy dwa błędy dla tego samego pola (bierz pierwszy).
+
 ### Pliki kluczowe
 
 | Plik | Co zmieniono |
 |------|-------------|
 | `ApplicationService.java` | CR-10: usunięto `@Transactional` z `markCurrentStageCompleted()` |
 | `V11__user_id_not_null.sql` | CR-B7: NOT NULL na `user_id` w `applications` i `cvs` |
+| `GlobalExceptionHandler.java` | CR-B9: błędy walidacji jako mapa pól |
