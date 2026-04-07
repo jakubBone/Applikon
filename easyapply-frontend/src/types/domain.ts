@@ -20,14 +20,6 @@ export type NoteCategory = 'QUESTIONS' | 'FEEDBACK' | 'OTHER'
 // Encje
 // ============================================================
 
-export interface StageHistory {
-  id: number
-  stageName: string
-  completedAt: string | null
-  createdAt: string
-  completed: boolean
-}
-
 export interface Application {
   id: number
   company: string
@@ -48,7 +40,6 @@ export interface Application {
   cvFileName: string | null
   cvType: CVType | null
   cvExternalUrl: string | null
-  stageHistory: StageHistory[]
 }
 
 export interface Note {

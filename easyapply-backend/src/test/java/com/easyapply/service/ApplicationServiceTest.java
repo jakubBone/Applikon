@@ -9,10 +9,8 @@ import com.easyapply.entity.ContractType;
 import com.easyapply.entity.RejectionReason;
 import com.easyapply.entity.SalarySource;
 import com.easyapply.entity.SalaryType;
-import com.easyapply.entity.StageHistory;
 import com.easyapply.entity.User;
 import com.easyapply.repository.ApplicationRepository;
-import com.easyapply.repository.StageHistoryRepository;
 import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.context.MessageSource;
@@ -58,9 +56,6 @@ class ApplicationServiceTest {
     private NoteService noteService;
 
     @Mock
-    private StageHistoryRepository stageHistoryRepository;
-
-    @Mock
     private UserRepository userRepository;
 
     @Mock
@@ -71,9 +66,6 @@ class ApplicationServiceTest {
 
     @Captor
     private ArgumentCaptor<Application> appCaptor;
-
-    @Captor
-    private ArgumentCaptor<StageHistory> stageHistoryCaptor;
 
     private User testUser;
 
@@ -150,7 +142,6 @@ class ApplicationServiceTest {
             ApplicationResponse response = applicationService.create(request("Google", "Java Dev"), TEST_USER_ID);
 
             verify(applicationRepository).save(appCaptor.capture());
-            verify(stageHistoryRepository).save(stageHistoryCaptor.capture());
 
             Application captured = appCaptor.getValue();
             assertEquals("Google", captured.getCompany());
@@ -189,7 +180,7 @@ class ApplicationServiceTest {
 
         @Test
         void findAllByUserId_returnsMappedList() {
-            when(applicationRepository.findByUserIdWithStageHistory(TEST_USER_ID))
+            when(applicationRepository.findByUserId(TEST_USER_ID))
                     .thenReturn(List.of(
                             app(1L, "Google", "Dev"),
                             app(2L, "Meta", "Engineer")
@@ -274,23 +265,6 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void addStage_savesStageHistoryEntry() {
-            // addStage() — not updateStage() — is responsible for writing to stage_history
-            Application existing = app(13L, "Google", "Dev");
-            existing.setStatus(ApplicationStatus.IN_PROGRESS);
-
-            when(applicationRepository.findByIdAndUserId(13L, TEST_USER_ID)).thenReturn(Optional.of(existing));
-            when(applicationRepository.save(any(Application.class))).thenReturn(existing);
-
-            applicationService.addStage(13L, "HR call", TEST_USER_ID);
-
-            verify(stageHistoryRepository).save(stageHistoryCaptor.capture());
-            StageHistory saved = stageHistoryCaptor.getValue();
-            assertEquals("HR call", saved.getStageName());
-            assertEquals(existing, saved.getApplication());
-        }
-
-        @Test
         void updateStage_toWyslane_clearsFlowDataAndHistory() {
             Application existing = app(12L, "Google", "Dev");
             existing.setStatus(ApplicationStatus.REJECTED);
@@ -307,7 +281,6 @@ class ApplicationServiceTest {
                     TEST_USER_ID
             );
 
-            verify(stageHistoryRepository).deleteByApplicationId(12L);
             assertEquals(ApplicationStatus.SENT, response.status());
             assertNull(response.currentStage());
             assertNull(response.rejectionReason());

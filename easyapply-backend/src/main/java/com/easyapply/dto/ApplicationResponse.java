@@ -3,7 +3,6 @@ package com.easyapply.dto;
 import com.easyapply.entity.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public record ApplicationResponse(
         Long id,
@@ -27,8 +26,7 @@ public record ApplicationResponse(
         String cvExternalUrl,
         String currentStage,
         RejectionReason rejectionReason,
-        String rejectionDetails,
-        List<StageHistoryResponse> stageHistory) {
+        String rejectionDetails) {
 
     public static ApplicationResponse fromEntity(Application application) {
         CV cv = application.getCv();
@@ -54,11 +52,7 @@ public record ApplicationResponse(
                 cv != null ? cv.getExternalUrl() : null,
                 application.getCurrentStage(),
                 application.getRejectionReason(),
-                application.getRejectionDetails(),
-                application.getStageHistory() == null ? List.of()
-                        : application.getStageHistory().stream()
-                                .map(StageHistoryResponse::fromEntity)
-                                .toList()
+                application.getRejectionDetails()
         );
     }
 }

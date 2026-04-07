@@ -359,9 +359,7 @@ class ApplicationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(stageRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.currentStage").value("Rozmowa z CEO"))
-                .andExpect(jsonPath("$.stageHistory").isArray())
-                .andExpect(jsonPath("$.stageHistory[?(@.stageName == 'Rozmowa z CEO')]").exists());
+                .andExpect(jsonPath("$.currentStage").value("Rozmowa z CEO"));
     }
 
     @Test

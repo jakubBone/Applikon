@@ -4,7 +4,6 @@ import com.easyapply.dto.ApplicationStats;
 import com.easyapply.entity.Application;
 import com.easyapply.entity.ApplicationStatus;
 import com.easyapply.entity.RejectionReason;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,11 +15,8 @@ import java.util.UUID;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    List<Application> findByUserId(UUID userId);
-
-    @EntityGraph(attributePaths = {"stageHistory"})
     @Query("SELECT a FROM Application a WHERE a.user.id = :userId ORDER BY a.appliedAt DESC")
-    List<Application> findByUserIdWithStageHistory(@Param("userId") UUID userId);
+    List<Application> findByUserId(@Param("userId") UUID userId);
 
     List<Application> findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase(
             UUID userId, String company, String position);

@@ -5,7 +5,6 @@ import com.easyapply.dto.ApplicationResponse;
 import com.easyapply.dto.StageUpdateRequest;
 import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
-import com.easyapply.repository.StageHistoryRepository;
 import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -25,19 +24,16 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final NoteService noteService;
-    private final StageHistoryRepository stageHistoryRepository;
     private final UserRepository userRepository;
     private final MessageSource messageSource;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
             NoteService noteService,
-            StageHistoryRepository stageHistoryRepository,
             UserRepository userRepository,
             MessageSource messageSource) {
         this.applicationRepository = applicationRepository;
         this.noteService = noteService;
-        this.stageHistoryRepository = stageHistoryRepository;
         this.userRepository = userRepository;
         this.messageSource = messageSource;
     }
@@ -66,7 +62,6 @@ public class ApplicationService {
         application.setStatus(ApplicationStatus.SENT);
 
         Application saved = applicationRepository.save(application);
-        stageHistoryRepository.save(new StageHistory(saved, "Wysłane"));
 
         return ApplicationResponse.fromEntity(
                 applicationRepository.findByIdAndUserId(saved.getId(), userId).orElseThrow());
@@ -74,7 +69,7 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public List<ApplicationResponse> findAllByUserId(UUID userId) {
-        return applicationRepository.findByUserIdWithStageHistory(userId).stream()
+        return applicationRepository.findByUserId(userId).stream()
                 .map(ApplicationResponse::fromEntity)
                 .toList();
     }
@@ -106,7 +101,6 @@ public class ApplicationService {
             application.setCurrentStage(null);
             application.setRejectionReason(null);
             application.setRejectionDetails(null);
-            stageHistoryRepository.deleteByApplicationId(application.getId());
         }
 
         if (newStatus == ApplicationStatus.IN_PROGRESS) {
@@ -143,28 +137,11 @@ public class ApplicationService {
     public ApplicationResponse addStage(Long id, String stageName, UUID userId) {
         Application application = getApplicationByIdAndUserId(id, userId);
 
-        markCurrentStageCompleted(application);
         application.setCurrentStage(stageName);
         application.setStatus(ApplicationStatus.IN_PROGRESS);
 
-        stageHistoryRepository.save(new StageHistory(application, stageName));
-
         return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
-
-    private void markCurrentStageCompleted(Application application) {
-        if (application.getCurrentStage() != null) {
-            stageHistoryRepository.findByApplicationIdOrderByCreatedAtAsc(application.getId()).stream()
-                    .filter(h -> h.getStageName().equals(application.getCurrentStage()) && !h.isCompleted())
-                    .findFirst()
-                    .ifPresent(h -> {
-                        h.markCompleted();
-                        stageHistoryRepository.save(h);
-                    });
-        }
-    }
-
-
 
     @Transactional(readOnly = true)
     public List<ApplicationResponse> findDuplicates(UUID userId, String company, String position) {

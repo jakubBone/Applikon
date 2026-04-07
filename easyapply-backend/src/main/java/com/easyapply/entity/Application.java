@@ -7,8 +7,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "applications")
@@ -76,10 +74,6 @@ public class Application {
 
     private String rejectionDetails;
 
-    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("createdAt ASC")
-    private List<StageHistory> stageHistory = new ArrayList<>();
-
     public Application() {}
 
     public Long getId() { return id; }
@@ -120,10 +114,4 @@ public class Application {
     public void setRejectionReason(RejectionReason rejectionReason) { this.rejectionReason = rejectionReason; }
     public String getRejectionDetails() { return rejectionDetails; }
     public void setRejectionDetails(String rejectionDetails) { this.rejectionDetails = rejectionDetails; }
-    public List<StageHistory> getStageHistory() { return stageHistory; }
-
-    public void addStageHistory(StageHistory stage) {
-        stageHistory.add(stage);
-        stage.setApplication(this);
-    }
 }

@@ -2,7 +2,6 @@ package com.easyapply.service;
 
 import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
-import com.easyapply.repository.StageHistoryRepository;
 import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -22,17 +21,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
-    private final StageHistoryRepository stageHistoryRepository;
     private final MessageSource messageSource;
 
     public UserService(
             UserRepository userRepository,
             ApplicationRepository applicationRepository,
-            StageHistoryRepository stageHistoryRepository,
             MessageSource messageSource) {
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
-        this.stageHistoryRepository = stageHistoryRepository;
         this.messageSource = messageSource;
     }
 
@@ -134,10 +130,7 @@ public class UserService {
                 This is a sample application — feel free to delete or modify it!
                 """);
 
-        Application saved = applicationRepository.save(demo);
-
-        StageHistory initialStage = new StageHistory(saved, "Sent");
-        stageHistoryRepository.save(initialStage);
+        applicationRepository.save(demo);
 
         log.info("Demo application created for new user {}", user.getEmail());
     }
