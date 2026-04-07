@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User } from '../types/domain'
-import { fetchCurrentUser, getToken, clearToken } from '../services/api'
+import { fetchCurrentUser, getToken, clearToken, logout } from '../services/api'
 
 // ============================================================
 // Typy kontekstu
@@ -11,7 +11,7 @@ interface AuthContextValue {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  signOut: () => void
+  signOut: () => Promise<void>
 }
 
 // ============================================================
@@ -52,7 +52,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       .finally(() => setIsLoading(false))
   }, [])
 
-  const signOut = () => {
+  const signOut = async () => {
+    try {
+      await logout()
+    } catch {
+      // Backend unreachable — log out locally anyway
+    }
     clearToken()
     setUser(null)
   }

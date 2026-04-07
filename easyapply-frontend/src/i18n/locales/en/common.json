@@ -9,6 +9,9 @@
     "close": "Close",
     "loading": "Loading..."
   },
+  "auth": {
+    "logout": "Log out"
+  },
   "login": {
     "subtitle": "Manage your job applications",
     "googleBtn": "Sign in with Google"

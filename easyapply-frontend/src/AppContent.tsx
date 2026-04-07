@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from './auth/AuthProvider'
 import KanbanBoard from './components/kanban/KanbanBoard'
 import CVManager from './components/cv/CVManager'
 import ApplicationTable from './components/applications/ApplicationTable'
@@ -23,6 +24,7 @@ type View = 'kanban' | 'list' | 'cv' | 'details'
 
 export default function AppContent() {
   const { t } = useTranslation()
+  const { signOut } = useAuth()
   const [view, setView] = useState<View>('kanban')
   const [previousView, setPreviousView] = useState<View>('kanban')
   const [selectedAppId, setSelectedAppId] = useState<number | null>(null)
@@ -93,8 +95,16 @@ export default function AppContent() {
           </div>
         </div>
         <div className="header-right">
-          <LanguageSwitcher />
           <BadgeWidget />
+          <LanguageSwitcher />
+          <div className="header-separator" />
+          <button
+            data-cy="logout-btn"
+            className="logout-btn"
+            onClick={() => void signOut()}
+          >
+            {t('auth.logout')}
+          </button>
         </div>
       </header>
 

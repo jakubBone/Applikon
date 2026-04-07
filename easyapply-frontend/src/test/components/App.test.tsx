@@ -2,10 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AppContent from '../../AppContent'
+import { AuthProvider } from '../../auth/AuthProvider'
 import * as api from '../../services/api'
 import { QueryWrapper } from '../test-utils'
 
-const renderApp = () => render(<AppContent />, { wrapper: QueryWrapper })
+const renderApp = () =>
+  render(
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>,
+    { wrapper: QueryWrapper }
+  )
 
 // Mock all API functions
 vi.mock('../../services/api', () => ({
@@ -23,6 +30,7 @@ vi.mock('../../services/api', () => ({
   assignCVToApplication: vi.fn(),
   getToken: vi.fn(() => null),
   fetchCurrentUser: vi.fn(),
+  logout: vi.fn(),
 }))
 
 describe('App Component', () => {

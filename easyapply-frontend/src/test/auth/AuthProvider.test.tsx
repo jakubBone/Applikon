@@ -7,6 +7,7 @@ vi.mock('../../services/api', () => ({
   getToken: vi.fn(),
   fetchCurrentUser: vi.fn(),
   clearToken: vi.fn(),
+  logout: vi.fn(),
 }))
 
 import * as api from '../../services/api'
@@ -80,16 +81,17 @@ describe('AuthProvider', () => {
     expect(api.clearToken).toHaveBeenCalledOnce()
   })
 
-  it('signOut — clears token and resets user state to null', async () => {
+  it('signOut — calls backend logout, clears token and resets user state to null', async () => {
     vi.mocked(api.getToken).mockReturnValue('valid-token')
     vi.mocked(api.fetchCurrentUser).mockResolvedValue(mockUser)
+    vi.mocked(api.logout).mockResolvedValue(undefined)
 
     function SignOutButton() {
       const { isAuthenticated, signOut } = useAuth()
       return (
         <>
           <span data-testid="authenticated">{String(isAuthenticated)}</span>
-          <button onClick={signOut}>Wyloguj</button>
+          <button onClick={() => void signOut()}>auth.logout</button>
         </>
       )
     }
@@ -104,10 +106,42 @@ describe('AuthProvider', () => {
       expect(screen.getByTestId('authenticated')).toHaveTextContent('true')
     })
 
-    act(() => screen.getByText('Wyloguj').click())
+    await act(async () => { screen.getByText('auth.logout').click() })
 
-    expect(screen.getByTestId('authenticated')).toHaveTextContent('false')
+    expect(api.logout).toHaveBeenCalledOnce()
     expect(api.clearToken).toHaveBeenCalled()
+    expect(screen.getByTestId('authenticated')).toHaveTextContent('false')
+  })
+
+  it('signOut — logs out locally even when backend call fails', async () => {
+    vi.mocked(api.getToken).mockReturnValue('valid-token')
+    vi.mocked(api.fetchCurrentUser).mockResolvedValue(mockUser)
+    vi.mocked(api.logout).mockRejectedValue(new Error('network error'))
+
+    function SignOutButton() {
+      const { isAuthenticated, signOut } = useAuth()
+      return (
+        <>
+          <span data-testid="authenticated">{String(isAuthenticated)}</span>
+          <button onClick={() => void signOut()}>auth.logout</button>
+        </>
+      )
+    }
+
+    render(
+      <AuthProvider>
+        <SignOutButton />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('authenticated')).toHaveTextContent('true')
+    })
+
+    await act(async () => { screen.getByText('auth.logout').click() })
+
+    expect(api.clearToken).toHaveBeenCalled()
+    expect(screen.getByTestId('authenticated')).toHaveTextContent('false')
   })
 
   it('useAuth outside AuthProvider — throws error with readable message', () => {

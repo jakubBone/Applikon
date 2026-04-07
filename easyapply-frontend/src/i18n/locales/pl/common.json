@@ -9,6 +9,9 @@
     "close": "Zamknij",
     "loading": "Ładowanie..."
   },
+  "auth": {
+    "logout": "Wyloguj"
+  },
   "login": {
     "subtitle": "Zarządzaj swoimi aplikacjami o pracę",
     "googleBtn": "Zaloguj się przez Google"
