@@ -8,14 +8,14 @@ Z natury jest backendowcem, więc, chce zrozumieć jak działa frontend na pozio
 
 **Dokumenty źródłowe:**
 - `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — ten plik (plan nauki + postęp)
-- `spec/v1/03-review/code-review-2026-03-01.md` — Code Review od mentora (DR & AI, 2026-03-01) — źródło wszystkich napraw
+- `spec/v1/03-review/code-review-2026-03-01.md` — Code Review od mentora — źródło wszystkich napraw
 
 **Jak używać tego planu:**
 Wklej go do nowej sesji Claude Code i napisz: _"Kontynuujemy naukę frontendu. Jesteśmy na Etapie X."_
 
 **Claude na początku każdej sesji czyta:**
 1. `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — ten plik (plan, zasady, postęp)
-2. `spec/v1/03-review/code-review-2026-03-01.md` — code review od mentora
+2. `spec/v1/03-review/code-review-2026-03-01.md` — code review
 3. `spec/v1/04-refactoring-learning/learning-notes-frontend.md` — co Jakub już przerobił i zrozumiał
 
 `learning-notes-frontend.md` to kluczowy kontekst — pokazuje jakim językiem i analogiami tłumaczyć kolejne zagadnienia, co już wiadomo, do czego można się odwoływać.

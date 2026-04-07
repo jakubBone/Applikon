@@ -574,3 +574,67 @@ Komentarze w kodzie zawsze po **angielsku**.
 | `ApplicationStats.java` (nowy) | CR-B4: projection dla zapytania statystycznego |
 | `StatisticsService.java` | CR-B4: Object[] → ApplicationStats; CR-B5: tablice → BadgeDefinition[] |
 | `ApplicationRepository.java` | CR-B4: constructor expression w JPQL |
+
+---
+
+## Etap 5 — Testy: przegląd, uzupełnienie, pokrycie
+
+### Dwa poziomy testów
+
+**Testy serwisów** (`@ExtendWith(MockitoExtension.class)`):
+- Spring nie startuje — tylko JUnit + Mockito
+- Repozytoria zamockowane (`@Mock`) — baza nie istnieje
+- Testują czystą logikę w izolacji, szybkie (milisekundy)
+
+**Testy kontrolerów** (`@SpringBootTest + @AutoConfigureMockMvc`):
+- Pełny kontekst Spring startuje z H2 w pamięci
+- `MockMvc` symuluje HTTP bez uruchamiania serwera
+- Przechodzą przez cały stack: controller → service → repository → H2
+- Wolniejsze (sekundy), ale bardziej realistyczne — to testy integracyjne
+
+### TestSecurityConfig — dlaczego bez JWT
+
+Główna konfiguracja blokuje każdy request bez JWT (`401`). W testach nie generujemy tokenów.
+
+`TestSecurityConfig` jest aktywna tylko przy `@Profile("test")` i ma `@Order(1)` — wyższy priorytet niż główna konfiguracja (domyślny `@Order(100)`). Spring Security bierze pierwszy pasujący filter chain → wszystko przepuszczone.
+
+Uwierzytelnienie w testach: `@BeforeEach` ustawia `AuthenticatedUser` ręcznie w `SecurityContextHolder` — kontroler dostaje go przez `@AuthenticationPrincipal` tak samo jak w produkcji.
+
+### @Order w projekcie — trzy różne konteksty
+
+| Gdzie | Dotyczy | Co kontroluje |
+|---|---|---|
+| `TestSecurityConfig` | `@Bean SecurityFilterChain` | Który filter chain Spring Security wybiera |
+| `GlobalExceptionHandler` | `@RestControllerAdvice` | Który handler wyjątków ma pierwszeństwo |
+| Klasy testowe | metody `@Test` (JUnit) | Kolejność testów w ramach jednej klasy |
+
+Różne konteksty — nie wchodzą sobie w drogę.
+
+### Strict stubbing w Mockito
+
+`@ExtendWith(MockitoExtension.class)` domyślnie włącza `STRICT_STUBS`. Nieużyty mock = błąd `UnnecessaryStubbingException`. Filozofia: jeśli ustawiłeś mock który nie został wywołany — albo test jest źle napisany, albo kod się zmienił i test jest nieaktualny.
+
+### updateStage vs addStage — różnica semantyczna
+
+- `updateStage()` (PATCH) — zmienia status aplikacji między kolumnami kanbana (SENT → IN_PROGRESS → REJECTED). **Nie zapisuje** do `stage_history`.
+- `addStage()` (POST) — dodaje nowy etap w ramach `IN_PROGRESS`. **Zapisuje** nowy wpis do `stage_history`.
+
+### Dodane testy (6 nowych, łącznie 90)
+
+| Test | Klasa | Co sprawdza |
+|------|-------|-------------|
+| `uploadCV_fakePdfContentType_throws` | `CVServiceTest` | CR-B3: EXE z Content-Type PDF odrzucony przez magic bytes |
+| `uploadCV_pathTraversalFilename_doesNotEscape` | `CVServiceTest` | CR-1: plik z `../` w nazwie ląduje w uploadDir |
+| `createCV_javascriptUrl_throws` | `CVServiceTest` | CR-B1: `javascript:` URL odrzucony |
+| `createCV_dataUrl_throws` | `CVServiceTest` | CR-B1: `data:` URL odrzucony |
+| `updateStage_NullStatus_ReturnsBadRequest` | `ApplicationControllerTest` | CR-B2: brak status → 400 z polem `errors.status` |
+| `addStage_savesStageHistoryEntry` | `ApplicationServiceTest` | `addStage()` zapisuje wpis do `stage_history` |
+
+### Wzorzec testowania — rzut vs weryfikacja efektu
+
+| Podejście | Przykład | Test sprawdza |
+|---|---|---|
+| Odrzuć złe wejście | magic bytes, URL schema, null status | `assertThrows(...)` |
+| Sanitizuj / zamień | path traversal → UUID | `assertTrue(path.startsWith(uploadDir))` |
+
+Path traversal nie rzuca wyjątku — serwis cicho ignoruje niebezpieczną nazwę i używa UUID. Test weryfikuje efekt (bezpieczna ścieżka), nie wyjątek.

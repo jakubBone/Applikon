@@ -5,7 +5,7 @@
 ---
 
 ## POST 1 — Spec-Driven Development z AI
-**Status: gotowy do publikacji**
+**Status: opublikowany**
 
 ---
 
@@ -41,53 +41,43 @@ W kolejnym wpisie pokażę, jak do tego procesu podpinam do AI „TRYB MENTORA" 
 
 ---
 
-## BRIEF — Post 2: Tryb Mentora (do napisania)
-
-**Temat:** Jak uczę się frontendu, który AI wygenerował — system nauki z AI jako mentorem.
-
-**Kontekst dla AI piszącego wpis:**
-
-Jakub jest backendowcem (Java, Spring Boot). Wygenerował frontend React z pomocą AI do swojej aplikacji EasyApply (job tracker dla juniorów IT). Nie znał Reacta. Zamiast się go uczyć "z kursów", stworzył z AI system nauki oparty na własnym projekcie.
-
-**Jak system działa — każdy szczegół ważny:**
-
-1. **AI zrobił code review własnego kodu** — powstał plik `03-review/code-review-2026-03-01.md` z 12 konkretnymi problemami, podzielonymi na krytyczne (bezpieczeństwo: XSS przez href, błąd kontraktu refresh tokena, zahardkodowany localhost:8080, brak Error Boundary) i ważne (jakość: CVManager używał ręcznego useState zamiast React Query hooka, zduplikowane stałe kolorów statusów).
-
-2. **CR stał się planem nauki** — powstał `04-refactoring-learning/refactor-plan-frontend.md`: 10 etapów nauki (ekosystem/Vite → komponenty → state/useState → hooki → React Query → routing → komunikacja z API → OAuth2/JWT → TypeScript → testowanie). Do każdego etapu przypisane są konkretne CR-y do naprawienia.
-
-3. **Kluczowa zasada przypisania CR do etapu:** CR naprawiam przy etapie, który tłumaczy mechanizm błędu — nie wcześniej. Błąd dotyczący React Query naprawiam przy Etapie 5 (React Query), bo przy Etapie 2 nie wiem jeszcze co to React Query. Naprawa bez zrozumienia nic nie daje.
-
-4. **Zasady trybu mentora:**
-   - Każde zagadnienie tłumaczone przez analogie do Javy (bo Jakub ją zna) — np. `useState` ≈ pole w klasie + setter który automatycznie wywołuje `repaint()`, React Query ≈ `@Cacheable` w Springu
-   - Quiz po każdym zagadnieniu — 5 pytań, nie idzie dalej bez odpowiedzi
-   - AI drąży jeśli odpowiedź jest niepełna lub błędna
-   - Notatki lądują w pliku `04-refactoring-learning/learning-notes-frontend.md` po każdym etapie — zostają jako ściągawka
-   - Postęp śledzony w tabelce (etap → nauka ✅/⬜, CR naprawione ✅/⬜, przetestowane ✅/⬜)
-
-5. **Flow każdej naprawy CR (obowiązkowy):**
-   Wyjaśnij mechanizm → przeczytaj aktualny plik → napraw → uruchom testy → sprawdź build (TypeScript) → Jakub sprawdza w przeglądarce → pytanie o zaliczenie → aktualizacja tabelki
-
-6. **Efekty po 9 etapach:** wszystkie CR naprawione i ręcznie przetestowane w przeglądarce. Etap 10 (testowanie) w toku.
-
-7. **Wizja dalej:** `06-v2/vision.md` — 6 mikroserwisów, Kafka jako event broker, Redis, AI-powered features. Na to też będzie plan nauki. W tej chwili: najpierw rozumiem monolit, który mam zastąpić.
-
-**Ton wpisu:** szczery, konkretny, bez lansowania się. Pokazać system, nie siebie. Może lekko prowokacyjny na starcie ("AI napisał mi frontend" albo "Uczę się kodu, którego nie pisałem").
-
-**Czego unikać:** generycznych zdań typu "AI to przyszłość", "nauka nigdy się nie kończy". Każde zdanie ma mieć konkret — nazwę pliku, nazwę mechanizmu, przykład z projektu.
-
-**Co koniecznie uwzględnić:**
-- CR → plan nauki → naprawa przy właściwym etapie (to najbardziej oryginalna część)
-- Quiz i zasada "nie idę dalej bez odpowiedzi"
-- Analogie do Javy jako metoda tłumaczenia
-- Notatki w plikach jako persistent memory
-- Wzmianka o wizji mikroserwisów (żeby uciszyć komentarze "czemu nie Kafka")
-
-**Długość:** LinkedIn, nierozwlekle. Konkretne, autentyczne, atrakcyjne. Nie może wyglądać jak napisane przez AI.
+## POST 2 — Tryb Mentora
+**Status: do opublikowania**
 
 ---
 
+Spec-first development działa nawet wtedy, gdy nie jesteś ekspertem w danej technologii.
+Jest jeden warunek: nie możesz generować kodu „na pałę” i uznawać, że skoro działa - to jest dobrze.
+
+Jestem backendowcem. Do EasyApply potrzebowałem frontendu, więc razem z Claude Code zrobiłem go w React w podejściu spec-first.
+
+👉 Ale... nie potraktowałem tego jako „gotowego produktu”, tylko jako materiał do nauki.
+
+Zacząłem od:
+📄 code-review.md
+Na tej bazie powstał:
+📄 learing-plan-frontend.md
+
+10 etapów nauki frontu (Vite → komponenty → state → hooki → React Query → … → testy)
+
+👉 Cel:
+Uczymy się i naprawiamy realne błędy jednocześnie.
+Naprawiamy dopiero wtedy, kiedy zrozumiem mechanizm.
+
+Tryb mentor (Claude Code):
+
+📚 AI tłumaczy (analogie do Javy)
+🧠 quiz (5 pytań:  brak odpowiedzi = brak progresu)
+💻 kod (czytam + rozumiem)
+🔧 fix (dopiero teraz)
+🧪 testy
+🏗️ build (TypeScript)
+🌐 przeglądarka
+📝 notatki → learning-notes-frontend.md
+---
+
 ## POST 3 — Struktura spec/ w repozytorium
-**Opublikowany**
+**Status: opublikowany**
 
 ---
 
@@ -136,7 +126,7 @@ zanim zaczyna się kod.
 
 
 ## POST 4 — Struktura spec/ w repozytorium
-**Do napisania**
+****Status: do napisania ****
 Implementacja i18n
 
 

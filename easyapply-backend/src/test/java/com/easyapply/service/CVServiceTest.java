@@ -164,6 +164,46 @@ class CVServiceTest {
 
             assertThrows(EntityNotFoundException.class, () -> cvService.uploadCV(file, TEST_USER_ID));
         }
+
+        @Test
+        void uploadCV_fakePdfContentType_throws() {
+            // CR-B3: attacker sends an EXE with Content-Type: application/pdf
+            // Magic bytes check must reject it regardless of the declared content type
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "malicious.pdf",
+                    "application/pdf",
+                    "MZ\u0090\u0000this is an exe".getBytes()
+            );
+
+            assertThrows(IllegalArgumentException.class, () -> cvService.uploadCV(file, TEST_USER_ID));
+            verify(cvRepository, never()).save(any(CV.class));
+        }
+
+        @Test
+        void uploadCV_pathTraversalFilename_doesNotEscape() throws IOException {
+            // CR-1: original filename contains "../" — the stored path must stay inside uploadDir
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "../../etc/cron.d/backdoor.pdf",
+                    "application/pdf",
+                    "%PDF-1.4\nbody".getBytes()
+            );
+
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
+            when(cvRepository.save(any(CV.class))).thenAnswer(inv -> {
+                CV saved = inv.getArgument(0);
+                setField(saved, "id", 99L);
+                return saved;
+            });
+
+            CV result = cvService.uploadCV(file, TEST_USER_ID);
+
+            // The file must land inside tempDir, not escape via the traversal path
+            Path storedPath = Path.of(result.getFilePath());
+            assertTrue(storedPath.startsWith(tempDir),
+                    "Stored file must be inside uploadDir, got: " + storedPath);
+        }
     }
 
     @Nested
@@ -191,6 +231,31 @@ class CVServiceTest {
                     IllegalArgumentException.class,
                     () -> cvService.createCV("file", CVType.FILE, null, TEST_USER_ID)
             );
+        }
+
+        @Test
+        void createCV_javascriptUrl_throws() {
+            // CR-B1: javascript: scheme must be rejected — defense in depth even if frontend validates
+            // User mock required because URL validation happens after the user lookup in createCV()
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> cvService.createCV("Evil CV", CVType.LINK, "javascript:alert(document.cookie)", TEST_USER_ID)
+            );
+            verify(cvRepository, never()).save(any(CV.class));
+        }
+
+        @Test
+        void createCV_dataUrl_throws() {
+            // CR-B1: data: scheme is another XSS vector — must also be rejected
+            when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(testUser));
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> cvService.createCV("Evil CV", CVType.LINK, "data:text/html,<script>alert(1)</script>", TEST_USER_ID)
+            );
+            verify(cvRepository, never()).save(any(CV.class));
         }
 
         @Test

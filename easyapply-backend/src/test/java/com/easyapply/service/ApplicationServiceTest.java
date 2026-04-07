@@ -274,6 +274,23 @@ class ApplicationServiceTest {
         }
 
         @Test
+        void addStage_savesStageHistoryEntry() {
+            // addStage() — not updateStage() — is responsible for writing to stage_history
+            Application existing = app(13L, "Google", "Dev");
+            existing.setStatus(ApplicationStatus.IN_PROGRESS);
+
+            when(applicationRepository.findByIdAndUserId(13L, TEST_USER_ID)).thenReturn(Optional.of(existing));
+            when(applicationRepository.save(any(Application.class))).thenReturn(existing);
+
+            applicationService.addStage(13L, "HR call", TEST_USER_ID);
+
+            verify(stageHistoryRepository).save(stageHistoryCaptor.capture());
+            StageHistory saved = stageHistoryCaptor.getValue();
+            assertEquals("HR call", saved.getStageName());
+            assertEquals(existing, saved.getApplication());
+        }
+
+        @Test
         void updateStage_toWyslane_clearsFlowDataAndHistory() {
             Application existing = app(12L, "Google", "Dev");
             existing.setStatus(ApplicationStatus.REJECTED);

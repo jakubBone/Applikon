@@ -377,6 +377,23 @@ class ApplicationControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    @Order(21)
+    @DisplayName("PATCH /api/applications/{id}/stage - null status returns 400")
+    void updateStage_NullStatus_ReturnsBadRequest() throws Exception {
+        // CR-B2: @NotNull on StageUpdateRequest.status must produce 400, not 500 (NPE)
+        Application app = createTestApplication("Google", "Dev");
+
+        Map<String, Object> stageRequest = new HashMap<>();
+        // status is intentionally omitted — server receives null
+
+        mockMvc.perform(patch("/api/applications/" + app.getId() + "/stage")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(stageRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.status").exists());
+    }
+
     // ==================== ETAP 4: CV Assignment ====================
 
     @Test
