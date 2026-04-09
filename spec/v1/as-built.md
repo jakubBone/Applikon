@@ -1,5 +1,6 @@
 # EasyApply v1 — As-Built Documentation
-> Generated: 2026-04-07. Describes the actual implemented state of EasyApply v1.
+
+> Generated: 2026-04-08. Describes the actual implemented state of EasyApply v1.
 > Source of truth: the code. This document reflects what exists, not what was planned.
 
 ---
@@ -8,215 +9,228 @@
 
 | Area | Planned | Built | Status |
 |------|---------|-------|--------|
-| Application CRUD | `company, position, link, salary, status, source, jobDescription, agency` | As planned + `salarySource`, `currentStage`, `rejectionReason`, `rejectionDetails` | Built with extra fields |
-| Kanban (status tracking) | Drag & drop, 5 statuses: Wysłane/Rozmowa/Zadanie/Oferta/Odrzucone | 4 statuses: `SENT/IN_PROGRESS/OFFER/REJECTED`. 3 Kanban columns (FINISHED groups OFFER+REJECTED) | Different |
-| CV management | PDF upload, assign to application | PDF + LINK + NOTE types. Upload, assign, download, delete | Beyond spec (LINK/NOTE types) |
-| Notes | Plaintext, multiple per application | As planned + `category` field (QUESTIONS/FEEDBACK/OTHER) | Beyond spec (categories) |
-| Authentication | OAuth2 (mentioned in v8 "Future") | Google OAuth2 + JWT (access) + refresh token (httpOnly cookie) | Beyond spec for v1 MVP |
-| User accounts | Not in MVP | Full multi-user with `users` table, per-user data isolation | Beyond spec |
-| i18n | Not in MVP | Full i18n backend (EN/PL via Accept-Language) + frontend (i18next, 4 namespaces) | Beyond spec |
-| Statistics/Badges | Not in MVP | `GET /api/statistics/badges` — rejection/ghosting badge engine | Beyond spec |
-| Stage history | Planned in impl-plan | Removed (V12 migration drops table; was overengineered) | Removed by cleanup |
-| Duplicate detection | Planned | `GET /api/applications/check-duplicate` | As planned |
-| Job description archiving | Planned (`jobDescription` field) | `jobDescription TEXT` in `Application` | As planned |
-| Re-application edge case | Listed as edge case | Duplicate check endpoint exists | As planned |
-| Multi-currency | Listed as edge case | `currency` field (free-text String), no conversion | As planned |
-| Session-based auth | Planned for future | Replaced with JWT + OAuth2 (better choice) | Different |
+| Application CRUD | Basic REST API | Full CRUD + stage + duplicate check | As planned + more |
+| Kanban view | 5 statuses (WYSŁANE/ROZMOWA/ZADANIE/OFERTA/ODRZUCONE) | 4 DB statuses (SENT/IN_PROGRESS/OFFER/REJECTED), 3 Kanban columns (SENT/IN_PROGRESS/FINISHED) | Different |
+| CV management | PDF upload + LINK + NOTE types, assign to application (ETAP 4) | Implemented as planned | As planned |
+| Notes | Plaintext with PYTANIA/FEEDBACK/INNE categories (ETAP 5) | Implemented, categories renamed to English | As planned |
+| Authentication | Not in MVP (planned for future) | Fully implemented: Google OAuth2 + JWT + refresh tokens | Added beyond spec |
+| Stage history (StageHistory entity) | Planned in mvp-implementation-plan.md | Implemented, then removed (V12) — overengineered | Removed |
+| i18n (EN/PL) | Not in brief | Fully implemented: i18next, LanguageDetector, switcher, all strings translated | Added beyond spec |
+| Badges / gamification | In plan (ETAP 7) | StatisticsService + BadgeWidget (rejection/ghosting badges, sweet revenge) | As planned |
+| Responsiveness / mobile | Implicit in brief (vs Teal: "brak wersji mobilnej") | FAB, MoveModal as mobile bottom sheet, isMobile(), OnboardingOverlay | As planned |
+| Onboarding / Tour | Not in plan | OnboardingOverlay, TourGuide components | Added beyond spec |
+| Enum values | Polish (WYSLANE, BRUTTO, UOP, BRAK_ODPOWIEDZI) | English (SENT, GROSS, EMPLOYMENT, NO_RESPONSE) | Different (renamed) |
+| Salary change auto-note | Planned in i18n impl. plan | `createSalaryChangeNote()` defined in NoteService — never called from ApplicationService | Dead code |
+| Duplicate detection | Planned (check-duplicate) | Implemented | As planned |
+| Job description archive | Planned (jobDescription field) | Implemented | As planned |
+| Re-application warning | Planned | Implemented via check-duplicate | As planned |
+| Hidden recruitment (agency) | Planned | Implemented (agency field) | As planned |
+| Security: CORS | Planned (separate CorsConfig) | Merged into SecurityConfig | Different |
+| Database migrations | Not planned (ddl-auto=update) | Flyway migrations V1–V12 | Added beyond spec |
 
 ---
 
 ## 2. Features — Status
 
-### Brief MVP features (section 4 of brief.md)
+Based on `spec/v1/01-vision/brief.md`:
+
+### MVP Features (§4)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **Application register (CRUD)** — company, position, link, date, salary, currency, status, source | Implemented | All fields present. `appliedAt` is auto-generated via `@CreatedDate`. |
-| **Kanban view** — drag & drop between Wysłane/Rozmowa/Zadanie/Oferta/Odrzucone | Implemented differently | Uses 4 statuses (`SENT`, `IN_PROGRESS`, `OFFER`, `REJECTED`), Kanban has 3 columns (FINISHED merges OFFER+REJECTED). Sub-stage tracking via `currentStage` field. |
-| **CV management** — PDF upload (max 5MB), assign to application | Implemented and extended | 3 CV types: `FILE` (upload), `LINK` (external URL), `NOTE` (name only). Max 5MB for FILE type. Multiple CVs per user, assigned per application. |
-| **Notepad** — plaintext notes per application | Implemented and extended | Notes have `category` (QUESTIONS/FEEDBACK/OTHER), multiple notes per application, timestamps. |
+| Application registry (CRUD): company, position, link, date, salary, currency, status, source | ✅ Implemented | Plus: salaryMin/salaryMax, contractType, salaryType, salarySource, agency, jobDescription |
+| Kanban view: drag & drop between columns | ✅ Implemented | 3 columns (SENT, IN_PROGRESS, FINISHED) — not 5 as in brief |
+| CV management: PDF upload (max 5MB) + LINK + NOTE types, assign to application | ✅ Implemented | As planned in ETAP 4; categories renamed to English |
+| Notepad: plaintext, multiple per application, with categories (PYTANIA/FEEDBACK/INNE) | ✅ Implemented | As planned in ETAP 5; categories renamed to English (QUESTIONS/FEEDBACK/OTHER) |
 
-### Brief edge cases (section 5 of brief.md)
+### Edge Cases (§5)
 
 | Edge Case | Status | Notes |
 |-----------|--------|-------|
-| Re-application notification | Implemented | `GET /api/applications/check-duplicate?company=&position=` |
-| Hidden recruitment (agency) | Implemented | `agency` field on `Application` entity |
-| Expired links | Implemented | `jobDescription TEXT` on `Application` entity |
-| Salary change tracking | Implemented (differently) | `NoteService.createSalaryChangeNote()` creates a note automatically on salary change — no separate history table |
-| Multi-currency | Implemented | `currency` String field (PLN/EUR/USD/GBP), no auto-conversion |
-| Duplicate detection | Implemented | Case-insensitive query on `company + position` per user |
+| Re-application notification | ✅ Implemented | `GET /api/applications/check-duplicate` |
+| Hidden recruitment (agency field) | ✅ Implemented | `agency` field on Application entity |
+| Expired links (job description archive) | ✅ Implemented | `jobDescription TEXT` column |
+| Salary negotiation history | ❌ Not implemented | `createSalaryChangeNote()` exists in NoteService but is never called from ApplicationService — dead code, no user-visible effect |
+| Multi-currency (PLN/EUR/USD/GBP) | ✅ Implemented | `currency` field, no auto-conversion |
+| Duplicate detection | ✅ Implemented | Case-insensitive match on company + position |
 
 ---
 
 ## 3. Backend — Actual Architecture
 
-### Package structure (`com.easyapply`)
+### Package structure
 
 ```
 com.easyapply/
-  EasyApplyApplication.java
+  EasyApplyApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing
   config/
-    I18nConfig.java          — MessageSource, LocalValidatorFactoryBean, AcceptHeaderLocaleResolver
-    SecurityConfig.java      — RSA key pair, JWT encoder/decoder, OAuth2, CORS, filter chain
+    I18nConfig.java                — MessageSource (i18n/messages), AcceptHeaderLocaleResolver (default: en)
+    SecurityConfig.java            — Spring Security, OAuth2, JWT encoder/decoder, CORS
   controller/
-    ApplicationController.java
-    AuthController.java
-    CVController.java
-    NoteController.java
-    StatisticsController.java
+    ApplicationController.java     — /api/applications
+    AuthController.java            — /api/auth
+    CVController.java              — /api/cv
+    NoteController.java            — /api (nested under /applications and /notes)
+    StatisticsController.java      — /api/statistics
   dto/
-    ApplicationRequest.java
-    ApplicationResponse.java
-    ApplicationStats.java
-    BadgeResponse.java
-    BadgeStatsResponse.java
-    NoteRequest.java
-    NoteResponse.java
-    StageUpdateRequest.java
-    StatusUpdateRequest.java
-    UserResponse.java
+    ApplicationRequest.java        — record (company, position, link, salary*, currency, salaryType, contractType, salarySource, source, jobDescription, agency)
+    ApplicationResponse.java       — record (all Application fields + cv info flattened: cvId, cvFileName, cvType, cvExternalUrl)
+    ApplicationStats.java          — record (rejections, ghosting, offers) — for JPQL projection
+    BadgeResponse.java             — record (name, icon, description, threshold, currentCount, nextThreshold, nextBadgeName)
+    BadgeStatsResponse.java        — record (rejectionBadge, ghostingBadge, sweetRevengeUnlocked, totals)
+    NoteRequest.java               — record (content, category)
+    NoteResponse.java              — record (id, content, category, applicationId, createdAt)
+    StageUpdateRequest.java        — record (status, currentStage, rejectionReason, rejectionDetails)
+    StatusUpdateRequest.java       — record (status)
+    UserResponse.java              — record (id, email, name)
   entity/
-    Application.java
-    ApplicationStatus.java   — enum: SENT, IN_PROGRESS, OFFER, REJECTED
-    ContractType.java        — enum: B2B, EMPLOYMENT, MANDATE, OTHER
-    CV.java
-    CVType.java              — enum: FILE, LINK, NOTE
-    Note.java
-    NoteCategory.java        — enum: QUESTIONS, FEEDBACK, OTHER
-    RejectionReason.java     — enum: NO_RESPONSE, EMAIL_REJECTION, REJECTED_AFTER_INTERVIEW, OTHER
-    SalarySource.java        — enum: FROM_POSTING, MY_PROPOSAL
-    SalaryType.java          — enum: GROSS, NET
-    User.java
+    Application.java               — @Entity, table: applications
+    CV.java                        — @Entity, table: cvs
+    Note.java                      — @Entity, table: notes
+    User.java                      — @Entity, table: users
+    ApplicationStatus.java         — enum: SENT, IN_PROGRESS, OFFER, REJECTED
+    ContractType.java              — enum: B2B, EMPLOYMENT, MANDATE, OTHER
+    CVType.java                    — enum: FILE, LINK, NOTE
+    NoteCategory.java              — enum: QUESTIONS, FEEDBACK, OTHER
+    RejectionReason.java           — enum: NO_RESPONSE, EMAIL_REJECTION, REJECTED_AFTER_INTERVIEW, OTHER
+    SalarySource.java              — enum: FROM_POSTING, MY_PROPOSAL
+    SalaryType.java                — enum: GROSS, NET
   exception/
-    GlobalExceptionHandler.java
+    GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException / fallback
   repository/
-    ApplicationRepository.java
-    CVRepository.java
-    NoteRepository.java
-    UserRepository.java
+    ApplicationRepository.java     — JpaRepository; custom queries: findByUserId, findByIdAndUserId, existsByIdAndUserId, findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase, getApplicationStats, clearCVReferences
+    CVRepository.java              — JpaRepository
+    NoteRepository.java            — JpaRepository; findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc, findByIdAndApplicationUserId, etc.
+    UserRepository.java            — JpaRepository; findByGoogleId, findByRefreshToken
   security/
-    AuthenticatedUser.java           — record(UUID id, String email, String name)
-    CustomOAuth2UserService.java
-    JwtAuthenticationConverter.java
-    JwtService.java
-    MdcUserFilter.java
-    OAuth2AuthenticationSuccessHandler.java
+    AuthenticatedUser.java         — record (id: UUID) — principal injected by JwtAuthenticationConverter
+    CustomOAuth2UserService.java   — loads/creates user from Google OAuth2 attributes
+    JwtAuthenticationConverter.java — extracts AuthenticatedUser from JWT sub claim
+    JwtService.java                — generates access token (RS256, 15 min) and refresh token (UUID)
+    MdcUserFilter.java             — adds user email to MDC for logging
+    OAuth2AuthenticationSuccessHandler.java — on OAuth2 success: issues JWT + refresh token, redirects to frontend
   service/
-    ApplicationService.java
-    CVService.java
-    NoteService.java
-    StatisticsService.java
-    UserService.java
+    ApplicationService.java        — create, findAllByUserId, findById, updateStatus, updateStage, addStage, findDuplicates, delete, update
+    CVService.java                 — uploadCV, findAllByUserId, findById, downloadCV, deleteCV, createCV, updateCV, assignCVToApplication, removeCVFromApplication
+    NoteService.java               — create, findByApplicationId, findById, update, delete, deleteByApplicationId, createSalaryChangeNote (⚠️ dead code — never called)
+    StatisticsService.java         — getBadgeStats: computes rejection/ghosting badges + sweet revenge unlock
+    UserService.java               — findOrCreateUser, getById, getByGoogleId, saveRefreshToken, clearRefreshToken, findByValidRefreshToken + createDemoApplication (new user only)
 ```
 
 ### All REST endpoints
 
-#### ApplicationController — `@RequestMapping("/api/applications")`
+**ApplicationController — `/api/applications`**
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/applications` | Create application (201 Created) |
-| GET | `/api/applications` | List all for current user |
-| GET | `/api/applications/{id}` | Get by ID |
-| PUT | `/api/applications/{id}` | Full update |
-| DELETE | `/api/applications/{id}` | Delete (204 No Content) |
-| PATCH | `/api/applications/{id}/status` | Update status only (`StatusUpdateRequest`) |
-| PATCH | `/api/applications/{id}/stage` | Update stage+status+rejection (`StageUpdateRequest`) |
-| POST | `/api/applications/{id}/stage` | Add stage (sets `currentStage`, moves to `IN_PROGRESS`) |
-| GET | `/api/applications/check-duplicate` | Duplicate check (`?company=&position=`) |
-| PATCH | `/api/applications/{id}/cv` | Assign or remove CV (`{cvId: Long|null}`) |
+| `POST` | `/api/applications` | Create application |
+| `GET` | `/api/applications` | List all (current user) |
+| `GET` | `/api/applications/{id}` | Get by ID |
+| `PUT` | `/api/applications/{id}` | Full update |
+| `DELETE` | `/api/applications/{id}` | Delete |
+| `PATCH` | `/api/applications/{id}/status` | Change status (simple) |
+| `PATCH` | `/api/applications/{id}/stage` | Update stage + status + rejection data |
+| `POST` | `/api/applications/{id}/stage` | Add stage (sets currentStage, moves to IN_PROGRESS) |
+| `PATCH` | `/api/applications/{id}/cv` | Assign or unassign CV (`{cvId: null}` removes) |
+| `GET` | `/api/applications/check-duplicate` | Find duplicates by company + position |
 
-#### AuthController — `@RequestMapping("/api/auth")`
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/auth/me` | Current user profile (requires JWT) |
-| POST | `/api/auth/refresh` | Issue new access token from httpOnly refresh cookie (public) |
-| POST | `/api/auth/logout` | Invalidate refresh token, clear cookie (requires JWT) |
-
-#### CVController — `@RequestMapping("/api/cv")`
+**AuthController — `/api/auth`**
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/cv/upload` | Upload PDF file (`multipart/form-data`) |
-| POST | `/api/cv` | Create CV record with name/type/externalUrl |
-| GET | `/api/cv` | List all CVs for current user |
-| GET | `/api/cv/{id}` | Get CV by ID |
-| GET | `/api/cv/{id}/download` | Download PDF file |
-| PUT | `/api/cv/{id}` | Update CV name / externalUrl |
-| DELETE | `/api/cv/{id}` | Delete CV (204 No Content) |
+| `GET` | `/api/auth/me` | Get current user profile (requires JWT) |
+| `POST` | `/api/auth/refresh` | Issue new access token from refresh token cookie |
+| `POST` | `/api/auth/logout` | Clear refresh token in DB + remove cookie |
 
-#### NoteController — `@RequestMapping("/api")`
+**CVController — `/api/cv`**
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/applications/{applicationId}/notes` | List notes for application |
-| POST | `/api/applications/{applicationId}/notes` | Create note |
-| GET | `/api/notes/{id}` | Get note by ID |
-| PUT | `/api/notes/{id}` | Update note content/category |
-| DELETE | `/api/notes/{id}` | Delete note (204 No Content) |
+| `POST` | `/api/cv/upload` | Upload PDF file (multipart/form-data) |
+| `POST` | `/api/cv` | Create CV entry (name + type + optional URL) |
+| `GET` | `/api/cv` | List all CVs (current user) |
+| `GET` | `/api/cv/{id}` | Get CV by ID |
+| `PUT` | `/api/cv/{id}` | Update CV entry |
+| `DELETE` | `/api/cv/{id}` | Delete CV |
+| `GET` | `/api/cv/{id}/download` | Download PDF (Content-Disposition: attachment) |
 
-#### StatisticsController — `@RequestMapping("/api/statistics")`
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/statistics/badges` | Get badge stats (rejection/ghosting badges + counts) |
-
-#### Spring Security managed (not controllers)
+**NoteController — `/api`**
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/oauth2/authorization/google` | Initiates Google OAuth2 login |
-| GET | `/login/oauth2/code/google` | OAuth2 callback (handled by Spring Security) |
-| GET | `/actuator/health` | Health check (public) |
+| `GET` | `/api/applications/{applicationId}/notes` | List notes for application |
+| `POST` | `/api/applications/{applicationId}/notes` | Create note |
+| `GET` | `/api/notes/{id}` | Get note by ID |
+| `PUT` | `/api/notes/{id}` | Update note |
+| `DELETE` | `/api/notes/{id}` | Delete note |
 
-### Key dependencies (from pom.xml)
+**StatisticsController — `/api/statistics`**
 
-- **Java 21**, Spring Boot 3.4.1
-- `spring-boot-starter-data-jpa` — JPA/Hibernate ORM
-- `spring-boot-starter-web` — REST API
-- `spring-boot-starter-validation` — Jakarta Bean Validation
-- `spring-boot-starter-security` — Spring Security
-- `spring-boot-starter-oauth2-client` — Google OAuth2 login
-- `spring-boot-starter-oauth2-resource-server` — JWT validation (RS256 via Nimbus)
-- `spring-boot-starter-actuator` — health endpoint
-- `postgresql` — JDBC driver
-- `h2` (test scope) — in-memory DB for tests
-- `flyway-core` + `flyway-database-postgresql` — schema migrations
-- `spring-dotenv` (me.paulschwarz) — `.env` file loading
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/statistics/badges` | Get badge stats (rejections, ghosting, offers, badges) |
+
+**Spring Security managed**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/oauth2/authorization/google` | Start Google OAuth2 login |
+| `GET` | `/actuator/health` | Health check (public) |
+
+### Key dependencies (pom.xml)
+
+| Artifact | Purpose |
+|----------|---------|
+| `spring-boot-starter-web` | REST API |
+| `spring-boot-starter-data-jpa` | ORM |
+| `spring-boot-starter-validation` | Bean Validation |
+| `spring-boot-starter-security` | Spring Security |
+| `spring-boot-starter-oauth2-client` | Google OAuth2 login |
+| `spring-boot-starter-oauth2-resource-server` | JWT validation |
+| `spring-boot-starter-actuator` | Health endpoint |
+| `postgresql` | JDBC driver |
+| `h2` | In-memory DB for tests |
+| `flyway-core` + `flyway-database-postgresql` | DB migrations |
+| `spring-dotenv` | `.env` file support |
+| No Lombok | All getters/setters written manually |
 
 ---
 
 ## 4. Database — Actual Schema
 
-Schema is managed by Flyway (12 migrations, V1 through V12). The current effective schema after all migrations:
+### Migration history
 
-### Table: `users`
+| Version | File | Purpose |
+|---------|------|---------|
+| V1 | `V1__init_schema.sql` | Initial: cvs, applications, notes, stage_history tables |
+| V2 | `V2__add_session_id.sql` | session_id columns (pre-auth, anonymous multi-tenant mode) |
+| V3 | `V3__migrate_deprecated_statuses.sql` | ROZMOWA/ZADANIE→W_PROCESIE, ODRZUCONE→ODMOWA |
+| V4 | `V4__auth_schema.sql` | users table, user_id FK on applications+cvs, drop session_id |
+| V5 | `V5__rename_rejection_reasons.sql` | BRAK_ODPOWIEDZI→NO_RESPONSE etc. |
+| V6 | `V6__rename_note_categories.sql` | PYTANIA→QUESTIONS, INNE→OTHER etc. |
+| V7 | `V7__rename_salary_types.sql` | BRUTTO→GROSS, NETTO→NET |
+| V8 | `V8__rename_contract_types.sql` | UOP→EMPLOYMENT, UZ→MANDATE, INNA→OTHER |
+| V9 | `V9__rename_application_statuses.sql` | WYSLANE→SENT, W_PROCESIE→IN_PROGRESS, OFERTA→OFFER, ODMOWA→REJECTED |
+| V10 | `V10__fix_column_defaults.sql` | column defaults: WYSLANE→SENT, INNE→OTHER |
+| V11 | `V11__user_id_not_null.sql` | user_id NOT NULL on applications + cvs |
+| V12 | `V12__drop_stage_history.sql` | DROP TABLE stage_history |
+
+### Current tables
+
+**`users`**
+
 | Column | Type | Constraints |
 |--------|------|-------------|
-| id | UUID | PK, `DEFAULT gen_random_uuid()` |
+| id | UUID | PK, default gen_random_uuid() |
 | email | VARCHAR(255) | NOT NULL, UNIQUE |
 | name | VARCHAR(255) | NOT NULL |
 | google_id | VARCHAR(255) | NOT NULL, UNIQUE |
 | refresh_token | VARCHAR(255) | nullable |
 | refresh_token_expiry | TIMESTAMP | nullable |
-| created_at | TIMESTAMP | NOT NULL, `DEFAULT CURRENT_TIMESTAMP` |
+| created_at | TIMESTAMP | NOT NULL |
 
-### Table: `cvs`
-| Column | Type | Constraints |
-|--------|------|-------------|
-| id | BIGSERIAL | PK |
-| type | VARCHAR(50) | `DEFAULT 'FILE'` |
-| file_name | VARCHAR(255) | nullable |
-| original_file_name | VARCHAR(255) | NOT NULL |
-| file_path | VARCHAR(500) | nullable |
-| file_size | BIGINT | nullable |
-| external_url | VARCHAR(500) | nullable |
-| user_id | UUID | FK → users(id), NOT NULL (added V4, made NOT NULL V11) |
-| uploaded_at | TIMESTAMP | NOT NULL, `DEFAULT CURRENT_TIMESTAMP` |
+**`applications`**
 
-### Table: `applications`
 | Column | Type | Constraints |
 |--------|------|-------------|
 | id | BIGSERIAL | PK |
@@ -226,121 +240,125 @@ Schema is managed by Flyway (12 migrations, V1 through V12). The current effecti
 | salary_min | INTEGER | nullable |
 | salary_max | INTEGER | nullable |
 | currency | VARCHAR(10) | nullable |
-| salary_type | VARCHAR(50) | nullable |
-| contract_type | VARCHAR(50) | nullable |
-| salary_source | VARCHAR(50) | nullable |
+| salary_type | VARCHAR(50) | nullable (GROSS/NET) |
+| contract_type | VARCHAR(50) | nullable (B2B/EMPLOYMENT/MANDATE/OTHER) |
+| salary_source | VARCHAR(50) | nullable (FROM_POSTING/MY_PROPOSAL) |
 | source | VARCHAR(255) | nullable |
-| status | VARCHAR(50) | NOT NULL, `DEFAULT 'SENT'` (V10 changed from `'WYSLANE'`) |
+| status | VARCHAR(50) | NOT NULL, default 'SENT' (SENT/IN_PROGRESS/OFFER/REJECTED) |
 | job_description | TEXT | nullable |
 | agency | VARCHAR(255) | nullable |
 | cv_id | BIGINT | FK → cvs(id), nullable |
-| user_id | UUID | FK → users(id), NOT NULL (V4 + V11) |
-| applied_at | TIMESTAMP | NOT NULL, `DEFAULT CURRENT_TIMESTAMP` |
+| applied_at | TIMESTAMP | NOT NULL |
 | current_stage | VARCHAR(255) | nullable |
-| rejection_reason | VARCHAR(100) | nullable |
+| rejection_reason | VARCHAR(100) | nullable (NO_RESPONSE/EMAIL_REJECTION/REJECTED_AFTER_INTERVIEW/OTHER) |
 | rejection_details | TEXT | nullable |
+| user_id | UUID | FK → users(id), NOT NULL |
 
-### Table: `notes`
+**`cvs`**
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | BIGSERIAL | PK |
+| type | VARCHAR(50) | default 'FILE' (FILE/LINK/NOTE) |
+| file_name | VARCHAR(255) | nullable (storage filename) |
+| original_file_name | VARCHAR(255) | NOT NULL (display name) |
+| file_path | VARCHAR(500) | nullable |
+| file_size | BIGINT | nullable |
+| external_url | VARCHAR(500) | nullable |
+| uploaded_at | TIMESTAMP | NOT NULL |
+| user_id | UUID | FK → users(id), NOT NULL |
+
+**`notes`**
+
 | Column | Type | Constraints |
 |--------|------|-------------|
 | id | BIGSERIAL | PK |
 | content | TEXT | NOT NULL |
-| application_id | BIGINT | FK → applications(id) ON DELETE CASCADE, NOT NULL |
-| category | VARCHAR(255) | `DEFAULT 'OTHER'` (V6 migrated from `'INNE'`) |
-| created_at | TIMESTAMP | NOT NULL, `DEFAULT CURRENT_TIMESTAMP` |
+| application_id | BIGINT | FK → applications(id), NOT NULL, ON DELETE CASCADE |
+| category | VARCHAR(255) | default 'OTHER' (QUESTIONS/FEEDBACK/OTHER) |
+| created_at | TIMESTAMP | NOT NULL |
 
-### Dropped table
-- `stage_history` — created in V1, dropped in V12 (`DROP TABLE IF EXISTS stage_history`).
+**`stage_history`** — DROPPED (V12). Was: id, application_id FK, stage_name, completed, created_at, completed_at.
 
-### Key relationships
-- `applications.user_id` → `users.id` (many-to-one)
-- `applications.cv_id` → `cvs.id` (many-to-one, nullable)
-- `notes.application_id` → `applications.id` (many-to-one, cascade delete)
-- `cvs.user_id` → `users.id` (many-to-one)
+### Relations
 
-### Indexes (from V1 + V4)
-- `idx_applications_status`, `idx_applications_company`, `idx_applications_applied_at`, `idx_applications_company_position`
-- `idx_applications_user_id`, `idx_applications_user_status`
-- `idx_notes_application_id`, `idx_notes_created_at`
-- `idx_cvs_uploaded_at`, `idx_cvs_user_id`
-- `idx_users_email`, `idx_users_google_id`
+- `applications.user_id` → `users.id`
+- `applications.cv_id` → `cvs.id` (nullable — application may not have a CV assigned)
+- `cvs.user_id` → `users.id`
+- `notes.application_id` → `applications.id` (CASCADE DELETE)
 
 ---
 
 ## 5. Frontend — Actual Architecture
 
-### Pages
+### Routing (App.tsx)
 
-| Page | Path | Description |
-|------|------|-------------|
-| `LoginPage` | `/login` | Google login button, language switcher, redirects to `/dashboard` if authenticated |
-| `AuthCallbackPage` | `/auth/callback` | Reads `?token=` from URL, stores in localStorage, redirects to `/dashboard` |
-| `DashboardPage` | `/dashboard` | Thin wrapper around `AppContent` |
+| Path | Component | Protected |
+|------|-----------|-----------|
+| `/login` | LoginPage | No |
+| `/auth/callback` | AuthCallbackPage | No |
+| `/dashboard` | DashboardPage → AppContent | Yes (ProtectedRoute) |
+| `/` | Redirect to /dashboard | — |
+| `*` | Redirect to /dashboard | — |
 
-### Component structure
+### Views in AppContent (tab-switched, no separate routes)
+
+| View key | Component | Description |
+|----------|-----------|-------------|
+| `kanban` | KanbanBoard | Drag & drop kanban |
+| `list` | ApplicationTable | Sortable table with bulk delete |
+| `cv` | CVManager | Upload/manage CVs, assign to applications |
+| `details` | ApplicationDetails | Full application view with notes, CV, stage |
+
+### Component tree
 
 ```
-src/
-  App.tsx                        — Router + providers (QueryClient, AuthProvider, ErrorBoundary)
-  AppContent.tsx                 — Main layout: header, tabs, view routing, logout button
-  AppContent.css                 — (via App.css import)
-  auth/
-    AuthProvider.tsx             — Context: user, isLoading, isAuthenticated, signOut (calls backend logout)
-    ProtectedRoute.tsx           — Redirects to /login if unauthenticated
-  pages/
-    LoginPage.tsx
-    AuthCallbackPage.tsx
-    DashboardPage.tsx
-  components/
-    ErrorBoundary.tsx
-    LanguageSwitcher.tsx         — PL/EN toggle buttons
-    applications/
-      ApplicationForm.tsx        — Create / edit form
-      ApplicationTable.tsx       — List view with status filter and delete
-      ApplicationDetails.tsx     — Full detail panel with CV picker and notes
-      SalaryFormSection.tsx      — Salary fields sub-component (reused in form)
-    kanban/
-      KanbanBoard.tsx            — DnD board (3 columns: SENT / IN_PROGRESS / FINISHED)
-      KanbanColumn.tsx           — Single column
-      ApplicationCard.tsx        — Card with stage dropdown, mobile long-press menu
-      DragOverlayCard.tsx        — Ghost card during drag
-      StageModal.tsx             — Stage selection popup (5 predefined + custom)
-      MoveModal.tsx              — Mobile move card popup
-      EndModal.tsx               — Outcome modal (OFFER / REJECTED + reason)
-      types.ts                   — STATUSES, PREDEFINED_STAGES, REJECTION_REASONS, helpers
-    badges/
-      BadgeWidget.tsx            — Badge progress widget in header
-    cv/
-      CVManager.tsx              — CV list (upload/link/note), assign to application
-    notes/
-      NotesList.tsx              — Notes list with category filter and inline edit
-    tour/
-      TourGuide.tsx              — First-time user onboarding tour
-  hooks/
-    useApplications.ts           — React Query hooks: useApplications, useUpdateStatus, useUpdateStage, useDeleteApplication
-    useBadgeStats.ts             — React Query hook for badge stats
-    useCV.ts                     — React Query hooks for CV operations
-    useNotes.ts                  — React Query hooks for notes
-  services/
-    api.ts                       — All fetch calls to the backend
-  types/
-    domain.ts                    — TypeScript types mirroring backend DTOs
-  constants/
-    applicationStatus.ts         — STATUS_CONFIG (label keys, colors per status)
-  utils/
-    urlValidator.ts              — URL validation helper
-  i18n/
-    index.ts                     — i18next init (LanguageDetector, 4 namespaces)
-    types.ts                     — TypeScript declaration for i18n key typing
-    locales/
-      pl/ common.json, errors.json, badges.json, tour.json
-      en/ common.json, errors.json, badges.json, tour.json
+App.tsx
+  QueryClientProvider (React Query)
+  BrowserRouter
+    AuthProvider           — Google OAuth2 + JWT state
+      ErrorBoundary
+        /login   → LoginPage
+                   LanguageSwitcher (before login)
+        /auth/callback → AuthCallbackPage  — exchanges code for JWT
+        /dashboard → ProtectedRoute → DashboardPage → AppContent
+          header
+            BadgeWidget        — gamification badges
+            LanguageSwitcher   — PL / EN toggle
+            logout-btn         — calls POST /api/auth/logout
+          TourGuide            — onboarding tour
+          toolbar
+            view-tabs (kanban / list / cv)
+            add-btn → ApplicationForm (mode=create)
+          fab                  — mobile floating action button
+          main-content
+            KanbanBoard
+              KanbanColumn × 3 (SENT / IN_PROGRESS / FINISHED)
+                ApplicationCard (draggable)
+                  DragOverlayCard
+              OnboardingOverlay
+              MoveModal     — status transition confirmation
+              EndModal      — OFFER / REJECTED modal (rejection reason)
+              StageModal    — select/add currentStage
+            ApplicationTable
+            CVManager
+            ApplicationDetails
+              NotesList
 ```
 
-### API calls made by the frontend (`src/services/api.ts`)
+### Hooks (server state via React Query)
+
+| Hook | File | Manages |
+|------|------|---------|
+| `useApplications` | hooks/useApplications.ts | fetch, create, update, updateStatus, updateStage, addStage, delete, checkDuplicate |
+| `useNotes` | hooks/useNotes.ts | fetch, create, update, delete notes |
+| `useCV` | hooks/useCV.ts | fetch, upload, create, update, delete, assignCV |
+| `useBadgeStats` | hooks/useBadgeStats.ts | fetch badge statistics |
+
+### API calls (api.ts → backend endpoints)
 
 | Function | Method | Endpoint |
-|----------|--------|----------|
+|----------|--------|---------|
 | `fetchCurrentUser` | GET | `/api/auth/me` |
 | `logout` | POST | `/api/auth/logout` |
 | `refreshToken` | POST | `/api/auth/refresh` |
@@ -352,159 +370,201 @@ src/
 | `updateApplicationStage` | PATCH | `/api/applications/{id}/stage` |
 | `addStage` | POST | `/api/applications/{id}/stage` |
 | `checkDuplicate` | GET | `/api/applications/check-duplicate` |
+| `assignCVToApplication` | PATCH | `/api/applications/{id}/cv` |
 | `fetchCVs` | GET | `/api/cv` |
 | `uploadCV` | POST | `/api/cv/upload` |
 | `createCV` | POST | `/api/cv` |
 | `updateCV` | PUT | `/api/cv/{id}` |
 | `deleteCV` | DELETE | `/api/cv/{id}` |
-| `assignCVToApplication` | PATCH | `/api/applications/{applicationId}/cv` |
 | `downloadCV` | GET | `/api/cv/{id}/download` |
-| `fetchNotes` | GET | `/api/applications/{applicationId}/notes` |
-| `createNote` | POST | `/api/applications/{applicationId}/notes` |
-| `updateNote` | PUT | `/api/notes/{noteId}` |
-| `deleteNote` | DELETE | `/api/notes/{noteId}` |
+| `fetchNotes` | GET | `/api/applications/{id}/notes` |
+| `createNote` | POST | `/api/applications/{id}/notes` |
+| `updateNote` | PUT | `/api/notes/{id}` |
+| `deleteNote` | DELETE | `/api/notes/{id}` |
 | `fetchBadgeStats` | GET | `/api/statistics/badges` |
 
-All requests send `Accept-Language: <i18n.language>` and `Authorization: Bearer <token>`.
+### i18n
 
-### Installed libraries (from package.json)
+| Item | Detail |
+|------|--------|
+| Library | i18next + react-i18next + i18next-browser-languagedetector |
+| Languages | `pl` (Polish), `en` (English), fallback: `en` |
+| Detection order | localStorage → navigator |
+| Namespaces | `common`, `errors`, `badges`, `tour` |
+| Backend header | `Accept-Language: {i18n.language}` on every request |
+| Language switcher | `LanguageSwitcher.tsx` — visible on login page and in header |
 
-**Dependencies (runtime):**
-- `react` 19.2.0, `react-dom` 19.2.0
-- `react-router-dom` 7.13.0
-- `@tanstack/react-query` 5.90.21
-- `@dnd-kit/core` 6.3.1, `@dnd-kit/sortable` 10.0.0, `@dnd-kit/utilities` 3.2.2
-- `i18next` 25.10.10, `react-i18next` 16.6.6, `i18next-browser-languagedetector` 8.2.1
+### Installed libraries (package.json)
 
-**DevDependencies:**
-- `vite` 7.2.4, `@vitejs/plugin-react`
-- `typescript` 5.9.3
-- `tailwindcss` 4.2.0, `@tailwindcss/vite`
-- `vitest` 1.3.0, `@testing-library/react` 16.0.0, `@testing-library/user-event`, `jsdom`
-- `cypress` 15.9.0
+| Library | Version | Purpose |
+|---------|---------|---------|
+| react | ^19.2.0 | UI |
+| react-dom | ^19.2.0 | DOM rendering |
+| react-router-dom | ^7.13.0 | Routing |
+| @tanstack/react-query | ^5.90.21 | Server state management |
+| @dnd-kit/core + sortable + utilities | ^6/^10/^3 | Drag & drop (Kanban) |
+| i18next | ^25.10.10 | i18n engine |
+| react-i18next | ^16.6.6 | React bindings for i18next |
+| i18next-browser-languagedetector | ^8.2.1 | Detects browser language |
+| tailwindcss | ^4.2.0 | CSS utility framework |
+| vite | ^7.2.4 | Build tool |
+| vitest | ^1.3.0 | Unit tests |
+| cypress | ^15.9.0 | E2E tests |
 
 ---
 
 ## 6. Deviations from Plan
 
-### Authentication model
-**Plan (brief.md section 8):** Session-based auth listed as a future option.  
-**Reality:** JWT + Google OAuth2 fully implemented in v1. Access token (RS256 JWT, 15 min) stored in localStorage; refresh token (opaque UUID) in httpOnly cookie. RSA key pair generated in-memory at startup — tokens invalidated on server restart.
+### 6a. Enum names renamed to English (all)
 
-### Application status enum
-**Plan (impl-plan, step 2):** `WYSLANE`, `W_PROCESIE`, `OFERTA`, `ODMOWA` (Polish names).  
-**Reality:** Renamed to English: `SENT`, `IN_PROGRESS`, `OFFER`, `REJECTED` via Flyway migrations V9 + V5–V10. i18n labels on the frontend handle display.
+The original plan and brief used Polish enum values. All were renamed to English via Flyway migrations V5–V9:
 
-### Kanban columns vs statuses
-**Plan (brief.md):** 5 Kanban columns: Wysłane / Rozmowa / Zadanie / Oferta / Odrzucone.  
-**Reality:** 4 statuses, 3 Kanban columns. `OFFER` and `REJECTED` are grouped into one `FINISHED` column on the board. The "recruitment stage" (HR interview, technical interview, etc.) is tracked via the free-text `currentStage` field + `StageModal`, not as separate statuses.
+| Enum | Plan (Polish) | Reality (English) |
+|------|--------------|-------------------|
+| ApplicationStatus | WYSLANE, W_PROCESIE, OFERTA, ODMOWA | SENT, IN_PROGRESS, OFFER, REJECTED |
+| ContractType | B2B, UOP, UZ, INNA | B2B, EMPLOYMENT, MANDATE, OTHER |
+| SalaryType | BRUTTO, NETTO | GROSS, NET |
+| RejectionReason | BRAK_ODPOWIEDZI, ODMOWA_MAILOWA, ODRZUCENIE_PO_ROZMOWIE, INNE | NO_RESPONSE, EMAIL_REJECTION, REJECTED_AFTER_INTERVIEW, OTHER |
+| NoteCategory | PYTANIA (legacy), INNE (legacy) | QUESTIONS, FEEDBACK, OTHER |
 
-### StageHistory entity
-**Plan (impl-plan, step 3):** `StageHistory` entity with full history of recruitment stages.  
-**Reality:** Designed and initially built, then removed via V12 Flyway migration and code cleanup (spec in `06-cleanup/remove-stage-history.md`). The frontend never displayed it. `currentStage` string field on `Application` is sufficient.
+### 6b. Kanban columns: 5 statuses → 4 DB statuses + 3 columns
 
-### CV types
-**Plan:** Only PDF file uploads.  
-**Reality:** Three `CVType` values: `FILE` (PDF upload), `LINK` (external URL e.g. Google Drive), `NOTE` (name/label only for locally stored CVs). Multiple CVs belong to the user, not per-application — one CV can be assigned to many applications.
+Brief planned 5 columns: *Wysłane → Rozmowa → Zadanie → Oferta → Odrzucone*.
 
-### Note categories
-**Plan:** Notes as plaintext only.  
-**Reality:** Notes have a `category` field (enum: `QUESTIONS`, `FEEDBACK`, `OTHER`) stored in DB. The category was initially Polish (`PYTANIA`, `INNE`), then renamed via Flyway V6.
+Reality:
+- 4 database statuses: SENT, IN_PROGRESS, OFFER, REJECTED
+- 3 Kanban columns: SENT | IN_PROGRESS | FINISHED (FINISHED groups both OFFER and REJECTED)
+- V3 migration evidence: ROZMOWA and ZADANIE were merged into W_PROCESIE (later renamed IN_PROGRESS)
 
-### Error response format
-**Plan (impl-plan, step 7):** `{"error": "message", "timestamp": "..."}`.  
-**Reality:** Uses Spring's RFC 9457 `ProblemDetail` format via `spring.mvc.problemdetails.enabled=true`. Response shape is `{"title": "...", "detail": "...", "status": 400, "errors": {...}}`.
+### 6c. StageHistory: planned, implemented, removed
 
-### CORS configuration
-**Plan:** Separate `CorsConfig` class.  
-**Reality:** CORS is configured inline within `SecurityConfig.corsConfigurationSource()`. No separate class. Allowed origins are configurable via `CORS_ALLOWED_ORIGINS` env variable.
+The `mvp-implementation-plan.md` included a `StageHistory` entity, `StageHistoryRepository`, `StageHistoryResponse` DTO, `@OneToMany` relation, and dedicated service methods.
 
-### Salary change tracking
-**Plan (brief.md edge cases):** Track history of financial negotiations.  
-**Reality:** Salary change creates an automatic note via `NoteService.createSalaryChangeNote()`. No dedicated table or history entity.
+All of this was implemented, then removed in a cleanup refactoring:
+- `entity/StageHistory.java` — deleted
+- `repository/StageHistoryRepository.java` — deleted
+- `dto/StageHistoryResponse.java` — deleted
+- `ApplicationRepository.findByUserIdWithStageHistory` — replaced with `findByUserId`
+- V12 Flyway migration drops the `stage_history` table
+
+Reason: The UI never displayed stage history. Data was collected but never consumed. Removing eliminated dead complexity.
+
+### 6d. CORS: separate class → merged into SecurityConfig
+
+Plan: create a separate `CorsConfig.java` class with `WebMvcConfigurer`.
+
+Reality: CORS is configured as a `CorsConfigurationSource` bean inside `SecurityConfig.java`. This is architecturally correct — Spring Security must handle CORS before auth checks, so it must be inside the security filter chain.
+
+### 6e. JPA ddl-auto: update → validate + Flyway
+
+Plan: `spring.jpa.hibernate.ddl-auto=update` (Hibernate manages schema).
+
+Reality: `spring.jpa.hibernate.ddl-auto=validate` + Flyway migrations. Flyway manages all schema changes via versioned SQL files (V1–V12). Hibernate only validates the schema matches the entities on startup.
+
+### 6f. ApplicationResponse: no stageHistory field
+
+Plan included `List<StageHistoryResponse> stageHistory` in `ApplicationResponse`.
+
+Reality: `ApplicationResponse` record has no `stageHistory` field. `domain.ts` on the frontend has no `stageHistory` field in the `Application` interface. Both cleaned up alongside V12.
+
+### 6g. Salary change auto-note: dead code
+
+The i18n implementation plan describes `service/NoteService.java` — auto-nota salary change i18n.  
+`NoteService.createSalaryChangeNote()` was implemented with i18n support.  
+However, `ApplicationService.update()` does **not** call it — no salary change comparison logic, no note creation on update.  
+The method exists and is reachable from the `NoteController` tests, but is never triggered in the application flow.
+
+### 6h. ApplicationRequest does not send status
+
+`ApplicationRequest` (POST + PUT body) has no `status` field. Status is always set to `SENT` on creation and can only be changed via dedicated PATCH endpoints. This is an intentional architectural decision (not a deviation from spec).
 
 ---
 
 ## 7. Added Beyond Spec
 
-### Google OAuth2 + JWT authentication
-Not in brief.md's MVP (listed only as future tech). Fully implemented: Google OAuth2 login → access token (JWT RS256) + refresh token (httpOnly cookie). Token refresh endpoint. Logout clears refresh token from DB and removes cookie.
+The following features are implemented but were **not** in `brief.md` or `mvp-implementation-plan.md`.
 
-### Multi-user support with data isolation
-No mention in the MVP brief. All entities (`applications`, `cvs`, `notes`) are scoped to `user_id`. All service methods take `UUID userId` and enforce ownership checks.
+> Note: Gamification (ETAP 7), CVType FILE/LINK/NOTE (ETAP 4), NoteCategory (ETAP 5), and SalarySource (architecture section) are all in `mvp-implementation-plan.md` and are therefore **not** listed here.
 
-### Statistics and badges
-`GET /api/statistics/badges` returns two badge progressions (rejection resilience and ghosting endurance), each with 5 levels. Computed from `ApplicationRepository.getApplicationStats()` JPQL projection. Frontend renders `BadgeWidget` in the header.
+### 7a. Authentication: Google OAuth2 + JWT
 
-### i18n — backend
-`I18nConfig` with `MessageSource` (EN/PL via `Accept-Language`). All validation messages, error messages, and exception messages use i18n keys. Enum values renamed from Polish to English (V5–V10 Flyway migrations).
+`brief.md §8` listed auth as future work (Spring Security + OAuth2 + session-based). The MVP plan had no auth etap. Implemented in full:
+- Google OAuth2 login (`/oauth2/authorization/google`)
+- JWT access token (RS256, 15-minute expiry, in-memory RSA key pair)
+- Refresh token (opaque UUID, 7-day expiry, stored in `users.refresh_token`, sent as httpOnly cookie)
+- `AuthController`: `/api/auth/me`, `/api/auth/refresh`, `/api/auth/logout`
+- `JwtService`, `JwtAuthenticationConverter`, `CustomOAuth2UserService`, `OAuth2AuthenticationSuccessHandler`, `MdcUserFilter`
+- Multi-user isolation: every query filters by `user_id` from JWT
 
-### i18n — frontend
-Full `i18next` setup with 4 namespaces (common, errors, badges, tour). `LanguageDetector` reads from localStorage or browser. `LanguageSwitcher` component. `Accept-Language` header sent with every API request. Predefined stage names stored as i18n keys in DB (e.g. `stage.hrInterview`), with `LEGACY_STAGE_MAP` for backward compatibility.
+### 7b. Onboarding / Tour
 
-### Demo application on first login
-`UserService.createDemoApplication()` automatically creates a sample Google job listing for every new user on first login.
+Not in brief or implementation plan:
+- `OnboardingOverlay.tsx` — shown in KanbanBoard on first visit
+- `TourGuide.tsx` — step-by-step interactive guide
+- i18n namespace `tour` with tour step translations
 
-### Onboarding tour
-`TourGuide` component provides a step-by-step guided tour for first-time users.
+### 7c. i18n (internationalization, EN/PL)
 
-### Mobile support
-`KanbanBoard` disables `TouchSensor` on mobile; uses long-press context menu (`MoveModal`) instead of drag & drop. Floating Action Button (FAB) for adding applications on mobile.
+Not in brief or MVP implementation plan (documented as a separate additional feature in `spec/v1/05-additional-features/i18n/`):
+- i18next with 4 namespaces: `common`, `errors`, `badges`, `tour`
+- Language auto-detection from localStorage or browser (navigator)
+- `LanguageSwitcher.tsx` — PL/EN toggle, visible on login page and in header
+- `Accept-Language` header sent with every API request
+- Backend: `I18nConfig.java` with `MessageSource` (i18n/messages.properties + messages_pl.properties) and `AcceptHeaderLocaleResolver`
+- All validation messages and error messages i18n-aware
 
-### React Query for data management
-`@tanstack/react-query` used for all API state (caching, loading states, invalidation). Not in the original spec.
+### 7d. Demo application for new users
 
-### `@tanstack/react-query` + React 19
-Frontend uses React 19 (spec planned React 18) and React Query v5.
+`UserService.createDemoApplication()` — called automatically on first login. Creates a sample "Google / Junior Software Engineer" application with job description text.
 
-### Actuator health endpoint
-`/actuator/health` exposed publicly. `management.endpoints.web.exposure.include=health,info`.
+### 7e. React Query (@tanstack/react-query)
 
-### `spring-dotenv` integration
-`me.paulschwarz:spring-dotenv` enables `.env` file loading for local development.
+Brief specified `fetch API` for HTTP communication. Reality uses React Query v5 for full server-state management: caching, invalidation, optimistic updates, loading/error states.
+
+### 7f. Cypress E2E tests
+
+Not in spec. The project includes Cypress for end-to-end testing (`cypress/e2e/`). Components use `data-cy` attributes for test selectors.
+
+### 7g. Logout button
+
+Documented as a separate additional feature (`spec/v1/05-additional-features/logout/`). Frontend `signOut()` calls `POST /api/auth/logout` before clearing localStorage.
 
 ---
 
 ## 8. Not Implemented (from spec)
 
-### Kanban drag-and-drop on mobile
-The plan mentions drag & drop as the primary interaction. On mobile, `TouchSensor` is intentionally **disabled** and replaced by a `MoveModal` long-press menu. Drag & drop on mobile is not implemented.
-
-### CVStorageService as a separate class
-Brief.md shows a `CVStorageService.java` in the file structure. In reality, file storage logic lives inside `CVService.java` — no separate storage class.
-
-### `NoteRepository.java` as the only repository planned
-Brief.md lists `ApplicationRepository` and `NoteRepository` only. In reality, `CVRepository` and `UserRepository` also exist (needed by CV management and auth).
-
-### Session-based auth (as an alternative)
-Brief.md mentions "Session-based: simpler than JWT for single-backend apps" as an option. This was not implemented — JWT was used instead.
-
-### Automatic job description archiving (no scraping)
-Brief.md mentions "Automatic saving of pasted job listing content." This exists as a plain `jobDescription` text field that the user fills in manually — there is no automated scraping or link-to-content extraction.
+| Item | Source | Notes |
+|------|--------|-------|
+| Salary change tracking (auto-note on update) | brief.md §5, i18n plan | `createSalaryChangeNote()` exists in NoteService but is never called from `ApplicationService.update()` — dead code, no user-visible effect |
+| 5-column Kanban (Wysłane / Rozmowa / Zadanie / Oferta / Odrzucone) | brief.md §4 | Already reduced to 3 columns in mvp-implementation-plan.md ETAP 3; as-built matches the implementation plan, not the brief |
 
 ---
 
 ## 9. v1 Completion Status
 
-The core MVP features are fully implemented and functional:
+### What is done and working
 
-- Application CRUD with all planned fields
-- Kanban board with drag & drop (desktop), column grouping, stage modal
-- CV management (upload, link, note types)
+- Full CRUD for applications, notes, CVs
+- Kanban board with drag & drop and status transitions
 - Notes with categories
-- Status and stage tracking
+- CV management (file upload + link/note types)
+- Duplicate detection
+- Authentication (Google OAuth2 + JWT + refresh + logout)
+- i18n (EN/PL with language switcher)
+- Gamification badges
+- Onboarding/tour
+- Flyway migrations (V1–V12, clean schema)
+- Multi-user isolation (all queries scoped to user_id from JWT)
+- Vitest unit tests (84/84 backend, 67/67 frontend at last run)
+- Cypress E2E tests
 
-Additionally, a substantial set of features beyond the original MVP brief are complete:
+### What is incomplete or pending
 
-- Full authentication (Google OAuth2 + JWT + refresh tokens)
-- Multi-user data isolation
-- Gamification (badges/statistics)
-- Full EN/PL i18n on both frontend and backend
-- Onboarding tour, mobile support, duplicate detection
+| Item | Type | Priority |
+|------|------|----------|
+| Salary change auto-note: wire `createSalaryChangeNote()` into `ApplicationService.update()` | Missing feature | `createSalaryChangeNote()` in NoteService is complete and tested; `ApplicationService.update()` needs salary change comparison logic and a call to that method |
+| `rejectionDetails` not in frontend `Application` response type | Type gap | Backend returns `rejectionDetails` in `ApplicationResponse`; `domain.ts` `Application` interface doesn't declare it; field is sent correctly via `StageUpdateRequest` but cannot be displayed in UI |
 
-**Known gaps / remaining work:**
-1. Mobile drag & drop is replaced by a modal — the spec intent (drag & drop) is not met on touch devices.
-2. `CVStorageService` separation (minor structural deviation).
-3. No automated job description archiving — requires user to paste content manually.
-4. Access token RSA key is generated in-memory at startup — server restart invalidates all sessions. Acceptable for MVP, but not production-grade.
-5. No v1.1 AI features (out of scope by design).
+### v1 overall assessment
+
+All planned features (ETAP 1–7) are implemented. Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type, so the field stored in the DB cannot be displayed in the UI.
