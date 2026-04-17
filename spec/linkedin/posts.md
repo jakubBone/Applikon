@@ -49,14 +49,14 @@ W kolejnym wpisie pokażę, jak do tego procesu podpinam do AI „TRYB MENTORA" 
 Spec-first development działa nawet wtedy, gdy nie jesteś ekspertem w danej technologii.
 Jest jeden warunek: nie możesz generować kodu „na pałę” i uznawać, że skoro działa - to jest dobrze.
 
-Jestem backendowcem. Do EasyApply potrzebowałem frontendu, więc razem z Claude Code zrobiłem go w React w podejściu spec-first.
+Jestem backendowcem. Do EasyApply potrzebowałem frontendu, więc razem z Claude Code zrobilimy go w React. W podejściu spec-first, rzecz jasna ;) 
 
 👉 Ale... nie potraktowałem tego jako „gotowego produktu”, tylko jako materiał do nauki.
 
 Zacząłem od:
 📄 code-review.md
 Na tej bazie powstał:
-📄 learing-plan-frontend.md
+📄 learning-plan-frontend.md
 
 10 etapów nauki frontu (Vite → komponenty → state → hooki → React Query → … → testy)
 
@@ -66,7 +66,8 @@ Naprawiamy dopiero wtedy, kiedy zrozumiem mechanizm.
 
 Tryb mentor (Claude Code):
 
-📚 AI tłumaczy (analogie do Javy)
+🗺️ Plan nauki 
+📚 AI tłumaczy (analogie do Javy, bo ją znam)
 🧠 quiz (5 pytań:  brak odpowiedzi = brak progresu)
 💻 kod (czytam + rozumiem)
 🔧 fix (dopiero teraz)
@@ -128,6 +129,14 @@ zanim zaczyna się kod.
 ## POST 4 — Struktura spec/ w repozytorium
 ****Status: do napisania ****
 Implementacja i18n
+
+
+
+## POST 5 — as-build.md
+****Status: do napisania ****
+Ze normalna sprawa, ze przy llm nie jestes w stanie wszytkiego zaplanować
+jak na etapie planowania cos sie da poprawić to wracasz do spec i update
+jak nie to zrobilem u mnie tak, ze po v1 mam plik as-built.md gdzie jest status reality vs plan 
 
 
 

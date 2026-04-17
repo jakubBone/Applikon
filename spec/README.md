@@ -5,24 +5,34 @@ organized chronologically by development phase. All implementation was done usin
 **Claude Code** (Anthropic's AI CLI) with a spec-first approach: specifications
 were written before code, not after.
 
-## V1 — MVP Monolith
+## V1 — MVP (complete)
 
 | Phase | Directory | Status |
 |-------|-----------|--------|
-| Vision | `v1/01-vision/` | Complete |
-| Implementation | `v1/02-implementation/` | Complete |
-| Code Review | `v1/03-review/` | Complete (2026-03-01) |
-| Refactoring & Learning | `v1/04-refactoring-learning/` | Frontend: done / Backend: pending |
-| Feature: i18n | `v1/05-additional-features/i18n/` | Complete |
+| Vision & brief | `v1/01-vision/` | Complete |
+| Implementation plan | `v1/02-implementation/` | Complete |
+| Code review | `v1/03-review/` | Complete (2026-03-01) |
+| Refactoring & learning | `v1/04-refactoring-learning/` | Frontend: done / Backend: in progress |
+| Additional features (i18n, logout) | `v1/05-additional-features/` | Complete |
+| Cleanup | `v1/06-cleanup/` | Complete |
+| **As-built** | **`v1/as-built.md`** | **Authoritative — what is actually built** |
 
-## V2 — Microservices
+> `v1/as-built.md` is the primary reference for the current codebase state:
+> full package structure, all REST endpoints, DB schema, frontend components, hooks, API calls.
+
+## V2 — Microservices (not started)
 
 | Phase | Directory | Status |
 |-------|-----------|--------|
-| Vision | `v2/vision.md` | Complete |
-| Brief & Implementation | `v2/` | Pending |
-| Code Review | `v2/review/` | Pending |
-| Learning & Improvement | `v2/learning/` | Pending |
+| Architecture vision | `v2/vision.md` | Complete |
+| Brief & implementation plan | `v2/` | Pending |
+
+## Deployment
+
+| Document | Directory |
+|----------|-----------|
+| Deployment guide | `deployment/deployment-guide.md` |
+| Beginner-friendly guide | `deployment/deployment-dla-poczatkujacych.md` |
 
 ## AI-Assisted Development
 
@@ -37,4 +47,3 @@ files record what was understood at each stage.
 `v1/03-review/` contains a **code quality review** (best practices, security vulnerabilities,
 design patterns) — not a verification that the implementation plan was completed.
 Completion verification is tracked within each plan's own Definition of Done.
-
