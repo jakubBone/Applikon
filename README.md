@@ -1,12 +1,32 @@
-<p align="center">
-  <img src="" alt="EasyApply" width="80" height="80">
-</p>
+<img src="easyapply-frontend/public/logo-clean.png" alt="EasyApply" width="380">
 
-<h1 align="center">EasyApply</h1>
+> Job application tracker for IT candidates in Poland.
 
-<p align="center">
-  Job application tracker for IT candidates in Poland.
-</p>
+**Built spec-first with AI pair-programming** — specs in `spec/` drove implementation, not the other way around.
+
+![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)
+![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
+
+**Backend** &nbsp;
+![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
+![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=springsecurity&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Flyway](https://img.shields.io/badge/Flyway-CC0200?style=flat&logo=flyway&logoColor=white)
+
+**Frontend** &nbsp;
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
+![React Query](https://img.shields.io/badge/React_Query-FF4154?style=flat&logo=reactquery&logoColor=white)
+
+**Infra & Tests** &nbsp;
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
+![Cypress](https://img.shields.io/badge/Cypress-69D3A7?style=flat&logo=cypress&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 
 ## About
@@ -28,16 +48,6 @@ Built for the Polish IT market, primarily for juniors who apply to many position
 - **Badge system** — achievements for rejections and ghosting (gamification)
 - **Authentication** — Google OAuth2 login, JWT access token + refresh token
 - **i18n** — Polish and English interface with a language switcher
-
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Backend | Java 21, Spring Boot 3.4, Spring Security, Google OAuth2 + JWT (RS256) |
-| Database | PostgreSQL 16, Flyway migrations (V1–V12) |
-| Frontend | React 19, TypeScript, Tailwind CSS 4, React Query v5, @dnd-kit, i18next |
-| Infrastructure | Docker Compose, Vercel (frontend) |
 
 
 ## Project Structure
