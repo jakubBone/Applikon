@@ -29,10 +29,7 @@
 
 Spec-first workflow — specifications in [`spec/`](spec/README.md) defined the product, architecture, and implementation plan **before any code was written**. **Claude Code** and **Gemini** then implemented against those specs, end-to-end. Each phase has its own artefacts in `spec/` (brief, implementation plan, code review, refactoring/learning notes), so the full AI-assisted lifecycle is fully traceable.
 
-```mermaid
-flowchart LR
-  A([Vision]) --> B([Spec]) --> C([Code]) --> D([Review]) --> E([Refactor])
-```
+![Vision](https://img.shields.io/badge/Vision-1F2937?style=flat) → ![Spec](https://img.shields.io/badge/Spec-1F2937?style=flat) → ![Code](https://img.shields.io/badge/Code-1F2937?style=flat) → ![Review](https://img.shields.io/badge/Review-1F2937?style=flat) → ![Refactor](https://img.shields.io/badge/Refactor-1F2937?style=flat)
 
 
 ## ✨ Features
