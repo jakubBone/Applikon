@@ -39,6 +39,8 @@ uploads/
 *.key
 
 # Others
-.claude
 nul
 plan.txt
+
+# Local-only specs (not for public repo)
+spec/post/

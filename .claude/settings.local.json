@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(pwd)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "Bash(git status)",
+      "Bash(git diff)",
+      "Bash(git log)",
+      "Bash(mvn clean:*)",
+      "Bash(mvn install:*)",
+      "Bash(mvn test:*)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx cypress:*)",
+      "Bash(./mvnw test *)"
+    ]
+  }
+}

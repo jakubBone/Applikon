@@ -52,24 +52,31 @@ docker-compose.yml    — Local development setup
 
 ## Running Locally
 
-See [`spec/deployment/deployment-guide.md`](spec/deployment/deployment-guide.md) for full setup instructions.
+You need: Java 21, Node.js 20+, PostgreSQL 16 (or run via Docker), Google OAuth2 credentials.
 
-Quick start:
+**1. Database** — start Postgres (e.g. via Docker):
 ```bash
-# Copy and fill in environment variables
-cp .env.example .env
-cp easyapply-frontend/.env.example easyapply-frontend/.env
-
-# Start everything
-docker-compose up
+docker run --name easyapply-db -e POSTGRES_DB=easyapply -e POSTGRES_USER=easyapply \
+  -e POSTGRES_PASSWORD=easyapply -p 5432:5432 -d postgres:16-alpine
 ```
 
-Backend runs on `localhost:8080`, frontend on `localhost:5173`.
+**2. Backend** (`easyapply-backend/`):
+```bash
+cp .env.example .env       # fill in DATABASE_*, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+./mvnw spring-boot:run     # starts on :8080
+```
+
+**3. Frontend** (`easyapply-frontend/`):
+```bash
+cp .env.example .env       # fill in VITE_API_URL, VITE_GOOGLE_CLIENT_ID
+npm install
+npm run dev                # starts on :5173
+```
 
 
 ## Documentation
 
-All specification and architecture artifacts live in [`spec/`](spec/README.md):
+Specification and architecture artifacts live in [`spec/`](spec/README.md):
 
 - **Vision & MVP brief** — `spec/v1/01-vision/brief.md`
 - **Implementation plan** — `spec/v1/02-implementation/mvp-implementation-plan.md`

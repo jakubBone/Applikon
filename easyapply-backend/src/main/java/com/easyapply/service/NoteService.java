@@ -83,25 +83,6 @@ public class NoteService {
         noteRepository.deleteByApplicationIdAndApplicationUserId(applicationId, userId);
     }
 
-    @Transactional
-    public NoteResponse createSalaryChangeNote(Long applicationId, Integer oldSalary, String oldCurrency, Integer newSalary, String newCurrency, UUID userId) {
-        Application application = getApplicationByIdAndUserId(applicationId, userId);
-
-        String content = messageSource.getMessage("error.salary.changed",
-                new Object[]{
-                        oldSalary != null ? oldSalary : 0,
-                        oldCurrency != null ? oldCurrency : "PLN",
-                        newSalary != null ? newSalary : 0,
-                        newCurrency != null ? newCurrency : "PLN"
-                },
-                LocaleContextHolder.getLocale());
-
-        log.info("Creating salary change note for applicationId={} user={}", applicationId, userId);
-        Note note = new Note(content, application);
-        Note saved = noteRepository.save(note);
-        return NoteResponse.fromEntity(saved);
-    }
-
     private Application getApplicationByIdAndUserId(Long applicationId, UUID userId) {
         return applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.application.notFound", new Object[]{applicationId}, LocaleContextHolder.getLocale())));

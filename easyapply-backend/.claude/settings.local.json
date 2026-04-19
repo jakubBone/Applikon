@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw test:*)",
+      "Bash(echo:*)",
+      "Bash(./mvnw surefire:test:*)",
+      "Bash(tee:*)",
+      "Bash(cmd /c \"mvnw.cmd test 2>&1\")",
+      "Bash(mvn test:*)",
+      "Bash(dir:*)",
+      "Bash(ver)"
+    ]
+  }
+}

@@ -208,34 +208,4 @@ class NoteServiceTest {
         }
     }
 
-    @Nested
-    class SalaryNoteTests {
-
-        @Test
-        void createSalaryChangeNote_buildsExpectedText() {
-            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
-            when(noteRepository.save(any(Note.class))).thenReturn(note(
-                    101L,
-                    "Stawka zmieniona: 5000 PLN -> 7000 PLN",
-                    NoteCategory.OTHER
-            ));
-
-            NoteResponse response = noteService.createSalaryChangeNote(1L, 5000, "PLN", 7000, "PLN", TEST_USER_ID);
-
-            verify(noteRepository).save(noteCaptor.capture());
-            assertTrue(noteCaptor.getValue().getContent().contains("5000"));
-            assertTrue(noteCaptor.getValue().getContent().contains("7000"));
-            assertEquals(101L, response.id());
-        }
-
-        @Test
-        void createSalaryChangeNote_handlesNulls() {
-            when(applicationRepository.findByIdAndUserId(1L, TEST_USER_ID)).thenReturn(Optional.of(testApplication));
-            when(noteRepository.save(any(Note.class))).thenReturn(note(102L, "any", NoteCategory.OTHER));
-
-            NoteResponse response = noteService.createSalaryChangeNote(1L, null, null, 7000, "EUR", TEST_USER_ID);
-
-            assertNotNull(response);
-        }
-    }
 }
