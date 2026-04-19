@@ -1,42 +1,41 @@
-<img src="easyapply-frontend/public/logo-clean.png" alt="EasyApply" width="380">
-
-> Job application tracker for IT candidates in Poland.
-
-**Built spec-first with AI pair-programming** — specs in `spec/` drove implementation, not the other way around.
+<img src="easyapply-frontend/public/logo_white.png" alt="EasyApply" width="100%">
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)
 ![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
 
-**Backend** &nbsp;
 ![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=springsecurity&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white)
 ![Flyway](https://img.shields.io/badge/Flyway-CC0200?style=flat&logo=flyway&logoColor=white)
-
-**Frontend** &nbsp;
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
 ![React Query](https://img.shields.io/badge/React_Query-FF4154?style=flat&logo=reactquery&logoColor=white)
-
-**Infra & Tests** &nbsp;
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
 ![Cypress](https://img.shields.io/badge/Cypress-69D3A7?style=flat&logo=cypress&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 
-## About
+## 🎯 About
 
-EasyApply helps organize your job search process. Instead of scattered notes, spreadsheets, and expired links — one place for all applications, CVs, and interview notes.
-
-Built for the Polish IT market, primarily for juniors who apply to many positions simultaneously and need control over the entire process.
+**EasyApply is a job application tracker for IT candidates in Poland** — one place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Built primarily for juniors actively applying to many positions and needing control over the entire process.
 
 
-## Features
+## 🤖 Built with AI
+
+Spec-first workflow — specifications in [`spec/`](spec/README.md) defined the product, architecture, and implementation plan **before any code was written**. **Claude Code** and **Gemini** then implemented against those specs, end-to-end. Each phase has its own artefacts in `spec/` (brief, implementation plan, code review, refactoring/learning notes), so the full AI-assisted lifecycle is fully traceable.
+
+```mermaid
+flowchart LR
+  A([Vision]) --> B([Spec]) --> C([Code]) --> D([Review]) --> E([Refactor])
+```
+
+
+## ✨ Features
 
 - **Application registry** — company, position, salary (range, currency, gross/net, contract type), job source, link to posting
 - **Kanban board** — visual overview of recruitment status: Sent → In progress → Completed, with drag & drop
@@ -50,7 +49,7 @@ Built for the Polish IT market, primarily for juniors who apply to many position
 - **i18n** — Polish and English interface with a language switcher
 
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 easyapply-backend/    — Spring Boot application (com.easyapply)
@@ -60,7 +59,7 @@ docker-compose.yml    — Local development setup
 ```
 
 
-## Running Locally
+## 🚀 Running Locally
 
 You need: Java 21, Node.js 20+, PostgreSQL 16 (or run via Docker), Google OAuth2 credentials.
 
@@ -84,7 +83,7 @@ npm run dev                # starts on :5173
 ```
 
 
-## Documentation
+## 📚 Documentation
 
 Specification and architecture artifacts live in [`spec/`](spec/README.md):
 
@@ -94,7 +93,7 @@ Specification and architecture artifacts live in [`spec/`](spec/README.md):
 - **v2 microservices vision** — `spec/v2/vision.md`
 
 
-## Status
+## ✅ Status
 
 v1 complete. All planned MVP features implemented, plus: Google OAuth2 authentication, i18n (EN/PL), onboarding tour, gamification badges, Cypress E2E tests.
 
