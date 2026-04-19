@@ -2,7 +2,7 @@
 
 ## Project
 Job application tracker for Polish IT candidates (juniors/mids actively applying for roles).
-Built together with the user in a **spec-driven** workflow: specs in `spec/` came before code.
+Built together with the user and Claude Code in a **spec-driven** workflow: specs in `spec/` came before code.
 
 **Backend:** Java 21 · Spring Boot 3.4 · Spring Security · Google OAuth2 + JWT (RS256) · PostgreSQL · Flyway  
 **Frontend:** React 19 · TypeScript · Tailwind CSS 4 · React Query v5 · i18next (PL/EN) · @dnd-kit  
@@ -32,7 +32,6 @@ spec/
 - Multi-user isolation: all queries scoped to `user_id` from JWT
 - i18n EN/PL, gamification badges, onboarding tour
 - Vitest (84 backend, 67 frontend tests) + Cypress E2E
-- Branch `refactor-backend` — backend refactoring/learning in progress
 
 **Known gaps:** `createSalaryChangeNote()` in NoteService exists but is never called from ApplicationService (dead code); `rejectionDetails` missing from frontend `Application` type.
 
@@ -56,7 +55,6 @@ Example: `refactor(backend): extract validation into ApplicationValidator`
 | Need | Read |
 |------|------|
 | Full architecture / DB schema / API list | `spec/v1/as-built.md` |
-| Backend refactor — what's done, what's next | `spec/v1/04-refactoring-learning/refactor-plan-backend.md` |
 | Original vision / problem statement | `spec/v1/01-vision/brief.md` |
 | v2 microservices context | `spec/v2/vision.md` |
 | Deploy instructions | `spec/deployment/deployment-guide.md` |
