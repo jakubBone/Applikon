@@ -93,9 +93,9 @@ public void acceptPrivacyPolicy() {
 
 **Plik:** `dto/UserResponse.java`
 
-- [ ] Dodać pole `privacyPolicyAcceptedAt` (jako `String` ISO-8601 lub `LocalDateTime`)
-- [ ] Frontend na podstawie tego pola decyduje czy pokazać ekran consent
-- [ ] `./mvnw test` — zielony (test `GET /api/auth/me` może wymagać aktualizacji asercji)
+- [x] Dodać pole `privacyPolicyAcceptedAt` jako `String` (ISO-8601 z `LocalDateTime.toString()`, null-safe) — spójne z `CVResponse.uploadedAt`
+- [x] Frontend na podstawie tego pola decyduje czy pokazać ekran consent
+- [x] `./mvnw test` — 88/88 zielone (brak testu `/api/auth/me` w projekcie, nic do zaktualizowania)
 
 ---
 
