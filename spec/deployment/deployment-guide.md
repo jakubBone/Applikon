@@ -178,7 +178,7 @@ apt update && apt install caddy
 3. APIs & Services → Credentials → OAuth 2.0 Client IDs
 4. Dodaj do **Authorized redirect URIs**:
    ```
-   https://twoja-domena.pl/login/oauth2/code/google
+   https://your-domain.com/login/oauth2/code/google
    ```
    (To musi być HTTPS — Google nie przyjmie HTTP)
 5. Skopiuj `Client ID` i `Client Secret`
@@ -197,7 +197,7 @@ git clone https://github.com/TwojeKonto/EasyApply.git .
 Lub jeśli repo jest prywatne, skopiuj pliki przez `scp`:
 ```bash
 # Z lokalnego komputera:
-scp -r "C:\Pulpitowe pliki\Z2J\projects\Easy" root@157.90.xxx.xxx:/opt/easyapply
+scp -r /path/to/local/project root@SERVER_IP:/opt/easyapply
 ```
 
 ---
@@ -215,21 +215,21 @@ Wypełnij:
 # Baza danych
 POSTGRES_DB=easyapply_db
 POSTGRES_USER=easyapply_user
-POSTGRES_PASSWORD=TutajBardzoTrudneHaslo123!@#   # ZMIEŃ na coś losowego
+POSTGRES_PASSWORD=your_strong_random_password   # CHANGE to a random value
 
 # Backend
 SPRING_PROFILES_ACTIVE=prod
-CORS_ALLOWED_ORIGINS=https://twoja-domena.pl
+CORS_ALLOWED_ORIGINS=https://your-domain.com
 
 # Frontend — URL do API (baked in przy buildzie!)
-VITE_API_URL=https://twoja-domena.pl/api
+VITE_API_URL=https://your-domain.com/api
 
 # Google OAuth2
 GOOGLE_CLIENT_ID=123456789-abc.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=GOCSPX-twój-secret
+GOOGLE_CLIENT_SECRET=GOCSPX-your-secret-here
 
 # Frontend URL (do redirectu po OAuth2)
-FRONTEND_URL=https://twoja-domena.pl
+FRONTEND_URL=https://your-domain.com
 ```
 
 **Ważne:** Plik `.env` zawiera hasła — nigdy nie commituj go do gita!
@@ -245,7 +245,7 @@ nano /etc/caddy/Caddyfile
 
 Zawartość:
 ```caddyfile
-twoja-domena.pl {
+your-domain.com {
     # Przekaż cały ruch do frontendu (port 80)
     reverse_proxy localhost:80
 
@@ -293,7 +293,7 @@ docker compose logs backend # logi backendu
 
 Po ~60 sekundach (Spring Boot potrzebuje czasu na start) otwórz:
 ```
-https://twoja-domena.pl
+https://your-domain.com
 ```
 
 ---
@@ -425,7 +425,7 @@ docker compose logs -f frontend   # logi nginx
 
 Health check backendu (publiczny endpoint):
 ```
-https://twoja-domena.pl/actuator/health
+https://your-domain.com/actuator/health
 ```
 Powinno zwrócić: `{"status":"UP"}`
 
@@ -448,7 +448,7 @@ Powinno zwrócić: `{"status":"UP"}`
 2. Docker + Caddy na serwerze
 3. Sklonuj repo, stwórz `.env`
 4. `docker compose up -d --build`
-5. Sprawdź `https://twoja-domena.pl/actuator/health`
+5. Sprawdź `https://your-domain.com/actuator/health`
 6. Przetestuj logowanie Google
 
 ---
