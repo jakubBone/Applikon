@@ -403,8 +403,12 @@ function CVManager({ applications, onCVAssigned }: Props) {
               <>
                 <h3>{t('cv.addModalTitle')}</h3>
                 <div className="add-cv-options">
-                  <div className="add-cv-option" onClick={() => setAddStep('file')}>
-                    <div className="option-icon">📁</div>
+                  <div
+                    className="add-cv-option add-cv-option--disabled"
+                    aria-disabled="true"
+                    title={t('cv.uploadDisabledTooltip')}
+                  >
+                    <div className="option-icon">🔒</div>
                     <div className="option-content">
                       <h4>{t('cv.uploadOptionTitle')}</h4>
                       <p>{t('cv.uploadOptionDesc')}</p>

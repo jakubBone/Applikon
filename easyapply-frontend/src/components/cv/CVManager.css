@@ -537,6 +537,16 @@
   background: #f8f9ff;
 }
 
+.add-cv-option--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-cv-option--disabled:hover {
+  border-color: #e0e0e0;
+  background: transparent;
+}
+
 .option-icon {
   font-size: 2rem;
   width: 50px;

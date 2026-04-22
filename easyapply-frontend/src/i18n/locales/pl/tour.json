@@ -38,11 +38,11 @@
     },
     "cvSection": {
       "title": "📄 Zarządzanie CV",
-      "content": "Tutaj możesz dodawać swoje CV. Spokojnie... wszystkie dane są zapisane tylko w Twojej przeglądarce - bezpiecznie i lokalnie."
+      "content": "Tutaj zarządzasz swoim CV. Zapisujesz nazwę pliku, który wysłałeś na dane stanowisko (plik zostaje u Ciebie na dysku), albo wklejasz link do CV z Google Drive / Dropbox. Potem przypisujesz je do konkretnych aplikacji."
     },
     "cvAddButton": {
       "title": "📎 Dodaj swoje CV",
-      "content": "Dodaj swoje CV. Możesz przesłać plik PDF, podać link do chmury (Google Drive, Dropbox) lub po prostu zanotować nazwę pliku."
+      "content": "Wklej link do CV z Google Drive / Dropbox albo zanotuj nazwę pliku."
     },
     "cvAssignOpen": {
       "title": "🔗 Przypisywanie CV",

@@ -48,11 +48,11 @@ Obecnie karta (linia 406):
 <div className="add-cv-option" onClick={() => setAddStep('file')}>
 ```
 
-- [ ] Dodać atrybut `data-disabled="true"` oraz klasę CSS `add-cv-option--disabled`
-- [ ] Usunąć `onClick` (lub podmienić na no-op)
-- [ ] Dodać `title={t('cv.uploadDisabledTooltip')}` — natywny tooltip HTML
-- [ ] Opcjonalnie: pokazać ikonkę 🔒 zamiast 📁 dla jasnego sygnału wizualnego
-- [ ] `npm run build` zielony
+- [x] Dodać atrybut `aria-disabled="true"` oraz klasę CSS `add-cv-option--disabled` (pominięto `data-disabled` — `aria-disabled` wystarcza semantycznie i jest czytane przez screen readery)
+- [x] Usunąć `onClick` (usunięte, brak no-op)
+- [x] Dodać `title={t('cv.uploadDisabledTooltip')}` — natywny tooltip HTML
+- [x] Pokazać ikonkę 🔒 zamiast 📁 dla jasnego sygnału wizualnego
+- [x] `npm run build` zielony
 
 **Schemat po zmianie:**
 
@@ -78,12 +78,11 @@ Obecnie karta (linia 406):
 
 **Plik:** `easyapply-frontend/src/components/cv/CVManager.css` (lub odpowiedni plik stylu — do zweryfikowania)
 
-- [ ] Zlokalizować plik stylu dla `.add-cv-option`
-- [ ] Dodać regułę `.add-cv-option--disabled`:
+- [x] Zlokalizować plik stylu dla `.add-cv-option` (znaleziony: `components/cv/CVManager.css`)
+- [x] Dodać regułę `.add-cv-option--disabled`:
   - `opacity: 0.5`
   - `cursor: not-allowed`
-  - `pointer-events: auto` (zachować hover dla tooltipa, ale `onClick` jest usunięty)
-  - Dla `:hover` — nie zmieniać `background`/`transform` (wyłączyć efekty hover)
+  - `:hover` wyzerowany (border i background bez zmian)
 
 **Schemat:**
 
@@ -106,15 +105,22 @@ Obecnie karta (linia 406):
 
 **Pliki:** `src/i18n/locales/pl/*.json`, `src/i18n/locales/en/*.json`
 
-- [ ] Zlokalizować plik gdzie są klucze `cv.*` (pewnie `cv.json` lub `common.json`)
-- [ ] Dodać klucz `cv.uploadDisabledTooltip`:
-  - PL: `"Chwilowo nieczynne"`
+- [x] Zlokalizować plik gdzie są klucze `cv.*` (`i18n/locales/{pl,en}/common.json`)
+- [x] Dodać klucz `cv.uploadDisabledTooltip`:
+  - PL: `"Chwilowo niedostępne"` (edytowane przez użytkownika)
   - EN: `"Temporarily unavailable"`
-- [ ] `npm run build` zielony (TypeScript nie narzeka na brakujący klucz)
+- [x] `npm run build` zielony
 
 ---
 
-### Etap 4 — Obsługa błędu 503 z backendu (defensywna)
+### Etap 4 — Obsługa błędu 503 z backendu (defensywna) — POMINIĘTE
+
+Zgodnie z decyzją w planie: polegamy na `ConsentGate` / disabled UI. Endpoint
+503 nie jest osiągalny przez normalny flow userski, więc dedykowana obsługa
+nie jest potrzebna. Istniejący `onError: alert(tErrors('cv.uploadError'))`
+w `CVManager.tsx:87` pokryje każde teoretyczne wywołanie spoza UI.
+
+
 
 **Plik:** `easyapply-frontend/src/hooks/useCV.ts` lub `src/services/api.ts`
 
@@ -132,29 +138,26 @@ nadal dostępna w kodzie.
 
 ---
 
-### Etap 5 — Aktualizacja testów
+### Etap 5 — Aktualizacja testów — N/A
 
-**Plik:** `easyapply-frontend/src/test/**` (lokalizacja testu CVManager do zweryfikowania)
+**Brak pliku `CVManager.test.tsx`** w projekcie (weryfikacja: `src/test/components/`
+zawiera tylko `App.test.tsx` i `BadgeWidget.test.tsx`). `api.test.ts` testuje
+funkcję `uploadCV` (mock fetch) — nie zmienia się, bo sygnatura funkcji jest
+ta sama, a backend behavior jest mockowany.
 
-- [ ] Znaleźć test weryfikujący flow "click Upload PDF → idź do kroku file"
-- [ ] Zmienić: po kliknięciu karty "Upload PDF" ekran `file` **nie pojawia się**
-      (pozostajemy na ekranie wyboru)
-- [ ] Dodać asercję: karta ma atrybut `aria-disabled="true"`
-- [ ] Dodać asercję: `title` karty równe wartości klucza `cv.uploadDisabledTooltip`
-- [ ] Sprawdzić czy jest test flow dodawania CV typu LINK — zostawić bez zmian
-- [ ] `npm run test:run` zielony
+- [x] Wynik `npm run test:run`: **68/68 zielone** (bez regresji)
 
 ---
 
 ## Definicja ukończenia (DoD)
 
-- [ ] Karta "Upload PDF" widoczna w modalu, ale wizualnie zdisabled (opacity, not-allowed cursor)
-- [ ] Najechanie myszą pokazuje tooltip "Chwilowo nieczynne" / "Temporarily unavailable"
-- [ ] Kliknięcie karty nie otwiera ekranu uploadu
-- [ ] Dodawanie CV jako LINK działa jak dotychczas
-- [ ] Istniejące CV typu FILE są widoczne w liście i można je pobrać / usunąć
-- [ ] `npm run build` bez błędów TypeScript
-- [ ] `npm run test:run` — 0 failed tests
+- [x] Karta "Upload PDF" widoczna w modalu, ale wizualnie zdisabled (opacity, not-allowed cursor)
+- [x] Najechanie myszą pokazuje tooltip "Chwilowo niedostępne" / "Temporarily unavailable"
+- [x] Kliknięcie karty nie otwiera ekranu uploadu (brak `onClick`)
+- [x] Dodawanie CV jako LINK działa jak dotychczas (brak zmian w tej ścieżce)
+- [x] Istniejące CV typu FILE są widoczne w liście i można je pobrać / usunąć (brak zmian)
+- [x] `npm run build` bez błędów TypeScript
+- [x] `npm run test:run` — 68/68, 0 failed
 - [ ] Weryfikacja manualna: full flow dodawania CV przez link działa end-to-end z backendem
 
 ---

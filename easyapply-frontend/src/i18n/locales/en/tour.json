@@ -38,11 +38,11 @@
     },
     "cvSection": {
       "title": "📄 CV Management",
-      "content": "Here you can add your CVs. Don't worry... all data is saved only in your browser - securely and locally."
+      "content": "Here you manage your CVs. Save the name of the file you sent for a position (the file stays on your disk), or paste a link to your CV from Google Drive / Dropbox. Then assign them to specific applications."
     },
     "cvAddButton": {
       "title": "📎 Add your CV",
-      "content": "Add your CV. You can upload a PDF, provide a cloud link (Google Drive, Dropbox) or just note the file name."
+      "content": "Paste a link to your CV from Google Drive / Dropbox, or note the file name."
     },
     "cvAssignOpen": {
       "title": "🔗 Assigning CV",
