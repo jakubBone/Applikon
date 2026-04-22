@@ -35,6 +35,9 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "privacy_policy_accepted_at")
+    private LocalDateTime privacyPolicyAcceptedAt;
+
     protected User() {}
 
     public User(String email, String name, String googleId) {
@@ -50,6 +53,13 @@ public class User {
     public String getRefreshToken() { return refreshToken; }
     public LocalDateTime getRefreshTokenExpiry() { return refreshTokenExpiry; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getPrivacyPolicyAcceptedAt() { return privacyPolicyAcceptedAt; }
+
+    public void acceptPrivacyPolicy() {
+        if (this.privacyPolicyAcceptedAt == null) {
+            this.privacyPolicyAcceptedAt = LocalDateTime.now();
+        }
+    }
 
     public void updateProfile(String name, String email) {
         this.name = name;

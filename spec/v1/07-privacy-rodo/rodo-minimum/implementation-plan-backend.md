@@ -68,11 +68,11 @@ oznacza "użytkownik w połowie rejestracji". Przy kasowaniu konta usuwamy tak s
 
 **Plik encji:** `entity/User.java`
 
-- [ ] Dodać pole `LocalDateTime privacyPolicyAcceptedAt` z `@Column(name = "privacy_policy_accepted_at")` (nullable)
-- [ ] Dodać getter `getPrivacyPolicyAcceptedAt()`
-- [ ] Dodać metodę domenową `acceptPrivacyPolicy()` ustawiającą pole na `LocalDateTime.now()`
-- [ ] Schema update: Hibernate `ddl-auto=update` doda kolumnę automatycznie dla dev; dla prod rozważyć ręczny skrypt SQL (do decyzji w fazie deploy)
-- [ ] `./mvnw test` — zielony
+- [x] Dodać pole `LocalDateTime privacyPolicyAcceptedAt` z `@Column(name = "privacy_policy_accepted_at")` (nullable)
+- [x] Dodać getter `getPrivacyPolicyAcceptedAt()`
+- [x] Dodać metodę domenową `acceptPrivacyPolicy()` ustawiającą pole na `LocalDateTime.now()` (**idempotentna** — jeśli już ustawione, nie nadpisuje; egzekwuje inwariant w domenie)
+- [x] **Flyway migracja V13** `V13__user_privacy_policy_accepted_at.sql` — plan zakładał `ddl-auto=update`, ale projekt używa Flyway (migracje V1–V12 w `db/migration/`), więc zamiast polegać na Hibernate napisałem właściwą migrację
+- [x] `./mvnw test` — 88/88 zielone
 
 **Schemat:**
 
