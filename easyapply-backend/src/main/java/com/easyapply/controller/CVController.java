@@ -6,6 +6,8 @@ import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.CVService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -24,17 +27,21 @@ import java.util.List;
 public class CVController {
 
     private final CVService cvService;
+    private final MessageSource messageSource;
 
-    public CVController(CVService cvService) {
+    public CVController(CVService cvService, MessageSource messageSource) {
         this.cvService = cvService;
+        this.messageSource = messageSource;
     }
 
     @PostMapping("/upload")
     public ResponseEntity<CVResponse> uploadCV(
             @AuthenticationPrincipal AuthenticatedUser user,
             @RequestParam("file") MultipartFile file) throws IOException {
-        CV cv = cvService.uploadCV(file, user.id());
-        return ResponseEntity.status(HttpStatus.CREATED).body(CVResponse.fromEntity(cv));
+        throw new ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                messageSource.getMessage("error.cv.uploadDisabled", null, LocaleContextHolder.getLocale())
+        );
     }
 
     @GetMapping

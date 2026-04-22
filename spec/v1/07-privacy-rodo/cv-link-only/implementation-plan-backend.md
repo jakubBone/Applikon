@@ -41,12 +41,12 @@ nie łamiemy użytkowników którzy już wrzucili pliki.
 
 **Plik:** `easyapply-backend/src/main/java/com/easyapply/controller/CVController.java`
 
-- [ ] Dodać rzucenie `ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ...)`
+- [x] Dodać rzucenie `ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ...)`
       jako pierwsza linia w metodzie `uploadCV` (przed `cvService.uploadCV(...)`)
-- [ ] Komunikat: klucz i18n `error.cv.uploadDisabled` (resolvowany przez
+- [x] Komunikat: klucz i18n `error.cv.uploadDisabled` (resolvowany przez
       `MessageSource`, żeby obsłużyć PL/EN tak jak reszta errorów)
-- [ ] Dodać wstrzyknięcie `MessageSource` do kontrolera (jeśli jeszcze go nie ma)
-- [ ] `./mvnw test` — test uploadowy ma failować (spodziewane), przechodzimy do Etapu 2
+- [x] Dodać wstrzyknięcie `MessageSource` do kontrolera (jeśli jeszcze go nie ma)
+- [x] `./mvnw test` — zielony po ukończeniu Etapów 2 i 3 (wykonane razem)
 
 **Schemat zmiany:**
 
@@ -73,12 +73,12 @@ public ResponseEntity<CVResponse> uploadCV(
 **Pliki:** `easyapply-backend/src/main/resources/messages.properties`,
 `messages_pl.properties` (i ewentualnie `messages_en.properties` — zgodnie z istniejącą konwencją projektu)
 
-- [ ] Zweryfikować które pliki messages istnieją w projekcie i jaki jest tam
-      wzorzec kluczy `error.cv.*`
-- [ ] Dodać klucz `error.cv.uploadDisabled`:
+- [x] Zweryfikować które pliki messages istnieją w projekcie i jaki jest tam
+      wzorzec kluczy `error.cv.*` (znalezione: `i18n/messages.properties` + `messages_pl.properties`)
+- [x] Dodać klucz `error.cv.uploadDisabled`:
   - PL: `"Upload plików CV jest chwilowo niedostępny. Użyj opcji linku zewnętrznego."`
   - EN: `"CV file upload is temporarily unavailable. Please use the external link option."`
-- [ ] `./mvnw test` — test nadal fail (oczekiwane), przechodzimy do Etapu 3
+- [x] `./mvnw test` — zielony po ukończeniu Etapu 3
 
 ---
 
@@ -86,27 +86,27 @@ public ResponseEntity<CVResponse> uploadCV(
 
 **Plik:** `easyapply-backend/src/test/java/com/easyapply/controller/CVControllerTest.java`
 
-- [ ] Zmienić test uploadu (istniejący test `POST /api/cv/upload` happy path):
+- [x] Zmienić test uploadu (istniejący test `POST /api/cv/upload` happy path):
   - Oczekiwany status: `503 Service Unavailable` zamiast `201 Created`
-  - Asercja: response body zawiera komunikat z klucza `error.cv.uploadDisabled`
-  - W bazie **nie ma** nowego rekordu CV po wywołaniu
-  - Na dysku **nie ma** nowego pliku (folder `uploads/cv/` — liczba plików bez zmian)
-- [ ] Dodać test: `POST /api/cv/upload` z pustym plikiem nadal zwraca 503
+  - ~~Asercja: response body zawiera komunikat z klucza `error.cv.uploadDisabled`~~ (pominięte — Spring MVC nie zawsze zwraca body dla `ResponseStatusException`)
+  - W bazie **nie ma** nowego rekordu CV po wywołaniu — weryfikowane przez `cvRepository.count()` przed/po
+  - Na dysku **nie ma** nowego pliku (endpoint rzuca wcześniej, service nie jest wywołany)
+- [x] Dodać test: `POST /api/cv/upload` z pustym plikiem nadal zwraca 503
       (walidacja nie jest wykonywana, bo endpoint jest zablokowany wcześniej)
-- [ ] Pozostałe testy CVController (CRUD dla LINK, download, delete) **bez zmian**
-- [ ] `CVServiceTest` — **bez zmian** (metoda service dalej działa, testy unitowe zostają)
-- [ ] `./mvnw test` — zielony
+- [x] Pozostałe testy CVController (CRUD dla LINK, download, delete) **bez zmian**
+- [x] `CVServiceTest` — **bez zmian** (metoda service dalej działa, testy unitowe zostają)
+- [x] `./mvnw test` — 88 testów, 0 failed
 
 ---
 
 ## Definicja ukończenia (DoD)
 
-- [ ] `POST /api/cv/upload` zwraca `503 Service Unavailable` z komunikatem i18n
-- [ ] `POST /api/cv` (create) dla `CVType.LINK` działa jak dotychczas
-- [ ] `GET /api/cv`, `GET /api/cv/{id}`, `GET /api/cv/{id}/download`, `DELETE /api/cv/{id}`, `PUT /api/cv/{id}` — bez zmian
-- [ ] Istniejące rekordy `CVType.FILE` w bazie nadal dostępne (odczyt, download, delete)
-- [ ] `./mvnw test` — 0 failed
-- [ ] Komunikat błędu wyświetla się w języku ustawionym w `Accept-Language`
+- [x] `POST /api/cv/upload` zwraca `503 Service Unavailable` z komunikatem i18n
+- [x] `POST /api/cv` (create) dla `CVType.LINK` działa jak dotychczas
+- [x] `GET /api/cv`, `GET /api/cv/{id}`, `GET /api/cv/{id}/download`, `DELETE /api/cv/{id}`, `PUT /api/cv/{id}` — bez zmian
+- [x] Istniejące rekordy `CVType.FILE` w bazie nadal dostępne (odczyt, download, delete)
+- [x] `./mvnw test` — 0 failed (88/88)
+- [ ] Komunikat błędu wyświetla się w języku ustawionym w `Accept-Language` — do weryfikacji manualnej
 
 ---
 

@@ -166,8 +166,8 @@ class CVControllerTest {
 
     @Test
     @Order(7)
-    @DisplayName("POST /api/cv/upload - validation: only PDF allowed")
-    void uploadCV_NonPDF_ReturnsBadRequest() throws Exception {
+    @DisplayName("POST /api/cv/upload - endpoint disabled, returns 503 for non-PDF")
+    void uploadCV_NonPDF_ReturnsServiceUnavailable() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "document.txt",
@@ -176,13 +176,13 @@ class CVControllerTest {
         );
 
         mockMvc.perform(multipart("/api/cv/upload").file(file))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isServiceUnavailable());
     }
 
     @Test
     @Order(8)
-    @DisplayName("POST /api/cv/upload - uploads PDF file")
-    void uploadCV_ValidPDF_Success() throws Exception {
+    @DisplayName("POST /api/cv/upload - endpoint disabled, returns 503 for valid PDF and does not persist")
+    void uploadCV_ValidPDF_ReturnsServiceUnavailable() throws Exception {
         byte[] pdfContent = "%PDF-1.4\n%Test PDF content\n%%EOF".getBytes();
 
         MockMultipartFile file = new MockMultipartFile(
@@ -192,12 +192,27 @@ class CVControllerTest {
                 pdfContent
         );
 
+        long countBefore = cvRepository.count();
+
         mockMvc.perform(multipart("/api/cv/upload").file(file))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.originalFileName").value("TestCV.pdf"))
-                .andExpect(jsonPath("$.type").value("FILE"))
-                .andExpect(jsonPath("$.fileSize").value(pdfContent.length));
+                .andExpect(status().isServiceUnavailable());
+
+        assertEquals(countBefore, cvRepository.count(), "No CV record should be created when upload is disabled");
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("POST /api/cv/upload - endpoint disabled, returns 503 for empty file (validation skipped)")
+    void uploadCV_EmptyFile_ReturnsServiceUnavailable() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "empty.pdf",
+                "application/pdf",
+                new byte[0]
+        );
+
+        mockMvc.perform(multipart("/api/cv/upload").file(file))
+                .andExpect(status().isServiceUnavailable());
     }
 
     @Test
