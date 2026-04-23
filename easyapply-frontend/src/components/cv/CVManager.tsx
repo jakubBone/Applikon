@@ -39,6 +39,18 @@ function CVManager({ applications, onCVAssigned }: Props) {
     }
   }, [cvList])
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAddModal) setShowAddModal(false)
+        if (showAssignModal) setShowAssignModal(false)
+        if (showEditModal) setShowEditModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [showAddModal, showAssignModal, showEditModal])
+
   const groupedCVs = {
     FILE: cvList.filter(cv => cv.type === 'FILE' || !cv.type),
     LINK: cvList.filter(cv => cv.type === 'LINK'),
