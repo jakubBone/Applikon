@@ -15,6 +15,7 @@ were written before code, not after.
 | Refactoring & learning | `v1/04-refactoring-learning/` | Frontend: done / Backend: in progress |
 | Additional features (i18n, logout) | `v1/05-additional-features/` | Complete |
 | Cleanup | `v1/06-cleanup/` | Complete |
+| Privacy & RODO (phase 07) | `v1/07-privacy-rodo/` | Complete (rodo-minimum + cv-link-only) |
 | **As-built** | **`v1/as-built.md`** | **Authoritative — what is actually built** |
 
 > `v1/as-built.md` is the primary reference for the current codebase state:

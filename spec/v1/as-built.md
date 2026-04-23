@@ -1,7 +1,9 @@
 # EasyApply v1 — As-Built Documentation
 
-> Generated: 2026-04-08. Describes the actual implemented state of EasyApply v1.
+> Generated: 2026-04-23. Describes the actual implemented state of EasyApply v1.
 > Source of truth: the code. This document reflects what exists, not what was planned.
+> 
+> **Latest update:** Phase 07 (Privacy & RODO) implemented: rodo-minimum (consent flow + account deletion) and cv-link-only (disabled file upload).
 
 ---
 
@@ -11,7 +13,7 @@
 |------|---------|-------|--------|
 | Application CRUD | Basic REST API | Full CRUD + stage + duplicate check | As planned + more |
 | Kanban view | 5 statuses (WYSŁANE/ROZMOWA/ZADANIE/OFERTA/ODRZUCONE) | 4 DB statuses (SENT/IN_PROGRESS/OFFER/REJECTED), 3 Kanban columns (SENT/IN_PROGRESS/FINISHED) | Different |
-| CV management | PDF upload + LINK + NOTE types, assign to application (ETAP 4) | Implemented as planned | As planned |
+| CV management | PDF upload + LINK + NOTE types, assign to application (ETAP 4) | LINK + NOTE implemented; FILE upload disabled (phase 07) | Modified |
 | Notes | Plaintext with PYTANIA/FEEDBACK/INNE categories (ETAP 5) | Implemented, categories renamed to English | As planned |
 | Authentication | Not in MVP (planned for future) | Fully implemented: Google OAuth2 + JWT + refresh tokens | Added beyond spec |
 | Stage history (StageHistory entity) | Planned in mvp-implementation-plan.md | Implemented, then removed (V12) — overengineered | Removed |
@@ -26,7 +28,10 @@
 | Re-application warning | Planned | Implemented via check-duplicate | As planned |
 | Hidden recruitment (agency) | Planned | Implemented (agency field) | As planned |
 | Security: CORS | Planned (separate CorsConfig) | Merged into SecurityConfig | Different |
-| Database migrations | Not planned (ddl-auto=update) | Flyway migrations V1–V12 | Added beyond spec |
+| Database migrations | Not planned (ddl-auto=update) | Flyway migrations V1–V13 | Added beyond spec |
+| Privacy policy (phase 07) | Not in MVP | `/privacy` page public route, PL/EN, react-markdown | Added (phase 07) |
+| Consent flow (phase 07) | Not in MVP | ConsentGate wrapper, POST /api/auth/consent, blocks UI until accepted | Added (phase 07) |
+| Account deletion (phase 07) | Not in MVP | DELETE /api/auth/me + cascade; /settings page with deletion UI | Added (phase 07) |
 
 ---
 
@@ -82,7 +87,7 @@ com.easyapply/
     NoteResponse.java              — record (id, content, category, applicationId, createdAt)
     StageUpdateRequest.java        — record (status, currentStage, rejectionReason, rejectionDetails)
     StatusUpdateRequest.java       — record (status)
-    UserResponse.java              — record (id, email, name)
+    UserResponse.java              — record (id, email, name, privacyPolicyAcceptedAt) (phase 07)
   entity/
     Application.java               — @Entity, table: applications
     CV.java                        — @Entity, table: cvs
@@ -141,6 +146,8 @@ com.easyapply/
 | `GET` | `/api/auth/me` | Get current user profile (requires JWT) |
 | `POST` | `/api/auth/refresh` | Issue new access token from refresh token cookie |
 | `POST` | `/api/auth/logout` | Clear refresh token in DB + remove cookie |
+| `POST` | `/api/auth/consent` | Accept privacy policy (phase 07) |
+| `DELETE` | `/api/auth/me` | Delete user account + cascade all user data (phase 07) |
 
 **CVController — `/api/cv`**
 
@@ -214,6 +221,7 @@ com.easyapply/
 | V10 | `V10__fix_column_defaults.sql` | column defaults: WYSLANE→SENT, INNE→OTHER |
 | V11 | `V11__user_id_not_null.sql` | user_id NOT NULL on applications + cvs |
 | V12 | `V12__drop_stage_history.sql` | DROP TABLE stage_history |
+| V13 | `V13__user_privacy_policy_accepted_at.sql` | Add privacy_policy_accepted_at column (phase 07) |
 
 ### Current tables
 
@@ -228,6 +236,7 @@ com.easyapply/
 | refresh_token | VARCHAR(255) | nullable |
 | refresh_token_expiry | TIMESTAMP | nullable |
 | created_at | TIMESTAMP | NOT NULL |
+| privacy_policy_accepted_at | TIMESTAMP | nullable (phase 07) |
 
 **`applications`**
 
@@ -297,7 +306,9 @@ com.easyapply/
 |------|-----------|-----------|
 | `/login` | LoginPage | No |
 | `/auth/callback` | AuthCallbackPage | No |
-| `/dashboard` | DashboardPage → AppContent | Yes (ProtectedRoute) |
+| `/privacy` | PrivacyPolicy | No (public) — phase 07 |
+| `/dashboard` | DashboardPage → AppContent → ConsentGate | Yes (ProtectedRoute) — phase 07 |
+| `/settings` | Settings | Yes (ProtectedRoute) — phase 07 |
 | `/` | Redirect to /dashboard | — |
 | `*` | Redirect to /dashboard | — |
 
@@ -321,10 +332,15 @@ App.tsx
         /login   → LoginPage
                    LanguageSwitcher (before login)
         /auth/callback → AuthCallbackPage  — exchanges code for JWT
-        /dashboard → ProtectedRoute → DashboardPage → AppContent
+        /privacy → PrivacyPolicy (public route, phase 07)
+        /settings → ProtectedRoute → Settings (delete account UI, phase 07)
+        /dashboard → ProtectedRoute → ConsentGate (phase 07)
+                                      ↓
+                                    DashboardPage → AppContent
           header
             BadgeWidget        — gamification badges
             LanguageSwitcher   — PL / EN toggle
+            settings-btn       — link to /settings (phase 07)
             logout-btn         — calls POST /api/auth/logout
           TourGuide            — onboarding tour
           toolbar
@@ -341,10 +357,20 @@ App.tsx
               EndModal      — OFFER / REJECTED modal (rejection reason)
               StageModal    — select/add currentStage
             ApplicationTable
-            CVManager
+            CVManager        — disabled file upload (phase 07)
             ApplicationDetails
               NotesList
+          Footer             — privacy policy link + contact email (phase 07)
 ```
+
+### New components (phase 07)
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `ConsentGate` | `components/auth/ConsentGate.tsx` | Fullscreen overlay blocking UI for users without accepted privacy policy |
+| `PrivacyPolicy` | `pages/PrivacyPolicy.tsx` | Public page rendering privacy policy in PL/EN with markdown |
+| `Settings` | `pages/Settings.tsx` | Protected user settings page with account deletion |
+| `Footer` | `components/layout/Footer.tsx` | Footer with privacy policy link and contact email |
 
 ### Hooks (server state via React Query)
 
@@ -362,6 +388,8 @@ App.tsx
 | `fetchCurrentUser` | GET | `/api/auth/me` |
 | `logout` | POST | `/api/auth/logout` |
 | `refreshToken` | POST | `/api/auth/refresh` |
+| `acceptConsent` | POST | `/api/auth/consent` |
+| `deleteAccount` | DELETE | `/api/auth/me` |
 | `fetchApplications` | GET | `/api/applications` |
 | `createApplication` | POST | `/api/applications` |
 | `updateApplication` | PUT | `/api/applications/{id}` |
@@ -407,6 +435,7 @@ App.tsx
 | react-i18next | ^16.6.6 | React bindings for i18next |
 | i18next-browser-languagedetector | ^8.2.1 | Detects browser language |
 | tailwindcss | ^4.2.0 | CSS utility framework |
+| react-markdown | ^9.* | Markdown rendering (phase 07) |
 | vite | ^7.2.4 | Build tool |
 | vitest | ^1.3.0 | Unit tests |
 | cypress | ^15.9.0 | E2E tests |
@@ -531,7 +560,55 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ---
 
-## 8. Not Implemented (from spec)
+## 8. Phase 07 — Privacy & RODO (2026-04-23)
+
+**Status:** rodo-minimum + cv-link-only **complete**. retention-hygiene deferred post-publication.
+
+### 8a. rodo-minimum — Consent & Account Deletion
+
+**Backend:**
+- `User.privacyPolicyAcceptedAt` field (nullable TIMESTAMP)
+- `POST /api/auth/consent` — accept privacy policy (idempotent, returns 204)
+- `DELETE /api/auth/me` — delete user account + cascade (applications, notes, CVs, files)
+- `ConsentRequiredFilter` — guard protecting all endpoints except whitelist (consent, logout, refresh, delete)
+- Flyway V13: add `privacy_policy_accepted_at` column
+- Tests: 4 new + updated existing for consent/delete flow
+
+**Frontend:**
+- `PrivacyPolicy.tsx` — public route `/privacy`, renders markdown policy PL/EN with react-markdown
+- `ConsentGate.tsx` — fullscreen overlay blocking UI for users without accepted policy
+- `Settings.tsx` — protected route `/settings`, email + accept date display, delete account modal with confirmation
+- `Footer.tsx` — visible on all pages, links to `/privacy` + mailto contact
+- i18n: 8+ keys for consent (title, description, button, etc.) + 12+ for settings (delete flow)
+- Tests: 21 new tests (PrivacyPolicy, ConsentGate, Settings)
+
+### 8b. cv-link-only — Disable File Upload
+
+**Backend:**
+- `POST /api/cv/upload` returns **503 Service Unavailable** with message "File upload is temporarily unavailable. Use CV link instead."
+
+**Frontend:**
+- CVManager: upload card disabled (opacity 0.5, cursor not-allowed, aria-disabled=true)
+- Icon changed from 📁 to 🔒
+- Tooltip: "Chwilowo nieczynne" (PL) / "Temporarily unavailable" (EN)
+- Link option fully functional
+
+**Rationale:** CV files contain PII (address, phone, birthdate, photo, employment history). Hosting them on our infrastructure creates RODO liability. User provides link (Google Drive, Dropbox, own site) — user manages access, we keep only the link.
+
+### 8c. retention-hygiene (deferred)
+
+**Planned (not yet implemented):**
+- `lastLoginAt` field tracking user activity
+- Scheduled job (daily 3:00 AM) deleting accounts inactive > 12 months
+- Refresh token hashing (SHA-256) — store hash, not plaintext
+- Audit: verify logs don't leak email/name/tokens
+- Spec exists in `v1/07-privacy-rodo/retention-hygiene/implementation-plan-backend.md`
+
+**Why deferred:** Compliance with minimum RODO is now met. retention-hygiene improves infrastructure security & data minimization but is not blocking publication. Will implement post-MVP launch.
+
+---
+
+## 9. Not Implemented (from spec)
 
 | Item | Source | Notes |
 |------|--------|-------|
@@ -540,22 +617,26 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ---
 
-## 9. v1 Completion Status
+## 10. v1 Completion Status
 
 ### What is done and working
 
 - Full CRUD for applications, notes, CVs
 - Kanban board with drag & drop and status transitions
 - Notes with categories
-- CV management (file upload + link/note types)
+- CV management (link/note types; file upload disabled per phase 07)
 - Duplicate detection
 - Authentication (Google OAuth2 + JWT + refresh + logout)
 - i18n (EN/PL with language switcher)
 - Gamification badges
 - Onboarding/tour
-- Flyway migrations (V1–V12, clean schema)
+- Flyway migrations (V1–V13, clean schema)
 - Multi-user isolation (all queries scoped to user_id from JWT)
-- Vitest unit tests (84/84 backend, 67/67 frontend at last run)
+- Privacy policy page (/privacy, public, PL/EN)
+- Consent flow (users must accept privacy policy before accessing app)
+- Account deletion (DELETE /api/auth/me with cascade to all user data)
+- Settings page with account management
+- Vitest unit tests (89/89 backend, 68/68 frontend after phase 07)
 - Cypress E2E tests
 
 ### What is incomplete or pending
@@ -564,7 +645,10 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 |------|------|----------|
 | Salary change auto-note: wire `createSalaryChangeNote()` into `ApplicationService.update()` | Missing feature | `createSalaryChangeNote()` in NoteService is complete and tested; `ApplicationService.update()` needs salary change comparison logic and a call to that method |
 | `rejectionDetails` not in frontend `Application` response type | Type gap | Backend returns `rejectionDetails` in `ApplicationResponse`; `domain.ts` `Application` interface doesn't declare it; field is sent correctly via `StageUpdateRequest` but cannot be displayed in UI |
+| retention-hygiene (phase 07 part 3) | Deferred | Spec complete; implementation deferred post-MVP publication for infrastructure optimization |
 
 ### v1 overall assessment
 
-All planned features (ETAP 1–7) are implemented. Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type, so the field stored in the DB cannot be displayed in the UI.
+All planned MVP features (ETAP 1–7) are implemented. Phase 07 (Privacy & RODO) has completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
+
+Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type.
