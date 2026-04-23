@@ -51,7 +51,9 @@ class NoteControllerTest {
         cvRepository.deleteAll();
         userRepository.deleteAll();
 
-        testUser = userRepository.save(new User("test@example.com", "Test User", "google-test-note"));
+        testUser = new User("test@example.com", "Test User", "google-test-note");
+        testUser.acceptPrivacyPolicy();
+        testUser = userRepository.save(testUser);
 
         AuthenticatedUser principal = new AuthenticatedUser(
                 testUser.getId(), testUser.getEmail(), testUser.getName());

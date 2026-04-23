@@ -2,6 +2,8 @@ package com.easyapply.service;
 
 import com.easyapply.entity.*;
 import com.easyapply.repository.ApplicationRepository;
+import com.easyapply.repository.CVRepository;
+import com.easyapply.repository.NoteRepository;
 import com.easyapply.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -11,7 +13,11 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -21,14 +27,20 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
+    private final CVRepository cvRepository;
+    private final NoteRepository noteRepository;
     private final MessageSource messageSource;
 
     public UserService(
             UserRepository userRepository,
             ApplicationRepository applicationRepository,
+            CVRepository cvRepository,
+            NoteRepository noteRepository,
             MessageSource messageSource) {
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
+        this.cvRepository = cvRepository;
+        this.noteRepository = noteRepository;
         this.messageSource = messageSource;
     }
 
@@ -91,6 +103,49 @@ public class UserService {
         }
 
         return user;
+    }
+
+    @Transactional
+    public void acceptPrivacyPolicy(UUID userId) {
+        User user = getById(userId);
+        if (user.getPrivacyPolicyAcceptedAt() == null) {
+            user.acceptPrivacyPolicy();
+            userRepository.save(user);
+        }
+    }
+
+    @Transactional
+    public void deleteAccount(UUID userId) {
+        User user = getById(userId);
+
+        // 1. Delete CV files from disk
+        List<CV> cvs = cvRepository.findByUserId(userId);
+        for (CV cv : cvs) {
+            if (cv.getType() == CVType.FILE && cv.getFilePath() != null) {
+                try {
+                    Files.deleteIfExists(Paths.get(cv.getFilePath()));
+                    log.debug("Deleted CV file: {}", cv.getFilePath());
+                } catch (IOException e) {
+                    log.warn("Could not delete CV file: {}", cv.getFilePath(), e);
+                }
+            }
+        }
+
+        // 2. Delete notes (before applications, to avoid FK constraint issues)
+        List<Application> applications = applicationRepository.findByUserId(userId);
+        for (Application app : applications) {
+            noteRepository.deleteByApplicationId(app.getId());
+        }
+
+        // 3. Delete applications
+        applicationRepository.deleteAll(applications);
+
+        // 4. Delete CVs
+        cvRepository.deleteAll(cvs);
+
+        // 5. Delete user
+        userRepository.delete(user);
+        log.info("User account deleted: {}", user.getEmail());
     }
 
     // =========================================================================

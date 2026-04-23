@@ -49,7 +49,9 @@ class ApplicationControllerTest {
         cvRepository.deleteAll();
         userRepository.deleteAll();
 
-        testUser = userRepository.save(new User("test@example.com", "Test User", "google-test-app"));
+        testUser = new User("test@example.com", "Test User", "google-test-app");
+        testUser.acceptPrivacyPolicy();
+        testUser = userRepository.save(testUser);
 
         AuthenticatedUser principal = new AuthenticatedUser(
                 testUser.getId(), testUser.getEmail(), testUser.getName());

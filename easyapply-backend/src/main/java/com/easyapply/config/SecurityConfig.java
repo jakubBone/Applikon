@@ -3,6 +3,9 @@ package com.easyapply.config;
 import com.easyapply.security.JwtAuthenticationConverter;
 import com.easyapply.security.OAuth2AuthenticationSuccessHandler;
 import com.easyapply.security.CustomOAuth2UserService;
+import com.easyapply.security.ConsentRequiredFilter;
+import com.easyapply.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
@@ -48,12 +51,15 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
+    private final UserRepository userRepository;
 
     public SecurityConfig(
             CustomOAuth2UserService customOAuth2UserService,
-            JwtAuthenticationConverter jwtAuthenticationConverter) {
+            JwtAuthenticationConverter jwtAuthenticationConverter,
+            UserRepository userRepository) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.jwtAuthenticationConverter = jwtAuthenticationConverter;
+        this.userRepository = userRepository;
     }
 
     // =====================================================================
@@ -99,6 +105,14 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
     }
 
+    /**
+     * ConsentRequiredFilter — guard ensuring user has accepted privacy policy.
+     */
+    @Bean
+    public ConsentRequiredFilter consentRequiredFilter(ObjectMapper objectMapper) {
+        return new ConsentRequiredFilter(userRepository, objectMapper);
+    }
+
     // =====================================================================
     // SECURITY FILTER CHAIN
     // Defines ALL security rules for the application.
@@ -111,7 +125,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             JwtDecoder jwtDecoder,
-            OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws Exception {
+            OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
+            ConsentRequiredFilter consentRequiredFilter) throws Exception {
         return http
                 // CSRF disabled — we use JWT (stateless), not session/form cookies
                 .csrf(AbstractHttpConfigurer::disable)
@@ -145,6 +160,10 @@ public class SecurityConfig {
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter)))
+
+                // Add ConsentRequiredFilter after JWT authentication
+                .addFilterAfter(consentRequiredFilter,
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
 
                 .build();
     }

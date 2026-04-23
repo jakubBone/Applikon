@@ -77,6 +77,39 @@ public class AuthController {
     }
 
     /**
+     * Accepts the privacy policy for the authenticated user.
+     * Idempotent: if already accepted, does not overwrite the timestamp.
+     */
+    @PostMapping("/consent")
+    public ResponseEntity<Void> acceptConsent(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        userService.acceptPrivacyPolicy(authenticatedUser.id());
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Deletes the authenticated user's account and all related data.
+     * This is a RODO right: complete account deletion (user, applications, CVs, notes, files).
+     * Clears the refresh token cookie on the client side.
+     */
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteAccount(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            HttpServletResponse response) {
+        userService.deleteAccount(authenticatedUser.id());
+
+        // Clear the cookie on the client side
+        Cookie cookie = new Cookie("refresh_token", "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/api/auth");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Logs out the user: clears the refresh token in the database and removes the cookie.
      */
     @PostMapping("/logout")
