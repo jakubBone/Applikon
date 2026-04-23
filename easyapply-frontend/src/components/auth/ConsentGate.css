@@ -1,0 +1,156 @@
+.consent-gate-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.consent-gate-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  padding: 2.5rem;
+}
+
+.consent-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.consent-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+}
+
+.consent-description {
+  margin: 0;
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.consent-policy-link {
+  text-align: center;
+}
+
+.consent-policy-link a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.consent-policy-link a:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+.consent-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.consent-checkbox {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin-top: 0.25rem;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.consent-checkbox-label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #333;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.consent-error {
+  padding: 0.75rem 1rem;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  color: #c33;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.consent-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+}
+
+.consent-button-accept,
+.consent-button-logout {
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.consent-button-accept {
+  background: #667eea;
+  color: white;
+}
+
+.consent-button-accept:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.consent-button-accept:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.consent-button-logout {
+  background: transparent;
+  color: #667eea;
+  border: 1px solid #667eea;
+}
+
+.consent-button-logout:hover:not(:disabled) {
+  background: #f0f2ff;
+}
+
+.consent-button-logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .consent-gate-container {
+    padding: 1.5rem;
+  }
+
+  .consent-title {
+    font-size: 1.5rem;
+  }
+
+  .consent-description {
+    font-size: 0.95rem;
+  }
+}

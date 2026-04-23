@@ -12,6 +12,39 @@
   "auth": {
     "logout": "Log out"
   },
+  "consent": {
+    "title": "Before you start",
+    "description": "To use EasyApply, you must accept the privacy policy.",
+    "linkToPolicy": "Read privacy policy",
+    "checkbox": "I have read and accept the privacy policy",
+    "acceptButton": "Accept and continue",
+    "logoutButton": "Log out",
+    "loading": "Processing...",
+    "error": "Failed to accept privacy policy"
+  },
+  "footer": {
+    "privacyLink": "Privacy policy",
+    "contact": "Contact"
+  },
+  "settings": {
+    "title": "Settings",
+    "accountSection": "Account",
+    "emailLabel": "Email",
+    "privacyAcceptedAt": "Privacy policy accepted:",
+    "dateLocale": "en-US",
+    "dangerZone": "Danger zone",
+    "deleteAccount": {
+      "button": "Delete account",
+      "confirmTitle": "Delete account?",
+      "warning": "This action is irreversible. Your account, applications, CVs, notes, and all associated data will be permanently deleted.",
+      "confirmInputPrompt": "Type DELETE to confirm",
+      "confirmWord": "DELETE",
+      "cancel": "Cancel",
+      "confirm": "Delete my account",
+      "success": "Your account has been deleted",
+      "error": "Failed to delete account"
+    }
+  },
   "login": {
     "subtitle": "Manage your job applications",
     "googleBtn": "Sign in with Google"

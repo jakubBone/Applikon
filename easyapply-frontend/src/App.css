@@ -82,6 +82,24 @@ html, body {
   flex-shrink: 0;
 }
 
+.settings-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+}
+
+.settings-btn:hover {
+  background: rgba(102, 126, 234, 0.25);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
 .logout-btn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.4);

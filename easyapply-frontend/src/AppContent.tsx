@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from './auth/AuthProvider'
 import KanbanBoard from './components/kanban/KanbanBoard'
 import CVManager from './components/cv/CVManager'
@@ -9,6 +10,7 @@ import { BadgeWidget } from './components/badges/BadgeWidget'
 import TourGuide from './components/tour/TourGuide'
 import { ApplicationForm } from './components/applications/ApplicationForm'
 import { ApplicationDetails } from './components/applications/ApplicationDetails'
+import { Footer } from './components/layout/Footer'
 import LanguageSwitcher from './components/LanguageSwitcher'
 import {
   useApplications,
@@ -24,6 +26,7 @@ type View = 'kanban' | 'list' | 'cv' | 'details'
 
 export default function AppContent() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { signOut } = useAuth()
   const [view, setView] = useState<View>('kanban')
   const [previousView, setPreviousView] = useState<View>('kanban')
@@ -98,6 +101,13 @@ export default function AppContent() {
           <BadgeWidget />
           <LanguageSwitcher />
           <div className="header-separator" />
+          <button
+            className="settings-btn"
+            onClick={() => navigate('/settings')}
+            title={t('settings.title')}
+          >
+            ⚙️
+          </button>
           <button
             data-cy="logout-btn"
             className="logout-btn"
@@ -176,6 +186,8 @@ export default function AppContent() {
           />
         )}
       </main>
+
+      <Footer />
     </div>
   )
 }

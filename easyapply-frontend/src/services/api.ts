@@ -76,6 +76,23 @@ export const refreshToken = async (): Promise<string> => {
   return data.accessToken
 }
 
+export const acceptConsent = async (): Promise<void> => {
+  const response = await apiFetch(`${API_URL}/auth/consent`, {
+    method: 'POST',
+    headers: getHeaders(),
+  })
+  if (!response.ok) throw new Error('api.acceptConsent')
+}
+
+export const deleteAccount = async (): Promise<void> => {
+  const response = await apiFetch(`${API_URL}/auth/me`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  })
+  if (!response.ok) throw new Error('api.deleteAccount')
+  clearToken()
+}
+
 // ============================================================
 // Applications
 // ============================================================

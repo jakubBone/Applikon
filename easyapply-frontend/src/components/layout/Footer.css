@@ -1,0 +1,40 @@
+.footer {
+  padding: 1.5rem;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  font-size: 0.85rem;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-link {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+.footer-separator {
+  color: #ccc;
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .footer-content {
+    gap: 0.5rem;
+  }
+}

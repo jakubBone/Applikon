@@ -12,6 +12,39 @@
   "auth": {
     "logout": "Wyloguj"
   },
+  "consent": {
+    "title": "Zanim zaczniesz",
+    "description": "Aby korzystać z EasyApply, musisz zaakceptować politykę prywatności.",
+    "linkToPolicy": "Przeczytaj politykę prywatności",
+    "checkbox": "Zapoznałem/am się z polityką prywatności i akceptuję ją",
+    "acceptButton": "Akceptuję i kontynuuję",
+    "logoutButton": "Wyloguj",
+    "loading": "Przetwarzanie...",
+    "error": "Nie udało się zaakceptować polityki prywatności"
+  },
+  "footer": {
+    "privacyLink": "Polityka prywatności",
+    "contact": "Kontakt"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "accountSection": "Konto",
+    "emailLabel": "Email",
+    "privacyAcceptedAt": "Zgoda na politykę:",
+    "dateLocale": "pl-PL",
+    "dangerZone": "Strefa zagrożenia",
+    "deleteAccount": {
+      "button": "Usuń konto",
+      "confirmTitle": "Usunąć konto?",
+      "warning": "Ta operacja jest nieodwracalna. Zostaną trwale usunięte: Twoje konto, aplikacje, CV, notatki i wszystkie powiązane dane.",
+      "confirmInputPrompt": "Wpisz USUN aby potwierdzić",
+      "confirmWord": "USUN",
+      "cancel": "Anuluj",
+      "confirm": "Usuń moje konto",
+      "success": "Twoje konto zostało usunięte",
+      "error": "Nie udało się usunąć konta"
+    }
+  },
   "login": {
     "subtitle": "Zarządzaj swoimi aplikacjami o pracę",
     "googleBtn": "Zaloguj się przez Google"

@@ -34,6 +34,8 @@ Types: `feat` · `fix` · `refactor` · `test` · `docs` · `chore`
 Scopes: `backend` · `frontend` · `spec` · `db` · `infra`
 Example: `refactor(backend): extract validation into ApplicationValidator`
 
+**Important:** Commits should NOT include `Co-Authored-By` trailers. User commits alone.
+
 **Other rules:**
 - No features/abstractions beyond what was asked
 - When changing behavior, check if it conflicts with `spec/v1/as-built.md`

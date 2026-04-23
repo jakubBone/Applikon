@@ -2,10 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './auth/AuthProvider'
 import { ProtectedRoute } from './auth/ProtectedRoute'
+import { ConsentGate } from './components/auth/ConsentGate'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LoginPage } from './pages/LoginPage'
 import { AuthCallbackPage } from './pages/AuthCallbackPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { Settings } from './pages/Settings'
+import { PrivacyPolicy } from './pages/PrivacyPolicy'
 
 /**
  * QueryClient — global client managing query cache.
@@ -37,13 +40,24 @@ export default function App() {
               {/* Public routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
 
               {/* Protected routes */}
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <DashboardPage />
+                    <ConsentGate>
+                      <DashboardPage />
+                    </ConsentGate>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
                   </ProtectedRoute>
                 }
               />

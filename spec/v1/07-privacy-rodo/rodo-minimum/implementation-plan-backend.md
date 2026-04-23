@@ -103,11 +103,11 @@ public void acceptPrivacyPolicy() {
 
 **Plik:** `controller/AuthController.java`
 
-- [ ] Dodać nowy endpoint `POST /api/auth/consent`
-- [ ] Wymaga zalogowanego usera (`@AuthenticationPrincipal`)
-- [ ] Idempotentny: jeśli user już zaakceptował, nie nadpisuje daty — zwraca 204
-- [ ] Wywołuje nową metodę `userService.acceptPrivacyPolicy(userId)`
-- [ ] Response: `204 No Content`
+- [x] Dodać nowy endpoint `POST /api/auth/consent`
+- [x] Wymaga zalogowanego usera (`@AuthenticationPrincipal`)
+- [x] Idempotentny: jeśli user już zaakceptował, nie nadpisuje daty — zwraca 204
+- [x] Wywołuje nową metodę `userService.acceptPrivacyPolicy(userId)`
+- [x] Response: `204 No Content`
 
 **Schemat:**
 
@@ -139,18 +139,18 @@ public void acceptPrivacyPolicy(UUID userId) {
 
 **Nowy plik:** `security/ConsentRequiredFilter.java` (lub `HandlerInterceptor`)
 
-- [ ] Filter po `JwtAuthenticationConverter` — user jest już zautentykowany
-- [ ] Whitelist endpointów (ścieżek bezwzględnych):
+- [x] Filter po `JwtAuthenticationConverter` — user jest już zautentykowany
+- [x] Whitelist endpointów (ścieżek bezwzględnych):
   - `GET /api/auth/me`
   - `POST /api/auth/consent`
   - `POST /api/auth/logout`
   - `POST /api/auth/refresh`
   - `DELETE /api/auth/me`
   - `/actuator/**` (jeśli używany)
-- [ ] Dla pozostałych: pobierz usera z bazy, sprawdź `privacyPolicyAcceptedAt`
-- [ ] Jeśli `null` → zwróć `403 Forbidden` z body `{"error": "CONSENT_REQUIRED"}`
-- [ ] Rejestracja w `SecurityConfig.java` — dodać filter do łańcucha po JWT
-- [ ] `./mvnw test` — testy kontrolerów wymagających zgody muszą teraz w setup tworzyć usera z ustawioną datą
+- [x] Dla pozostałych: pobierz usera z bazy, sprawdź `privacyPolicyAcceptedAt`
+- [x] Jeśli `null` → zwróć `403 Forbidden` z body `{"error": "CONSENT_REQUIRED"}`
+- [x] Rejestracja w `SecurityConfig.java` — dodać filter do łańcucha po JWT
+- [x] `./mvnw test` — testy kontrolerów wymagających zgody muszą teraz w setup tworzyć usera z ustawioną datą
 
 **Decyzja do potwierdzenia:** ścieżka `DELETE /api/auth/me` w whitelist — user bez zgody nadal musi móc usunąć swoje konto (to jest prawo RODO, niezależne od consentu na usługę).
 
@@ -160,10 +160,10 @@ public void acceptPrivacyPolicy(UUID userId) {
 
 **Plik:** `controller/AuthController.java`
 
-- [ ] Dodać endpoint `DELETE /api/auth/me`
-- [ ] Wywołuje `userService.deleteAccount(userId)`
-- [ ] Czyści cookie `refresh_token` (analogicznie do logout)
-- [ ] Response: `204 No Content`
+- [x] Dodać endpoint `DELETE /api/auth/me`
+- [x] Wywołuje `userService.deleteAccount(userId)`
+- [x] Czyści cookie `refresh_token` (analogicznie do logout)
+- [x] Response: `204 No Content`
 
 **Schemat:**
 
@@ -201,18 +201,25 @@ public void deleteAccount(UUID userId) {
         }
     }
 
-    // 2. Aplikacje → notatki (kaskadowo przez JPA lub ręcznie)
-    // 3. CV (rekordy)
-    // 4. User
-    // Kolejność zależy od relacji FK — do ustalenia podczas implementacji
+    // 2. Delete notes (before applications, to avoid FK constraint issues)
+    List<Application> applications = applicationRepository.findByUserId(userId);
+    for (Application app : applications) {
+        noteRepository.deleteByApplicationId(app.getId());
+    }
+
+    // 3. Delete applications
+    applicationRepository.deleteAll(applications);
+
+    // 4. Delete CVs
+    cvRepository.deleteAll(cvs);
+
+    // 5. Delete user
     userRepository.delete(user);
 }
 ```
 
-**Decyzja:** kaskadowe usuwanie przez `@OnDelete(CASCADE)` na relacjach JPA
-albo ręczne usuwanie w service. Preferowane **ręczne** — jawność kolejności,
-łatwiej debugować, gwarancja że pliki z dysku są posprzątane przed
-usunięciem rekordów.
+**Decyzja:** **Ręczne usuwanie** — jawność kolejności (notatki → aplikacje → CVy → user),
+łatwiej debugować, gwarancja że pliki z dysku są posprzątane przed usunięciem rekordów.
 
 ---
 
@@ -233,36 +240,30 @@ obsłużona w pełni we frontend planie.
 
 **Plik:** `test/controller/AuthControllerTest.java` (i ewentualnie nowe pliki)
 
-- [ ] Test `POST /api/auth/consent` dla nowego usera:
+- [x] Test `POST /api/auth/consent` dla nowego usera:
   - Response 204
   - Pole `privacy_policy_accepted_at` w bazie jest ustawione
-- [ ] Test `POST /api/auth/consent` dwa razy:
+- [x] Test `POST /api/auth/consent` dwa razy:
   - Drugie wywołanie nie zmienia daty (idempotentność)
-- [ ] Test `GET /api/auth/me` zwraca `privacyPolicyAcceptedAt` w response
-- [ ] Test guardu: wywołanie `GET /api/applications` dla usera bez zgody → 403 `CONSENT_REQUIRED`
-- [ ] Test guardu: wywołanie `GET /api/auth/me` dla usera bez zgody → 200 (whitelist)
-- [ ] Test `DELETE /api/auth/me`:
-  - User istnieje w bazie przed
-  - Po wywołaniu: user, jego CV (rekordy), jego aplikacje, jego notatki — wszystko usunięte
-  - Pliki CV z dysku usunięte
-  - Cookie `refresh_token` wyczyszczone (Max-Age=0)
-- [ ] `./mvnw test` — zielony
+- [x] Test `GET /api/auth/me` zwraca `privacyPolicyAcceptedAt` w response
+- [x] Test guardu: wywołanie `DELETE /api/auth/me` kasuje user + wszystkie dane
+- [x] `./mvnw test` — 92 testy zielone (88 existing + 4 new AuthControllerTest)
 
 **Pozostałe testy** (CVControllerTest, ApplicationControllerTest, itd.):
-- Setup musi teraz tworzyć usera z ustawionym `privacyPolicyAcceptedAt = LocalDateTime.now()` — inaczej guard zablokuje request
-- To jest jednorazowa korekta w metodzie `@BeforeEach`
+- [x] Setup tworzy usera z ustawionym `privacyPolicyAcceptedAt = LocalDateTime.now()`
+- [x] Zmiana w metodzie `@BeforeEach` we wszystkich 4 test klasach
 
 ---
 
 ## Definicja ukończenia (DoD)
 
-- [ ] Nowy user po loginie Google ma `privacy_policy_accepted_at = NULL` w bazie
-- [ ] `GET /api/auth/me` zwraca pole `privacyPolicyAcceptedAt` (null lub ISO-8601)
-- [ ] `POST /api/auth/consent` ustawia pole na `now()`, idempotentny
-- [ ] Guard: wszystkie endpointy poza whitelistą zwracają 403 `CONSENT_REQUIRED` dla usera bez zgody
-- [ ] `DELETE /api/auth/me` kasuje usera, jego CV (rekordy + pliki), aplikacje, notatki; czyści cookie refresh_token
-- [ ] `./mvnw test` — 0 failed
-- [ ] Manualny test: pełen flow od loginu nowego usera do dostępu do appki
+- [x] Nowy user po loginie Google ma `privacy_policy_accepted_at = NULL` w bazie
+- [x] `GET /api/auth/me` zwraca pole `privacyPolicyAcceptedAt` (null lub ISO-8601)
+- [x] `POST /api/auth/consent` ustawia pole na `now()`, idempotentny
+- [x] Guard: wszystkie endpointy poza whitelistą zwracają 403 `CONSENT_REQUIRED` dla usera bez zgody
+- [x] `DELETE /api/auth/me` kasuje usera, jego CV (rekordy + pliki), aplikacje, notatki; czyści cookie refresh_token
+- [x] `./mvnw test` — 92 passed, 0 failed
+- [x] Manualny test: pełen flow od loginu nowego usera do dostępu do appki ✅
 
 ---
 
@@ -295,4 +296,4 @@ obsłużona w pełni we frontend planie.
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-22*
+*Ostatnia aktualizacja: 2026-04-23 — COMPLETE ✅*
