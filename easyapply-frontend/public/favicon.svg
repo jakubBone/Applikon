@@ -1,21 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
-  <!-- Rączka walizki -->
-  <rect x="48" y="8" width="32" height="8" rx="4" fill="#0066CC"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <style>
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+      }
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes glow {
+        0%, 100% { filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.4)); }
+        50% { filter: drop-shadow(0 0 16px rgba(118, 75, 162, 0.6)); }
+      }
+      .logo-icon {
+        animation: float 3s ease-in-out infinite, glow 2s ease-in-out infinite;
+      }
+      .up-arrow {
+        animation: rotate 20s linear infinite;
+        transform-origin: 100px 50px;
+      }
+    </style>
+  </defs>
 
-  <!-- Korpus walizki -->
-  <rect x="12" y="24" width="104" height="88" rx="12" fill="#0066CC"/>
+  <g class="logo-icon">
+    <!-- Left arrow -->
+    <polygon points="60,40 50,50 50,70 70,70 70,50" fill="#FFC107"/>
 
-  <!-- Wewnętrzny prostokąt -->
-  <rect x="20" y="32" width="88" height="72" rx="8" fill="#004999"/>
+    <!-- Center up arrow -->
+    <g class="up-arrow">
+      <polygon points="100,10 85,35 95,35 95,55 105,55 105,35 115,35" fill="#0052CC"/>
+    </g>
 
-  <!-- Żółty checkmark -->
-  <path d="M 42 64 L 56 78 L 86 48"
-        stroke="#FFC107"
-        stroke-width="12"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        fill="none"/>
+    <!-- Right arrow -->
+    <polygon points="140,40 130,50 130,70 150,70 150,50 140,60" fill="#FFC107"/>
 
-  <!-- Zamek -->
-  <rect x="58" y="16" width="12" height="8" rx="2" fill="#FFD54F"/>
+    <!-- Briefcase body -->
+    <rect x="45" y="70" width="110" height="90" rx="12" fill="#0052CC"/>
+
+    <!-- Briefcase inner shadow -->
+    <rect x="55" y="82" width="90" height="68" rx="8" fill="#003D99"/>
+
+    <!-- Yellow checkmark -->
+    <path d="M 80 120 L 95 135 L 140 90"
+          stroke="#FFC107"
+          stroke-width="12"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"/>
+  </g>
 </svg>

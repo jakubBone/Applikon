@@ -22,13 +22,13 @@ export function LoginPage() {
 
   return (
     <div className="login-page">
+      <div className="login-background-blob login-blob-1"></div>
       <div className="login-lang-switcher">
         <LanguageSwitcher />
       </div>
       <div className="login-container">
         <div className="login-logo">
-          <img src="/favicon.svg" alt="EasyApply" />
-          <h1>EasyApply</h1>
+          <img src="/logo-trim.png" alt="EasyApply" className="login-logo-img" />
         </div>
         <p className="login-subtitle">{t('login.subtitle')}</p>
         <button className="login-google-btn" onClick={handleGoogleLogin}>
