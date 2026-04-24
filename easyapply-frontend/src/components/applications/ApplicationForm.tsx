@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCreateApplication, useUpdateApplication } from '../../hooks/useApplications'
 import { checkDuplicate } from '../../services/api'
@@ -79,6 +79,16 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
   const createApplication = useCreateApplication()
   const updateApplication = useUpdateApplication()
   const isPending = createApplication.isPending || updateApplication.isPending
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [onClose])
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

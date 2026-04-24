@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
@@ -10,10 +10,24 @@ export function Settings() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuth()
+
+  const handleBack = () => {
+    navigate('/dashboard')
+  }
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [confirmInput, setConfirmInput] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showDeleteModal) {
+        setShowDeleteModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [showDeleteModal])
 
   const confirmWord = t('settings.deleteAccount.confirmWord') || 'DELETE'
   const isConfirmValid = confirmInput === confirmWord
@@ -59,6 +73,9 @@ export function Settings() {
   return (
     <div className="settings-page">
       <div className="settings-container">
+        <button className="back-btn" onClick={handleBack}>
+          {t('details.back')}
+        </button>
         <h1>{t('settings.title')}</h1>
 
         <section className="settings-section">
