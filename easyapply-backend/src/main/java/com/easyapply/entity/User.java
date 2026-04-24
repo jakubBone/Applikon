@@ -1,12 +1,14 @@
 package com.easyapply.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Getter
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
@@ -45,15 +47,6 @@ public class User {
         this.name = name;
         this.googleId = googleId;
     }
-
-    public UUID getId() { return id; }
-    public String getEmail() { return email; }
-    public String getName() { return name; }
-    public String getGoogleId() { return googleId; }
-    public String getRefreshToken() { return refreshToken; }
-    public LocalDateTime getRefreshTokenExpiry() { return refreshTokenExpiry; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getPrivacyPolicyAcceptedAt() { return privacyPolicyAcceptedAt; }
 
     public void acceptPrivacyPolicy() {
         if (this.privacyPolicyAcceptedAt == null) {
