@@ -1,52 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
   <defs>
-    <style>
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
-      }
-      @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-      @keyframes glow {
-        0%, 100% { filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.4)); }
-        50% { filter: drop-shadow(0 0 16px rgba(118, 75, 162, 0.6)); }
-      }
-      .logo-icon {
-        animation: float 3s ease-in-out infinite, glow 2s ease-in-out infinite;
-      }
-      .up-arrow {
-        animation: rotate 20s linear infinite;
-        transform-origin: 100px 50px;
-      }
-    </style>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0052CC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#003D99;stop-opacity:1" />
+    </linearGradient>
   </defs>
 
-  <g class="logo-icon">
-    <!-- Left arrow -->
-    <polygon points="60,40 50,50 50,70 70,70 70,50" fill="#FFC107"/>
+  <!-- Background -->
+  <rect width="200" height="200" fill="url(#bgGrad)" rx="25"/>
 
-    <!-- Center up arrow -->
-    <g class="up-arrow">
-      <polygon points="100,10 85,35 95,35 95,55 105,55 105,35 115,35" fill="#0052CC"/>
-    </g>
+  <!-- E - White -->
+  <text x="60" y="130" font-family="Arial, sans-serif" font-size="110" font-weight="900" fill="white" text-anchor="middle">E</text>
 
-    <!-- Right arrow -->
-    <polygon points="140,40 130,50 130,70 150,70 150,50 140,60" fill="#FFC107"/>
-
-    <!-- Briefcase body -->
-    <rect x="45" y="70" width="110" height="90" rx="12" fill="#0052CC"/>
-
-    <!-- Briefcase inner shadow -->
-    <rect x="55" y="82" width="90" height="68" rx="8" fill="#003D99"/>
-
-    <!-- Yellow checkmark -->
-    <path d="M 80 120 L 95 135 L 140 90"
-          stroke="#FFC107"
-          stroke-width="12"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          fill="none"/>
-  </g>
+  <!-- A - Yellow -->
+  <text x="140" y="130" font-family="Arial, sans-serif" font-size="110" font-weight="900" fill="#FFC107" text-anchor="middle">A</text>
 </svg>
