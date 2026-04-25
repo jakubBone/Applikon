@@ -45,23 +45,7 @@ public class ApplicationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.user.notFound", null, LocaleContextHolder.getLocale())));
 
-        Application application = new Application();
-        application.setUser(user);
-        application.setCompany(request.company());
-        application.setPosition(request.position());
-        application.setLink(request.link());
-        application.setSalaryMin(request.salaryMin());
-        application.setSalaryMax(request.salaryMax());
-        application.setCurrency(request.currency());
-        application.setSalaryType(request.salaryType());
-        application.setContractType(request.contractType());
-        application.setSalarySource(request.salarySource());
-        application.setSource(request.source());
-        application.setJobDescription(request.jobDescription());
-        application.setAgency(request.agency());
-        application.setStatus(ApplicationStatus.SENT);
-
-        Application saved = applicationRepository.save(application);
+        Application saved = applicationRepository.save(Application.from(request, user));
 
         return ApplicationResponse.fromEntity(
                 applicationRepository.findByIdAndUserId(saved.getId(), userId).orElseThrow());
@@ -163,19 +147,7 @@ public class ApplicationService {
     public ApplicationResponse update(Long id, ApplicationRequest request, UUID userId) {
         Application application = getApplicationByIdAndUserId(id, userId);
 
-        application.setCompany(request.company());
-        application.setPosition(request.position());
-        application.setLink(request.link());
-        application.setSalaryMin(request.salaryMin());
-        application.setSalaryMax(request.salaryMax());
-        application.setCurrency(request.currency());
-        application.setSalaryType(request.salaryType());
-        application.setContractType(request.contractType());
-        application.setSalarySource(request.salarySource());
-        application.setSource(request.source());
-        application.setJobDescription(request.jobDescription());
-        application.setAgency(request.agency());
-
+        application.updateFrom(request);
         return ApplicationResponse.fromEntity(applicationRepository.save(application));
     }
 

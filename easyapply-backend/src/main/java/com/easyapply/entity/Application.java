@@ -1,5 +1,6 @@
 package com.easyapply.entity;
 
+import com.easyapply.dto.ApplicationRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -79,4 +80,37 @@ public class Application {
     private String rejectionDetails;
 
     public Application() {}
+
+    public static Application from(ApplicationRequest request, User user) {
+        Application app = new Application();
+        app.setUser(user);
+        app.setCompany(request.company());
+        app.setPosition(request.position());
+        app.setLink(request.link());
+        app.setSalaryMin(request.salaryMin());
+        app.setSalaryMax(request.salaryMax());
+        app.setCurrency(request.currency());
+        app.setSalaryType(request.salaryType());
+        app.setContractType(request.contractType());
+        app.setSalarySource(request.salarySource());
+        app.setSource(request.source());
+        app.setJobDescription(request.jobDescription());
+        app.setAgency(request.agency());
+        return app;
+    }
+
+    public void updateFrom(ApplicationRequest request) {
+        this.company = request.company();
+        this.position = request.position();
+        this.link = request.link();
+        this.salaryMin = request.salaryMin();
+        this.salaryMax = request.salaryMax();
+        this.currency = request.currency();
+        this.salaryType = request.salaryType();
+        this.contractType = request.contractType();
+        this.salarySource = request.salarySource();
+        this.source = request.source();
+        this.jobDescription = request.jobDescription();
+        this.agency = request.agency();
+    }
 }
