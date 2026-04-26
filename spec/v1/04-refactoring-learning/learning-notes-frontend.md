@@ -1,129 +1,129 @@
-# Notatki z nauki frontendu — EasyApply
+# Frontend Learning Notes — EasyApply
 
-Plik do wracania. Każdy etap = kluczowe pojęcia, analogie do Javy, ważne pliki.
+Reference file for learning progress. Each phase = key concepts, Java analogies, important files.
 
 ---
 
-## Etap 1 — Ekosystem i narzędzia
+## Phase 1 — Ecosystem and Tools
 
-### Narzędzia — analogie do Javy
+### Tools — Analogies to Java
 
-| Frontend | Java | Co robi |
+| Frontend | Java | What It Does |
 |----------|------|---------|
-| Node.js | JDK | Środowisko uruchomieniowe — bez niego nic nie działa |
-| npm | Maven | Pobiera zależności do `node_modules/`, uruchamia skrypty |
-| package.json | pom.xml | Lista zależności + konfiguracja projektu |
-| node_modules/ | `~/.m2/repository` | Folder z pobranymi bibliotekami |
-| Vite | Maven + Spring DevTools | Kompiluje kod i odpala serwer deweloperski |
-| TypeScript | Java | Język z typowaniem statycznym |
-| JavaScript | Bytecode JVM | To co faktycznie rozumie przeglądarka |
+| Node.js | JDK | Runtime environment — nothing works without it |
+| npm | Maven | Fetches dependencies into `node_modules/`, runs scripts |
+| package.json | pom.xml | List of dependencies + project configuration |
+| node_modules/ | `~/.m2/repository` | Folder with downloaded libraries |
+| Vite | Maven + Spring DevTools | Compiles code and runs dev server |
+| TypeScript | Java | Statically typed language |
+| JavaScript | Bytecode JVM | What browser actually understands |
 
-### Porty — zapamiętaj
+### Ports — Remember
 
 ```
-localhost:5432   →  PostgreSQL (baza danych)
+localhost:5432   →  PostgreSQL (database)
 localhost:5173   →  Vite (frontend, dev server)
 localhost:8080   →  Spring Boot (backend)
 ```
 
-### Jak działa Vite
+### How Vite Works
 
-Vite działa **na Twoim komputerze deweloperskim** (nie na serwerze produkcyjnym):
-- kompiluje TypeScript + JSX → JavaScript
-- odpala serwer HTTP na `localhost:5173`
-- przeglądarka pyta ten serwer o pliki JS i je uruchamia u siebie
+Vite runs **on your development machine** (not production server):
+- compiles TypeScript + JSX → JavaScript
+- runs HTTP server on `localhost:5173`
+- browser asks that server for JS files and runs them locally
 
-Na produkcji Vite nie istnieje. `npm run build` generuje gotowe pliki JS do folderu `dist/`, które serwuje Nginx.
+On production Vite doesn't exist. `npm run build` generates ready JS files to `dist/` folder, served by Nginx.
 
 ### JSX
 
-JSX to nie osobny język — to **rozszerzenie składni TypeScript**, tak jak adnotacje (`@RestController`, `@GetMapping`) są rozszerzeniem składni Javy. Bez odpowiedniego procesora (w Javie: procesor adnotacji, w React: plugin `@vitejs/plugin-react`) kompilator nie wiedziałby co z tym zrobić.
+JSX is not a separate language — it's **TypeScript syntax extension**, like annotations (`@RestController`, `@GetMapping`) are Java syntax extension. Without proper processor (Java: annotation processor, React: `@vitejs/plugin-react` plugin) compiler wouldn't know what to do.
 
-JSX pozwala pisać HTML-podobny kod bezpośrednio w TypeScript:
+JSX lets you write HTML-like code directly in TypeScript:
 ```tsx
-return <div>Cześć {name}</div>   // JSX — rozumie programista
+return <div>Hello {name}</div>   // JSX — humans understand
 ```
-Vite kompiluje to na czysty JavaScript:
+Vite compiles it to plain JavaScript:
 ```js
-React.createElement("div", null, "Cześć " + name)  // JS — rozumie przeglądarka
+React.createElement("div", null, "Hello " + name)  // JS — browser understands
 ```
-**Przeglądarka nie rozumie JSX — rozumie tylko JS.**
+**Browser doesn't understand JSX — only JavaScript.**
 
-### Rozszerzenia plików
+### File Extensions
 
-| Rozszerzenie | Kiedy używać |
+| Extension | When to Use |
 |---|---|
-| `.ts` | Logika bez JSX — hooki, serwisy, typy (`api.ts`, `useApplications.ts`) |
-| `.tsx` | Komponenty z JSX — wszystko co zwraca widok (`App.tsx`, `LoginPage.tsx`) |
+| `.ts` | Logic without JSX — hooks, services, types (`api.ts`, `useApplications.ts`) |
+| `.tsx` | Components with JSX — anything that returns view (`App.tsx`, `LoginPage.tsx`) |
 
-### Przepływ od startu do UI
+### Flow from Startup to UI
 
 ```
 npm run dev
-  → Vite startuje serwer na localhost:5173
-  → Przeglądarka otwiera localhost:5173
-  → Vite oddaje index.html
-  → Przeglądarka widzi <script src="main.tsx">
-  → Pobiera i uruchamia main.tsx
-  → main.tsx znajduje <div id="root"> w index.html
-  → React wypełnia ten div całą aplikacją
-  → Widzisz UI na ekranie
+  → Vite starts server on localhost:5173
+  → Browser opens localhost:5173
+  → Vite serves index.html
+  → Browser sees <script src="main.tsx">
+  → Downloads and runs main.tsx
+  → main.tsx finds <div id="root"> in index.html
+  → React fills that div with entire app
+  → You see UI on screen
 ```
 
-**Co to `<div id="root">` i jak React go wypełnia:**
+**What is `<div id="root">` and how React fills it:**
 
-`div` to niewidoczny pojemnik HTML (jak `JPanel` w Swingu). Na początku jest pusty — to React go wypełnia.
-React **nie jest zainstalowany w przeglądarce**. Jest w `node_modules/` i Vite pakuje go razem z Twoim kodem do JS.
-`main.tsx` uruchamia: `createRoot(document.getElementById('root')).render(<App />)` — znajduje pusty div i wstrzykuje w niego całą aplikację.
+`div` is invisible HTML container (like `JPanel` in Swing). At first it's empty — React fills it.
+React is **not installed in browser**. It's in `node_modules/` and Vite bundles it with your code.
+`main.tsx` runs: `createRoot(document.getElementById('root')).render(<App />)` — finds empty div and injects entire app.
 
-**Jak działa zmiana ekranów (SPA) bez przeładowania strony:**
+**How screen changes (SPA) without page reload:**
 
-React trzyma w pamięci JS aktualny URL. Gdy klikasz zakładkę lub link:
-1. React Router przechwytuje kliknięcie
-2. Zmienia URL w pasku przeglądarki (bez zapytania do serwera)
-3. React podmienia zawartość `<div id="root">` na inny komponent
+React keeps current URL in JS memory. When you click tab or link:
+1. React Router intercepts the click
+2. Changes URL in address bar (no server request)
+3. React replaces `<div id="root">` contents with different component
 
-Przeglądarka **nie wysyła** nowego `GET /dashboard`. To React steruje co widzisz.
-Analogia: jedno okno `JFrame` (index.html) z podmienianymi panelami (`JPanel`) w środku.
+Browser **doesn't send** new `GET /dashboard`. React controls what you see.
+Analogy: single `JFrame` (index.html) with swapped `JPanel`s inside.
 
-### Kluczowe pliki projektu
+### Key Project Files
 
 **`easyapply-frontend/package.json`**
-Odpowiednik `pom.xml`. Sekcja `scripts` = komendy (dev, build, test). Sekcja `dependencies` = biblioteki produkcyjne. Sekcja `devDependencies` = tylko na czas developmentu (Vite, TypeScript, testy).
+Equivalent of `pom.xml`. `scripts` section = commands (dev, build, test). `dependencies` = production libraries. `devDependencies` = only during development (Vite, TypeScript, tests).
 
 **`easyapply-frontend/index.html`**
-Jedyny plik HTML w całej aplikacji. Zawiera pusty `<div id="root">` — tu React wstrzyknie całą aplikację. Zawiera `<script src="main.tsx">` — to punkt startu.
+The ONLY HTML file in entire app. Contains empty `<div id="root">` — React injects whole app here. Contains `<script src="main.tsx">` — startup point.
 
 **`easyapply-frontend/src/main.tsx`**
-Odpowiednik `public static void main()`. Znajduje `<div id="root">` i odpala React (`createRoot().render()`). `StrictMode` = tryb debugowania (podwójne wywołania w dev, brak wpływu na produkcję).
+Equivalent of `public static void main()`. Finds `<div id="root">` and runs React (`createRoot().render()`). `StrictMode` = debug mode (double-calls in dev, no effect on production).
 
 **`easyapply-frontend/src/App.tsx`**
-Korzeń aplikacji — tylko routing i Providerzy, zero logiki biznesowej. Wzorzec Provider = owijanie komponentów żeby udostępnić coś globalnie (jak `@Bean` w Springu). Szczegóły routingu w Etapie 6, Providerów w Etapach 5 i 6.
+App root — only routing and Providers, zero business logic. Provider pattern = wrapping components to make something globally available (like `@Bean` in Spring). Routing details in Phase 6, Providers in Phases 5 and 6.
 
-### Wzorzec Provider (zapowiedź)
+### Provider Pattern (Preview)
 
 ```tsx
-<QueryClientProvider>   ← udostępnia React Query globalnie
-  <BrowserRouter>       ← udostępnia routing globalnie
-    <AuthProvider>      ← udostępnia dane usera globalnie
+<QueryClientProvider>   ← provides React Query globally
+  <BrowserRouter>       ← provides routing globally
+    <AuthProvider>      ← provides user data globally
       <App />
     </AuthProvider>
   </BrowserRouter>
 </QueryClientProvider>
 ```
-Każda warstwa "owija" i udostępnia coś wszystkim komponentom w środku.
+Each layer "wraps" and provides something to all children inside.
 
 ---
 
-## Etap 2 — Komponent — podstawowa jednostka
+## Phase 2 — Component — Basic Unit
 
-### Czym jest komponent
+### What Is a Component
 
-Komponent = funkcja TypeScript która zwraca JSX (opis UI).
+Component = TypeScript function that returns JSX (UI description).
 
 ```tsx
-export function LoginPage() {   // ← funkcja = komponent
-  return (                      // ← zwraca JSX
+export function LoginPage() {   // ← function = component
+  return (                      // ← returns JSX
     <div className="login-page">
       ...
     </div>
@@ -131,241 +131,241 @@ export function LoginPage() {   // ← funkcja = komponent
 }
 ```
 
-**Analogia do Javy:** klasa z metodą `render()` — ale zapisana jako funkcja, nie klasa.
+**Java analogy:** class with `render()` method — but written as function, not class.
 
-### Plik .tsx — z czego się składa
+### .tsx File — What's Inside
 
 ```
-importy                     ← jak import w Javie
-stałe i funkcje pomocnicze  ← zwykły TypeScript
-interfejsy/typy             ← opis kształtu danych (jak DTO)
-komponenty                  ← funkcje zwracające JSX
+imports                     ← like import in Java
+constants and helper functions  ← plain TypeScript
+interfaces/types             ← data shape description (like DTO)
+components                  ← functions returning JSX
 ```
 
-`.tsx` vs `.ts` — jedyna różnica: w `.tsx` możesz pisać JSX. Konwencja: komponenty → `.tsx`, logika/hooki/typy → `.ts`.
+`.tsx` vs `.ts` — only difference: `.tsx` lets you write JSX. Convention: components → `.tsx`, logic/hooks/types → `.ts`.
 
 ### JSX
 
-JSX to **rozszerzenie składni TypeScript** (nie osobny język). Vite kompiluje je na czysty JS:
+JSX is **TypeScript syntax extension** (not separate language). Vite compiles it to plain JS:
 
 ```tsx
-<div className="login-page">Cześć</div>   // JSX — piszesz Ty
-React.createElement("div", { className: "login-page" }, "Cześć")  // JS — dostaje przeglądarka
+<div className="login-page">Hello</div>   // JSX — you write
+React.createElement("div", { className: "login-page" }, "Hello")  // JS — browser gets
 ```
 
-**Ważne:** w HTML piszesz `class=`, w JSX piszesz `className=` (bo `class` to zarezerwowane słowo w JS).
+**Important:** in HTML you write `class=`, in JSX you write `className=` (because `class` is reserved in JS).
 
-**Klamry `{}` w JSX** = "tu jest kod TypeScript, nie tekst":
+**Braces `{}` in JSX** = "this is TypeScript code, not text":
 ```tsx
-<button onClick={handleGoogleLogin}>  ← {} = referencja do funkcji
+<button onClick={handleGoogleLogin}>  ← {} = function reference
 ```
 
-### Props — dane wejściowe komponentu
+### Props — Component Input Data
 
-Props = parametry funkcji komponentu. Analogia: konstruktor klasy w Javie.
+Props = function parameters. Analogy: constructor in Java class.
 
 ```tsx
-// Opis propsów (jak DTO w Javie)
+// Props description (like DTO in Java)
 interface BadgeRowProps {
   badge: BadgeInfo | null
   count: number
   type: 'rejection' | 'ghosting'
 }
 
-// Komponent przyjmujący propsy
+// Component receiving props
 function BadgeRow({ badge, count, type }: BadgeRowProps) {
   return <div>...</div>
 }
 
-// Użycie — przekazanie propsów
+// Usage — pass props
 <BadgeRow badge={rejectionBadge} count={totalRejections} type="rejection" />
 ```
 
-Komponent bez propsów (`LoginPage`) = pobiera dane sam z siebie (np. przez hooki).
-Komponent z propsami (`BadgeRow`) = dostaje dane od rodzica.
+Component without props (`LoginPage`) = fetches data itself (e.g., via hooks).
+Component with props (`BadgeRow`) = receives data from parent.
 
-### export — publiczny/prywatny
+### export — Public/Private
 
 ```tsx
-function BadgeRow(...)         // bez export = prywatny (tylko w tym pliku)
-export function BadgeWidget()  // z export = publiczny (można importować)
-export default function App()  // default export = jeden główny eksport z pliku
+function BadgeRow(...)         // no export = private (this file only)
+export function BadgeWidget()  // export = public (can import)
+export default function App()  // default export = one main export per file
 ```
 
-Analogia: `public`/`private` w Javie.
+Analogy: `public`/`private` in Java.
 
-### Import komponentów
+### Import Components
 
 ```tsx
-import { LoginPage } from './pages/LoginPage'   // jak import w Javie
+import { LoginPage } from './pages/LoginPage'   // like import in Java
 ```
 
-Ścieżka bez rozszerzenia `.tsx` — TypeScript sam się domyśla.
+Path without `.tsx` — TypeScript figures it out itself.
 
-### Zagnieżdżanie komponentów
+### Nesting Components
 
-Komponenty składają się jak matrioszka. Rodzic owija dzieci, przekazuje im propsy:
+Components nest like matryoshka dolls. Parent wraps children, passes props:
 
 ```tsx
-<BadgeWidget>          ← rodzic
-  <BadgeRow ... />     ← dziecko (używane 2x z różnymi propsami)
+<BadgeWidget>          ← parent
+  <BadgeRow ... />     ← child (used 2x with different props)
   <BadgeRow ... />
 </BadgeWidget>
 ```
 
-Cała aplikacja to jedno drzewo komponentów — korzeń w `App.tsx`:
+Entire app is one component tree — root in `App.tsx`:
 ```
 App → AuthProvider → Routes → LoginPage / DashboardPage / ...
 ```
 
-### Komponent — jak React go rozpoznaje
+### How React Recognizes a Component
 
-Komponentem jest funkcja która:
-1. Zaczyna się **wielką literą** — obowiązkowe, React tego wymaga
-2. Zwraca **JSX**
+Component is function that:
+1. Starts with **capital letter** — required, React demands it
+2. Returns **JSX**
 
 ```tsx
-function calculateProgress() { return 42 }    // zwykła funkcja — mała litera
-function LoginPage() { return <div>...</div> } // komponent — wielka litera
+function calculateProgress() { return 42 }    // regular function — lowercase
+function LoginPage() { return <div>...</div> } // component — uppercase
 ```
 
-`<div>` = znacznik HTML (mała litera). `<LoginPage>` = komponent React (wielka litera). React odróżnia je właśnie po tym.
+`<div>` = HTML tag (lowercase). `<LoginPage>` = React component (uppercase). React tells them apart by this.
 
-### Routing i renderowanie
+### Routing and Rendering
 
-**Routing** = mapowanie URL → komponent. Gdy URL się zmienia, React Router decyduje co pokazać.
-Analogia: `@GetMapping("/login")` w Spring MVC.
+**Routing** = mapping URL → component. When URL changes, React Router decides what to show.
+Analogy: `@GetMapping("/login")` in Spring MVC.
 
 ```tsx
 <Route path="/login"     element={<LoginPage />} />   // /login → LoginPage
 <Route path="/dashboard" element={<DashboardPage />} /> // /dashboard → DashboardPage
 ```
 
-Import udostępnia komponent w pliku. Route decyduje kiedy go pokazać.
+Import makes component available in file. Route decides when to show it.
 
-**Renderowanie** = React wywołuje funkcję komponentu → dostaje JSX → zamienia na HTML → wstawia do `<div id="root">`.
-Rerenderowanie = React wywołuje funkcję ponownie gdy dane się zmieniły i aktualizuje tylko zmienione fragmenty. Szczegóły w Etapie 3.
+**Rendering** = React calls component function → gets JSX → converts to HTML → inserts into `<div id="root">`.
+Re-rendering = React calls function again when data changed, updates only changed parts. Details in Phase 3.
 
-### Props — szczegóły
+### Props — Details
 
-Props to argumenty komponentu (słowo "props" = standard React, znaczy to samo).
+Props are component arguments (word "props" = React standard, means the same).
 
 ```java
-new BadgeRow(rejectionBadge, totalRejections, "rejection")  // Java — kolejność ważna
+new BadgeRow(rejectionBadge, totalRejections, "rejection")  // Java — order matters
 ```
 ```tsx
-<BadgeRow badge={rejectionBadge} count={totalRejections} type="rejection" />  // React — kolejność dowolna, nazwa ważna
+<BadgeRow badge={rejectionBadge} count={totalRejections} type="rejection" />  // React — order irrelevant, name matters
 ```
 
-### export default vs named export
+### export default vs Named Export
 
 ```tsx
 export function LoginPage() {}        // named export  → import { LoginPage } from '...'
 export default function App() {}      // default export → import App from '...'
 ```
 
-Jeden plik może mieć wiele named exportów, ale tylko jeden default.
+One file can have many named exports, but only one default.
 
-### Kluczowe pliki
+### Key Files
 
-- `src/pages/LoginPage.tsx` — prosty komponent bez propsów
-- `src/components/badges/BadgeWidget.tsx` — dwa komponenty w jednym pliku: `BadgeWidget` (publiczny) + `BadgeRow` (prywatny z propsami)
-- `src/App.tsx` — korzeń aplikacji, routing + zagnieżdżanie komponentów
-
----
-
-## Etap 3 — Stan (state) i rerenderowanie
-
-### ✅ STATUS: ZROZUMIANY (Sesja 3 — 2026-03-13)
-
-Jakub w pełni opanował `useState` i `useEffect`. Quiz 5/5 dla obu koncepcji. Pełny przepływ logowania w `AuthProvider.tsx` wyjaśniony i zrozumiany.
+- `src/pages/LoginPage.tsx` — simple component without props
+- `src/components/badges/BadgeWidget.tsx` — two components in one file: `BadgeWidget` (public) + `BadgeRow` (private with props)
+- `src/App.tsx` — app root, routing + component nesting
 
 ---
 
-### `useState` — zmienna + setter + automatyczny re-render
+## Phase 3 — State and Re-rendering
 
-**Super zdanie do zapamiętania:**
-> `useState` = zmienna + setter + automatyczny re-render. Gdy wołasz `setSearchQuery()`, React wie że musi uruchomić całą funkcję komponentu od nowa.
+### ✅ STATUS: UNDERSTOOD (Session 3 — 2026-03-13)
 
-#### Analogia do Javy
+Jakub fully mastered `useState` and `useEffect`. 5/5 quiz for both concepts. Complete login flow in `AuthProvider.tsx` explained and understood.
 
-**W Javie (ręcznie):**
+---
+
+### `useState` — Variable + Setter + Automatic Re-render
+
+**Super sentence to remember:**
+> `useState` = variable + setter + automatic re-render. When you call `setSearchQuery()`, React knows to run the whole component function again.
+
+#### Java Analogy
+
+**In Java (manual):**
 ```java
 private String searchQuery = "";
 
 public void onSearchChange(String newText) {
-  searchQuery = newText;  // ← zmieniasz pole
-  repaint();              // ← TY pamiętasz zawsze dodać
+  searchQuery = newText;  // ← you change field
+  repaint();              // ← YOU always remember to add
 }
 ```
 
-**W React (automatycznie):**
+**In React (automatic):**
 ```tsx
 const [searchQuery, setSearchQuery] = useState('');
 
 const handleSearch = (newText) => {
-  setSearchQuery(newText);  // ← React automatycznie odrenderuje
+  setSearchQuery(newText);  // ← React automatically re-renders
 }
 ```
 
-**Różnica:** W Javie zmieniasz pole i musisz ręcznie wołać `repaint()`. W React `setState` robi `repaint()` za Ciebie automatycznie.
+**Difference:** In Java you change field and manually call `repaint()`. In React `setState` does `repaint()` for you automatically.
 
-#### Jak to działa (przepływ)
+#### How It Works (Flow)
 
-1. Użytkownik pisze "Google" w polu wyszukiwania
-2. Wołana jest funkcja: `setSearchQuery('Google')`
-3. React zmienia wartość `searchQuery` wewnętrznie
-4. React automatycznie odrenderowuje całą funkcję komponentu od nowa
-5. `filteredApplications` (linia 107 w `ApplicationTable.tsx`) liczy się na nowo z `searchQuery = 'Google'`
-6. Tablica pokazuje nowe wyniki
-7. Całe bez ręcznego `repaint()`
+1. User types "Google" in search box
+2. Function called: `setSearchQuery('Google')`
+3. React changes `searchQuery` internally
+4. React automatically re-renders entire component function
+5. `filteredApplications` (line 107 in `ApplicationTable.tsx`) recalculates with `searchQuery = 'Google'`
+6. Table shows new results
+7. All without manual `repaint()`
 
-#### Dlaczego `useState` a nie zwykła zmienna?
+#### Why `useState` and Not Regular Variable?
 
 ```tsx
-// ❌ BYŁOBY ŹLE
+// ❌ WOULD BE WRONG
 let searchQuery = '';
 const setSearchQuery = (newValue) => {
-  searchQuery = newValue  // ← React nie wie że się coś zmieniło
-  // UI się nie odrenderuje
+  searchQuery = newValue  // ← React doesn't know something changed
+  // UI won't re-render
 }
 
-// ✅ PRAWIDŁOWO
+// ✅ CORRECT
 const [searchQuery, setSearchQuery] = useState('');
-// React obserwuje tę zmienną i wie kiedy się zmienia
+// React watches this variable and knows when it changes
 ```
 
-`useState` to **observable** — React nasłuchuje na zmiany i automatycznie odrenderowuje.
+`useState` is **observable** — React listens for changes and automatically re-renders.
 
-#### Niezależne stany
+#### Independent States
 
-Każdy `useState` działa niezależnie:
+Each `useState` works independently:
 
 ```tsx
-const [searchQuery, setSearchQuery] = useState('')        // stan 1
-const [statusFilter, setStatusFilter] = useState('ALL')   // stan 2
+const [searchQuery, setSearchQuery] = useState('')        // state 1
+const [statusFilter, setStatusFilter] = useState('ALL')   // state 2
 
-// Gdy zmienisz statusFilter, searchQuery pozostaje niezmieniony
-setStatusFilter('W_PROCESIE')  // ← zmieni się tylko statusFilter
-// searchQuery zostaje takie jakie było
+// When you change statusFilter, searchQuery stays the same
+setStatusFilter('IN_PROGRESS')  // ← only statusFilter changes
+// searchQuery remains as it was
 ```
 
-#### Praktyk z projektu: `ApplicationTable.tsx`
+#### Practice from Project: `ApplicationTable.tsx`
 
-Linia 60:
+Line 60:
 ```tsx
 const [searchQuery, setSearchQuery] = useState('')
 ```
 
-Linia 252 (gdy użytkownik pisze):
+Line 252 (when user types):
 ```tsx
 <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
 ```
 
-Linie 107-114 (filtrowanie):
+Lines 107-114 (filtering):
 ```tsx
 const filteredApplications = applications.filter(app => {
-  if (searchQuery) {  // ← używa searchQuery
+  if (searchQuery) {  // ← uses searchQuery
     const matchesSearch = app.company.toLowerCase().includes(searchQuery.toLowerCase()) || ...
     if (!matchesSearch) return false
   }
@@ -375,15 +375,15 @@ const filteredApplications = applications.filter(app => {
 
 ---
 
-### `useEffect` — kod który musi się wykonać "na starcie"
+### `useEffect` — Code That Must Execute "On Startup"
 
-**Analogia do Javy:**
+**Java Analogy:**
 ```java
 @Component
 public class AuthService {
-  @PostConstruct  // ← wykonaj raz gdy bean się tworzy
+  @PostConstruct  // ← run once when bean is created
   public void init() {
-    System.out.println("Inicjalizuję AuthService");
+    System.out.println("Initializing AuthService");
   }
 }
 ```
@@ -391,182 +391,182 @@ public class AuthService {
 ```tsx
 function AuthProvider() {
   useEffect(() => {
-    console.log("Inicjalizuję komponent");
-  }, [])  // ← pusta tablica = wykonaj raz gdy komponent pojawia się
+    console.log("Initializing component");
+  }, [])  // ← empty array = run once when component appears
 }
 ```
 
-**`@PostConstruct` w Javie ≈ `useEffect(..., [])` w React'cie**
+**`@PostConstruct` in Java ≈ `useEffect(..., [])` in React**
 
-#### Tablica dependencji — trzy scenariusze
+#### Dependency Array — Three Scenarios
 
 ```tsx
 // 1. useEffect(..., [])
-// Uruchomi się raz, gdy komponent pojawi się na ekranie
+// Runs once when component appears on screen
 useEffect(() => {
-  console.log("Raz!")
+  console.log("Once!")
 }, [])
 
 // 2. useEffect(...)
-// Uruchomi się po KAŻDYM renderze — niebezpieczne!
+// Runs after EVERY render — dangerous!
 useEffect(() => {
-  console.log("Po każdym renderze!")
+  console.log("After every render!")
 })
 
 // 3. useEffect(..., [user])
-// Uruchomi się gdy user zmieni się
+// Runs when user changes
 useEffect(() => {
-  console.log("user się zmienił!")
+  console.log("user changed!")
 }, [user])
 ```
 
-#### Problem: Nieskończona pętla
+#### Problem: Infinite Loop
 
 ```tsx
-// ❌ NIESKOŃCZONA PĘTLA
+// ❌ INFINITE LOOP
 useEffect(() => {
   setUser({ name: 'Jan' })
-}, [user])  // ← React patrzy na user
+}, [user])  // ← React watches user
 
-// Przepływ:
-// 1. useEffect uruchamia się
-// 2. setUser zmienia user
-// 3. React widzi że user się zmienił (bo [user] w zależnościach)
-// 4. useEffect uruchamia się znowu
-// 5. setUser uruchamia się znowu
-// 6. user zmienia się znowu...
-// PĘTLA 💥
+// Flow:
+// 1. useEffect runs
+// 2. setUser changes user
+// 3. React sees user changed (because [user] in dependencies)
+// 4. useEffect runs again
+// 5. setUser runs again
+// 6. user changes again...
+// LOOP 💥
 ```
 
 ```tsx
-// ✅ PRAWIDŁOWO — bez pętli
+// ✅ CORRECT — no loop
 useEffect(() => {
   setUser({ name: 'Jan' })
-}, [])  // ← [] mówi "nie patrzę na nic"
+}, [])  // ← [] says "I don't watch anything"
 
-// Przepływ:
-// 1. useEffect uruchamia się raz (bo [])
-// 2. setUser zmienia user
-// 3. React patrzy na [] — nie ma user w zależnościach
-// 4. useEffect się nie uruchamia znowu
-// 5. Bez pętli ✅
+// Flow:
+// 1. useEffect runs once
+// 2. setUser changes user
+// 3. React watches [] — no user in dependencies
+// 4. useEffect doesn't run again
+// 5. No loop ✅
 ```
 
-#### Praktyka z projektu: `AuthProvider.tsx` (linie 37-53)
+#### Practice from Project: `AuthProvider.tsx` (Lines 37-53)
 
 ```tsx
 useEffect(() => {
-  // KROK 1: Sprawdzamy token w localStorage
-  const token = getToken()  // linijka 40
+  // STEP 1: Check token in localStorage
+  const token = getToken()  // line 40
 
-  if (!token) {  // linijki 41-43
-    setIsLoading(false)    // "nie ma tokena, koniec czekania"
+  if (!token) {  // lines 41-43
+    setIsLoading(false)    // "no token, done waiting"
     return
   }
 
-  // KROK 2: Jeśli token jest, pobieramy dane usera z API
-  fetchCurrentUser()  // linijka 46
-    .then(setUser)    // linijka 47: jeśli OK → setUser
+  // STEP 2: If token exists, fetch user data from API
+  fetchCurrentUser()  // line 46
+    .then(setUser)    // line 47: if OK → setUser
     .catch(() => {
-      clearToken()    // linijka 50: token nieważny
+      clearToken()    // line 50: token invalid
     })
-    .finally(() => setIsLoading(false))  // linijka 52: koniec
-}, [])  // ← uruchomi się raz, na starcie aplikacji
+    .finally(() => setIsLoading(false))  // line 52: done
+}, [])  // ← run once on startup
 ```
 
-**Trzy scenariusze:**
+**Three Scenarios:**
 
-1. **Token ważny:**
+1. **Token Valid:**
    ```
-   getToken() → OK → fetchCurrentUser() → setUser(userData) → zalogowany ✅
-   ```
-
-2. **Brak tokena:**
-   ```
-   getToken() → null → setIsLoading(false), return → niezalogowany ❌
+   getToken() → OK → fetchCurrentUser() → setUser(userData) → logged in ✅
    ```
 
-3. **Token wygasł (nieważny):**
+2. **No Token:**
    ```
-   getToken() → OK → fetchCurrentUser() → błąd 401 → clearToken() → niezalogowany ❌
+   getToken() → null → setIsLoading(false), return → not logged in ❌
+   ```
+
+3. **Token Expired (Invalid):**
+   ```
+   getToken() → OK → fetchCurrentUser() → error 401 → clearToken() → not logged in ❌
    ```
 
 ---
 
-### Quiz — wyniki
+### Quiz — Results
 
-| Pytanie | Odpowiedź Jakuba | Ocena |
+| Question | Jakub's Answer | Grade |
 |---------|---|---|
-| Dlaczego `useState` zamiast zwykłej zmiennej? | React nasłuchuje na zmianę, zmiana poprzez `set`, rerenderuje wszystko | ✅ |
-| Co robi `setSearchQuery`? | Ustawia wartość i renderuje | ✅ |
-| Czym jest rerenderowanie? | React uruchamia całą funkcję komponentu od nowa | ✅ |
-| Czy zmiana `statusFilter` zmienia `searchQuery`? | Nie, każdy `useState` jest niezależny | ✅ |
-| Czy `value={searchQuery}` zawsze odzwierciedla stan? | Tak, pole wciąż słucha zmian w `searchQuery` | ✅ |
-| Co oznacza `[]` w `useEffect`? | Tablica dependencji — uruchomi się raz na starcie | ✅ |
-| Co by było bez `[]`? | Nieskończona pętla | ✅ |
-| Co by było z `[user]` w auth? | Nieskończona pętla — `setUser` zmienia `user`, co uruchamia `useEffect` | ✅ |
-| Dlaczego `[]` jest prawidłowe w `AuthProvider`? | `[]` mówi "nie patrzę na nic", więc `setUser` nie uruchamia `useEffect` znowu | ✅ |
+| Why `useState` instead of regular variable? | React listens for change, change via `set`, re-renders everything | ✅ |
+| What does `setSearchQuery` do? | Sets value and renders | ✅ |
+| What is re-rendering? | React runs entire component function again | ✅ |
+| Does changing `statusFilter` change `searchQuery`? | No, each `useState` is independent | ✅ |
+| Does `value={searchQuery}` always reflect state? | Yes, field keeps listening to `searchQuery` changes | ✅ |
+| What does `[]` in `useEffect` mean? | Dependency array — run once on startup | ✅ |
+| What without `[]`? | Infinite loop | ✅ |
+| What with `[user]` in auth? | Infinite loop — `setUser` changes `user`, which triggers `useEffect` | ✅ |
+| Why is `[]` correct in `AuthProvider`? | `[]` says "I don't watch anything", so `setUser` doesn't trigger `useEffect` again | ✅ |
 
-**Podsumowanie:** Quiz 9/9 ✅ — pełne zrozumienie `useState` i `useEffect`
-
----
-
-### Kluczowe pliki
-
-- `src/components/applications/ApplicationTable.tsx` — praktyka `useState` (searchQuery, statusFilter, sortField)
-- `src/auth/AuthProvider.tsx` — praktyka `useEffect` (sprawdzenie tokenu na starcie)
-- `src/services/api.ts` — funkcje `getToken()`, `fetchCurrentUser()`, `clearToken()`
+**Summary:** 9/9 Quiz ✅ — complete understanding of `useState` and `useEffect`
 
 ---
 
-### Co Jakub powinien zapamiętać
+### Key Files
 
-1. **`useState` = zmienna + setter + automatyczny re-render** — najważniejsze zdanie
-2. **Każdy `setState` powoduje re-render całej funkcji komponentu**
-3. **Każdy `useState` jest niezależny** — zmiana jednego nie wpływa na drugie
-4. **`useEffect` z `[]`** = uruchomi się raz na starcie (analogia: `@PostConstruct`)
-5. **`useEffect` z `[user]`** = nieskończona pętla gdy wołasz `setUser` w środku
-6. **`[]` chroni nas przed pętlami** — mówi React'owi "nie patrzę na te zmienne"
+- `src/components/applications/ApplicationTable.tsx` — practice with `useState` (searchQuery, statusFilter, sortField)
+- `src/auth/AuthProvider.tsx` — practice with `useEffect` (check token on startup)
+- `src/services/api.ts` — functions `getToken()`, `fetchCurrentUser()`, `clearToken()`
 
 ---
 
-## Etap 4 — Hooki React
+### What Jakub Should Remember
 
-### ✅ STATUS: ZROZUMIANY (Sesja 4 — 2026-03-17)
-
-Jakub opanował: czym są hooki, zasady hooków, cleanup w useEffect, własne hooki, hooki z konfiguracją. Quiz 4.5/5.
+1. **`useState` = variable + setter + automatic re-render** — most important sentence
+2. **Each `setState` triggers re-render of entire component function**
+3. **Each `useState` is independent** — changing one doesn't affect others
+4. **`useEffect` with `[]`** = run once on startup (analogy: `@PostConstruct`)
+5. **`useEffect` with `[user]`** = infinite loop if you call `setUser` inside
+6. **`[]` protects us from loops** — tells React "I don't watch these variables"
 
 ---
 
-### Czym jest hook
+## Phase 4 — React Hooks
 
-**Hook = funkcja, która podpina Twój kod do mechanizmów Reacta.**
+### ✅ STATUS: UNDERSTOOD (Session 4 — 2026-03-17)
 
-Nie "czeka na wydarzenie" (to event listener). Hook mówi: **"React, daj mi dostęp do [stanu / efektu / kontekstu]"**.
+Jakub mastered: what hooks are, hook rules, cleanup in useEffect, custom hooks, hooks with configuration. 4.5/5 quiz.
 
-**Analogia:** `@Autowired` w Springu — prosisz framework o dostęp do czegoś, czym on zarządza.
+---
 
-| Spring (Java) | React (hook) | Co robi |
+### What Is a Hook
+
+**Hook = function that plugs your code into React's mechanisms.**
+
+Not "waits for event" (that's event listener). Hook says: **"React, give me access to [state / effect / context]"**.
+
+**Analogy:** `@Autowired` in Spring — you ask framework for access to something it manages.
+
+| Spring (Java) | React (hook) | What It Does |
 |---|---|---|
-| `@Autowired` pole | `useContext(...)` | Pobiera zależność z kontekstu |
-| `@PostConstruct` | `useEffect(..., [])` | Kod po inicjalizacji |
-| pole klasy + setter | `useState(...)` | Stan z powiadamianiem |
-| `@Cacheable` + serwis | `useQuery(...)` | Cache'owane pobieranie danych |
+| `@Autowired` field | `useContext(...)` | Gets dependency from context |
+| `@PostConstruct` | `useEffect(..., [])` | Code after initialization |
+| field + setter | `useState(...)` | State with notifications |
+| `@Cacheable` + service | `useQuery(...)` | Cached data fetching |
 
 ---
 
-### Zasady hooków (Rules of Hooks)
+### Hook Rules (Rules of Hooks)
 
-**1. Tylko na najwyższym poziomie funkcji komponentu** — nigdy w `if`, pętli, zagnieżdżonej funkcji.
-React trzyma hooki jako listę w stałej kolejności. Hook w `if` = liczba hooków zmienia się między renderami = React przypisuje wartości do złych hooków.
+**1. Only at top level of component function** — never in `if`, loop, nested function.
+React keeps hooks as list in fixed order. Hook in `if` = number of hooks changes between renders = React assigns values to wrong hooks.
 
-**2. Tylko w komponentach React lub w innych hookach** — nigdy w zwykłej funkcji.
+**2. Only in React components or other hooks** — never in regular function.
 
-**3. Prefiks `use`** — React + linter rozpoznają hooki po nazwie. Bez `use` linter nie stosuje reguł hooków.
+**3. `use` prefix** — React + linter recognize hooks by name. Without `use` linter doesn't apply hook rules.
 
 ---
 
-### useEffect — cleanup (sprzątanie)
+### useEffect — Cleanup (Cleanup Function)
 
 ```tsx
 useEffect(() => {
@@ -578,24 +578,24 @@ useEffect(() => {
 }, [])
 ```
 
-`return () => {...}` = **funkcja sprzątająca**. React wywołuje ją gdy komponent znika z ekranu.
+`return () => {...}` = **cleanup function**. React calls it when component disappears from screen.
 
-| Spring | React | Kiedy |
+| Spring | React | When |
 |---|---|---|
-| `@PostConstruct` | kod w `useEffect` | komponent się pojawia |
-| `@PreDestroy` | `return () => {...}` | komponent znika |
+| `@PostConstruct` | code in `useEffect` | component appears |
+| `@PreDestroy` | `return () => {...}` | component disappears |
 
 ---
 
-### useEffect — wiele efektów
+### useEffect — Multiple Effects
 
-Komponent może mieć **wiele `useEffect`** — każdy odpowiada za inną rzecz. Zasada: **jeden `useEffect` = jedna odpowiedzialność** (jak wiele `@EventListener` w jednym beanie).
+Component can have **many `useEffect`s** — each handles different thing. Principle: **one `useEffect` = one responsibility** (like many `@EventListener` in one bean).
 
 ---
 
-### Własne hooki = serwisy Springowe
+### Custom Hooks = Spring Services
 
-**Własny hook = zwykła funkcja zaczynająca się od `use`, która w środku używa innych hooków.**
+**Custom hook = regular function starting with `use`, using other hooks inside.**
 
 ```tsx
 // useNotes.ts ≈ NoteService.java
@@ -604,239 +604,239 @@ export function useNotes(applicationId: number) {
 }
 ```
 
-| Spring | React | Rola |
+| Spring | React | Role |
 |---|---|---|
-| `@Service` klasa | własny hook (`useXxx`) | enkapsuluje logikę |
-| `@Autowired` na polu | wywołanie innego hooka | pobiera zależność |
-| metody publiczne | wartość zwracana | API dla konsumenta |
+| `@Service` class | custom hook (`useXxx`) | encapsulates logic |
+| `@Autowired` on field | calling another hook | gets dependency |
+| public methods | return value | API for consumer |
 
-**Dlaczego?** Żeby nie kopiować logiki. Piszesz raz w hooku, używasz w wielu komponentach.
+**Why?** Don't copy logic. Write once in hook, use in many components.
 
-Hooki projektu:
+Project hooks:
 
-| Hook | Odpowiednik Java | Co robi |
+| Hook | Java Equivalent | What It Does |
 |---|---|---|
-| `useApplications.ts` | `ApplicationService.java` | CRUD aplikacji |
-| `useCV.ts` | `CVService.java` | CRUD CV |
-| `useNotes.ts` | `NoteService.java` | CRUD notatek |
-| `useBadgeStats.ts` | `StatisticsService.java` | statystyki odznak |
+| `useApplications.ts` | `ApplicationService.java` | CRUD applications |
+| `useCV.ts` | `CVService.java` | CRUD CVs |
+| `useNotes.ts` | `NoteService.java` | CRUD notes |
+| `useBadgeStats.ts` | `StatisticsService.java` | badge statistics |
 
 ---
 
-### Hooki z konfiguracją
+### Hooks with Configuration
 
-**`staleTime`** — jak długo dane są "świeże" (nie odpytuj serwera ponownie):
-- `useBadgeStats`: `staleTime: 60_000` — statystyki rzadko się zmieniają, cache 60s
-- `useApplications`: brak `staleTime` — aplikacje zmieniają się często, zawsze świeże
+**`staleTime`** — how long data is "fresh" (don't ask server again):
+- `useBadgeStats`: `staleTime: 60_000` — stats rarely change, cache 60s
+- `useApplications`: no `staleTime` — apps change often, always fresh
 
-**`enabled`** — warunkowe odpytywanie:
-- `useCheckDuplicate`: `enabled: company.length > 0 && position.length > 0` — nie sprawdzaj duplikatów dopóki pola puste
-
----
-
-### Zapowiedź CR-7
-
-`CVManager.tsx` nie używa gotowego `useCVs()` — zamiast tego pisze `useState + useEffect + fetchCVs()` ręcznie. To jak kontroler który ignoruje serwis i idzie bezpośrednio do repozytorium. Problem: niespójność, duplikacja, brak cache. Naprawa w Etapie 5.
+**`enabled`** — conditional fetching:
+- `useCheckDuplicate`: `enabled: company.length > 0 && position.length > 0` — don't check duplicates until fields filled
 
 ---
 
-### Co Jakub powinien zapamiętać
+### Preview: CR-7
 
-1. **Hook = "React, daj mi dostęp do..."** — jak `@Autowired` w Springu
-2. **Zasady hooków:** tylko na górze funkcji, tylko w komponentach/hookach, prefiks `use`
-3. **Cleanup** = `return () => {...}` w `useEffect` = `@PreDestroy` w Springu
-4. **Własny hook = serwis Springowy** — enkapsulacja logiki, reużywalność
-5. **`staleTime`** = czas cache, **`enabled`** = warunkowe odpytywanie
+`CVManager.tsx` doesn't use ready `useCVs()` — instead writes `useState + useEffect + fetchCVs()` manually. Like controller ignoring service and going straight to repository. Problem: inconsistency, duplication, no cache. Fix in Phase 5.
 
 ---
 
-## Etap 5 — React Query — serce frontendu
+### What Jakub Should Remember
 
-### ✅ STATUS: ZROZUMIANY (Sesja 5 — 2026-03-17)
-
-CR-7 naprawiony. Quiz 2.5/5 — słabsze punkty do powtórzenia: `refetchOnWindowFocus`, uzasadnienie unieważniania wielu cache'ów.
+1. **Hook = "React, give me access to..."** — like `@Autowired` in Spring
+2. **Hook Rules:** only at top level, only in components/hooks, `use` prefix
+3. **Cleanup** = `return () => {...}` in `useEffect` = `@PreDestroy` in Spring
+4. **Custom hook = Spring service** — logic encapsulation, reusability
+5. **`staleTime`** = cache time, **`enabled`** = conditional fetching
 
 ---
 
-### Problem bez React Query
+## Phase 5 — React Query — Heart of Frontend
 
-Ręczne zarządzanie danymi z serwera wymaga:
-- `useState` dla danych, loading, error
-- `useEffect` do pobrania na starcie
-- ręcznego `fetchCVs()` po każdej operacji
-- ręcznej obsługi `try/catch`
+### ✅ STATUS: UNDERSTOOD (Session 5 — 2026-03-17)
 
-To jak kontroler w Springu, który ignoruje serwis i idzie bezpośrednio do repozytorium.
+CR-7 fixed. 2.5/5 quiz — weak points: `refetchOnWindowFocus`, reasoning for invalidating multiple caches.
 
-### `useQuery` — pobieranie danych (≈ `@Cacheable`)
+---
+
+### Problem Without React Query
+
+Manual data management from server requires:
+- `useState` for data, loading, error
+- `useEffect` to fetch on startup
+- manual `fetchCVs()` after each operation
+- manual `try/catch` handling
+
+Like controller in Spring ignoring service and going straight to repository.
+
+### `useQuery` — Data Fetching (≈ `@Cacheable`)
 
 ```tsx
-// Zamiast 20 linii useState + useEffect + fetchCVs + try/catch:
+// Instead of 20 lines of useState + useEffect + fetchCVs + try/catch:
 const { data: cvList = [], isLoading, error } = useCVs()
 ```
 
-React Query automatycznie:
-1. Zarządza stanem `isLoading` / `error` / `data`
-2. Cache'uje wyniki (nie odpytuje serwera za każdym razem)
-3. Odświeża dane gdy wracasz na zakładkę (`refetchOnWindowFocus`)
+React Query automatically:
+1. Manages state `isLoading` / `error` / `data`
+2. Caches results (doesn't ask server every time)
+3. Refreshes data when you return to tab (`refetchOnWindowFocus`)
 
-| Spring | React Query | Co robi |
+| Spring | React Query | What It Does |
 |---|---|---|
-| `@Cacheable("applications")` | `useQuery({ queryKey: ['applications'], queryFn })` | Pobiera z cache lub serwera |
-| wartość w `@Cacheable(...)` | `queryKey` | Nazwa/klucz cache |
+| `@Cacheable("applications")` | `useQuery({ queryKey: ['applications'], queryFn })` | Fetches with cache or server |
+| value in `@Cacheable(...)` | `queryKey` | Cache name/key |
 
-### `useMutation` — operacje zapisu (≈ `@CacheEvict`)
+### `useMutation` — Write Operations (≈ `@CacheEvict`)
 
 ```tsx
 const uploadCVMutation = useUploadCV()
 
-// Użycie:
+// Usage:
 uploadCVMutation.mutate(file, {
-  onSuccess: (newCv) => { ... },   // po sukcesie
-  onError: () => { ... },          // po błędzie
+  onSuccess: (newCv) => { ... },   // after success
+  onError: () => { ... },          // after error
 })
 
-// Za darmo:
-uploadCVMutation.isPending   // czy operacja trwa (zamiast useState(false))
+// For free:
+uploadCVMutation.isPending   // is operation running (instead of useState(false))
 ```
 
-Przepływ po mutacji:
-1. `mutationFn` wysyła POST/PUT/DELETE do backendu
-2. Backend przetwarza
-3. `onSuccess` się odpala
-4. `invalidateQueries` unieważnia cache
-5. React Query sam pobiera dane od nowa
-6. UI się odrenderowuje — **bez jednego `setState`**
+Flow after mutation:
+1. `mutationFn` sends POST/PUT/DELETE to backend
+2. Backend processes
+3. `onSuccess` fires
+4. `invalidateQueries` invalidates cache
+5. React Query automatically fetches data again
+6. UI re-renders — **without one `setState`**
 
-### `invalidateQueries` — unieważnianie cache
+### `invalidateQueries` — Invalidate Cache
 
 ```tsx
-// Unieważnij jeden cache:
+// Invalidate one cache:
 queryClient.invalidateQueries({ queryKey: ['cvs'] })
 
-// Unieważnij wiele (gdy operacja wpływa na różne dane):
+// Invalidate many (when operation affects different data):
 queryClient.invalidateQueries({ queryKey: ['cvs'] })
 queryClient.invalidateQueries({ queryKey: ['applications'] })
-// ^ bo usunięcie CV odpina je od aplikacji
+// ^ because deleting CV unpins them from applications
 ```
 
-**Zasada:** unieważniaj **wszystkie** cache'e których dotyczy operacja, nie tylko oczywisty.
+**Principle:** invalidate **all** affected caches, not just obvious one.
 
-### CR-7 — co zmieniliśmy
+### CR-7 — What We Changed
 
-| Przed (ręcznie) | Po (React Query) |
+| Before (Manual) | After (React Query) |
 |---|---|
 | `useState<CV[]>([])` + `fetchCVs()` + `useEffect` | `useCVs()` |
-| `useState(false)` dla `uploading` | `uploadCVMutation.isPending` |
+| `useState(false)` for `uploading` | `uploadCVMutation.isPending` |
 | `await uploadCVAPI(file)` + `fetchCVs()` | `uploadCVMutation.mutate(file)` |
 | `await createCV(...)` + `fetchCVs()` | `createCVMutation.mutate(...)` |
 | `await deleteCVAPI(id)` + `fetchCVs()` | `deleteCVMutation.mutate(id)` |
 | `await updateCV(...)` + `fetchCVs()` | `updateCVMutation.mutate(...)` |
 
-### Kluczowe pliki
+### Key Files
 
-- `src/hooks/useCV.ts` — hooki React Query dla CV (useCVs, useUploadCV, useCreateCV, useUpdateCV, useDeleteCV)
-- `src/hooks/useApplications.ts` — wzorcowy przykład useQuery + useMutation z invalidacją
-- `src/components/cv/CVManager.tsx` — po naprawie CR-7 używa hooków zamiast ręcznego zarządzania
-
----
-
-### Co Jakub powinien zapamiętać
-
-1. **`useQuery`** = pobieranie danych z automatycznym cache (≈ `@Cacheable`)
-2. **`useMutation`** = zapis + unieważnienie cache (≈ `@CacheEvict`)
-3. **`queryKey`** = nazwa cache (jak wartość w `@Cacheable("applications")`)
-4. **`invalidateQueries`** = unieważnij cache → React Query sam pobierze od nowa
-5. **Bez `onSuccess` + `invalidateQueries`** użytkownik nie zobaczy zmian aż do odświeżenia
-6. **Unieważniaj wszystkie powiązane cache'e** — nie tylko oczywisty
+- `src/hooks/useCV.ts` — React Query hooks for CV (useCVs, useUploadCV, useCreateCV, useUpdateCV, useDeleteCV)
+- `src/hooks/useApplications.ts` — example useQuery + useMutation with invalidation
+- `src/components/cv/CVManager.tsx` — after CR-7 fix uses hooks instead of manual management
 
 ---
 
-## Etap 6 — Routing i ochrona stron
+### What Jakub Should Remember
 
-### ✅ STATUS: ZROZUMIANY (Sesja 6 — 2026-03-17)
-
-Jakub opanował: SPA i History API, Routes/Route, Navigate, Context API, ProtectedRoute, isLoading. Quiz SPA 5/5, Routes 4/5, Context 3/5, ProtectedRoute 2.5/5.
-
----
-
-### SPA — nawigacja bez przeładowania
-
-W klasycznej aplikacji (Spring MVC + Thymeleaf) każda zmiana URL = nowe zapytanie do serwera i nowy HTML.
-W SPA (React) każda zmiana URL = React podmienia komponent w przeglądarce, serwer o niczym nie wie.
-
-**Jak to działa:**
-1. React Router **przechwytuje** kliknięcie linku (nie pozwala przeglądarce wysłać zapytania)
-2. Zmienia URL w pasku przez **History API** (`window.history.pushState(...)`)
-3. React podmienia komponent w `<div id="root">`
-
-Jedyny moment, kiedy przeglądarka naprawdę pyta serwer — **pierwsze wejście** na stronę (dostaje `index.html` + JS).
-
-`<BrowserRouter>` w `App.tsx` — komponent nasłuchujący na zmiany URL i informujący resztę aplikacji.
+1. **`useQuery`** = data fetching with automatic cache (≈ `@Cacheable`)
+2. **`useMutation`** = write + invalidate cache (≈ `@CacheEvict`)
+3. **`queryKey`** = cache name (like value in `@Cacheable("applications")`)
+4. **`invalidateQueries`** = invalidate cache → React Query fetches again
+5. **Without `onSuccess` + `invalidateQueries`** user won't see changes until refresh
+6. **Invalidate all related caches** — not just obvious one
 
 ---
 
-### Routes i Route — mapowanie URL → komponent
+## Phase 6 — Routing and Page Protection
 
-| Spring MVC | React Router | Co robi |
+### ✅ STATUS: UNDERSTOOD (Session 6 — 2026-03-17)
+
+Jakub mastered: SPA and History API, Routes/Route, Navigate, Context API, ProtectedRoute, isLoading. SPA 5/5, Routes 4/5, Context 3/5, ProtectedRoute 2.5/5 quizzes.
+
+---
+
+### SPA — Navigation Without Reload
+
+In classic app (Spring MVC + Thymeleaf) every URL change = new server request and new HTML.
+In SPA (React) every URL change = React swaps component in browser, server knows nothing.
+
+**How it works:**
+1. React Router **intercepts** link click (doesn't let browser send request)
+2. Changes URL in bar via **History API** (`window.history.pushState(...)`)
+3. React swaps component in `<div id="root">`
+
+Only moment browser truly asks server — **first visit** (gets `index.html` + JS).
+
+`<BrowserRouter>` in `App.tsx` — component listening to URL changes, tells rest of app.
+
+---
+
+### Routes and Route — Mapping URL → Component
+
+| Spring MVC | React Router | What It Does |
 |---|---|---|
-| `@GetMapping("/login")` | `<Route path="/login" element={<LoginPage />} />` | URL → komponent |
-| `return "redirect:/dashboard"` | `<Navigate to="/dashboard" replace />` | przekierowanie |
-| brak mappingu → 404 | `<Route path="*" .../>` | catch-all (bez niego: pusty ekran) |
+| `@GetMapping("/login")` | `<Route path="/login" element={<LoginPage />} />` | URL → component |
+| `return "redirect:/dashboard"` | `<Navigate to="/dashboard" replace />` | redirect |
+| no mapping → 404 | `<Route path="*" .../>` | catch-all (without it: blank screen) |
 
-**`replace`** w `<Navigate>` — podmienia wpis w historii zamiast dodawać nowy. Bez tego przycisk "Wstecz" wchodzi w pętlę (wraca na `/`, redirect na `/dashboard`, "Wstecz", redirect...).
+**`replace`** in `<Navigate>` — swaps history entry instead of adding new one. Without it back button loops (goes to `/`, redirects to `/dashboard`, back, redirect...).
 
-**`path="*"`** — łapie każdy URL, który nie pasuje do żadnego innego Route. Jak `default:` w `switch` w Javie.
+**`path="*"`** — catches any URL that doesn't match other routes. Like `default:` in `switch` in Java.
 
 ---
 
-### Context API — globalny stan (= kontener Springa)
+### Context API — Global State (= Spring Container)
 
-**Problem:** props drilling — przekazywanie danych przez propsy przez każdy komponent "po drodze" (nawet te, które ich nie potrzebują).
+**Problem:** props drilling — passing data through props through every component "on the way" (even those that don't need it).
 
-**Rozwiązanie:** Context API — globalny stan dostępny z dowolnego miejsca w drzewie komponentów.
+**Solution:** Context API — global state available from anywhere in component tree.
 
-| Krok | React | Spring | Co robi |
+| Step | React | Spring | What It Does |
 |---|---|---|---|
-| 1. Deklaracja | `createContext(...)` | `@Bean` deklaracja | "będzie taki kontekst" |
-| 2. Rejestracja | `<Context.Provider value={...}>` | `return new Service(...)` w `@Bean` | wypełnia danymi, udostępnia dzieciom |
-| 3. Pobranie | `useContext(AuthContext)` | `@Autowired` | pobiera dane z kontekstu |
+| 1. Declaration | `createContext(...)` | `@Bean` declaration | "this context will exist" |
+| 2. Registration | `<Context.Provider value={...}>` | `return new Service(...)` in `@Bean` | fills with data, provides to children |
+| 3. Fetching | `useContext(AuthContext)` | `@Autowired` | gets data from context |
 
-**`useAuth()`** = wrapper na `useContext(AuthContext)` z walidacją — jeśli użyjesz poza `<AuthProvider>`, dostaniesz czytelny błąd zamiast `undefined`.
+**`useAuth()`** = wrapper on `useContext(AuthContext)` with validation — if you use outside `<AuthProvider>`, you get readable error instead of `undefined`.
 
-Praktyka: `KanbanBoard` głęboko w drzewie woła `useAuth()` i ma dane usera — bez propsów z góry.
+Practice: `KanbanBoard` deep in tree calls `useAuth()` and has user data — no props from top.
 
 ---
 
-### isLoading — "jeszcze sprawdzam, nie podejmuj decyzji"
+### isLoading — "Still Checking, Don't Decide Yet"
 
-`isLoading` **nie oznacza** "niezalogowany". Oznacza: **"jeszcze nie wiem, czekaj"**.
+`isLoading` does **NOT mean** "not logged in". Means: **"I haven't verified yet, wait"**.
 
-Bez `isLoading` zalogowany użytkownik wchodzący na `/dashboard` dostałby **fałszywy redirect** na `/login` — bo `useEffect` jeszcze nie zdążył pobrać usera, więc `user = null`, więc `isAuthenticated = false`.
+Without `isLoading` logged user entering `/dashboard` would get **false redirect** — because `useEffect` hadn't fetched user yet, so `user = null`, so `isAuthenticated = false`.
 
 | `isLoading` | `isAuthenticated` | ProtectedRoute |
 |---|---|---|
-| `true` | nieważne | `return null` — pusty ekran, czekaj |
-| `false` | `false` | redirect na `/login` |
-| `false` | `true` | pokaż stronę |
+| `true` | irrelevant | `return null` — blank screen, wait |
+| `false` | `false` | redirect to `/login` |
+| `false` | `true` | show page |
 
 ---
 
-### ProtectedRoute — guard komponentu (= Spring Security filter)
+### ProtectedRoute — Component Guard (= Spring Security Filter)
 
 ```tsx
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth()
 
-  if (isLoading) return null                        // czekaj
-  if (!isAuthenticated) return <Navigate to="/login" />  // wyrzuć
-  return <>{children}</>                            // wpuść
+  if (isLoading) return null                        // wait
+  if (!isAuthenticated) return <Navigate to="/login" />  // throw out
+  return <>{children}</>                            // allow
 }
 ```
 
-**Kolejność sprawdzeń ma znaczenie!** Najpierw `isLoading`, potem `isAuthenticated`. Odwrotna kolejność = fałszywy redirect.
+**Order of checks matters!** First `isLoading`, then `isAuthenticated`. Opposite order = false redirect.
 
-Użycie w `App.tsx`:
+Use in `App.tsx`:
 ```tsx
 <Route path="/dashboard" element={
   <ProtectedRoute>
@@ -845,62 +845,62 @@ Użycie w `App.tsx`:
 } />
 ```
 
-`/login` i `/auth/callback` nie mają `ProtectedRoute` — są publiczne.
+`/login` and `/auth/callback` have no `ProtectedRoute` — they're public.
 
 ---
 
-### Kluczowe pliki
+### Key Files
 
-- `src/App.tsx` — routing (`<Routes>`, `<Route>`), providerzy, podział na publiczne/chronione
+- `src/App.tsx` — routing (`<Routes>`, `<Route>`), providers, public/protected split
 - `src/auth/AuthProvider.tsx` — Context API (createContext → Provider → useAuth), isLoading
-- `src/auth/ProtectedRoute.tsx` — guard: sprawdza isLoading → isAuthenticated → wpuszcza lub wyrzuca
+- `src/auth/ProtectedRoute.tsx` — guard: checks isLoading → isAuthenticated → allows or throws out
 
 ---
 
-### Co Jakub powinien zapamiętać
+### What Jakub Should Remember
 
-1. **SPA** — jedna strona HTML, React Router podmienia komponenty bez pytania serwera
-2. **`<Route path="..." element={...} />`** = `@GetMapping` w Springu
-3. **`<Navigate>`** = redirect, **`replace`** chroni przed pętlą "Wstecz"
-4. **Context API** = kontener Springa: `createContext` → `Provider` → `useContext` = deklaracja → rejestracja → `@Autowired`
-5. **`isLoading`** = "jeszcze sprawdzam, nie podejmuj decyzji" — chroni przed fałszywym redirectem
-6. **`ProtectedRoute`** = Spring Security filter — kolejność: najpierw isLoading, potem isAuthenticated
+1. **SPA** — one HTML, React Router swaps components without asking server
+2. **`<Route path="..." element={...} />`** = `@GetMapping` in Spring
+3. **`<Navigate>`** = redirect, **`replace`** prevents back-button loop
+4. **Context API** = Spring container: `createContext` → `Provider` → `useContext` = declare → register → `@Autowired`
+5. **`isLoading`** = "still checking, don't decide" — prevents false redirect
+6. **`ProtectedRoute`** = Spring Security filter — order: first isLoading, then isAuthenticated
 
 ---
 
-## Etap 7 — Komunikacja front↔back
+## Phase 7 — Frontend ↔ Backend Communication
 
-### fetch() — klient HTTP w przeglądarce
+### fetch() — HTTP Client in Browser
 
-`fetch()` to funkcja przeglądarki (analogia: `RestTemplate` w Springu) do wysyłania zapytań HTTP.
+`fetch()` is browser function (analogy: `RestTemplate` in Spring) for sending HTTP requests.
 
 ```typescript
-// Struktura
+// Structure
 await fetch(url, {
   method: 'POST',           // GET, POST, PUT, DELETE
   headers: { ... },         // Authorization, Content-Type
-  body: JSON.stringify(dto) // dane do wysłania
+  body: JSON.stringify(dto) // data to send
 })
 ```
 
-### JSON — most między frontendem a backendem
+### JSON — Bridge Between Frontend and Backend
 
-Zarówno backend jak i frontend rozumieją JSON:
+Both backend and frontend understand JSON:
 
-| Kierunek | Co się dzieje |
+| Direction | What Happens |
 |----------|--------------|
-| Frontend → Backend | JS obiekt → `JSON.stringify()` → tekst JSON → backend parseuje → Java obiekt (`@RequestBody`) |
-| Backend → Frontend | Java obiekt → Jackson konwertuje → JSON tekst → frontend `response.json()` → JS obiekt |
+| Frontend → Backend | JS object → `JSON.stringify()` → JSON text → backend parses → Java object (`@RequestBody`) |
+| Backend → Frontend | Java object → Jackson converts → JSON text → frontend `response.json()` → JS object |
 
-### api.ts — warstwa API
+### api.ts — API Layer
 
-Plik `src/services/api.ts` to **centralna warstwa komunikacji**:
+File `src/services/api.ts` is **central communication layer**:
 
 ```typescript
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
 const getHeaders = () => ({
-  'Authorization': `Bearer ${token}`,  // token z localStorage
+  'Authorization': `Bearer ${token}`,  // token from localStorage
   'Content-Type': 'application/json'
 })
 
@@ -915,321 +915,321 @@ const apiFetch = async (input, init) => {
 }
 ```
 
-**Każdy API call** idzie przez `apiFetch()`:
-- Automatycznie dodaje token w headerze
-- Sprawdza 401 i redirectuje na `/login`
-- Wyrzuca error aby kod nie kontynuował
+**Every API call** goes through `apiFetch()`:
+- Automatically adds token in header
+- Checks 401 and redirects to `/login`
+- Throws error so code doesn't continue
 
-### Zmienne środowiskowe — Vite
+### Environment Variables — Vite
 
-Vite czyta z pliku `.env`:
+Vite reads from `.env` file:
 
 ```
 VITE_API_URL=http://localhost:8080/api
 ```
 
-W kodzie:
+In code:
 
 ```typescript
 const apiUrl = import.meta.env.VITE_API_URL || 'fallback'
 ```
 
-Na produkcji `.env` ma inny URL — bez zmian w kodzie!
+On production `.env` has different URL — code unchanged!
 
 ### HTTP Status Codes
 
-| Kod | Znaczenie | Akcja |
+| Code | Meaning | Action |
 |-----|-----------|-------|
-| **200** | OK — masz świeże dane | zwróć response.json() |
-| **304** | Not Modified — cache ok | użyj co masz |
-| **401** | Unauthorized — zaloguj się | clear token, redirect `/login` |
-| **404** | Not Found — endpoint nie istnieje | throw error |
-| **500** | Server Error — backend się sypie | throw error |
+| **200** | OK — you have fresh data | return response.json() |
+| **304** | Not Modified — cache ok | use what you have |
+| **401** | Unauthorized — log in | clear token, redirect `/login` |
+| **404** | Not Found — endpoint missing | throw error |
+| **500** | Server Error — backend crashes | throw error |
 
-### Network tab DevTools — jak patrzeć
+### Network Tab DevTools — How to Watch
 
-Po odświeżeniu strony (`F5`):
+After page refresh (`F5`):
 1. **Frontend assets** (CSS, JS) — localhost:5173, status 200/304
-2. **API calls** (dane) — localhost:8080/api/*, status 200/401/404
+2. **API calls** (data) — localhost:8080/api/*, status 200/401/404
 
-304 = przeglądarka ma świeżą kopię w cache, oszczędź transfer.
+304 = browser has fresh copy in cache, save transfer.
 
-### Kluczowe pliki
+### Key Files
 
-- `src/services/api.ts` — warstwa API, `fetch()`, tokeny, error handling
-- `src/pages/LoginPage.tsx` — przekierowanie do backendu OAuth2
-- `.env.example` — jakie zmienne muszą być ustawione
+- `src/services/api.ts` — API layer, `fetch()`, tokens, error handling
+- `src/pages/LoginPage.tsx` — redirect to backend OAuth2
+- `.env.example` — what environment variables must be set
 
-### Co Jakub powinien zapamiętać
+### What Jakub Should Remember
 
-1. **`fetch()`** = klient HTTP w przeglądarce (jak `RestTemplate` w Javie)
-2. **JSON** = uniwersalny format — frontend i backend go rozumieją
-3. **API kontrakt** = backend decyduje o polach (np. `"accessToken"`), frontend musi się dostosować
-4. **`import.meta.env.VITE_API_URL`** = nie hardkoduj URL, czytaj z `.env`
-5. **401 Unauthorized** = `throw Error()` żeby kod nie kontynuował dalej
-6. **304 Not Modified** = przeglądarka ma świeżą kopię, oszczędź transfer
-
----
-
-## Etap 8 — OAuth2 i JWT — pełny przepływ logowania
-
-### ✅ STATUS: ZROZUMIANY (Sesja 8 — 2026-03-23)
-
-Jakub opanował pełny przepływ OAuth2 + JWT + cookies. Step-by-step tracing wszystkich 8 kroków od kliknięcia do dashboardu.
-Zaproponował pytanie o sprzeczności (CSRF disable vs SameSite cookie) — odkrył problem w komentarzu kodu!
-Quiz: 5/5 ✅
+1. **`fetch()`** = HTTP client in browser (like `RestTemplate` in Java)
+2. **JSON** = universal format — frontend and backend both understand
+3. **API contract** = backend decides fields (e.g., `"accessToken"`), frontend must adapt
+4. **`import.meta.env.VITE_API_URL`** = don't hardcode URL, read from `.env`
+5. **401 Unauthorized** = `throw Error()` so code doesn't continue
+6. **304 Not Modified** = browser has fresh copy, save transfer
 
 ---
 
-### Przepływ OAuth2 — 8 kroków
+## Phase 8 — OAuth2 and JWT — Complete Login Flow
+
+### ✅ STATUS: UNDERSTOOD (Session 8 — 2026-03-23)
+
+Jakub mastered complete OAuth2 + JWT + cookies flow. Step-by-step tracing all 8 steps from click to dashboard.
+Suggested question about contradiction (CSRF disable vs SameSite cookie) — found problem in code comments!
+5/5 Quiz ✅
+
+---
+
+### OAuth2 Flow — 8 Steps
 
 ```
 1️⃣  LoginPage.tsx — window.location.href = /oauth2/authorization/google
-    ↓ Przeglądarka PRZEŁADOWUJE (nie fetch!)
-2️⃣  Backend — Spring Security redirect do Google
+    ↓ Browser RELOADS (not fetch!)
+2️⃣  Backend — Spring Security redirects to Google
     ↓
-3️⃣  Google Login — użytkownik się loguje w Google
+3️⃣  Google Login — user logs in at Google
     ↓
-4️⃣  Google Callback — Google odsyła: /auth/callback?code=...
+4️⃣  Google Callback — Google redirects: /auth/callback?code=...
     ↓
-5️⃣  Backend generuje JWT — OAuth2AuthenticationSuccessHandler
-    • Pobiera dane usera od Google
-    • Generuje access token (JWT, 15 min)
-    • Generuje refresh token (httpOnly cookie, 7 dni)
-    ↓ Odsyła: /auth/callback?token=<JWT>
-6️⃣  AuthCallbackPage.tsx — wyciąga token z URL
+5️⃣  Backend generates JWT — OAuth2AuthenticationSuccessHandler
+    • Gets user data from Google
+    • Generates access token (JWT, 15 min)
+    • Generates refresh token (httpOnly cookie, 7 days)
+    ↓ Redirects: /auth/callback?token=<JWT>
+6️⃣  AuthCallbackPage.tsx — extracts token from URL
     • setToken(token) → localStorage.setItem('easyapply_token', token)
     • navigate('/dashboard')
     ↓
-7️⃣  AuthProvider useEffect — sprawdzenie sesji na starcie
-    • const token = getToken() // czyta z localStorage
-    • fetchCurrentUser() → GET /api/auth/me (z tokenem w headerze)
+7️⃣  AuthProvider useEffect — check session on startup
+    • const token = getToken() // reads from localStorage
+    • fetchCurrentUser() → GET /api/auth/me (with token in header)
     • setUser(userData) → isAuthenticated = true
     ↓
-8️⃣  ProtectedRoute — sprawdzenie dostępu
-    • if (isLoading) return null // czekaj
+8️⃣  ProtectedRoute — check access
+    • if (isLoading) return null // wait
     • if (!isAuthenticated) redirect /login
-    • else wpuść na /dashboard ✅
+    • else allow to /dashboard ✅
 ```
 
 ---
 
-### Dwa tokeny — dlaczego?
+### Two Tokens — Why?
 
-| Co | Gdzie | Żywotność | Po co |
+| What | Where | Lifespan | Why |
 |---|---|---|---|
-| **Access Token** (JWT) | localStorage | 15 min | Wysyłasz w każdym API call w headerze `Authorization: Bearer` |
-| **Refresh Token** | httpOnly cookie | 7 dni | Gdy access token wygasa → wysyłasz do `/api/auth/refresh` → dostajesz nowy access token |
+| **Access Token** (JWT) | localStorage | 15 min | Send in every API call in `Authorization: Bearer` header |
+| **Refresh Token** | httpOnly cookie | 7 days | When access token expires → send to `/api/auth/refresh` → get new access token |
 
-**Dlaczego dwa?**
-- **Access Token krótki** = jeśli ktoś go ukradnie, niebezpieczeństwo jest krótkie
-- **Refresh Token w httpOnly** = bezpieczniejszy (JS nie może go czytać), ale dłuższe żywotność
+**Why two?**
+- **Access Token short** = if stolen, danger is short-lived
+- **Refresh Token in httpOnly** = safer (JS can't read it), but longer lifespan
 
-**Analogia do Javy:**
-- Access Token ≈ krótkotrwały session ID w Springu
-- Refresh Token ≈ persistent cookie w Springu
+**Java Analogy:**
+- Access Token ≈ short-lived session ID in Spring
+- Refresh Token ≈ persistent cookie in Spring
 
 ---
 
 ### localStorage vs Cookie
 
-| Aspekt | Cookie | localStorage |
+| Aspect | Cookie | localStorage |
 |---|---|---|
-| **Gdzie się przechowuje** | Przeglądarka (pamięć) | Przeglądarka (pamięć) |
-| **Czy wysyła się automatycznie** | ✅ TAK (każde żądanie) | ❌ NIE (manual `getToken()`) |
-| **JavaScript może czytać** | ⚠️ Tylko jeśli nie httpOnly | ✅ TAK (getItem) |
-| **Security** | httpOnly = niedostępne dla JS | Podatne na XSS (czytalne przez JS) |
-| **Użycie w EasyApply** | refresh_token (httpOnly ⚠️) | access_token (localStorage) |
+| **Where stored** | Browser (memory) | Browser (memory) |
+| **Sends automatically** | ✅ YES (every request) | ❌ NO (manual `getToken()`) |
+| **JavaScript can read** | ⚠️ Only if not httpOnly | ✅ YES (getItem) |
+| **Security** | httpOnly = unreachable by JS | Vulnerable to XSS (readable by JS) |
+| **EasyApply Usage** | refresh_token (httpOnly ⚠️) | access_token (localStorage) |
 
-**Cookie = plik przechowywany w przeglądarce, wysyłany automatycznie**
-Przeglądarka **sama** wysyła cookie przy każdym żądaniu (inaczej niż `getToken()` którym czytasz localStorage ręcznie).
+**Cookie = file stored in browser, sent automatically**
+Browser **itself** sends cookie with every request (unlike `getToken()` which you call manually).
 
 ---
 
-### Jak token leci w żądaniach API
+### How Token Travels in API Requests
 
-**Każde żądanie zawiera token w headerze** (api.ts linie 25-35):
+**Every request contains token in header** (api.ts lines 25-35):
 
 ```typescript
 const getHeaders = () => ({
-  'Authorization': `Bearer ${token}`,  // ← token z localStorage
+  'Authorization': `Bearer ${token}`,  // ← token from localStorage
   'Content-Type': 'application/json'
 })
 
-// Każda funkcja API używa getHeaders():
+// Every API function uses getHeaders():
 const response = await apiFetch(`${API_URL}/applications`, {
-  headers: getHeaders()  // ← token już tam jest!
+  headers: getHeaders()  // ← token already there!
 })
 ```
 
-Backend sprawdza:
+Backend checks:
 ```
 Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
 ↓
-Backend dekoduje JWT
+Backend decodes JWT
 ↓
-"To naprawdę Jakub (ID: 123)! ✅"
+"Really Jakub (ID: 123)! ✅"
 ```
 
 ---
 
-### Co się dzieje po 20 minutach (token wygasa)
+### What Happens After 20 Minutes (Token Expires)
 
-1. Access Token wygasł
-2. Frontend wysyła żądanie: `GET /api/applications`
-3. Backend zwraca: **HTTP 401 Unauthorized**
-4. `apiFetch()` łapie 401 (api.ts linie 41-49):
+1. Access Token expired
+2. Frontend sends request: `GET /api/applications`
+3. Backend returns: **HTTP 401 Unauthorized**
+4. `apiFetch()` catches 401 (api.ts lines 41-49):
    ```typescript
    if (response.status === 401) {
-     clearToken()              // usuń token
-     window.location.href = '/login'  // redirect na login
+     clearToken()              // remove token
+     window.location.href = '/login'  // redirect to login
      throw new Error('Unauthorized')
    }
    ```
-5. Frontend: redirect na `/login` ✅
+5. Frontend: redirect to `/login` ✅
 
 ---
 
-### CSRF i SameSite — kwestia Jakuba 🎯
+### CSRF and SameSite — Jakub's Question 🎯
 
-**Pytanie Jakuba:** "Naprawialiśmy SameSite na ciasteczku, ale w Spring Security CSRF jest wyłączony? WTF?"
+**Jakub's Question:** "We fixed SameSite on cookie, but Spring Security CSRF is disabled? WTF?"
 
-**Odpowiedź:** Dwie RÓŻNE ochrony, nie sprzeczne!
+**Answer:** Two DIFFERENT protections, not contradictory!
 
-#### CSRF token (synchronizer pattern) — wyłączony ❌
+#### CSRF Token (Synchronizer Pattern) — Disabled ❌
 
-To **tradycyjne** zabezpieczenie dla aplikacji **server-rendered**:
+This is **traditional** protection for **server-rendered** apps:
 ```html
-<!-- Tradycyjna aplikacja (JSP, Thymeleaf) -->
+<!-- Traditional app (JSP, Thymeleaf) -->
 <form method="POST">
   <input type="hidden" name="_csrf" value="abc123xyz..."/>  ← CSRF token
 </form>
 ```
 
-EasyApply to **SPA (React)**, wysyła **JSON**, nie formularze HTML:
+EasyApply is **SPA (React)**, sends **JSON**, not HTML forms:
 ```typescript
-// React — JSON, nie formularz
+// React — JSON, not form
 await fetch('/api/applications', {
   method: 'POST',
   body: JSON.stringify({ company: 'Google' })
 })
 ```
 
-Dlatego **CSRF token wyłączony** — bez sensu w SPA.
+Therefore **CSRF token disabled** — makes no sense in SPA.
 
-#### SameSite na ciasteczku — włączony ✅
+#### SameSite on Cookie — Enabled ✅
 
-To **nowoczesna** ochrona dla **API + cookies**:
+This is **modern** protection for **API + cookies**:
 ```java
-refreshCookie.setSameSite("Strict");  // ← Wysyłaj TYLKO z naszej domeny
+refreshCookie.setSameSite("Strict");  // ← Send ONLY from our domain
 ```
 
-Pracuje **niezależnie** od CSRF tokena. Chroni refresh_token cookie.
+Works **independently** from CSRF token. Protects refresh_token cookie.
 
-#### Co to robi SameSite=Strict?
+#### What SameSite=Strict Does?
 
 ```
-Bez SameSite:
-  evil.com wysyła żądanie do easyapply.com
-  Przeglądarka: "Mam refresh_token, wysyłam!"
-  Backend: "OK, nowy access token" 💥 HAKER DOSTAJE DOSTĘP
+Without SameSite:
+  evil.com sends request to easyapply.com
+  Browser: "I have refresh_token, sending!"
+  Backend: "OK, new access token" 💥 HACKER GETS ACCESS
 
-Z SameSite=Strict:
-  evil.com wysyła żądanie do easyapply.com
-  Przeglądarka: "To z innej domeny, nie wysyłam ciasteczka!"
-  Backend: "Brak ciasteczka, nie znam ciebie" 🚫
+With SameSite=Strict:
+  evil.com sends request to easyapply.com
+  Browser: "This is from different domain, won't send cookie!"
+  Backend: "No cookie, I don't know you" 🚫
 ```
 
-**Podsumowanie:**
-- CSRF disable = nie potrzebujemy synchronizer token pattern (SPA nie wysyła formularzy)
-- SameSite = osobna warstwa ochrony (zapobiega wysłaniu ciasteczka z obcej domeny)
-- Oba razem = bezpieczne ✅
+**Summary:**
+- CSRF disable = don't need synchronizer token pattern (SPA doesn't send forms)
+- SameSite = separate protection layer (prevents cookie send from foreign domain)
+- Both together = secure ✅
 
 ---
 
-### Problem w komentarzu kodu
+### Code Comment Problem
 
-Znaleziony przez Jakuba! 🎯
+Found by Jakub! 🎯
 
-**Stary komentarz (mylący):**
+**Old misleading comment:**
 ```java
-// CSRF wyłączone — używamy JWT (bezstanowe), nie sesji/cookies z formularzy
+// CSRF disabled — using JWT (stateless), not sessions/cookies from forms
 .csrf(AbstractHttpConfigurer::disable)
 ```
 
-"nie sesji/cookies" — ale **JEST refresh_token cookie!**
+"not sessions/cookies" — but **there IS refresh_token cookie!**
 
-**Powinien być:**
+**Should be:**
 ```java
-// CSRF token (synchronizer pattern) wyłączony — nie potrzebny w SPA
-// ALE: Refresh token w httpOnly cookie MUSI mieć SameSite=Strict
+// CSRF token (synchronizer pattern) disabled — not needed in SPA
+// BUT: Refresh token in httpOnly cookie MUST have SameSite=Strict
 .csrf(AbstractHttpConfigurer::disable)
 ```
 
 ---
 
-### Kluczowe pliki
+### Key Files
 
-- `src/pages/LoginPage.tsx` (linie 15-18) — `window.location.href` redirect do Google
-- `src/pages/AuthCallbackPage.tsx` (linie 17-27) — odbiór tokenu z URL
-- `src/auth/AuthProvider.tsx` (linie 37-53) — sprawdzenie sesji na starcie (`useEffect`)
-- `src/services/api.ts` (linie 16-35) — `getToken()`, `setToken()`, `getHeaders()`
-- (backend) `OAuth2AuthenticationSuccessHandler.java` (linie 76-87) — ustawienie refresh_token cookie
-
----
-
-### Co Jakub powinien zapamiętać
-
-1. **`window.location.href` = przeładowanie strony** (nie `fetch()`)
-2. **Dwa tokeny:** access (localStorage, 15 min) + refresh (httpOnly cookie, 7 dni)
-3. **localStorage = ręczne zarządzanie** (`getToken()`, `setToken()`)
-4. **Cookie = automatyczne wysyłanie** (przeglądarka wysyła sama)
-5. **Token w każdym żądaniu:** `Authorization: Bearer {token}` w headerze
-6. **401 Unauthorized = token wygasł** → redirect `/login`
-7. **CSRF token wyłączony** = nie potrzebny w SPA
-8. **SameSite=Strict** = ciasteczko wysyłane TYLKO z naszej domeny (ochrona przed CSRF)
-9. **CSRF disable vs SameSite** = dwie różne ochrony, pracują niezależnie
+- `src/pages/LoginPage.tsx` (lines 15-18) — `window.location.href` redirect to Google
+- `src/pages/AuthCallbackPage.tsx` (lines 17-27) — receive token from URL
+- `src/auth/AuthProvider.tsx` (lines 37-53) — check session on startup (`useEffect`)
+- `src/services/api.ts` (lines 16-35) — `getToken()`, `setToken()`, `getHeaders()`
+- (backend) `OAuth2AuthenticationSuccessHandler.java` (lines 76-87) — set refresh_token cookie
 
 ---
 
-### Quiz — wyniki
+### What Jakub Should Remember
 
-| Pytanie | Odpowiedź Jakuba | Ocena |
+1. **`window.location.href` = page reload** (not `fetch()`)
+2. **Two tokens:** access (localStorage, 15 min) + refresh (httpOnly cookie, 7 days)
+3. **localStorage = manual management** (`getToken()`, `setToken()`)
+4. **Cookie = automatic sending** (browser sends itself)
+5. **Token in every request:** `Authorization: Bearer {token}` in header
+6. **401 Unauthorized = token expired** → redirect `/login`
+7. **CSRF token disabled** = not needed in SPA
+8. **SameSite=Strict** = cookie sent ONLY from our domain (CSRF protection)
+9. **CSRF disable vs SameSite** = two different protections, work independently
+
+---
+
+### Quiz — Results
+
+| Question | Jakub's Answer | Grade |
 |---------|---|---|
-| Co robi `window.location.href`? | A (fetch) | ❌ Poprawka: B (przeładowanie) |
-| Gdzie token się zapisuje? | localStorage | ✅ |
-| Po co token w headerze Authorization? | Backend sprawdza token | ✅ |
-| Co się różni: jest token vs brak? | Rozumie pobieranie danych, ale nie isLoading | ⚠️ Wyjaśniono: isLoading = "czekaj na backend" |
-| Co po 20 minutach (token wygasa)? | B (401 → redirect /login) | ✅ |
-| CSRF disable vs SameSite — sprzeczność? | Znaleziony problem w komentarzu kodu! | ✅ Edukacyjny moment |
+| What does `window.location.href` do? | A (fetch) | ❌ Correction: B (page reload) |
+| Where is token saved? | localStorage | ✅ |
+| Why token in Authorization header? | Backend verifies token | ✅ |
+| Token vs no token difference? | Understands fetching, but not isLoading | ⚠️ Explained: isLoading = "wait for backend" |
+| What after 20 minutes (expired)? | B (401 → redirect /login) | ✅ |
+| CSRF disable vs SameSite contradiction? | Found problem in code comment! | ✅ Educational moment |
 
-**Podsumowanie:** Quiz 5/5 ✅ — pełne zrozumienie OAuth2 i JWT
+**Summary:** 5/5 Quiz ✅ — complete OAuth2 and JWT understanding
 
 ---
 
-## Etap 9 — TypeScript w React
+## Phase 9 — TypeScript in React
 
-### ✅ STATUS: ZROZUMIANY (Sesja 9 — 2026-03-24)
+### ✅ STATUS: UNDERSTOOD (Session 9 — 2026-03-24)
 
-CR-2 naprawiony w poprzedniej sesji. CR-8 naprawiony w tej sesji. Quiz: 2/5 za pierwszym razem, pełne zrozumienie po wyjaśnieniach.
+CR-2 fixed in previous session. CR-8 fixed in this session. 2/5 quiz initially, full understanding after explanations.
 
 ---
 
 ### TypeScript vs JavaScript
 
-TypeScript to JavaScript z typami. Przeglądarka **nie rozumie TypeScript** — Vite kompiluje TS → JS przed wysłaniem do przeglądarki.
+TypeScript is JavaScript with types. Browser **doesn't understand TypeScript** — Vite compiles TS → JS before sending to browser.
 
 | | TypeScript | JavaScript |
 |---|---|---|
-| Typowanie | statyczne (błędy przy kompilacji) | dynamiczne (błędy w runtime) |
-| Analogia Java | Java | Groovy |
-| Kiedy istnieje | w edytorze i przy buildzie | w przeglądarce |
+| Typing | static (errors at compile) | dynamic (errors at runtime) |
+| Java Analogy | Java | Groovy |
+| When It Exists | in editor and build | in browser |
 
-**Kluczowa pułapka:** TypeScript NIE chroni przed danymi z zewnętrznego API w runtime. Jeśli backend zwróci nieoczekiwany status — TypeScript już nie istnieje, błąd pojawi się dopiero w przeglądarce.
+**Key Pitfall:** TypeScript does NOT protect against external API data at runtime. If backend returns unexpected status — TypeScript already gone, error only appears in browser.
 
 ---
 
-### `interface` — tylko opis, znika po kompilacji
+### `interface` — Only Description, Disappears After Compilation
 
 ```typescript
 // domain.ts:31 — interface Application
@@ -1240,59 +1240,59 @@ export interface Application {
 }
 ```
 
-`interface` to **tylko opis kształtu danych** — nie ma konstruktora, metod, logiki. Po kompilacji **znika** — nie trafia do przeglądarki.
+`interface` is **only data shape description** — no constructor, methods, logic. After compilation **disappears** — doesn't go to browser.
 
-Analogia Java: `record` / czyste DTO — tylko dane, zero logiki.
+Java Analogy: `record` / pure DTO — only data, zero logic.
 
-**Dlaczego nie klasy?** Frontend nie tworzy obiektów — odbiera JSON z backendu i TypeScript sprawdza czy JSON ma właściwy kształt. Klasy są zbędne.
+**Why not classes?** Frontend doesn't create objects — receives JSON from backend and TypeScript checks if JSON has right shape. Classes unnecessary.
 
-**Zasada:** `interface` / `type` = znika. Obiekty / funkcje = trafiają do JS.
+**Principle:** `interface` / `type` = disappears. Objects / functions = go to JS.
 
 ---
 
-### Union types — zamiast enum
+### Union Types — Instead of Enum
 
 ```typescript
 // domain.ts:5
-export type ApplicationStatus = 'WYSLANE' | 'W_PROCESIE' | 'OFERTA' | 'ODMOWA'
+export type ApplicationStatus = 'SENT' | 'IN_PROGRESS' | 'OFFER' | 'REJECTED'
 ```
 
-`|` czyta się jako "albo". Analogia: `enum` w Javie.
+`|` reads as "or". Analogy: `enum` in Java.
 
-**Dlaczego string union zamiast `enum`?** JSON z backendu zwraca stringi (`"WYSLANE"`), TS porównuje stringi z union bez żadnej konwersji.
+**Why string union instead of `enum`?** JSON from backend returns strings (`"SENT"`), TS compares strings with union without conversion.
 
 ---
 
-### `| null` i `?` — nullability
+### `| null` and `?` — Nullability
 
 ```typescript
-// domain.ts:36 — pole MUSI być, ale może być null
+// domain.ts:36 — field MUST be, but can be null
 currentStage: string | null
 
-// domain.ts:85 — pole opcjonalne (może w ogóle nie istnieć w obiekcie)
+// domain.ts:85 — field optional (may not exist in object at all)
 salaryMin?: number | null
 ```
 
-| Zapis | Znaczenie | Analogia Java |
+| Notation | Meaning | Java Analogy |
 |---|---|---|
-| `string \| null` | pole musi być w obiekcie, wartość może być null | `@Nullable` pole |
-| `?` | pole może w ogóle nie istnieć w obiekcie | pole pominięte w `@RequestBody` |
+| `string | null` | field must be in object, value can be null | `@Nullable` field |
+| `?` | field may not exist in object | field omitted in `@RequestBody` |
 
 ```typescript
-// Dla "salaryMin: number | null":
+// For "salaryMin: number | null":
 { salaryMin: 5000 }  // ✅
 { salaryMin: null }   // ✅
-{}                    // ❌ brakuje pola
+{}                    // ❌ field missing
 
-// Dla "salaryMin?: number | null":
+// For "salaryMin?: number | null":
 { salaryMin: 5000 }  // ✅
 { salaryMin: null }   // ✅
-{}                    // ✅ pole opcjonalne
+{}                    // ✅ optional field
 ```
 
 ---
 
-### Strict mode — tsconfig.json
+### Strict Mode — tsconfig.json
 
 ```json
 "strict": true,
@@ -1301,130 +1301,130 @@ salaryMin?: number | null
 "noFallthroughCasesInSwitch": true
 ```
 
-Analogia: `-Xlint:all` + Checkstyle w Maven. Flagi działają **tylko przy kompilacji** — nie wpływają na działanie aplikacji w przeglądarce.
+Analogy: `-Xlint:all` + Checkstyle in Maven. Flags work **only at compile** — don't affect browser behavior.
 
-`noUnusedLocals` — zmienna zadeklarowana ale nieużyta = błąd kompilacji. Chroni przed martwym kodem.
+`noUnusedLocals` — variable declared but unused = compile error. Protects against dead code.
 
 ---
 
-### Spread operator — `...STATUS_CONFIG`
+### Spread Operator — `...STATUS_CONFIG`
 
 ```typescript
-// applicationStatus.ts — jedno źródło prawdy
+// applicationStatus.ts — single source of truth
 export const STATUS_CONFIG = {
-  WYSLANE:    { label: 'Wysłane',   color: '#3498db', bg: '#ebf5fb' },
-  W_PROCESIE: { label: 'W procesie', color: '#f39c12', bg: '#fef9e7' },
-  OFERTA:     { label: 'Oferta otrzymana', color: '#27ae60', bg: '#eafaf1' },
-  ODMOWA:     { label: 'Odmowa',    color: '#95a5a6', bg: '#f5f5f5' },
+  SENT:    { label: 'Sent',   color: '#3498db', bg: '#ebf5fb' },
+  IN_PROGRESS: { label: 'In Progress', color: '#f39c12', bg: '#fef9e7' },
+  OFFER:     { label: 'Offer Received', color: '#27ae60', bg: '#eafaf1' },
+  REJECTED:     { label: 'Rejected',    color: '#95a5a6', bg: '#f5f5f5' },
 }
 
-// ApplicationTable.tsx — rozszerza o legacy bez kopiowania
+// ApplicationTable.tsx — extends with legacy without copying
 const statusConfig = {
-  ...STATUS_CONFIG,        // ← wklej wszystkie 4 wpisy
-  'ROZMOWA': { ... },     // ← dodaj tylko legacy
+  ...STATUS_CONFIG,        // ← paste all 4 entries
+  'INTERVIEW': { ... },    // ← add only legacy
 }
 ```
 
-`...obj` = "wklej wszystkie klucze i wartości z tego obiektu tutaj". Zmiana w jednym miejscu → propaguje się wszędzie.
+`...obj` = "paste all keys and values from this object here". Change in one place → propagates everywhere.
 
 ---
 
-### Legacy statusy — kiedy usuwać
+### Legacy Statuses — When to Remove
 
-Stare wartości (`ROZMOWA`, `ZADANIE`, `ODRZUCONE`) to defensywne fallbacki dla starych rekordów w bazie.
+Old values (`INTERVIEW`, `TASK`, `REJECTED_LEGACY`) are defensive fallbacks for old DB records.
 
-**Kiedy można usunąć:** po weryfikacji w bazie:
+**When safe to remove:** after DB verification:
 ```sql
-SELECT COUNT(*) FROM applications WHERE status IN ('ROZMOWA', 'ZADANIE', 'ODRZUCONE');
+SELECT COUNT(*) FROM applications WHERE status IN ('INTERVIEW', 'TASK', 'REJECTED_LEGACY');
 ```
-Jeśli `0` → można usunąć. Inaczej → najpierw migracja Flyway, potem usunięcie fallbacków.
+If `0` → safe to remove. Otherwise → first Flyway migration, then remove fallbacks.
 
 ---
 
-### CR-8 — co zmieniliśmy
+### CR-8 — What We Changed
 
-Wyodrębniliśmy duplikaty do `src/constants/applicationStatus.ts`:
+Extracted duplicates to `src/constants/applicationStatus.ts`:
 
-| Przed | Po |
+| Before | After |
 |---|---|
-| `STATUS_COLORS` w `ApplicationDetails.tsx` | usunięte |
-| `STATUS_LABELS` w `ApplicationDetails.tsx` (z literówką `c;a`) | usunięte + naprawione |
-| `statusConfig` z 4 kolorami w `ApplicationTable.tsx` | zastąpione `...STATUS_CONFIG` |
-| Kolory zduplikowane w 2 plikach | jedno źródło prawdy w `constants/` |
+| `STATUS_COLORS` in `ApplicationDetails.tsx` | removed |
+| `STATUS_LABELS` in `ApplicationDetails.tsx` (with typo `c;a`) | removed + fixed |
+| `statusConfig` with 4 colors in `ApplicationTable.tsx` | replaced with `...STATUS_CONFIG` |
+| Colors duplicated in 2 files | single source of truth in `constants/` |
 
-### Kluczowe pliki
+### Key Files
 
-- `src/types/domain.ts` — wszystkie typy projektu (interfaces, union types)
-- `src/constants/applicationStatus.ts` — wyodrębnione stałe statusów (CR-8)
+- `src/types/domain.ts` — all project types (interfaces, union types)
+- `src/constants/applicationStatus.ts` — extracted status constants (CR-8)
 - `easyapply-frontend/tsconfig.json` — strict mode
 
 ---
 
-### Co Jakub powinien zapamiętać
+### What Jakub Should Remember
 
-1. **`interface` znika po kompilacji** — to tylko instrukcja dla kompilatora, nie trafia do przeglądarki
-2. **Union types** = `enum` w Javie, ale jako stringi (bo JSON zwraca stringi)
-3. **`| null`** = pole musi być, może być null. **`?`** = pole może w ogóle nie istnieć
-4. **TypeScript NIE chroni w runtime** — dane z API mogą łamać typy, błąd pojawi się dopiero w przeglądarce
-5. **Strict mode** = przy kompilacji, nie wpływa na runtime
-6. **`...spread`** = wklej wszystkie klucze obiektu — zasada DRY
-
----
-
-## Etap 10 — Testowanie frontendu
-
-### ✅ STATUS: ZROZUMIANY (Sesja 10 — 2026-03-26)
-
-Piramida testów omówiona. Przegląd wszystkich 6 plików testów projektu. Quiz skrócony z powodu czasu. CR-11 i CR-12 naprawione w tej sesji.
+1. **`interface` disappears after compilation** — only compiler instruction, doesn't go to browser
+2. **Union types** = `enum` in Java, but as strings (JSON returns strings)
+3. **`| null`** = field must be, can be null. **`?`** = field may not exist
+4. **TypeScript does NOT protect at runtime** — external API data can break types, error only in browser
+5. **Strict mode** = at compile, doesn't affect runtime
+6. **`...spread`** = paste all object keys — DRY principle
 
 ---
 
-### Piramida testów
+## Phase 10 — Frontend Testing
+
+### ✅ STATUS: UNDERSTOOD (Session 10 — 2026-03-26)
+
+Test pyramid discussed. Overview of all 6 project test files. Quiz shortened due to time. CR-11 and CR-12 fixed in this session.
+
+---
+
+### Test Pyramid
 
 ```
       /\
      /  \
-    / E2E \          ← Cypress — przeglądarka, klikasz jak użytkownik
+    / E2E \          ← Cypress — browser, click like user
    /--------\
-  / Integracja\      ← Vitest + Testing Library — renderujesz komponent
+  / Integration\      ← Vitest + Testing Library — render component
  /------------\
-/  Jednostkowe \     ← Vitest — testujesz funkcję/hook
+/  Unit Tests  \     ← Vitest — test function/hook
 /_______________\
 ```
 
-| Poziom | Frontend (projekt) | Java | Co testuje |
+| Level | Frontend (Project) | Java | What Tests |
 |---|---|---|---|
-| Jednostkowe | Vitest | JUnit 5 | Funkcja, hook — bez UI |
-| Integracja | Vitest + Testing Library | JUnit + Mockito | Komponent wyrenderowany w DOM |
-| E2E | Cypress | Selenium | Cała aplikacja w prawdziwej przeglądarce |
+| Unit | Vitest | JUnit 5 | Function, hook — no UI |
+| Integration | Vitest + Testing Library | JUnit + Mockito | Component rendered in DOM |
+| E2E | Cypress | Selenium | Entire app in real browser |
 
 ---
 
-### Narzędzia
+### Tools
 
-| Frontend | Java | Co robi |
+| Frontend | Java | What It Does |
 |---|---|---|
-| **Vitest** | JUnit 5 | Runner testów — `describe`, `it`, `expect` |
-| **Testing Library** | Mockito + AssertJ | Renderuje komponent, daje API do szukania w DOM |
-| **Cypress** | Selenium | Odpalana prawdziwa przeglądarka |
-| **`vi.mock()`** | `@MockBean` | Podmienia moduł na fake |
+| **Vitest** | JUnit 5 | Test runner — `describe`, `it`, `expect` |
+| **Testing Library** | Mockito + AssertJ | Renders component, gives DOM search API |
+| **Cypress** | Selenium | Runs real browser |
+| **`vi.mock()`** | `@MockBean` | Replaces module with fake |
 
 ---
 
-### Kluczowe funkcje Testing Library
+### Key Testing Library Functions
 
-**`render(<Komponent />)`** — wstrzykuje JSX do wirtualnego DOM (jsdom). Jak `@SpringBootTest` który odpala kontekst, tylko że odpala drzewo komponentów.
+**`render(<Component />)`** — injects JSX into virtual DOM (jsdom). Like `@SpringBootTest` that starts context, only for component tree.
 
-**`screen`** — obiekt do szukania elementów w DOM:
+**`screen`** — object for finding DOM elements:
 ```tsx
-screen.getByTestId('authenticated')  // znajdź element z data-testid="authenticated"
-screen.getByText('loading')          // znajdź element z tekstem
-screen.getByRole('button')           // znajdź button (dostępnościowo)
+screen.getByTestId('authenticated')  // find element with data-testid="authenticated"
+screen.getByText('loading')          // find element with text
+screen.getByRole('button')           // find button (accessibility)
 ```
 
-**`waitFor()`** — czeka aż asercja przejdzie. Potrzebne bo React jest asynchroniczny — po `render()` komponent jeszcze ładuje dane. Analogia: `Awaitility` w Javie.
+**`waitFor()`** — waits until assertion passes. Needed because React is async — after `render()` component still loading data. Analogy: `Awaitility` in Java.
 
-**`renderHook()`** — testuje hook bez pisania komponentu pomocniczego:
+**`renderHook()`** — tests hook without helper component:
 ```tsx
 const { result } = renderHook(() => useApplications(), { wrapper: createWrapper() })
 expect(result.current.isLoading).toBe(true)
@@ -1433,9 +1433,9 @@ await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
 ---
 
-### test-utils.tsx — dlaczego wrapper jest potrzebny
+### test-utils.tsx — Why Wrapper Is Needed
 
-Komponent używający `useQuery` potrzebuje `QueryClientProvider` w drzewie. W testach tego nie ma — dlatego `QueryWrapper` owija testowany komponent:
+Component using `useQuery` needs `QueryClientProvider` in tree. Tests don't have it — so `QueryWrapper` wraps tested component:
 
 ```tsx
 export function QueryWrapper({ children }) {
@@ -1444,86 +1444,86 @@ export function QueryWrapper({ children }) {
 }
 ```
 
-**Dlaczego factory (`createWrapper()`) a nie jeden globalny wrapper?**
-Każdy test musi mieć świeży `QueryClient` — inaczej cache z jednego testu zatruwa kolejny. Analogia: `@BeforeEach` w JUnit który tworzy nową instancję serwisu.
+**Why factory (`createWrapper()`) and not one global wrapper?**
+Each test must have fresh `QueryClient` — otherwise cache from one test contaminates next. Analogy: `@BeforeEach` in JUnit creating new service instance.
 
-**`retry: false`** — domyślnie React Query powtarza nieudane zapytania 3 razy. W testach to katastrofa — `retry: false` = jeden strzał i koniec.
+**`retry: false`** — React Query retries failed queries 3 times by default. In tests that's disaster — `retry: false` = one shot and done.
 
 ---
 
-### Pliki testów projektu
+### Project Test Files
 
-| Plik | Poziom | Co testuje |
+| File | Level | What Tests |
 |---|---|---|
-| `api.test.ts` | Jednostkowy | `fetch`, URL-e, odpowiedzi HTTP — mockuje `global.fetch` |
+| `api.test.ts` | Unit | `fetch`, URLs, HTTP responses — mocks `global.fetch` |
 | `hooks/useApplications.test.tsx` | Hook | React Query cache, `enabled`, `isLoading`, `isError` |
-| `auth/AuthProvider.test.tsx` | Integracyjny | Context API, `useEffect` na starcie, `signOut` |
-| `auth/ProtectedRoute.test.tsx` | Integracyjny | Redirect gdy niezalogowany, `isLoading` |
-| `components/App.test.tsx` | Integracyjny | Routing, providerzy |
-| `components/BadgeWidget.test.tsx` | Integracyjny | Komponent z propsami |
+| `auth/AuthProvider.test.tsx` | Integration | Context API, `useEffect` on startup, `signOut` |
+| `auth/ProtectedRoute.test.tsx` | Integration | Redirect when logged out, `isLoading` |
+| `components/App.test.tsx` | Integration | Routing, providers |
+| `components/BadgeWidget.test.tsx` | Integration | Component with props |
 
 ---
 
-### vi.mock() — granica mocka
+### vi.mock() — Mock Boundary
 
-**Zasada:** mockujesz zależność, nie funkcję którą testujesz.
+**Principle:** mock dependency, not function being tested.
 
 ```typescript
-// ✅ DOBRE — testujesz fetchApplications(), mockujesz fetch (zależność)
+// ✅ GOOD — test fetchApplications(), mock fetch (dependency)
 global.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => ... })
 const result = await fetchApplications()
 expect(global.fetch).toHaveBeenCalledWith(`${API_URL}/applications`, ...)
 
-// ❌ ZŁE — mockujesz to co testujesz, test zawsze zielony
+// ❌ BAD — mock what you're testing, test always green
 vi.mock(api.fetchApplications).mockResolvedValue(mockData)
 ```
 
-Analogia Java: mockujesz `EntityManager` / `DataSource`, nie swój serwis.
+Java Analogy: mock `EntityManager` / `DataSource`, not your service.
 
 ---
 
-### CR-11 — memoizacja (zrobione w tej sesji)
+### CR-11 — Memoization (Done This Session)
 
-`useMemo` = `@Cacheable` w React. Liczy wynik tylko gdy zależności się zmieniły.
+`useMemo` = `@Cacheable` in React. Calculates result only when dependencies change.
 
 ```tsx
-// BEZ useMemo — liczy się przy każdym renderze
+// WITHOUT useMemo — calculates every render
 const filteredApplications = applications.filter(...)
 
-// Z useMemo — liczy się tylko gdy applications/searchQuery/statusFilter się zmienią
+// WITH useMemo — calculates only when applications/searchQuery/statusFilter change
 const filteredApplications = useMemo(
   () => applications.filter(...),
   [applications, searchQuery, statusFilter]
 )
 ```
 
-Naprawiono w `ApplicationTable.tsx`: `filteredApplications`, `sortedApplications`, `statusCounts`.
+Fixed in `ApplicationTable.tsx`: `filteredApplications`, `sortedApplications`, `statusCounts`.
 
 ---
 
-### CR-12 — rozbicie KanbanBoard (zrobione w tej sesji)
+### CR-12 — KanbanBoard Split (Done This Session)
 
-987 linii → 396 linii w `KanbanBoard.tsx` + 7 nowych plików:
+987 lines → 396 lines in `KanbanBoard.tsx` + 7 new files:
 
-| Plik | Co zawiera |
+| File | Contains |
 |---|---|
 | `types.ts` | `KanbanStatus`, `STATUSES`, `PREDEFINED_STAGES`, `REJECTION_REASONS`, `isMobile` |
-| `ApplicationCard.tsx` | Karta aplikacji (draggable, dropdown etapu) |
-| `DragOverlayCard.tsx` | Karta w overlay podczas przeciągania |
-| `StageModal.tsx` | Modal wyboru etapu rekrutacji |
-| `OnboardingOverlay.tsx` | Onboarding mobile (wyłączony, ale zachowany) |
-| `MoveModal.tsx` | Bottom sheet mobile — zmiana statusu |
-| `EndModal.tsx` | Modal zakończenia (oferta/odmowa) |
-| `KanbanColumn.tsx` | Kolumna Kanban z SortableContext |
+| `ApplicationCard.tsx` | Application card (draggable, stage dropdown) |
+| `DragOverlayCard.tsx` | Card in overlay during drag |
+| `StageModal.tsx` | Modal for choosing recruitment stage |
+| `OnboardingOverlay.tsx` | Mobile onboarding (disabled, but kept) |
+| `MoveModal.tsx` | Bottom sheet mobile — status change |
+| `EndModal.tsx` | Modal for ending (offer/rejection) |
+| `KanbanColumn.tsx` | Kanban column with SortableContext |
 
 ---
 
-### Co Jakub powinien zapamiętać
+### What Jakub Should Remember
 
-1. **Piramida testów:** jednostkowe → integracja → E2E (od najszybszych do najwolniejszych)
-2. **`render()` + `screen` + `waitFor()`** = renderuj → szukaj → poczekaj na async
-3. **`renderHook()`** = testuj hook bez komponentu pomocniczego
-4. **`vi.mock()`** = `@MockBean` — mockuj zależność, nie testowaną funkcję
-5. **Świeży `QueryClient` per test** = `@BeforeEach` w JUnit
-6. **`retry: false`** = testy szybkie i przewidywalne
-7. **`useMemo`** = `@Cacheable` — liczy tylko gdy zależności się zmieniły
+1. **Test Pyramid:** unit → integration → E2E (fastest to slowest)
+2. **`render()` + `screen` + `waitFor()`** = render → search → wait for async
+3. **`renderHook()`** = test hook without helper component
+4. **`vi.mock()`** = `@MockBean` — mock dependency, not tested function
+5. **Fresh `QueryClient` per test** = `@BeforeEach` in JUnit
+6. **`retry: false`** = tests fast and predictable
+7. **`useMemo`** = `@Cacheable` — calculates only when dependencies change

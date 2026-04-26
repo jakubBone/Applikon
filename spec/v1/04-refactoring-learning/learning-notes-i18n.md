@@ -1,27 +1,27 @@
-# Notatki z nauki i18n — EasyApply
+# Internationalization (i18n) Learning Notes — EasyApply
 
-Plik do wracania. Tłumaczy ideę internacjonalizacji od zera — co to jest, jak działa na backendzie (Spring Boot), jak działa na frontendzie (React + i18next), i jak obie warstwy współpracują.
+Reference file. Explains i18n idea from scratch — what it is, how it works on backend (Spring Boot), how on frontend (React + i18next), and how both layers cooperate.
 
 ---
 
-## Część 1 — Idea i18n (o co chodzi?)
+## Part 1 — i18n Idea (What's This About?)
 
-### Co to jest i18n?
+### What Is i18n?
 
-**i18n** to skrót od „internationalization" (18 liter między „i" a „n"). Chodzi o to, żeby aplikacja mogła wyświetlać teksty w różnych językach bez zmiany kodu — tylko na podstawie plików z tłumaczeniami.
+**i18n** is abbreviation for "internationalization" (18 letters between "i" and "n"). Goal: app displays text in different languages without code changes — only based on translation files.
 
-**Analogia z życia codziennego:**
-Wyobraź sobie automat biletowy. Ten sam automat, ten sam hardware, ta sama logika — ale ekran wyświetla po polsku lub po angielsku zależnie od tego, który język wybrałeś. Kod automatu się nie zmienia, zmienia się tylko plik z tekstami.
+**Everyday Analogy:**
+Imagine ticket machine. Same machine, same hardware, same logic — but screen shows Polish or English depending which language you pick. Machine code doesn't change, only text file changes.
 
-**Bez i18n (hardcoded):**
+**Without i18n (Hardcoded):**
 ```java
-throw new EntityNotFoundException("Aplikacja o ID 5 nie została znaleziona");
+throw new EntityNotFoundException("Application ID 5 not found");
 ```
 ```tsx
-<button>Dodaj aplikację</button>
+<button>Add application</button>
 ```
 
-**Z i18n (dynamiczne):**
+**With i18n (Dynamic):**
 ```java
 throw new EntityNotFoundException(
     messageSource.getMessage("error.application.notFound", new Object[]{5}, locale)
@@ -31,136 +31,136 @@ throw new EntityNotFoundException(
 <button>{t('app.addApplication')}</button>
 ```
 
-Teraz teksty mieszkają w plikach `.properties` (backend) i `.json` (frontend). Chcesz zmienić język → ładujesz inny plik. Chcesz poprawić literówkę → edytujesz plik, nie kod.
+Now text lives in `.properties` files (backend) and `.json` files (frontend). Change language → load different file. Fix typo → edit file, not code.
 
-### Dwie warstwy i18n w EasyApply
+### Two i18n Layers in EasyApply
 
 ```
-Przeglądarka użytkownika
+User's Browser
   │
   ├── Frontend (React)
-  │     Wyświetla UI po polsku lub angielsku
-  │     Pliki tłumaczeń: src/i18n/locales/pl/*.json + en/*.json
+  │     Displays UI in Polish or English
+  │     Translation files: src/i18n/locales/pl/*.json + en/*.json
   │
-  └── wysyła nagłówek "Accept-Language: pl" lub "Accept-Language: en"
+  └── sends header "Accept-Language: pl" or "Accept-Language: en"
         │
         ▼
       Backend (Spring Boot)
-        Zwraca komunikaty błędów po polsku lub angielsku
-        Pliki tłumaczeń: src/main/resources/i18n/messages*.properties
+        Returns error messages in Polish or English
+        Translation files: src/main/resources/i18n/messages*.properties
 ```
 
 ---
 
-## Część 2 — Backend i18n (Spring Boot)
+## Part 2 — Backend i18n (Spring Boot)
 
-### Kluczowy komponent: MessageSource
+### Key Component: MessageSource
 
-`MessageSource` to bean Springa, który czyta pliki `.properties` i zwraca tekst po odpowiednim języku. To centralny punkt całego i18n na backendzie.
+`MessageSource` is Spring bean that reads `.properties` files and returns text in correct language. Central point of backend i18n.
 
-**Jak go skonfigurowałeś:** `src/main/java/com/easyapply/config/I18nConfig.java`
+**How you configured it:** `src/main/java/com/easyapply/config/I18nConfig.java`
 
 ```java
 @Bean
 public MessageSource messageSource() {
     ResourceBundleMessageSource ms = new ResourceBundleMessageSource();
-    ms.setBasename("i18n/messages");        // szuka plików: messages.properties, messages_pl.properties itp.
+    ms.setBasename("i18n/messages");        // searches for files: messages.properties, messages_pl.properties etc.
     ms.setDefaultEncoding("UTF-8");
-    ms.setFallbackToSystemLocale(false);    // jeśli nie ma tłumaczenia → używa fallbacku, nie systemu
+    ms.setFallbackToSystemLocale(false);    // if no translation → uses fallback, not system
     return ms;
 }
 ```
 
-`setBasename("i18n/messages")` = "szukaj plików o nazwie `messages` w folderze `i18n/` na classpath". Spring automatycznie dodaje sufiks `_pl`, `_en` itp.
+`setBasename("i18n/messages")` = "look for files named `messages` in `i18n/` folder on classpath". Spring automatically adds suffix `_pl`, `_en` etc.
 
-### Pliki tłumaczeń (backend)
+### Translation Files (Backend)
 
-**Lokalizacja:** `src/main/resources/i18n/`
+**Location:** `src/main/resources/i18n/`
 
 ```
 i18n/
-  messages.properties       ← angielski (fallback — używany gdy brak innego języka)
-  messages_pl.properties    ← polski
+  messages.properties       ← English (fallback — used when no other language)
+  messages_pl.properties    ← Polish
 ```
 
-**Struktura:** klucz=wartość, parametry jako `{0}`, `{1}` itd.
+**Structure:** key=value, parameters as `{0}`, `{1}` etc.
 
 ```properties
-# messages.properties (angielski)
+# messages.properties (English)
 error.application.notFound=Application {0} not found
 error.user.notFound=User not found
 validation.company.required=Company name is required
 error.salary.changed=Salary changed: {0} {1} -> {2} {3}
 
-# messages_pl.properties (polski)
+# messages_pl.properties (Polish)
 error.application.notFound=Aplikacja o ID {0} nie została znaleziona
 error.user.notFound=Użytkownik nie znaleziony
 validation.company.required=Nazwa firmy nie może być pusta
 error.salary.changed=Stawka zmieniona: {0} {1} -> {2} {3}
 ```
 
-Parametry `{0}`, `{1}` to miejsca na wartości dynamiczne (np. ID, kwota). Przekazujesz je jako tablicę `Object[]`.
+Parameters `{0}`, `{1}` are slots for dynamic values (e.g., ID, amount). You pass them as `Object[]` array.
 
-### Jak Spring wybiera język: LocaleResolver
+### How Spring Picks Language: LocaleResolver
 
-`LocaleResolver` to bean który przy każdym HTTP request decyduje „jaki język?". Używasz `AcceptHeaderLocaleResolver` — patrzy na nagłówek `Accept-Language` w requescie.
+`LocaleResolver` is bean that on every HTTP request decides "what language?". You use `AcceptHeaderLocaleResolver` — watches `Accept-Language` header in request.
 
 ```java
 @Bean
 public LocaleResolver localeResolver() {
     AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
-    resolver.setDefaultLocale(Locale.ENGLISH);  // domyślnie angielski gdy brak nagłówka
+    resolver.setDefaultLocale(Locale.ENGLISH);  // default English when no header
     return resolver;
 }
 ```
 
-**Przepływ:**
+**Flow:**
 ```
-Frontend wysyła:  GET /api/applications  +  Accept-Language: pl
-                                                        ↓
-Spring wywołuje:  localeResolver.resolveLocale(request)
-                                                        ↓
-                  Zwraca:  Locale("pl")
-                                                        ↓
-Kod serwisu:      messageSource.getMessage("error.application.notFound",
-                      new Object[]{id}, LocaleContextHolder.getLocale())
-                                                        ↓
-                  Zwraca:  "Aplikacja o ID 5 nie została znaleziona"
+Frontend sends:  GET /api/applications  +  Accept-Language: pl
+                                                       ↓
+Spring calls:    localeResolver.resolveLocale(request)
+                                                       ↓
+                 Returns:  Locale("pl")
+                                                       ↓
+Service code:    messageSource.getMessage("error.application.notFound",
+                     new Object[]{id}, LocaleContextHolder.getLocale())
+                                                       ↓
+                 Returns:  "Aplikacja o ID 5 nie została znaleziona"
 ```
 
-### LocaleContextHolder — jak dostać bieżący język w kodzie
+### LocaleContextHolder — How to Get Current Language in Code
 
-`LocaleContextHolder.getLocale()` to statyczna metoda Springa, która zwraca aktualny `Locale` z kontekstu wątku. W normalnym flow HTTP zawsze zwróci to co `LocaleResolver` wyciągnął z nagłówka.
+`LocaleContextHolder.getLocale()` is static method that returns current `Locale` from thread context. In normal HTTP flow always returns what `LocaleResolver` extracted from header.
 
 ```java
-// W serwisie — nie przekazujesz locale jako parametr, po prostu pytasz kontekst:
+// In service — don't pass locale as parameter, just ask context:
 throw new EntityNotFoundException(
     messageSource.getMessage("error.application.notFound",
         new Object[]{id}, LocaleContextHolder.getLocale())
 );
 ```
 
-Analogia do Javy: jak `ThreadLocal` — każdy wątek (każdy request HTTP) ma swój kontekst.
+Java Analogy: like `ThreadLocal` — each HTTP thread has its own context.
 
-### Gdzie MessageSource jest używany w projekcie
+### Where MessageSource Is Used in Project
 
-**Serwisy** — wyjątki z komunikatami:
+**Services** — exceptions with messages:
 
 ```java
 // ApplicationService.java, NoteService.java, CVService.java, UserService.java
-// Konstruktor wstrzykuje MessageSource:
+// Constructor injects MessageSource:
 public ApplicationService(ApplicationRepository repo, MessageSource messageSource) {
     this.messageSource = messageSource;
 }
 
-// Użycie:
+// Usage:
 throw new EntityNotFoundException(
     messageSource.getMessage("error.application.notFound",
         new Object[]{id}, LocaleContextHolder.getLocale())
 );
 ```
 
-**GlobalExceptionHandler** — tytuły odpowiedzi błędów:
+**GlobalExceptionHandler** — error response titles:
 
 ```java
 // exception/GlobalExceptionHandler.java
@@ -168,7 +168,7 @@ problem.setTitle(messageSource.getMessage(
     "error.validation.title", null, LocaleContextHolder.getLocale()));
 ```
 
-**AuthController** — komunikaty o tokenach:
+**AuthController** — token messages:
 
 ```java
 // controller/AuthController.java
@@ -176,19 +176,19 @@ return Map.of("error", messageSource.getMessage(
     "error.token.missing", null, LocaleContextHolder.getLocale()));
 ```
 
-**NoteService — auto-nota o zmianie wynagrodzenia:**
+**NoteService — Auto-note About Salary Change:**
 
 ```java
-// Treść notatki jest i18n — użytkownik widzi ją po swoim języku:
+// Note content is i18n — user sees it in their language:
 String content = messageSource.getMessage(
     "error.salary.changed",
     new Object[]{oldSalary, oldCurrency, newSalary, newCurrency},
     LocaleContextHolder.getLocale());
 ```
 
-### Wiadomości walidacyjne — specjalny przypadek
+### Validation Messages — Special Case
 
-Bean Validation (`@NotBlank`, `@Min` itp.) normalnie używa własnego systemu komunikatów. Żeby podłączyć go do naszego `MessageSource`, potrzebny jest `LocalValidatorFactoryBean`:
+Bean Validation (`@NotBlank`, `@Min` etc.) normally uses its own message system. To hook it to our `MessageSource`, you need `LocalValidatorFactoryBean`:
 
 ```java
 // I18nConfig.java
@@ -200,19 +200,19 @@ public LocalValidatorFactoryBean validator(MessageSource messageSource) {
 }
 ```
 
-Dzięki temu w DTO możesz pisać:
+Thanks to this in DTO you can write:
 
 ```java
-// Klamry {} = "szukaj w MessageSource", bez klamr = dosłowny tekst
+// Braces {} = "look in MessageSource", without braces = literal text
 @NotBlank(message = "{validation.company.required}")
 private String company;
 
-// Vs hardcoded (ŹLE dla i18n):
-@NotBlank(message = "Nazwa firmy nie może być pusta")
+// vs hardcoded (WRONG for i18n):
+@NotBlank(message = "Company name cannot be empty")
 private String company;
 ```
 
-**Pliki z adnotacjami walidacyjnymi w projekcie:**
+**Files with validation annotations in project:**
 - `dto/ApplicationRequest.java`
 - `dto/NoteRequest.java`
 - `dto/StatusUpdateRequest.java`
@@ -223,17 +223,17 @@ private String company;
 
 ---
 
-## Część 3 — Frontend i18n (React + i18next)
+## Part 3 — Frontend i18n (React + i18next)
 
-### Biblioteka: i18next + react-i18next
+### Library: i18next + react-i18next
 
-**i18next** to popularna biblioteka do i18n w JavaScript. Działa samodzielnie (plain JS), ale do Reacta używasz nakładki **react-i18next**, która dodaje hooki (jak `useTranslation`).
+**i18next** is popular i18n library in JavaScript. Works standalone (plain JS), but for React you use **react-i18next** wrapper, which adds hooks (like `useTranslation`).
 
-Analogia do Javy: i18next = silnik (jak Hibernate), react-i18next = integracja ze Springiem (jak Spring Data JPA).
+Java Analogy: i18next = engine (like Hibernate), react-i18next = Spring integration (like Spring Data JPA).
 
-### Konfiguracja: `src/i18n/index.ts`
+### Configuration: `src/i18n/index.ts`
 
-To odpowiednik `I18nConfig.java` z backendu. Inicjalizujesz tu bibliotekę — podajesz zasoby, języki, domyślny namespace itp.
+Equivalent to `I18nConfig.java` from backend. Initialize library here — provide resources, languages, default namespace etc.
 
 ```ts
 import i18n from 'i18next'
@@ -241,38 +241,38 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
 i18n
-  .use(LanguageDetector)      // automatycznie wykrywa język (z localStorage lub przeglądarki)
-  .use(initReactI18next)      // integracja z React
+  .use(LanguageDetector)      // auto-detects language (from localStorage or browser)
+  .use(initReactI18next)      // React integration
   .init({
-    fallbackLng: 'en',        // gdy brak tłumaczenia → angielski
+    fallbackLng: 'en',        // fallback English when translation missing
     supportedLngs: ['pl', 'en'],
-    defaultNS: 'common',      // domyślny namespace (plik JSON)
+    defaultNS: 'common',      // default namespace (JSON file)
     ns: ['common', 'errors', 'badges', 'tour'],
     resources: {
       pl: { common: plCommon, errors: plErrors, badges: plBadges, tour: plTour },
       en: { common: enCommon, errors: enErrors, badges: enBadges, tour: enTour },
     },
     detection: {
-      order: ['localStorage', 'navigator'],  // najpierw localStorage, potem ustawienia przeglądarki
+      order: ['localStorage', 'navigator'],  // check localStorage first, then browser settings
       caches: ['localStorage'],
-      lookupLocalStorage: 'i18nextLng',      // klucz w localStorage
+      lookupLocalStorage: 'i18nextLng',      // localStorage key
     },
   })
 ```
 
-**Ważne:** `import i18n from './i18n'` jest w `main.tsx` — **przed** `ReactDOM.render()`. To zapewnia że tłumaczenia są gotowe zanim React zacznie renderować.
+**Important:** `import i18n from './i18n'` is in `main.tsx` — **before** `ReactDOM.render()`. This ensures translations are ready before React starts rendering.
 
-### Pliki tłumaczeń (frontend)
+### Translation Files (Frontend)
 
-**Lokalizacja:** `src/i18n/locales/`
+**Location:** `src/i18n/locales/`
 
 ```
 locales/
   pl/
-    common.json    ← główny UI (przyciski, etykiety, formularze, status, kanban...)
-    errors.json    ← komunikaty błędów (z api.ts, AuthProvider.tsx)
-    badges.json    ← widget odznak (tytuły, nazwy odznak)
-    tour.json      ← przewodnik po aplikacji (TourGuide.tsx)
+    common.json    ← main UI (buttons, labels, forms, status, kanban...)
+    errors.json    ← error messages (from api.ts, AuthProvider.tsx)
+    badges.json    ← badge widget (titles, badge names)
+    tour.json      ← app tour guide (TourGuide.tsx)
   en/
     common.json
     errors.json
@@ -280,9 +280,9 @@ locales/
     tour.json
 ```
 
-**Dlaczego rozdzielono na namespacey?** Żeby ładować tylko potrzebne tłumaczenia. Każdy namespace to osobny plik JSON. Komponent odznak nie musi ładować całego common.json — ładuje tylko badges.json.
+**Why Split Into Namespaces?** Load only needed translations. Each namespace is separate JSON file. Badge component doesn't need to load entire common.json — only badges.json.
 
-**Struktura pliku JSON:**
+**JSON File Structure:**
 
 ```json
 // pl/common.json (fragment)
@@ -294,22 +294,22 @@ locales/
     "duplicateWarning": "Już aplikowałeś do {{company}} na stanowisko {{position}} ({{date}})"
   },
   "kanban": {
-    "statusWYSLANE": "Wysłane",
-    "statusW_PROCESIE": "W procesie"
+    "statusSENT": "Wysłane",
+    "statusIN_PROGRESS": "W procesie"
   }
 }
 ```
 
-Parametry dynamiczne to `{{nazwaParametru}}` (nie `{0}` jak w Javie).
+Dynamic parameters are `{{parameterName}}` (not `{0}` like Java).
 
-### Używanie tłumaczeń w komponentach: `useTranslation`
+### Using Translations in Components: `useTranslation`
 
 ```tsx
 import { useTranslation } from 'react-i18next'
 
 function ApplicationForm() {
-  const { t } = useTranslation()         // domyślny namespace = 'common'
-  const { t: tBadges } = useTranslation('badges')   // inny namespace
+  const { t } = useTranslation()         // default namespace = 'common'
+  const { t: tBadges } = useTranslation('badges')   // different namespace
 
   return (
     <div>
@@ -322,22 +322,22 @@ function ApplicationForm() {
 }
 ```
 
-`t('klucz.podklucz')` → szuka w JSON po zagnieżdżonej ścieżce.
-`t('klucz', { param: wartość })` → interpoluje `{{param}}` w tekście.
+`t('key.subkey')` → searches JSON by nested path.
+`t('key', { param: value })` → interpolates `{{param}}` in text.
 
-### LanguageDetector — jak wybierany jest język
+### LanguageDetector — How Language Is Chosen
 
-`i18next-browser-languagedetector` przy starcie aplikacji sprawdza po kolei:
-1. `localStorage` → klucz `i18nextLng` (jeśli użytkownik wcześniej wybrał język)
-2. Ustawienia przeglądarki (`navigator.language`) → np. `pl-PL`
+`i18next-browser-languagedetector` on app startup checks in order:
+1. `localStorage` → key `i18nextLng` (if user picked language before)
+2. Browser settings (`navigator.language`) → e.g., `pl-PL`
 
-Jeśli żaden z tych języków nie jest w `supportedLngs` → `fallbackLng: 'en'`.
+If none of these languages is in `supportedLngs` → `fallbackLng: 'en'`.
 
-**Gdzie to jest zapisywane:** `localStorage.i18nextLng = 'pl'` lub `'en'`.
+**Where It's Saved:** `localStorage.i18nextLng = 'pl'` or `'en'`.
 
-### LanguageSwitcher — komponent do zmiany języka
+### LanguageSwitcher — Component to Change Language
 
-**Plik:** `src/components/LanguageSwitcher.tsx`
+**File:** `src/components/LanguageSwitcher.tsx`
 
 ```tsx
 import i18n from '../i18n'
@@ -352,17 +352,17 @@ function LanguageSwitcher() {
 }
 ```
 
-`i18n.changeLanguage('en')` robi dwie rzeczy:
-1. Zapisuje `i18nextLng = 'en'` do localStorage
-2. Powiadamia wszystkie komponenty → React re-renderuje je z nowymi tłumaczeniami (bez przeładowania)
+`i18n.changeLanguage('en')` does two things:
+1. Saves `i18nextLng = 'en'` to localStorage
+2. Notifies all components → React re-renders them with new translations (no page reload)
 
-**Gdzie użyty:** w `AppContent.tsx` (header) i `LoginPage.tsx`.
+**Where Used:** in `AppContent.tsx` (header) and `LoginPage.tsx`.
 
-### Accept-Language — łącznik frontendu z backendem
+### Accept-Language — Bridge Frontend to Backend
 
-Frontend przy każdym API request wysyła nagłówek `Accept-Language` z bieżącym językiem. Dzięki temu backend wie po jakim języku odpowiadać.
+Frontend sends `Accept-Language` header with current language on every API request. Backend knows what language to respond in.
 
-**Gdzie jest dodawany:** `src/services/api.ts` → funkcja `getHeaders()`
+**Where Added:** `src/services/api.ts` → function `getHeaders()`
 
 ```ts
 import i18n from '../i18n'
@@ -370,16 +370,16 @@ import i18n from '../i18n'
 const getHeaders = (contentType?: string): HeadersInit => {
   const headers: Record<string, string> = {}
   // ... token ...
-  headers['Accept-Language'] = i18n.language    // ← 'pl' lub 'en'
+  headers['Accept-Language'] = i18n.language    // ← 'pl' or 'en'
   return headers
 }
 ```
 
-`i18n.language` to bieżący język wybrany przez użytkownika. Każde `fetch()` do backendu automatycznie niesie ten nagłówek.
+`i18n.language` is current user-picked language. Every `fetch()` to backend automatically carries this header.
 
-### TypeScript typowanie kluczy: `src/i18n/types.ts`
+### TypeScript Typing Keys: `src/i18n/types.ts`
 
-Żeby TypeScript wiedział jakie klucze istnieją (i dał autocomplete + błędy kompilacji przy literówkach):
+So TypeScript knows what keys exist (and gives autocomplete + compile errors for typos):
 
 ```ts
 // src/i18n/types.ts
@@ -398,125 +398,125 @@ declare module 'i18next' {
 }
 ```
 
-Teraz `t('form.typo')` → błąd TypeScript. `t('form.titleCreate')` → OK.
+Now `t('form.typo')` → TypeScript error. `t('form.titleCreate')` → OK.
 
 ---
 
-## Część 4 — Jak obie warstwy współpracują
+## Part 4 — How Both Layers Cooperate
 
-### Pełny przepływ: użytkownik zmienia język na EN
+### Full Flow: User Changes Language to EN
 
 ```
-1. Użytkownik klika "EN" w LanguageSwitcher
+1. User clicks "EN" in LanguageSwitcher
    → i18n.changeLanguage('en')
    → localStorage.i18nextLng = 'en'
-   → Wszystkie komponenty re-renderują się z en/*.json
-   → UI od razu po angielsku
+   → All components re-render with en/*.json
+   → UI immediately in English
 
-2. Użytkownik otwiera formularz i robi błąd walidacji (puste pole firma)
+2. User opens form and makes validation error (empty company field)
    → Frontend: t('form.companyRequired') → "Company name cannot be empty"
 
-3. Użytkownik wysyła request do backendu
-   → getHeaders() dodaje: Accept-Language: en
-   → Backend widzi nagłówek
+3. User sends request to backend
+   → getHeaders() adds: Accept-Language: en
+   → Backend sees header
    → LocaleResolver.resolveLocale(request) → Locale("en")
    → LocaleContextHolder.getLocale() → Locale("en")
    → messageSource.getMessage("error.application.notFound", ..., en) → "Application 5 not found"
-   → Frontend wyświetla błąd po angielsku
+   → Frontend displays error in English
 ```
 
-### Co jest po której stronie
+### What Lives Where
 
-| Co | Gdzie mieszka | Dlaczego |
+| What | Where | Why |
 |---|---|---|
-| Etykiety przycisków, formularzy | Frontend JSON | To są elementy UI, tylko frontend je renderuje |
-| Nazwy kolumn Kanban | Frontend JSON | UI logika |
-| Nazwy etapów rekrutacji (predefiniowane) | Frontend JSON | Wyświetlane przez frontend, backend trzyma klucz |
-| Wiadomości błędów HTTP | Backend `.properties` | Backend generuje te błędy |
-| Komunikaty walidacji (@NotBlank itp.) | Backend `.properties` | Bean Validation działa na backendzie |
-| Auto-nota o zmianie wynagrodzenia | Backend `.properties` | Generowana przez serwis, nie przez UI |
-| Nazwy odznak (Rękawica, Widmo...) | Frontend `badges.json` | API zwraca kod (np. `"Rękawica"`), frontend tłumaczy |
-| Powody odrzucenia (ODMOWA_MAILOWA itp.) | Frontend JSON | Enum z backendu, tłumaczony przez frontend |
+| Button labels, form labels | Frontend JSON | These are UI elements, only frontend renders |
+| Kanban column names | Frontend JSON | UI logic |
+| Recruitment stage names (predefined) | Frontend JSON | Displayed by frontend, backend holds key |
+| HTTP error messages | Backend `.properties` | Backend generates these errors |
+| Validation messages (@NotBlank etc.) | Backend `.properties` | Bean Validation runs on backend |
+| Auto-note about salary change | Backend `.properties` | Generated by service, not UI |
+| Badge names (Gauntlet, Ghost...) | Frontend `badges.json` | API returns code (e.g., `"Gauntlet"`), frontend translates |
+| Rejection reasons (EMAIL_REJECTED etc.) | Frontend JSON | Enum from backend, translated by frontend |
 
-### Co NIE jest i18n w projekcie
+### What Is NOT i18n in Project
 
-- **Dane użytkownika w bazie** — np. notatki, własne nazwy etapów wpisane przez użytkownika. To dane, nie UI. Nie tłumaczysz danych.
-- **Enum wartości** (`WYSLANE`, `ODMOWA`) — to kody, nie tekst do wyświetlenia. Frontend mapuje je na tekst w JSON (`kanban.statusWYSLANE`).
-- **Nazwy odznak jako klucze API** — backend zwraca `"Rękawica"` (polska nazwa jako klucz), frontend używa jej jako klucz w `badges.names.Rękawica` → tłumaczy na "The Gauntlet" po angielsku. To świadoma decyzja architektoniczna.
+- **User data in database** — e.g., user notes, custom stage names they typed. That's data, not UI. Don't translate data.
+- **Enum values** (`SENT`, `REJECTED`) — those are codes, not display text. Frontend maps them to text in JSON (`kanban.statusSENT`).
+- **Badge names as API keys** — backend returns `"Gauntlet"` (Polish name as key), frontend uses it as key in `badges.names.Gauntlet` → translates to "The Gauntlet" in English. Conscious architecture decision.
 
 ---
 
-## Część 5 — Podsumowanie: kluczowe pliki projektu
+## Part 5 — Summary: Key Project Files
 
 ### Backend
 
-| Plik | Rola |
+| File | Role |
 |---|---|
-| `config/I18nConfig.java` | Konfiguracja MessageSource, LocalValidatorFactoryBean, LocaleResolver |
-| `resources/i18n/messages.properties` | Angielskie tłumaczenia (fallback) |
-| `resources/i18n/messages_pl.properties` | Polskie tłumaczenia |
-| `exception/GlobalExceptionHandler.java` | Używa MessageSource do tytułów błędów HTTP |
-| `controller/AuthController.java` | Używa MessageSource do komunikatów o tokenach |
-| `service/ApplicationService.java` | Używa MessageSource w EntityNotFoundException |
-| `service/NoteService.java` | Używa MessageSource w wyjątkach + auto-nota salary |
-| `service/CVService.java` | Używa MessageSource w wyjątkach plików |
-| `service/UserService.java` | Używa MessageSource w wyjątkach + demo dane po angielsku |
+| `config/I18nConfig.java` | MessageSource, LocalValidatorFactoryBean, LocaleResolver configuration |
+| `resources/i18n/messages.properties` | English translations (fallback) |
+| `resources/i18n/messages_pl.properties` | Polish translations |
+| `exception/GlobalExceptionHandler.java` | Uses MessageSource for HTTP error titles |
+| `controller/AuthController.java` | Uses MessageSource for token messages |
+| `service/ApplicationService.java` | Uses MessageSource in EntityNotFoundException |
+| `service/NoteService.java` | Uses MessageSource in exceptions + auto-note salary |
+| `service/CVService.java` | Uses MessageSource in file exceptions |
+| `service/UserService.java` | Uses MessageSource in exceptions + demo data in English |
 
 ### Frontend
 
-| Plik | Rola |
+| File | Role |
 |---|---|
-| `src/main.tsx` | Importuje i18n PRZED Reactem — inicjalizuje bibliotekę |
-| `src/i18n/index.ts` | Konfiguracja i18next (zasoby, LanguageDetector, fallback) |
-| `src/i18n/types.ts` | TypeScript typowanie kluczy — autocomplete i błędy kompilacji |
-| `src/i18n/locales/pl/*.json` | Polskie tłumaczenia (4 pliki: common, errors, badges, tour) |
-| `src/i18n/locales/en/*.json` | Angielskie tłumaczenia (4 pliki) |
-| `src/components/LanguageSwitcher.tsx` | Przyciski PL/EN, wywołuje `i18n.changeLanguage()` |
-| `src/services/api.ts` → `getHeaders()` | Dodaje `Accept-Language` do każdego HTTP request |
+| `src/main.tsx` | Imports i18n BEFORE React — initializes library |
+| `src/i18n/index.ts` | i18next configuration (resources, LanguageDetector, fallback) |
+| `src/i18n/types.ts` | TypeScript key typing — autocomplete and compile errors |
+| `src/i18n/locales/pl/*.json` | Polish translations (4 files: common, errors, badges, tour) |
+| `src/i18n/locales/en/*.json` | English translations (4 files) |
+| `src/components/LanguageSwitcher.tsx` | PL/EN buttons, calls `i18n.changeLanguage()` |
+| `src/services/api.ts` → `getHeaders()` | Adds `Accept-Language` to every HTTP request |
 | `src/components/kanban/types.ts` | `LEGACY_STAGE_MAP`, `translateStageName()`, `normalizeStageKey()` |
 
 ---
 
-## Część 6 — Najczęstsze pytania
+## Part 6 — FAQ
 
-### Dlaczego fallback to angielski, nie polski?
+### Why Is Fallback English, Not Polish?
 
-Projekt jest portfolio — możesz pokazywać go rekruterom z różnych krajów. Angielski jest bezpieczniejszym domyślnym. Polska wersja jest dostępna, ale musisz ją aktywnie wybrać.
+Project is portfolio — you show it to recruiters from different countries. English is safer default. Polish version available, but you must actively choose it.
 
-### Co się dzieje gdy brak tłumaczenia dla danego klucza?
+### What Happens When Translation for Key Is Missing?
 
-**Frontend (i18next):** zwraca sam klucz, np. `"form.missingKey"`. W konsoli pojawia się warning. Dlatego masz `types.ts` — TypeScript wyłapuje brakujące klucze już na etapie kompilacji.
+**Frontend (i18next):** returns key itself, e.g., `"form.missingKey"`. Warning in console. That's why you have `types.ts` — TypeScript catches missing keys at compile time.
 
-**Backend (MessageSource):** jeśli nie ma klucza dla `pl` → szuka w `messages.properties` (fallback angielski). Jeśli nie ma nigdzie → rzuca `NoSuchMessageException`.
+**Backend (MessageSource):** if key missing for `pl` → searches in `messages.properties` (English fallback). If missing everywhere → throws `NoSuchMessageException`.
 
-### Dlaczego `{validation.company.required}` ma klamry a nie cudzysłowy?
+### Why `{validation.company.required}` Has Braces and Not Quotes?
 
-`{klucz}` to składnia Bean Validation — mówi "to jest klucz do rozwiązania w MessageSource, nie dosłowny tekst". Bez klamr Spring potraktuje to jako treść komunikatu.
+`{key}` is Bean Validation syntax — says "this is key to resolve in MessageSource, not literal text". Without braces Spring treats it as message content.
 
-### Jak działają stage names — dlaczego są skomplikowane?
+### How Stage Names Work — Why Complicated?
 
-Problem: etapy rekrutacji (Rozmowa z HR, Zadanie rekrutacyjne...) są przechowywane w DB jako tekst. Stare dane mają polskie nazwy (`"Rozmowa z HR"`), nowe dane mają klucze i18n (`"stage.hrInterview"`). Trzeba obsłużyć oba formaty bez migracji bazy.
+Problem: recruitment stages (HR Interview, Recruitment Task...) stored in DB as text. Old data has Polish names (`"Rozmowa z HR"`), new data has i18n keys (`"stage.hrInterview"`). Must handle both without DB migration.
 
-Rozwiązanie — `src/components/kanban/types.ts`:
+Solution — `src/components/kanban/types.ts`:
 ```ts
-// Nowy format (klucz):
+// New format (key):
 translateStageName("stage.hrInterview", t) → t("stage.hrInterview") → "Rozmowa z HR" / "HR Interview"
 
-// Stary format (polska nazwa — legacy):
+// Old format (Polish name — legacy):
 translateStageName("Rozmowa z HR", t) → LEGACY_STAGE_MAP → "stage.hrInterview" → t(...) → "Rozmowa z HR" / "HR Interview"
 
-// Custom (wpisany przez usera):
-translateStageName("Mój etap", t) → "Mój etap" (bez tłumaczenia — to dane usera)
+// Custom (user-typed):
+translateStageName("My Stage", t) → "My Stage" (no translation — user data)
 ```
 
-### Jak Cypress testy wiedzą jakiego języka użyć?
+### How Do Cypress Tests Know Which Language?
 
-Cypress odwiedza stronę jak normalny użytkownik. LanguageDetector sprawdzi localStorage. Dlatego w `cy.login()` ustawiamy:
+Cypress visits page like normal user. LanguageDetector checks localStorage. That's why in `cy.login()` we set:
 ```ts
 win.localStorage.setItem('i18nextLng', 'pl')
 ```
-Teraz aplikacja zawsze startuje po polsku w testach → asercje `cy.contains('Wysłane')` działają deterministycznie.
+App always starts Polish in tests → assertions `cy.contains('Wysłane')` work deterministically.
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-28*
+*Last updated: 2026-03-28*

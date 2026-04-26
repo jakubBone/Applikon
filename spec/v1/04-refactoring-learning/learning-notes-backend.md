@@ -1,118 +1,118 @@
-# Notatki z nauki backendu — EasyApply
+# Backend Learning Notes — EasyApply
 
-Plik do wracania. Każdy etap = kluczowe pojęcia, ważne pliki, naprawione CR.
+Reference file for learning progress. Each phase = key concepts, important files, fixed code reviews.
 
 ---
 
-## Etap 1 — Przegląd architektury, Security, OAuth2, JWT
+## Phase 1 — Architecture Overview, Security, OAuth2, JWT
 
-### Przepływ request → response
+### Request → Response Flow
 
-Przykład: `POST /api/applications`
+Example: `POST /api/applications`
 
 ```
-HTTP POST /api/applications  (+ nagłówek Authorization: Bearer <JWT>)
+HTTP POST /api/applications  (+ Authorization: Bearer <JWT> header)
   ↓
-[CORS filter]                → czy origin frontendu jest na liście allowedOrigins?
-[OAuth2 Resource Server]     → wyciąga JWT z nagłówka
-                               → JwtDecoder weryfikuje podpis i exp
+[CORS filter]                → is frontend origin in allowedOrigins list?
+[OAuth2 Resource Server]     → extracts JWT from header
+                               → JwtDecoder verifies signature and exp
                                → JwtAuthenticationConverter: JWT → AuthenticatedUser
                                → SecurityContext.setAuthentication(...)
-[Authorization filter]       → .anyRequest().authenticated() — ma token? OK.
-[MdcUserFilter]              → wyciąga userId z SecurityContext, wkłada do logów
+[Authorization filter]       → .anyRequest().authenticated() — has token? OK.
+[MdcUserFilter]              → extracts userId from SecurityContext, puts into logs
   ↓
 ApplicationController.create()
-  → @AuthenticationPrincipal AuthenticatedUser user  (z SecurityContext)
-  → @Valid @RequestBody ApplicationRequest           (walidacja DTO przed metodą)
+  → @AuthenticationPrincipal AuthenticatedUser user  (from SecurityContext)
+  → @Valid @RequestBody ApplicationRequest           (DTO validation before method)
   ↓
 ApplicationService.create()  (@Transactional)
   → userRepository.findById()
   → new Application(...)
   → applicationRepository.save()     ↑
-  → stageHistoryRepository.save()    ↑  jeden rollback jeśli coś się posypie
+  → stageHistoryRepository.save()    ↑  one rollback if anything fails
   ↓
 ApplicationResponse (DTO) → JSON → 201 Created
 ```
 
-Jeśli JWT nieprawidłowy lub brakuje → Spring Security zwraca **401**, metoda kontrolera się nie wywołuje.
+If JWT is invalid or missing → Spring Security returns **401**, controller method is not invoked.
 
 ---
 
-### Warstwy — co robi każda
+### Layers — What Each Does
 
-| Warstwa | Odpowiedzialność | Co NIE robi |
+| Layer | Responsibility | Does NOT Do |
 |---------|-----------------|-------------|
-| Controller | HTTP: parsuje, wywołuje service, buduje response | logika biznesowa |
-| Service | logika biznesowa, transakcje, reguły | dostęp do DB bezpośrednio |
-| Repository | SQL/JPA, dostęp do bazy | żadnej logiki |
-| Entity | model danych (tabela) | logika biznesowa |
-| DTO | kontrakt z frontem | nie trafia do bazy |
+| Controller | HTTP: parses, invokes service, builds response | business logic |
+| Service | business logic, transactions, rules | direct DB access |
+| Repository | SQL/JPA, database access | any logic |
+| Entity | data model (table) | business logic |
+| DTO | contract with frontend | doesn't go to database |
 
 ---
 
-### CORS — co to i dlaczego
+### CORS — What It Is and Why
 
-Przeglądarka blokuje requesty między różnymi originami (protokół + domena + port).
-`localhost:5173` → `localhost:8080` = dwa originy → przeglądarka pyta backend (preflight OPTIONS).
+The browser blocks requests between different origins (protocol + domain + port).
+`localhost:5173` → `localhost:8080` = two origins → browser asks backend (preflight OPTIONS).
 
-Backend odpowiada: "ten origin jest OK" → przeglądarka przepuszcza request.
+Backend responds: "this origin is OK" → browser allows request.
 
 ```java
 // SecurityConfig.java
 config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
-config.setAllowCredentials(true);  // bez tego cookie nie jest wysyłane razem z requestem
+config.setAllowCredentials(true);  // without this cookies won't be sent with request
 ```
 
-`allowedOrigins` pochodzi z `application.properties` (zmienna środowiskowa).
-CORS dotyczy **tylko przeglądarek** — curl/Postman go nie sprawdzają.
+`allowedOrigins` comes from `application.properties` (environment variable).
+CORS applies **only to browsers** — curl/Postman don't check it.
 
 ---
 
-### Sesja HTTP vs JWT (stateless)
+### HTTP Sessions vs JWT (Stateless)
 
-**Sesja (stare podejście):**
-- Serwer tworzy sesję i zapamiętuje użytkownika w pamięci
-- Przeglądarka dostaje cookie `JSESSIONID`
-- Przy każdym request serwer szuka sesji w pamięci
-- Problem: serwer musi pamiętać każdego zalogowanego — przy wielu serwerach trzeba synchronizować
+**Session (old approach):**
+- Server creates a session and remembers user in memory
+- Browser gets cookie `JSESSIONID`
+- On each request server looks up session in memory
+- Problem: server must remember every logged-in user — with many servers you need synchronization
 
-**JWT (stateless — Twoje podejście):**
-- Serwer nic nie pamięta
-- Cała "sesja" jest w tokenie (JWT) po stronie klienta
-- Przy każdym request serwer weryfikuje podpis tokena — informacja jest wewnątrz
-- Działa na wielu serwerach bez synchronizacji
+**JWT (stateless — your approach):**
+- Server remembers nothing
+- Entire "session" is in the token (JWT) on client side
+- On each request server verifies token signature — information is inside
+- Works on many servers without synchronization
 
-`SessionCreationPolicy.STATELESS` = Spring nie tworzy HttpSession.
-
----
-
-### Kryptografia — klucz i podpis (uproszczone)
-
-**RSA = para kluczy:**
-- **Prywatny** — tylko serwer go ma, podpisuje tokeny
-- **Publiczny** — możesz dać każdemu, weryfikuje czy podpis jest prawdziwy
-
-**Podpis** = matematyczna operacja:
-```
-podpis = encrypt(hash(dane), klucz_prywatny)
-weryfikacja: hash(dane) == decrypt(podpis, klucz_publiczny)  → OK
-```
-
-Nikt nie może sfałszować podpisu bez klucza prywatnego — nawet znając klucz publiczny.
-
-**W projekcie:**
-Klucz generowany przy starcie w pamięci (`RSAKeyGenerator(2048)`).
-Po restarcie stare tokeny nieważne — OK, bo access token żyje tylko 15 min.
+`SessionCreationPolicy.STATELESS` = Spring doesn't create HttpSession.
 
 ---
 
-### JWT — struktura
+### Cryptography — Keys and Signatures (Simplified)
+
+**RSA = key pair:**
+- **Private** — only server has it, signs tokens
+- **Public** — you can give to everyone, verifies signature is real
+
+**Signature** = mathematical operation:
+```
+signature = encrypt(hash(data), private_key)
+verification: hash(data) == decrypt(signature, public_key)  → OK
+```
+
+No one can forge signature without private key — even knowing public key.
+
+**In project:**
+Key generated at startup in memory (`RSAKeyGenerator(2048)`).
+After restart old tokens are invalid — OK, because access token lives only 15 min.
+
+---
+
+### JWT — Structure
 
 ```
 HEADER.PAYLOAD.SIGNATURE
 ```
 
-Każda część to Base64 — odkodować może każdy. JWT nie jest szyfrowany, tylko podpisany.
+Each part is Base64 — anyone can decode it. JWT is not encrypted, just signed.
 
 **HEADER:**
 ```json
@@ -125,29 +125,29 @@ Każda część to Base64 — odkodować może każdy. JWT nie jest szyfrowany, 
   "sub": "550e8400-e29b-41d4-a716-446655440000",  ← userId
   "email": "jakub@gmail.com",
   "name": "Jakub",
-  "iat": 1711900000,   ← issued at (kiedy wystawiony)
-  "exp": 1711900900    ← expiration (kiedy wygasa)
+  "iat": 1711900000,   ← issued at (when issued)
+  "exp": 1711900900    ← expiration (when expires)
 }
 ```
 
-**SIGNATURE:** `RSA_sign(HEADER + "." + PAYLOAD, klucz_prywatny)`
+**SIGNATURE:** `RSA_sign(HEADER + "." + PAYLOAD, private_key)`
 
-**Claims** = pola w PAYLOAD. Standardowe: `sub`, `iat`, `exp`. Własne: `email`, `name`.
-Nie wrzucaj do JWT haseł ani tajemnic — payload jest publiczny.
-
----
-
-### JWK — co to
-
-JWK = JSON Web Key. Klucz kryptograficzny w formacie JSON.
-JWKSet = zbiór kluczy (przydatne przy rotacji).
-JWKSource = interfejs "skarbiec kluczy" — Nimbus pyta go o klucz do podpisania/weryfikacji.
+**Claims** = fields in PAYLOAD. Standard: `sub`, `iat`, `exp`. Custom: `email`, `name`.
+Don't put passwords or secrets in JWT — payload is public.
 
 ---
 
-### Klasa `Jwt` z Spring Security
+### JWK — What Is It
 
-Gotowa klasa z API (`org.springframework.security.oauth2.jwt`). Trzyma zdekodowany token:
+JWK = JSON Web Key. Cryptographic key in JSON format.
+JWKSet = set of keys (useful for rotation).
+JWKSource = interface "key vault" — Nimbus asks it for key to sign/verify.
+
+---
+
+### `Jwt` Class from Spring Security
+
+Ready-made class with API (`org.springframework.security.oauth2.jwt`). Holds decoded token:
 
 ```java
 jwt.getSubject()              // claims["sub"]
@@ -155,270 +155,270 @@ jwt.getClaimAsString("email") // claims["email"]
 jwt.getExpiresAt()            // claims["exp"]
 ```
 
-Spring Security sam dekoduje token string → obiekt `Jwt` → przekazuje do Twojego konwertera.
+Spring Security decodes token string → `Jwt` object → passes to your converter.
 
 ---
 
-### UUID — co to i dlaczego
+### UUID — What Is It and Why
 
-UUID = 128-bitowy losowy identyfikator: `550e8400-e29b-41d4-a716-446655440000`
+UUID = 128-bit random identifier: `550e8400-e29b-41d4-a716-446655440000`
 
-Dlaczego nie `Long id`?
-- `Long` jest sekwencyjny (1, 2, 3...) → atakujący może zgadywać ID innych użytkowników
-- UUID jest losowy → nie do zgadnięcia
+Why not `Long id`?
+- `Long` is sequential (1, 2, 3...) → attacker can guess other users' IDs
+- UUID is random → not guessable
 
-W projekcie: `User.id` to UUID, generowany przez bazę przy INSERT. W JWT trafia jako `sub`.
-
----
-
-### Principal — co to
-
-Principal = "kto jest zalogowany". Ogólny koncept z Javy i Spring Security.
-
-W Spring Security `Authentication` trzyma:
-- `principal` → kto (u Ciebie: `AuthenticatedUser`)
-- `credentials` → dowód (JWT string, zwykle null po weryfikacji)
-- `authorities` → uprawnienia / role (u Ciebie: puste)
-
-`@AuthenticationPrincipal` = adnotacja która wyciąga `authentication.getPrincipal()` i wstrzykuje do parametru metody.
+In project: `User.id` is UUID, generated by database at INSERT. Lands in JWT as `sub`.
 
 ---
 
-### Łańcuch: JWT string → AuthenticatedUser w kontrolerze
+### Principal — What Is It
+
+Principal = "who is logged in". General concept from Java and Spring Security.
+
+In Spring Security `Authentication` holds:
+- `principal` → who (yours: `AuthenticatedUser`)
+- `credentials` → proof (JWT string, usually null after verification)
+- `authorities` → permissions / roles (yours: empty)
+
+`@AuthenticationPrincipal` = annotation that extracts `authentication.getPrincipal()` and injects into method parameter.
+
+---
+
+### Chain: JWT string → AuthenticatedUser in Controller
 
 ```
-JWT string w nagłówku (Authorization: Bearer ...)
+JWT string in header (Authorization: Bearer ...)
     ↓
-JwtDecoder.decode()              [Spring Security, automatycznie]
-    → weryfikuje podpis i exp
-    → zwraca obiekt Jwt (z claims)
+JwtDecoder.decode()              [Spring Security, automatic]
+    → verifies signature and exp
+    → returns Jwt object (with claims)
     ↓
-JwtAuthenticationConverter.convert(Jwt jwt)    [Twój kod]
-    → wyciąga sub, email, name z claims
-    → tworzy new AuthenticatedUser(userId, email, name)
-    → zwraca AuthenticatedUserToken (principal = AuthenticatedUser)
+JwtAuthenticationConverter.convert(Jwt jwt)    [Your code]
+    → extracts sub, email, name from claims
+    → creates new AuthenticatedUser(userId, email, name)
+    → returns AuthenticatedUserToken (principal = AuthenticatedUser)
     ↓
 SecurityContextHolder.setAuthentication(...)   [Spring Security]
     ↓
-MdcUserFilter.doFilterInternal()               [Twój kod]
+MdcUserFilter.doFilterInternal()               [Your code]
     → SecurityContextHolder.getAuthentication().getPrincipal()
-    → MDC.put("userId", user.id())     ← każdy log dostaje userId
+    → MDC.put("userId", user.id())     ← every log gets userId
     → filterChain.doFilter(...)
-    → finally: MDC.remove("userId")    ← KRYTYCZNE: wątek wraca do puli
+    → finally: MDC.remove("userId")    ← CRITICAL: thread returns to pool
     ↓
-@AuthenticationPrincipal AuthenticatedUser user  [w kontrolerze]
+@AuthenticationPrincipal AuthenticatedUser user  [in controller]
 ```
 
-**Gdzie co jest napisane przez Ciebie:**
-- `JwtAuthenticationConverter.java` — konwersja JWT → AuthenticatedUser
+**Written by you:**
+- `JwtAuthenticationConverter.java` — JWT → AuthenticatedUser conversion
 - `AuthenticatedUser.java` — record (id, email, name)
-- `MdcUserFilter.java` — wkładanie userId do logów
-- `SecurityConfig.java` — konfiguracja (co jest publiczne, jakie CORS, jaki decoder)
+- `MdcUserFilter.java` — putting userId into logs
+- `SecurityConfig.java` — configuration (what's public, CORS, which decoder)
 
-**Co daje Spring Security / Nimbus (gotowe z API):**
-- `JwtDecoder`, `JwtEncoder` — implementacje (NimbusJwtDecoder/Encoder)
-- Cały filter chain — CORS, session, authorization
-- `@AuthenticationPrincipal` — wstrzykiwanie principal do metody
-- `Jwt` — klasa z claims
+**Provided by Spring Security / Nimbus (ready from API):**
+- `JwtDecoder`, `JwtEncoder` — implementations (NimbusJwtDecoder/Encoder)
+- Entire filter chain — CORS, session, authorization
+- `@AuthenticationPrincipal` — injecting principal into method
+- `Jwt` — class with claims
 
 ---
 
-### OAuth2 — przepływ logowania
+### OAuth2 — Login Flow
 
 ```
-1. Frontend → redirect na Google
-   (Spring Security generuje URL automatycznie)
+1. Frontend → redirects to Google
+   (Spring Security generates URL automatically)
 
-2. Google → ekran logowania (Ty tego nie robisz)
-   Użytkownik wpisuje hasło w Google, nie u Ciebie
+2. Google → login screen (you don't do this)
+   User types password at Google, not at you
 
-3. Google → redirect z powrotem na:
-   /login/oauth2/code/google?code=JEDNORAZOWY_KOD
+3. Google → redirects back to:
+   /login/oauth2/code/google?code=ONE_TIME_CODE
 
-4. Spring Security odbiera code → wymienia na token u Google (serwer-serwer)
-   Google zwraca: { id_token: "...", access_token: "..." }
+4. Spring Security receives code → exchanges for token at Google (server-to-server)
+   Google returns: { id_token: "...", access_token: "..." }
 
-5. Spring Security wyciąga dane usera z id_token
-   → wywołuje CustomOAuth2UserService  [Twój kod]
-      szuka usera w bazie po googleId
-      jeśli nie ma → tworzy nowego User
-      jeśli jest → aktualizuje email/imię
+5. Spring Security extracts user data from id_token
+   → calls CustomOAuth2UserService  [Your code]
+      searches for user in database by googleId
+      if missing → creates new User
+      if exists → updates email/name
 
-6. OAuth2AuthenticationSuccessHandler  [Twój kod]
-   → generuje access token (JWT, RS256, 15 min)
-   → generuje refresh token (JWT, RS256, 7 dni)
-   → ustawia refresh token jako httpOnly cookie
-   → redirect na frontend z access tokenem
+6. OAuth2AuthenticationSuccessHandler  [Your code]
+   → generates access token (JWT, RS256, 15 min)
+   → generates refresh token (JWT, RS256, 7 days)
+   → sets refresh token as httpOnly cookie
+   → redirects frontend with access token
 ```
 
-**Co Ty piszesz, co daje framework:**
+**What You Write vs What Framework Provides:**
 
-| Co | Kto robi |
+| What | Who |
 |----|---------|
-| Redirect do Google | Spring Security automatycznie |
-| Ekran logowania | Google |
-| Wymiana code → token | Spring Security automatycznie |
-| Tworzenie/aktualizacja User w bazie | Ty → `CustomOAuth2UserService` |
-| Generowanie Twojego JWT | Ty → `OAuth2AuthenticationSuccessHandler` |
-| Weryfikacja JWT na każdy request | Spring Security automatycznie |
+| Redirect to Google | Spring Security automatic |
+| Login screen | Google |
+| Code → token exchange | Spring Security automatic |
+| Creating/updating User in database | You → `CustomOAuth2UserService` |
+| Generating Your JWT | You → `OAuth2AuthenticationSuccessHandler` |
+| Verifying JWT on every request | Spring Security automatic |
 
-**Słowniczek OAuth2:**
+**OAuth2 Terminology:**
 
-| Termin | Co to |
+| Term | What It Is |
 |--------|-------|
-| Client | Twoja aplikacja (EasyApply) |
-| Resource Owner | Użytkownik (właściciel konta Google) |
-| Authorization Server | Google — wydaje tokeny |
-| Resource Server | Twój backend — chroni API |
-| Authorization Code | Jednorazowy code z redirectu |
-| scope | Jakie dane chcesz od Google (`email`, `profile`) |
-| redirect_uri | Gdzie Google odsyła po logowaniu |
+| Client | Your application (EasyApply) |
+| Resource Owner | User (Google account owner) |
+| Authorization Server | Google — issues tokens |
+| Resource Server | Your backend — protects API |
+| Authorization Code | One-time code from redirect |
+| scope | What data you want from Google (`email`, `profile`) |
+| redirect_uri | Where Google redirects after login |
 
-**Dlaczego code, nie token bezpośrednio?**
-Wymiana code → token dzieje się serwer-serwer (z `client_secret`). Żaden pośrednik w sieci nie widzi tokena Google.
+**Why code, not token directly?**
+Code → token exchange happens server-to-server (with `client_secret`). No intermediary on network sees Google's token.
 
 ---
 
-### SecurityConfig — co Ty tworzysz, co jest gotowe
+### SecurityConfig — What You Create, What's Ready
 
-| Bean | Co robi | Kto implementuje |
+| Bean | What It Does | Who Implements |
 |------|---------|-----------------|
-| `rsaKey()` | generuje parę kluczy RSA 2048 bit | Nimbus (biblioteka) |
-| `jwkSource()` | pakuje klucz w "skarbiec" | Nimbus |
-| `jwtEncoder()` | tworzy/podpisuje JWT | Nimbus (NimbusJwtEncoder) |
-| `jwtDecoder()` | weryfikuje JWT, zwraca Jwt | Nimbus (NimbusJwtDecoder) |
-| `securityFilterChain()` | konfiguruje reguły security | Ty konfigurujesz, Spring buduje |
-| `corsConfigurationSource()` | reguły CORS | Ty konfigurujesz, Spring stosuje |
+| `rsaKey()` | generates RSA 2048-bit key pair | Nimbus (library) |
+| `jwkSource()` | wraps key in "vault" | Nimbus |
+| `jwtEncoder()` | creates/signs JWT | Nimbus (NimbusJwtEncoder) |
+| `jwtDecoder()` | verifies JWT, returns Jwt | Nimbus (NimbusJwtDecoder) |
+| `securityFilterChain()` | configures security rules | You configure, Spring builds |
+| `corsConfigurationSource()` | CORS rules | You configure, Spring applies |
 
 ---
 
 ---
 
-## Etap 2 — Security: OAuth2, JWT, ciasteczka
+## Phase 2 — Security: OAuth2, JWT, Cookies
 
-### Access token vs Refresh token — przepływ
+### Access Token vs Refresh Token — Flow
 
 ```
-Logowanie przez Google
-  → access token  → URL (/auth/callback?token=...) → frontend trzyma w pamięci JS
-  → refresh token → httpOnly cookie (przeglądarka trzyma sama)
-  → refresh token → baza danych (serwer trzyma kopię do weryfikacji)
+Login via Google
+  → access token  → URL (/auth/callback?token=...) → frontend holds in JS memory
+  → refresh token → httpOnly cookie (browser holds itself)
+  → refresh token → database (server holds copy for verification)
 
-Request po 5 minutach:
-  → frontend wysyła: Authorization: Bearer <access_token>
-  → refresh token NIE jest wysyłany (cookie idzie tylko do /api/auth)
-  → działa ✅
+Request after 5 minutes:
+  → frontend sends: Authorization: Bearer <access_token>
+  → refresh token NOT sent (cookie only goes to /api/auth)
+  → works ✅
 
-Request po 20 minutach (access token wygasł):
-  → frontend wysyła access token → backend zwraca 401
-  → frontend woła POST /api/auth/refresh
-  → przeglądarka automatycznie dołącza httpOnly cookie z refresh tokenem
-  → backend: userService.findByValidRefreshToken(token) — szuka w bazie
-  → znajdzie i nie wygasł → generuje nowy access token
-  → frontend dostaje nowy access token → trzyma w pamięci JS
-  → ponawia oryginalny request ✅
+Request after 20 minutes (access token expired):
+  → frontend sends access token → backend returns 401
+  → frontend calls POST /api/auth/refresh
+  → browser automatically includes httpOnly cookie with refresh token
+  → backend: userService.findByValidRefreshToken(token) — searches database
+  → finds and not expired → generates new access token
+  → frontend gets new access token → holds in JS memory
+  → retries original request ✅
 ```
 
-### Dlaczego refresh token to UUID, a nie JWT
+### Why Refresh Token Is UUID, Not JWT
 
-JWT jest **bezstanowy** — serwer nic nie pamięta, tylko weryfikuje podpis.
-Żeby unieważnić JWT trzeba prowadzić blacklistę — skomplikowane.
+JWT is **stateless** — server remembers nothing, just verifies signature.
+To revoke JWT you need a blacklist — complicated.
 
-Refresh token jako UUID jest **zapisany w bazie**. Unieważnienie = usunięcie z bazy.
+Refresh token as UUID is **saved in database**. Revocation = deletion from database.
 Logout: `userService.clearRefreshToken(user)` + cookie `MaxAge=0`.
 
-### localStorage vs httpOnly cookie
+### localStorage vs httpOnly Cookie
 
-| | localStorage | httpOnly cookie |
+| | localStorage | httpOnly Cookie |
 |--|-------------|-----------------|
-| JS może odczytać | tak | nie (`document.cookie` zwraca "") |
-| Wysyłanie do serwera | ręcznie w nagłówku | przeglądarka automatycznie |
-| Podatność na XSS | tak | nie |
+| JavaScript can read | yes | no (`document.cookie` returns "") |
+| Sending to server | manually in header | browser automatic |
+| Vulnerability to XSS | yes | no |
 
-Access token w pamięci JS jest do ukradzenia przez XSS — ale żyje tylko 15 min.
-React domyślnie chroni przed XSS (escapuje HTML w JSX).
+Access token in JS memory can be stolen by XSS — but lives only 15 min.
+React by default protects against XSS (escapes HTML in JSX).
 
-### CSRF i SameSite
+### CSRF and SameSite
 
-**CSRF** = atakujący nakłania przeglądarkę do wysłania requestu do Twojej domeny w Twoim imieniu (przeglądarka dołącza cookies automatycznie).
+**CSRF** = attacker tricks browser into sending request to your domain on your behalf (browser includes cookies automatically).
 
-**SameSite=Strict** — przeglądarka nie wysyła cookie gdy request pochodzi z obcej strony. Atak niemożliwy.
+**SameSite=Strict** — browser won't send cookie when request is from foreign site. Attack impossible.
 
-Minus Strict: kliknięcie zewnętrznego linku do aplikacji → brak cookie przy pierwszym request → widoczny jako niezalogowany (jednorazowy zgrzyt, po odświeżeniu OK).
-Dlatego wiele aplikacji używa `Lax` — linki działają, automatyczne POST-y z obcych stron blokowane.
+Minus Strict: clicking external link to app → no cookie on first request → appears logged out (one-time hiccup, OK after refresh).
+That's why many apps use `Lax` — links work, automatic POSTs from foreign sites blocked.
 
-### JwtService — jak powstaje access token
+### JwtService — How Access Token Is Created
 
 ```java
 JwtClaimsSet claims = JwtClaimsSet.builder()
-        .subject(user.getId().toString())            // UUID usera
+        .subject(user.getId().toString())            // user UUID
         .claim("email", user.getEmail())
         .claim("name", user.getName())
         .expiresAt(now.plus(15, ChronoUnit.MINUTES))
         .build();
 jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-// jwtEncoder podpisuje kluczem prywatnym RSA → string "aaa.bbb.ccc"
+// jwtEncoder signs with RSA private key → string "aaa.bbb.ccc"
 ```
 
-### CR-3 i CR-5 — już naprawione przed sesją
+### CR-3 and CR-5 — Fixed Before Session
 
-**CR-3** — backend zwracał `"token"` zamiast `"accessToken"`.
-Frontend robił `const { accessToken } = response` → `undefined` — cichy błąd, user wylogowywany po 15 min.
-Naprawione: `Map.of("accessToken", newAccessToken)` w `AuthController.java:72`.
+**CR-3** — backend returned `"token"` instead of `"accessToken"`.
+Frontend did `const { accessToken } = response` → `undefined` — silent bug, user logged out after 15 min.
+Fixed: `Map.of("accessToken", newAccessToken)` in `AuthController.java:72`.
 
-**CR-5** — brak `SameSite` na cookie → podatność na CSRF.
-Naprawione: `refreshCookie.setAttribute("SameSite", "Strict")` w `OAuth2AuthenticationSuccessHandler.java:80`.
+**CR-5** — missing `SameSite` on cookie → CSRF vulnerability.
+Fixed: `refreshCookie.setAttribute("SameSite", "Strict")` in `OAuth2AuthenticationSuccessHandler.java:80`.
 
-### Pliki kluczowe dla tego etapu
+### Key Files for This Phase
 
-| Plik | Co robi |
+| File | What It Does |
 |------|---------|
-| `JwtService.java` | Generuje access token (JWT) i refresh token (UUID) |
-| `OAuth2AuthenticationSuccessHandler.java` | Po logowaniu: generuje tokeny, ustawia cookie, redirect |
-| `AuthController.java` | `/refresh` — weryfikuje refresh token, wydaje nowy access token; `/logout` — czyści |
+| `JwtService.java` | Generates access token (JWT) and refresh token (UUID) |
+| `OAuth2AuthenticationSuccessHandler.java` | After login: generates tokens, sets cookie, redirect |
+| `AuthController.java` | `/refresh` — verifies refresh token, issues new access token; `/logout` — clears |
 
 ---
 
-### Pliki kluczowe dla tego etapu (Etap 1)
+### Key Files for This Phase (Phase 1)
 
-| Plik | Co robi |
+| File | What It Does |
 |------|---------|
-| `SecurityConfig.java` | Serce konfiguracji — RSA, JWT, CORS, reguły dostępu |
+| `SecurityConfig.java` | Heart of configuration — RSA, JWT, CORS, access rules |
 | `JwtAuthenticationConverter.java` | JWT (claims) → AuthenticatedUser |
 | `AuthenticatedUser.java` | Record: id (UUID), email, name |
-| `MdcUserFilter.java` | Dodaje userId do każdego logu |
-| `CustomOAuth2UserService.java` | Tworzy/aktualizuje User po logowaniu Google |
-| `OAuth2AuthenticationSuccessHandler.java` | Generuje JWT, ustawia cookie po OAuth2 |
-| `ApplicationController.java` | Przykład użycia @AuthenticationPrincipal |
-| `ApplicationService.java` | Przykład @Transactional |
+| `MdcUserFilter.java` | Adds userId to every log |
+| `CustomOAuth2UserService.java` | Creates/updates User after Google login |
+| `OAuth2AuthenticationSuccessHandler.java` | Generates JWT, sets cookie after OAuth2 |
+| `ApplicationController.java` | Example use of @AuthenticationPrincipal |
+| `ApplicationService.java` | Example of @Transactional |
 
 ---
 
-## Etap 3 — Security: walidacja danych i plików
+## Phase 3 — Security: Data Validation and Files
 
-### CR-1 — Path traversal
+### CR-1 — Path Traversal
 
-`file.getOriginalFilename()` zwraca nazwę podaną przez klienta — atakujący może wpisać `/etc/passwd` lub `../../etc/cron.d/backdoor`.
+`file.getOriginalFilename()` returns name provided by client — attacker can enter `/etc/passwd` or `../../etc/cron.d/backdoor`.
 
-`Path.resolve()` z absolutną ścieżką ignoruje `uploadDir` i zapisuje plik gdzie atakujący chce.
+`Path.resolve()` with absolute path ignores `uploadDir` and saves file where attacker wants.
 
-**Fix:** Na dysk idzie tylko `UUID.randomUUID() + ".pdf"`. Oryginalna nazwa jest już w bazie (`originalFileName`), nie musi być w ścieżce pliku.
+**Fix:** Only `UUID.randomUUID() + ".pdf"` goes to disk. Original filename is already in database (`originalFileName`), doesn't need to be in file path.
 
 ```java
-// PRZED (luka)
+// BEFORE (vulnerability)
 String fileName = UUID.randomUUID() + "_" + originalFileName;
 
-// PO (bezpieczne)
+// AFTER (secure)
 String fileName = UUID.randomUUID() + ".pdf";
 ```
 
-### CR-B3 — Magic bytes
+### CR-B3 — Magic Bytes
 
-`Content-Type` nagłówek ustawia klient — atakujący może wysłać `.exe` z `Content-Type: application/pdf`.
+`Content-Type` header is set by client — attacker can send `.exe` with `Content-Type: application/pdf`.
 
-Magic bytes = pierwsze bajty pliku identyfikują jego rzeczywisty typ. PDF zawsze zaczyna się od `%PDF-` (`25 50 44 46 2D`).
+Magic bytes = first bytes of file identify its real type. PDF always starts with `%PDF-` (`25 50 44 46 2D`).
 
-**Fix:** Czytamy pierwsze 5 bajtów z `file.getInputStream()` i porównujemy z `%PDF-`. Oba muszą zgadzać: Content-Type + magic bytes.
+**Fix:** Read first 5 bytes from `file.getInputStream()` and compare with `%PDF-`. Both must match: Content-Type + magic bytes.
 
 ```java
 byte[] header = new byte[5];
@@ -430,15 +430,15 @@ if (file.getInputStream().read(header) < 5
 }
 ```
 
-`MultipartFile.getInputStream()` można wywołać wielokrotnie (plik tymczasowy na dysku) — `Files.copy` poniżej działa poprawnie.
+`MultipartFile.getInputStream()` can be called multiple times (temporary file on disk) — `Files.copy` below works correctly.
 
-### CR-B1 — Walidacja URL-i (defense in depth)
+### CR-B1 — URL Validation (Defense in Depth)
 
-Frontend waliduje URL — ale API jest publiczne, ktoś może wysłać request z pominięciem frontendu.
+Frontend validates URL — but API is public, someone can send request bypassing frontend.
 
-`javascript:alert(document.cookie)` zapisany jako `externalUrl` → frontend renderuje `<a href="javascript:...">` → XSS przy kliknięciu.
+`javascript:alert(document.cookie)` saved as `externalUrl` → frontend renders `<a href="javascript:...">` → XSS on click.
 
-**Fix:** URL musi zaczynać się od `http://` lub `https://`. Dotyczy zarówno `createCV` jak i `updateCV`.
+**Fix:** URL must start with `http://` or `https://`. Applies to both `createCV` and `updateCV`.
 
 ```java
 if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
@@ -446,91 +446,91 @@ if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
 }
 ```
 
-### CR-B2 — @NotNull na StageUpdateRequest
+### CR-B2 — @NotNull on StageUpdateRequest
 
-Brak `@NotNull` na `status` → `null` przechodzi do serwisu → NPE → 500 Internal Server Error.
+No `@NotNull` on `status` → `null` passes to service → NPE → 500 Internal Server Error.
 
-**Fix:** `@NotNull ApplicationStatus status` w `StageUpdateRequest.java`. Bean Validation łapie null przed wywołaniem metody serwisu → 400 Bad Request z czytelnym komunikatem.
+**Fix:** `@NotNull ApplicationStatus status` in `StageUpdateRequest.java`. Bean Validation catches null before calling service method → 400 Bad Request with readable message.
 
-Zasada: walidację stawiamy na granicy systemu (DTO/API), nie wewnątrz serwisu.
+Principle: validation at system boundary (DTO/API), not inside service.
 
-### Pliki kluczowe
+### Key Files
 
-| Plik | Co zmieniono |
+| File | What Changed |
 |------|-------------|
 | `CVService.java` | CR-1 (UUID filename), CR-B3 (magic bytes), CR-B1 (URL validation) |
-| `StageUpdateRequest.java` | CR-B2 (@NotNull na status) |
-| `messages.properties` / `messages_pl.properties` | Nowy komunikat `error.cv.urlInvalid` |
+| `StageUpdateRequest.java` | CR-B2 (@NotNull on status) |
+| `messages.properties` / `messages_pl.properties` | New message `error.cv.urlInvalid` |
 
 ---
 
-## Etap 4 — Jakość kodu i wzorce
+## Phase 4 — Code Quality and Patterns
 
-### Spring AOP i proxy
+### Spring AOP and Proxy
 
-AOP (Aspect-Oriented Programming) = dodanie zachowania do wielu metod bez modyfikowania każdej z nich.
+AOP (Aspect-Oriented Programming) = add behavior to many methods without modifying each.
 
-Spring przy starcie aplikacji tworzy **proxy** — dynamiczną podklasę Twojego beana (CGLIB). Kiedy wstrzykujesz `@Autowired ApplicationService`, dostajesz proxy, nie oryginał.
+Spring at startup creates **proxy** — dynamic subclass of your bean (CGLIB). When you inject `@Autowired ApplicationService`, you get proxy, not original.
 
 ```
-Controller → applicationService (PROXY) → otwiera transakcję → super.addStage() (Twój kod) → commit/rollback
+Controller → applicationService (PROXY) → opens transaction → super.addStage() (your code) → commit/rollback
 ```
 
-Proxy nadpisuje metody (`@Override`) żeby dodać logikę przed/po. Dlatego:
-- **prywatna metoda** — Java nie pozwala jej nadpisać w podklasie → proxy jej nie widzi → `@Transactional` ignorowany
-- **`this.metoda()`** — wywołanie bezpośrednio na obiekcie, omija proxy → `@Transactional` ignorowany
+Proxy overrides methods (`@Override`) to add logic before/after. Therefore:
+- **Private method** — Java doesn't allow overriding in subclass → proxy doesn't see it → `@Transactional` ignored
+- **`this.method()`** — direct call on object, bypasses proxy → `@Transactional` ignored
 
 ### `@Transactional(readOnly = true)`
 
-Mówi Hibernate: "ta transakcja tylko czyta". Hibernate wyłącza **dirty checking** (sprawdzanie czy encje się zmieniły przed commitem). Lżejsze i szybsze dla metod `findAll...`.
+Tells Hibernate: "this transaction only reads". Hibernate disables **dirty checking** (checking if entities changed before commit). Lighter and faster for `findAll...` methods.
 
-### CR-10 — naprawione
+### CR-10 — Fixed
 
-Usunięto `@Transactional` z prywatnej metody `markCurrentStageCompleted()` w `ApplicationService.java:148`.
-Adnotacja była ignorowana (prywatna metoda) i myląca — metoda zawsze działa w transakcji `addStage()`.
+Removed `@Transactional` from private method `markCurrentStageCompleted()` in `ApplicationService.java:148`.
+Annotation was ignored (private method) and misleading — method always works within `addStage()` transaction.
 
 ### CR-B7 — user_id NOT NULL
 
-Migracja V4 dodała `user_id` jako nullable ("na razie, bo istniejące wiersze mają null") i nigdy nie wymusiła NOT NULL. Skutek: baza nie chroniła przed wstawieniem rekordu bez właściciela.
+Migration V4 added `user_id` as nullable ("for now, existing rows have null") and never enforced NOT NULL. Result: database didn't prevent inserting record without owner.
 
-**Fix:** Migracja V11 — usuwa osierocone wiersze (bez `user_id`), potem `ALTER TABLE ... SET NOT NULL` na `applications` i `cvs`.
+**Fix:** Migration V11 — removes orphaned rows (without `user_id`), then `ALTER TABLE ... SET NOT NULL` on `applications` and `cvs`.
 
-Zasada: **historycznych migracji Flyway nie edytujemy** — Flyway weryfikuje checksumę każdego zastosowanego pliku. Zmiana komentarzy w V2/V4 wywołałaby `checksum mismatch` na produkcji.
+Principle: **Don't edit historical Flyway migrations** — Flyway verifies checksum of each applied file. Changing comments in V2/V4 would trigger `checksum mismatch` on production.
 
-### GlobalExceptionHandler — jak działa
+### GlobalExceptionHandler — How It Works
 
-`@RestControllerAdvice` = Spring wie, że ta klasa obsługuje wyjątki ze wszystkich kontrolerów.
-`extends ResponseEntityExceptionHandler` = dziedziczysz po klasie bazowej Spring MVC, która już obsługuje wewnętrzne wyjątki (np. `MethodArgumentNotValidException`). Możesz nadpisywać jej metody przez `@Override`.
-`@Order(HIGHEST_PRECEDENCE)` = jeśli byłoby kilka handlerów — ten ma pierwszeństwo.
+`@RestControllerAdvice` = Spring knows this class handles exceptions from all controllers.
+`extends ResponseEntityExceptionHandler` = you inherit from Spring MVC base class that already handles internal exceptions (e.g., `MethodArgumentNotValidException`). You can override its methods via `@Override`.
+`@Order(HIGHEST_PRECEDENCE)` = if there were multiple handlers — this one has priority.
 
-**Kto rzuca, kto łapie:**
+**Who throws, who catches:**
 
-| Kto rzuca | Gdzie w kodzie | Kto łapie |
+| Who Throws | Where in Code | Who Catches |
 |-----------|----------------|-----------|
-| Spring (`@Valid` fail) | automatycznie przy wejściu do kontrolera | `handleMethodArgumentNotValid` |
-| `new EntityNotFoundException(...)` | w serwisach, gdy brak w bazie | `handleEntityNotFoundException` |
+| Spring (`@Valid` fail) | automatic on controller entry | `handleMethodArgumentNotValid` |
+| `new EntityNotFoundException(...)` | in services, when missing in DB | `handleEntityNotFoundException` |
 | `new IllegalArgumentException(...)` | CVService (path traversal, magic bytes, URL) | `handleIllegalArgumentException` |
-| Cokolwiek innego | gdziekolwiek | `handleGenericException` |
+| Anything else | anywhere | `handleGenericException` |
 
-**ProblemDetail** = klasa Spring (RFC 9457). Zamiast własnego JSON-a używasz gotowej struktury:
+**ProblemDetail** = Spring class (RFC 9457). Instead of custom JSON you use ready structure:
 ```json
 { "status": 400, "title": "...", "detail": "..." }
 ```
-`problem.setProperty("errors", mapa)` — dodaje własne pole do response.
+`problem.setProperty("errors", map)` — adds custom field to response.
 
-**MessageSource** = mechanizm tłumaczeń. Klucze trzymasz w `messages.properties` / `messages_pl.properties`,
-`messageSource.getMessage("klucz", null, locale)` zwraca tekst w języku usera.
+**MessageSource** = translation mechanism. Keys in `messages.properties` / `messages_pl.properties`,
+`messageSource.getMessage("key", null, locale)` returns text in user's language.
 
-### CR-B9 — Błędy walidacji jako mapa pól
+### CR-B9 — Validation Errors as Field Map
 
-Przed: wszystkie błędy w jednym stringu w `detail` → frontend nie wiedział które pole podświetlić.
+Before: all errors in one string in `detail` → frontend didn't know which field to highlight.
 
-Po: mapa `pole → komunikat` w `errors`, `detail` = stały string `"Validation failed"`.
+After: map `field → message` in `errors`, `detail` = fixed string `"Validation failed"`.
 
 ```json
 {
   "status": 400,
-  "title": "Błąd walidacji",
+  "title": "Validation Error",
   "detail": "Validation failed",
   "errors": {
     "company": "Company name is required"
@@ -538,103 +538,103 @@ Po: mapa `pole → komunikat` w `errors`, `detail` = stały string `"Validation 
 }
 ```
 
-`problem.setProperty("errors", mapa)` — RFC 9457, dodaje własne pole do ProblemDetail.
-`Collectors.toMap(..., (first, second) -> first)` — merge function gdy dwa błędy dla tego samego pola (bierz pierwszy).
+`problem.setProperty("errors", map)` — RFC 9457, adds custom field to ProblemDetail.
+`Collectors.toMap(..., (first, second) -> first)` — merge function if two errors for same field (take first).
 
-### CR-B4 — Object[] → projection
+### CR-B4 — Object[] → Projection
 
-JPQL constructor expression: `SELECT new com.easyapply.dto.ApplicationStats(SUM(...), ...)` zwraca typowany rekord zamiast `Object[]`.
+JPQL constructor expression: `SELECT new com.easyapply.dto.ApplicationStats(SUM(...), ...)` returns typed record instead of `Object[]`.
 
-`ApplicationStats` używa `Long` (nie `long`) bo SQL `SUM` może zwrócić `NULL` gdy nie ma wierszy.
-Metody `rejections()`, `ghosting()`, `offers()` obsługują null → 0.
+`ApplicationStats` uses `Long` (not `long`) because SQL `SUM` can return `NULL` if no rows.
+Methods `rejections()`, `ghosting()`, `offers()` handle null → 0.
 
-Stare `normalizeStats()` i `getStatValue()` w serwisie zostały usunięte.
+Old `normalizeStats()` and `getStatValue()` in service removed.
 
-### CR-B5 — Równoległe tablice → record BadgeDefinition
+### CR-B5 — Parallel Arrays → BadgeDefinition Record
 
-Przed: 4 tablice per typ odznaki (`NAMES`, `ICONS`, `DESCRIPTIONS`, `THRESHOLDS`) — zsynchronizowane po indeksie.
-Po: `record BadgeDefinition(String name, String icon, String description, int threshold)` — jeden obiekt na odznakę.
+Before: 4 arrays per badge type (`NAMES`, `ICONS`, `DESCRIPTIONS`, `THRESHOLDS`) — synchronized by index.
+After: `record BadgeDefinition(String name, String icon, String description, int threshold)` — one object per badge.
 
-`BadgeDefinition` jest `private record` wewnątrz `StatisticsService` — nie jest potrzebna poza serwisem.
+`BadgeDefinition` is `private record` inside `StatisticsService` — not needed outside service.
 
-### CR-B10 — Komentarze przy regułach biznesowych
+### CR-B10 — Comments on Business Rules
 
-Komentarze wyjaśniają **dlaczego** dana reguła istnieje, nie **co** robi kod.
-Przykład: `// Rolling back to SENT resets the entire recruitment progress — stages are no longer relevant as the process starts from scratch.`
+Comments explain **why** rule exists, not **what** code does.
+Example: `// Rolling back to SENT resets the entire recruitment progress — stages are no longer relevant as the process starts from scratch.`
 
-Komentarze w kodzie zawsze po **angielsku**.
+Code comments always in **English**.
 
-### Pliki kluczowe
+### Key Files
 
-| Plik | Co zmieniono |
+| File | What Changed |
 |------|-------------|
-| `ApplicationService.java` | CR-10: usunięto `@Transactional` z `markCurrentStageCompleted()`; CR-B10: komentarze |
-| `V11__user_id_not_null.sql` | CR-B7: NOT NULL na `user_id` w `applications` i `cvs` |
-| `GlobalExceptionHandler.java` | CR-B9: błędy walidacji jako mapa pól |
-| `ApplicationStats.java` (nowy) | CR-B4: projection dla zapytania statystycznego |
-| `StatisticsService.java` | CR-B4: Object[] → ApplicationStats; CR-B5: tablice → BadgeDefinition[] |
-| `ApplicationRepository.java` | CR-B4: constructor expression w JPQL |
+| `ApplicationService.java` | CR-10: removed `@Transactional` from `markCurrentStageCompleted()`; CR-B10: comments |
+| `V11__user_id_not_null.sql` | CR-B7: NOT NULL on `user_id` in `applications` and `cvs` |
+| `GlobalExceptionHandler.java` | CR-B9: validation errors as field map |
+| `ApplicationStats.java` (new) | CR-B4: projection for statistics query |
+| `StatisticsService.java` | CR-B4: Object[] → ApplicationStats; CR-B5: arrays → BadgeDefinition[] |
+| `ApplicationRepository.java` | CR-B4: constructor expression in JPQL |
 
 ---
 
-## Etap 5 — Testy: przegląd, uzupełnienie, pokrycie
+## Phase 5 — Testing: Overview, Completion, Coverage
 
-### Dwa poziomy testów
+### Two Test Levels
 
-**Testy serwisów** (`@ExtendWith(MockitoExtension.class)`):
-- Spring nie startuje — tylko JUnit + Mockito
-- Repozytoria zamockowane (`@Mock`) — baza nie istnieje
-- Testują czystą logikę w izolacji, szybkie (milisekundy)
+**Service Tests** (`@ExtendWith(MockitoExtension.class)`):
+- Spring doesn't start — only JUnit + Mockito
+- Repositories mocked (`@Mock`) — database doesn't exist
+- Test pure logic in isolation, fast (milliseconds)
 
-**Testy kontrolerów** (`@SpringBootTest + @AutoConfigureMockMvc`):
-- Pełny kontekst Spring startuje z H2 w pamięci
-- `MockMvc` symuluje HTTP bez uruchamiania serwera
-- Przechodzą przez cały stack: controller → service → repository → H2
-- Wolniejsze (sekundy), ale bardziej realistyczne — to testy integracyjne
+**Controller Tests** (`@SpringBootTest + @AutoConfigureMockMvc`):
+- Full Spring context starts with H2 in memory
+- `MockMvc` simulates HTTP without running server
+- Go through entire stack: controller → service → repository → H2
+- Slower (seconds), but more realistic — these are integration tests
 
-### TestSecurityConfig — dlaczego bez JWT
+### TestSecurityConfig — Why No JWT
 
-Główna konfiguracja blokuje każdy request bez JWT (`401`). W testach nie generujemy tokenów.
+Main config blocks every request without JWT (`401`). In tests we don't generate tokens.
 
-`TestSecurityConfig` jest aktywna tylko przy `@Profile("test")` i ma `@Order(1)` — wyższy priorytet niż główna konfiguracja (domyślny `@Order(100)`). Spring Security bierze pierwszy pasujący filter chain → wszystko przepuszczone.
+`TestSecurityConfig` is active only on `@Profile("test")` with `@Order(1)` — higher priority than main config (default `@Order(100)`). Spring Security takes first matching filter chain → everything allowed.
 
-Uwierzytelnienie w testach: `@BeforeEach` ustawia `AuthenticatedUser` ręcznie w `SecurityContextHolder` — kontroler dostaje go przez `@AuthenticationPrincipal` tak samo jak w produkcji.
+Authentication in tests: `@BeforeEach` sets `AuthenticatedUser` manually in `SecurityContextHolder` — controller gets it via `@AuthenticationPrincipal` same as production.
 
-### @Order w projekcie — trzy różne konteksty
+### @Order in Project — Three Different Contexts
 
-| Gdzie | Dotyczy | Co kontroluje |
+| Where | Applies To | What It Controls |
 |---|---|---|
-| `TestSecurityConfig` | `@Bean SecurityFilterChain` | Który filter chain Spring Security wybiera |
-| `GlobalExceptionHandler` | `@RestControllerAdvice` | Który handler wyjątków ma pierwszeństwo |
-| Klasy testowe | metody `@Test` (JUnit) | Kolejność testów w ramach jednej klasy |
+| `TestSecurityConfig` | `@Bean SecurityFilterChain` | Which filter chain Spring Security picks |
+| `GlobalExceptionHandler` | `@RestControllerAdvice` | Which exception handler has priority |
+| Test classes | `@Test` methods (JUnit) | Test execution order within one class |
 
-Różne konteksty — nie wchodzą sobie w drogę.
+Different contexts — don't interfere with each other.
 
-### Strict stubbing w Mockito
+### Strict Stubbing in Mockito
 
-`@ExtendWith(MockitoExtension.class)` domyślnie włącza `STRICT_STUBS`. Nieużyty mock = błąd `UnnecessaryStubbingException`. Filozofia: jeśli ustawiłeś mock który nie został wywołany — albo test jest źle napisany, albo kod się zmienił i test jest nieaktualny.
+`@ExtendWith(MockitoExtension.class)` enables `STRICT_STUBS` by default. Unused mock = error `UnnecessaryStubbingException`. Philosophy: if you set a mock that wasn't called — either test is wrong or code changed and test is outdated.
 
-### updateStage vs addStage — różnica semantyczna
+### updateStage vs addStage — Semantic Difference
 
-- `updateStage()` (PATCH) — zmienia status aplikacji między kolumnami kanbana (SENT → IN_PROGRESS → REJECTED). **Nie zapisuje** do `stage_history`.
-- `addStage()` (POST) — dodaje nowy etap w ramach `IN_PROGRESS`. **Zapisuje** nowy wpis do `stage_history`.
+- `updateStage()` (PATCH) — changes application status between kanban columns (SENT → IN_PROGRESS → REJECTED). Does **NOT save** to `stage_history`.
+- `addStage()` (POST) — adds new stage within `IN_PROGRESS`. **Saves** new entry to `stage_history`.
 
-### Dodane testy (6 nowych, łącznie 90)
+### Added Tests (6 New, Total 90)
 
-| Test | Klasa | Co sprawdza |
+| Test | Class | What It Checks |
 |------|-------|-------------|
-| `uploadCV_fakePdfContentType_throws` | `CVServiceTest` | CR-B3: EXE z Content-Type PDF odrzucony przez magic bytes |
-| `uploadCV_pathTraversalFilename_doesNotEscape` | `CVServiceTest` | CR-1: plik z `../` w nazwie ląduje w uploadDir |
-| `createCV_javascriptUrl_throws` | `CVServiceTest` | CR-B1: `javascript:` URL odrzucony |
-| `createCV_dataUrl_throws` | `CVServiceTest` | CR-B1: `data:` URL odrzucony |
-| `updateStage_NullStatus_ReturnsBadRequest` | `ApplicationControllerTest` | CR-B2: brak status → 400 z polem `errors.status` |
-| `addStage_savesStageHistoryEntry` | `ApplicationServiceTest` | `addStage()` zapisuje wpis do `stage_history` |
+| `uploadCV_fakePdfContentType_throws` | `CVServiceTest` | CR-B3: EXE with PDF Content-Type rejected by magic bytes |
+| `uploadCV_pathTraversalFilename_doesNotEscape` | `CVServiceTest` | CR-1: file with `../` in name lands in uploadDir |
+| `createCV_javascriptUrl_throws` | `CVServiceTest` | CR-B1: `javascript:` URL rejected |
+| `createCV_dataUrl_throws` | `CVServiceTest` | CR-B1: `data:` URL rejected |
+| `updateStage_NullStatus_ReturnsBadRequest` | `ApplicationControllerTest` | CR-B2: missing status → 400 with `errors.status` field |
+| `addStage_savesStageHistoryEntry` | `ApplicationServiceTest` | `addStage()` saves entry to `stage_history` |
 
-### Wzorzec testowania — rzut vs weryfikacja efektu
+### Testing Pattern — Throw vs Verify Effect
 
-| Podejście | Przykład | Test sprawdza |
+| Approach | Example | Test Checks |
 |---|---|---|
-| Odrzuć złe wejście | magic bytes, URL schema, null status | `assertThrows(...)` |
-| Sanitizuj / zamień | path traversal → UUID | `assertTrue(path.startsWith(uploadDir))` |
+| Reject bad input | magic bytes, URL schema, null status | `assertThrows(...)` |
+| Sanitize / replace | path traversal → UUID | `assertTrue(path.startsWith(uploadDir))` |
 
-Path traversal nie rzuca wyjątku — serwis cicho ignoruje niebezpieczną nazwę i używa UUID. Test weryfikuje efekt (bezpieczna ścieżka), nie wyjątek.
+Path traversal doesn't throw — service silently ignores unsafe name and uses UUID. Test verifies effect (safe path), not exception.
