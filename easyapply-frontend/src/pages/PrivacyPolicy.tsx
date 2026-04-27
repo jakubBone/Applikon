@@ -1,15 +1,22 @@
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { privacyPolicyPl, privacyPolicyEn } from '../content/privacyPolicy'
 import '../PrivacyPolicy.css'
 
 export function PrivacyPolicy() {
   const { i18n } = useTranslation()
+  const navigate = useNavigate()
   const policy = i18n.language === 'pl' ? privacyPolicyPl : privacyPolicyEn
 
   return (
     <div className="privacy-policy-page">
       <div className="privacy-container">
+        <div className="privacy-back-bar">
+          <button className="privacy-back-btn" onClick={() => navigate(-1)}>
+            ← {i18n.language === 'pl' ? 'Powrót' : 'Back'}
+          </button>
+        </div>
         <div className="privacy-content">
           <ReactMarkdown
             components={{

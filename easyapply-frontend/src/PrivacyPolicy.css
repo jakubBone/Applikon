@@ -14,8 +14,27 @@
   overflow: hidden;
 }
 
+.privacy-back-bar {
+  padding: 1rem 2rem 0 2rem;
+}
+
+.privacy-back-btn {
+  background: none;
+  border: none;
+  color: #667eea;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4rem 0;
+  transition: color 0.15s;
+}
+
+.privacy-back-btn:hover {
+  color: #764ba2;
+}
+
 .privacy-content {
-  padding: 3rem 2rem;
+  padding: 1.5rem 2rem 3rem 2rem;
   line-height: 1.8;
   color: #333;
 }
@@ -60,8 +79,12 @@
     padding: 1rem;
   }
 
+  .privacy-back-bar {
+    padding: 0.75rem 1rem 0 1rem;
+  }
+
   .privacy-content {
-    padding: 1.5rem 1rem;
+    padding: 1rem 1rem 2rem 1rem;
   }
 
   .privacy-heading {

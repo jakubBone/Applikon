@@ -35,6 +35,7 @@ export default function AppContent() {
   const [previousView, setPreviousView] = useState<View>('kanban')
   const [selectedAppId, setSelectedAppId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const queryClient = useQueryClient()
   const { data: notices = [] } = useServiceNotices()
@@ -105,22 +106,58 @@ export default function AppContent() {
         </div>
         <div className="header-right">
           <BadgeWidget />
-          <LanguageSwitcher />
-          <div className="header-separator" />
-          <button
-            className="settings-btn"
-            onClick={() => navigate('/settings')}
-            title={t('settings.title')}
-          >
-            ⚙️
-          </button>
-          <button
-            data-cy="logout-btn"
-            className="logout-btn"
-            onClick={() => void signOut()}
-          >
-            {t('auth.logout')}
-          </button>
+
+          <div className="header-controls">
+            <LanguageSwitcher />
+            <div className="header-separator" />
+            <button
+              className="settings-btn"
+              onClick={() => navigate('/settings')}
+              title={t('settings.title')}
+            >
+              ⚙️
+            </button>
+            <button
+              data-cy="logout-btn"
+              className="logout-btn"
+              onClick={() => void signOut()}
+            >
+              {t('auth.logout')}
+            </button>
+          </div>
+
+          <div className="hamburger-wrapper">
+            <button
+              className="hamburger-btn"
+              onClick={() => setMenuOpen(prev => !prev)}
+              aria-label="Menu"
+            >
+              {menuOpen ? '✕' : '☰'}
+            </button>
+            {menuOpen && (
+              <>
+                <div className="hamburger-backdrop" onClick={() => setMenuOpen(false)} />
+                <div className="hamburger-menu">
+                  <div className="hamburger-menu-lang">
+                    <LanguageSwitcher />
+                  </div>
+                  <div className="hamburger-divider" />
+                  <button
+                    className="hamburger-menu-btn"
+                    onClick={() => { navigate('/settings'); setMenuOpen(false) }}
+                  >
+                    ⚙️ {t('settings.title')}
+                  </button>
+                  <button
+                    className="hamburger-menu-btn logout"
+                    onClick={() => void signOut()}
+                  >
+                    {t('auth.logout')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

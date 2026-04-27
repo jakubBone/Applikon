@@ -1,13 +1,15 @@
 .settings-page {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 1rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  padding: 2rem 1rem 0 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .settings-container {
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 540px;
+  margin: 0 auto auto;
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -15,129 +17,182 @@
 }
 
 .settings-container > h1 {
-  margin: 0 0 2rem 0;
-  font-size: 1.75rem;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #333;
 }
 
-.settings-section {
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid #eee;
+/* Accordion sections */
+.settings-accordion {
+  margin-top: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.settings-section:last-child {
+.settings-accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.07) 0%, rgba(118, 75, 162, 0.07) 100%);
+  border: none;
+  cursor: pointer;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #444;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.settings-accordion-header:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.13) 0%, rgba(118, 75, 162, 0.13) 100%);
+}
+
+.settings-accordion-body .settings-row:first-child {
+  border-top: 1px solid #f0f0f0;
+}
+
+.settings-chevron {
+  font-size: 1.1rem;
+  display: inline-block;
+  transition: transform 0.2s;
+  color: #aaa;
+  line-height: 1;
+}
+
+.settings-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* Danger zone label (no accordion) */
+.settings-group-label {
+  margin: 1.5rem 0 0.4rem 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+}
+
+.settings-group-label--danger {
+  color: #dc3545;
+}
+
+/* Group containers */
+.settings-group {
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.settings-group--danger {
+  border-color: #f5c6cb;
+}
+
+/* Rows */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+.settings-row:last-child {
   border-bottom: none;
 }
 
-.settings-section > h2 {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.1rem;
-  color: #667eea;
-  font-weight: 600;
+/* Left side */
+.settings-row-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
 }
 
-.settings-field {
-  margin-bottom: 1.5rem;
-}
-
-.settings-field label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #333;
-  font-size: 0.95rem;
-}
-
-.settings-field input[disabled],
-.settings-field input[readonly] {
-  width: 100%;
-  padding: 0.75rem;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #666;
-  font-size: 0.95rem;
-}
-
-.settings-field-value {
-  padding: 0.75rem;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #666;
-  font-size: 0.95rem;
-}
-
-.settings-export-description {
-  margin: 0 0 1rem 0;
-  color: #555;
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.settings-export-button {
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 6px;
+.settings-row-icon {
   font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.settings-export-button:hover:not(:disabled) {
-  background: #5a6fd6;
-}
-
-.settings-export-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.settings-export-error {
-  margin: 0.75rem 0 0 0;
-  padding: 0.75rem 1rem;
-  background: #fee;
-  border: 1px solid #fcc;
-  border-radius: 6px;
-  color: #c33;
-  font-size: 0.9rem;
+  flex-shrink: 0;
+  width: 1.2rem;
   text-align: center;
 }
 
-.settings-danger {
-  background: #fff5f5;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #ffe0e0;
+.settings-row-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #333;
 }
 
-.settings-delete-button {
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: #dc3545;
-  color: white;
-  border: none;
+.settings-row-desc {
+  font-size: 0.8rem;
+  color: #888;
+  line-height: 1.4;
+}
+
+/* Right side */
+.settings-row-value {
+  font-size: 0.82rem;
+  color: #555;
+  flex-shrink: 0;
+  text-align: right;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Inline action buttons */
+.settings-action-btn {
+  flex-shrink: 0;
+  padding: 0.3rem 0.8rem;
+  border: 1.5px solid #667eea;
+  color: #667eea;
+  background: white;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
-.settings-delete-button:hover {
-  background: #c82333;
+.settings-action-btn:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
 }
 
-.settings-delete-button:active {
-  background: #bb2d2d;
+.settings-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
-/* Modal */
+.settings-action-btn--danger {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.settings-action-btn--danger:hover {
+  background: #dc3545;
+  color: white;
+}
+
+/* Inline error below group */
+.settings-inline-error {
+  margin: 0.4rem 0 0 0;
+  padding: 0.4rem 0.75rem;
+  background: #fff0f0;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  color: #c33;
+  font-size: 0.78rem;
+}
+
+/* Delete confirmation modal */
 .settings-modal-overlay {
   position: fixed;
   top: 0;
@@ -268,7 +323,7 @@
   }
 
   .settings-container > h1 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .settings-modal {
@@ -277,5 +332,21 @@
 
   .settings-modal-title {
     font-size: 1.1rem;
+  }
+
+  .settings-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .settings-row-value {
+    padding-left: calc(1.2rem + 0.65rem);
+    text-align: left;
+    max-width: none;
+    white-space: normal;
+  }
+
+  .settings-action-btn {
+    margin-left: calc(1.2rem + 0.65rem);
   }
 }

@@ -32,7 +32,7 @@
     "emailLabel": "Email",
     "privacyAcceptedAt": "Privacy policy accepted:",
     "dateLocale": "en-US",
-    "exportTitle": "Your data",
+    "exportTitle": "Archive",
     "exportDescription": "Download all your data stored in EasyApply.",
     "exportButton": "Download my data",
     "exporting": "Preparing...",
