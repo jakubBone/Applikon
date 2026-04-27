@@ -24,6 +24,10 @@
 
 /* MOBILE: Horizontal Scroll Kanban */
 @media (max-width: 768px) {
+  .kanban-board-container {
+    min-height: unset;
+  }
+
   .kanban-board {
     display: flex;
     flex-direction: row;
@@ -33,10 +37,11 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     padding: 1rem;
-    padding-bottom: 2rem;
+    padding-bottom: 1rem;
     scroll-behavior: smooth;
     width: 100%;
     max-width: 100vw;
+    min-height: unset;
   }
 
   /* Hide scrollbar but keep functionality */
@@ -739,8 +744,11 @@
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem;
-    margin-top: -1rem;
+    padding: 0.5rem 0.5rem 0.75rem;
+    position: sticky;
+    bottom: 0;
+    background: #f5f7fa;
+    z-index: 10;
   }
 
   .scroll-indicator span {

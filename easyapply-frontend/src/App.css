@@ -587,9 +587,17 @@ html, body {
 }
 
 @media (max-width: 768px) {
+  .app {
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+  }
+
   .main-content {
     padding: 0;
     overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

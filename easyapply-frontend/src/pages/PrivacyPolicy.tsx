@@ -5,7 +5,7 @@ import { privacyPolicyPl, privacyPolicyEn } from '../content/privacyPolicy'
 import '../PrivacyPolicy.css'
 
 export function PrivacyPolicy() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const policy = i18n.language === 'pl' ? privacyPolicyPl : privacyPolicyEn
 
@@ -13,8 +13,8 @@ export function PrivacyPolicy() {
     <div className="privacy-policy-page">
       <div className="privacy-container">
         <div className="privacy-back-bar">
-          <button className="privacy-back-btn" onClick={() => navigate(-1)}>
-            ← {i18n.language === 'pl' ? 'Powrót' : 'Back'}
+          <button className="back-btn" onClick={() => navigate(-1)}>
+            {t('details.back')}
           </button>
         </div>
         <div className="privacy-content">

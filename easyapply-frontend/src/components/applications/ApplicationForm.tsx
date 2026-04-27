@@ -143,8 +143,8 @@ export function ApplicationForm({ mode, application, onClose }: Props) {
   }
 
   return (
-    <div className="form-modal">
-      <div className="form-modal-content large">
+    <div className="form-modal" onClick={onClose}>
+      <div className="form-modal-content large" onClick={e => e.stopPropagation()}>
         <h2>{mode === 'create' ? t('form.titleCreate') : t('form.titleEdit')}</h2>
 
         {duplicateWarning && (
