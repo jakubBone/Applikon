@@ -81,11 +81,6 @@ export function ApplicationDetails({ application, onBack }: Props) {
               <span className="current-stage-badge">{translateStageName(application.currentStage, t)}</span>
             )}
           </div>
-          <div className="details-actions">
-            <button className="back-btn-mobile" onClick={onBack}>
-              {t('details.back')}
-            </button>
-          </div>
         </div>
       </div>
 
