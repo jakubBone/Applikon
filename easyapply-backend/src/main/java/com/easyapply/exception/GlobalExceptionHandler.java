@@ -3,6 +3,7 @@ package com.easyapply.exception;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.format.DateTimeParseException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.Ordered;
@@ -58,6 +59,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle(messageSource.getMessage("error.resource.title", null, LocaleContextHolder.getLocale()));
         return problem;
+    }
+
+    @ExceptionHandler(DateTimeParseException.class)
+    public ResponseEntity<Map<String, String>> handleDateTimeParse(DateTimeParseException ex) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", "Invalid date format. Expected ISO-8601, e.g. 2026-12-31T23:59:59"));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

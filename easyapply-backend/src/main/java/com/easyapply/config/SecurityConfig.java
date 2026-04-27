@@ -1,5 +1,6 @@
 package com.easyapply.config;
 
+import com.easyapply.security.AdminKeyFilter;
 import com.easyapply.security.JwtAuthenticationConverter;
 import com.easyapply.security.OAuth2AuthenticationSuccessHandler;
 import com.easyapply.security.CustomOAuth2UserService;
@@ -126,7 +127,8 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtDecoder jwtDecoder,
             OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
-            ConsentRequiredFilter consentRequiredFilter) throws Exception {
+            ConsentRequiredFilter consentRequiredFilter,
+            AdminKeyFilter adminKeyFilter) throws Exception {
         return http
                 // CSRF disabled — we use JWT (stateless), not session/form cookies
                 .csrf(AbstractHttpConfigurer::disable)
@@ -144,6 +146,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        // Admin endpoint — secured by AdminKeyFilter, not JWT
+                        .requestMatchers("/api/admin/**").permitAll()
                         // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
@@ -165,6 +169,10 @@ public class SecurityConfig {
                 .addFilterAfter(consentRequiredFilter,
                         org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
 
+                // AdminKeyFilter runs before JWT auth — checks X-Admin-Key header
+                .addFilterBefore(adminKeyFilter,
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+
                 .build();
     }
 
@@ -177,7 +185,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+        config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Admin-Key"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 

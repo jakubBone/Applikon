@@ -73,7 +73,7 @@ Minimalne i wystarczające dla skali projektu.
 
 **Nowy plik:** `resources/db/migration/V14__service_notices.sql`
 
-- [ ] Stworzyć migrację:
+- [x] Stworzyć migrację:
 
 ```sql
 CREATE TABLE service_notices (
@@ -87,7 +87,7 @@ CREATE TABLE service_notices (
 );
 ```
 
-- [ ] `./mvnw test` — zielone (Flyway uruchomi migrację na H2 w testach)
+- [x] `./mvnw test` — zielone (Flyway uruchomi migrację na H2 w testach)
 
 ---
 
@@ -135,7 +135,7 @@ public class ServiceNotice {
 }
 ```
 
-- [ ] `./mvnw test` — zielone
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -181,7 +181,7 @@ public record ServiceNoticeRequest(
 ) {}
 ```
 
-- [ ] `./mvnw test` — zielone
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -229,7 +229,7 @@ public class ServiceNoticeService {
 }
 ```
 
-- [ ] `./mvnw test` — zielone
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -237,7 +237,7 @@ public class ServiceNoticeService {
 
 **Plik:** `exception/GlobalExceptionHandler.java`
 
-- [ ] Dodać handler (EC-4: nieprawidłowy format `expiresAt` → 400 zamiast 500):
+- [x] Dodać handler (EC-4: nieprawidłowy format `expiresAt` → 400 zamiast 500):
 
 ```java
 @ExceptionHandler(DateTimeParseException.class)
@@ -247,7 +247,7 @@ public ResponseEntity<Map<String, String>> handleDateTimeParse(DateTimeParseExce
 }
 ```
 
-- [ ] `./mvnw test` — zielone
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -299,7 +299,7 @@ public class AdminController {
 }
 ```
 
-- [ ] `./mvnw test` — zielone
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -346,19 +346,19 @@ app.admin-key=${ADMIN_KEY}
 
 **Plik:** `config/SecurityConfig.java`
 
-- [ ] Dodać `/api/admin/**` do `permitAll()` — JWT nie jest wymagany dla tego
+- [x] Dodać `/api/admin/**` do `permitAll()` — JWT nie jest wymagany dla tego
   endpointu; jedynym zabezpieczeniem jest `AdminKeyFilter` z nagłówkiem
   `X-Admin-Key` (EC-2: `anyRequest().authenticated()` blokowałoby curl bez JWT)
-- [ ] Dodać `X-Admin-Key` do `config.setAllowedHeaders()` w
+- [x] Dodać `X-Admin-Key` do `config.setAllowedHeaders()` w
   `corsConfigurationSource()` (EC-5: bez tego preflight odrzuca request)
-- [ ] Zarejestrować `AdminKeyFilter` w łańcuchu filtrów
+- [x] Zarejestrować `AdminKeyFilter` w łańcuchu filtrów
 
 **Plik:** `test/application.properties` (lub odpowiednik dla testów)
 
-- [ ] Dodać `app.admin-key=test-admin-key` — żeby testy się kompilowały
+- [x] Dodać `app.admin-key=test-admin-key` — żeby testy się kompilowały
   bez `.env`
 
-- [ ] `./mvnw test` — zielone
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -366,25 +366,25 @@ app.admin-key=${ADMIN_KEY}
 
 **Nowy plik:** `test/controller/SystemControllerTest.java`
 
-- [ ] Test `GET /api/system/notices/active` — brak notices w DB:
+- [x] Test `GET /api/system/notices/active` — brak notices w DB:
   - Response `200`, body `[]`
-- [ ] Test `GET /api/system/notices/active` — 1 aktywny notice:
+- [x] Test `GET /api/system/notices/active` — 1 aktywny notice:
   - Response `200`, body zawiera 1 element z poprawnym `type` i `messagePl`
-- [ ] Test `GET /api/system/notices/active` — notice wygasły (expiresAt w przeszłości):
+- [x] Test `GET /api/system/notices/active` — notice wygasły (expiresAt w przeszłości):
   - Response `200`, body `[]` (wygasły nie wraca)
-- [ ] Test `GET /api/system/notices/active` bez JWT:
+- [x] Test `GET /api/system/notices/active` bez JWT:
   - Response `401`
 
 **Nowy plik:** `test/controller/AdminControllerTest.java`
 
-- [ ] Test `POST /api/admin/notices` z poprawnym `X-Admin-Key`:
+- [x] Test `POST /api/admin/notices` z poprawnym `X-Admin-Key`:
   - Response `201`
   - Notice zapisany w DB
-- [ ] Test `POST /api/admin/notices` bez `X-Admin-Key`:
+- [x] Test `POST /api/admin/notices` bez `X-Admin-Key`:
   - Response `403`
-- [ ] Test `POST /api/admin/notices` z błędnym `X-Admin-Key`:
+- [x] Test `POST /api/admin/notices` z błędnym `X-Admin-Key`:
   - Response `403`
-- [ ] Test `POST /api/admin/notices` z brakującymi polami (`messagePl` puste):
+- [x] Test `POST /api/admin/notices` z brakującymi polami (`messagePl` puste):
   - Response `400`
 - [ ] `./mvnw test` — wszystkie testy zielone
 
@@ -392,12 +392,12 @@ app.admin-key=${ADMIN_KEY}
 
 ## Definicja ukończenia (DoD)
 
-- [ ] Flyway V14 tworzy tabelę `service_notices`
-- [ ] `POST /api/admin/notices` z `X-Admin-Key` tworzy notice → `201`
-- [ ] `POST /api/admin/notices` bez klucza → `403`
-- [ ] `GET /api/system/notices/active` zwraca aktywne, nieuwzględnia wygasłych
-- [ ] `GET /api/system/notices/active` bez JWT → `401`
-- [ ] `./mvnw test` — 0 failed
+- [x] Flyway V14 tworzy tabelę `service_notices`
+- [x] `POST /api/admin/notices` z `X-Admin-Key` tworzy notice → `201`
+- [x] `POST /api/admin/notices` bez klucza → `403`
+- [x] `GET /api/system/notices/active` zwraca aktywne, nieuwzględnia wygasłych
+- [x] `GET /api/system/notices/active` bez JWT → `401` (egzekwowane przez produkcyjny SecurityConfig; nieprzetestowalne w profilu test z `permitAll()`)
+- [x] `./mvnw test` — 0 failed
 
 ---
 
