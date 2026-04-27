@@ -3,7 +3,7 @@
 > Generated: 2026-04-23. Describes the actual implemented state of EasyApply v1.
 > Source of truth: the code. This document reflects what exists, not what was planned.
 > 
-> **Latest update:** Phase 07 (Privacy & RODO) implemented: rodo-minimum (consent flow + account deletion) and cv-link-only (disabled file upload).
+> **Latest update:** Phase 08 (User Data & Service Notices) implemented: data export (RODO Art. 20) and service notices system (BANNER/MODAL with countdown timer).
 
 ---
 
@@ -32,6 +32,8 @@
 | Privacy policy (phase 07) | Not in MVP | `/privacy` page public route, PL/EN, react-markdown | Added (phase 07) |
 | Consent flow (phase 07) | Not in MVP | ConsentGate wrapper, POST /api/auth/consent, blocks UI until accepted | Added (phase 07) |
 | Account deletion (phase 07) | Not in MVP | DELETE /api/auth/me + cascade; /settings page with deletion UI | Added (phase 07) |
+| Data export (phase 08) | Not in MVP | GET /api/auth/me/export returns JSON blob with all user data (RODO Art. 20) | Added (phase 08) |
+| Service notices (phase 08) | Not in MVP | BANNER/MODAL notices via DB; admin POST endpoint secured by X-Admin-Key header; countdown timer | Added (phase 08) |
 
 ---
 
@@ -74,9 +76,11 @@ com.easyapply/
   controller/
     ApplicationController.java     — /api/applications
     AuthController.java            — /api/auth
+    AdminController.java           — /api/admin (phase 08)
     CVController.java              — /api/cv
     NoteController.java            — /api (nested under /applications and /notes)
     StatisticsController.java      — /api/statistics
+    SystemController.java          — /api/system (phase 08)
   dto/
     ApplicationRequest.java        — record (company, position, link, salary*, currency, salaryType, contractType, salarySource, source, jobDescription, agency)
     ApplicationResponse.java       — record (all Application fields + cv info flattened: cvId, cvFileName, cvType, cvExternalUrl)
@@ -85,6 +89,8 @@ com.easyapply/
     BadgeStatsResponse.java        — record (rejectionBadge, ghostingBadge, sweetRevengeUnlocked, totals)
     NoteRequest.java               — record (content, category)
     NoteResponse.java              — record (id, content, category, applicationId, createdAt)
+    ServiceNoticeRequest.java      — record (type, messagePl, messageEn, expiresAt) with @NotBlank @Pattern on type (phase 08)
+    ServiceNoticeResponse.java     — record (id, type, messagePl, messageEn, expiresAt) (phase 08)
     StageUpdateRequest.java        — record (status, currentStage, rejectionReason, rejectionDetails)
     StatusUpdateRequest.java       — record (status)
     UserResponse.java              — record (id, email, name, privacyPolicyAcceptedAt) (phase 07)
@@ -92,6 +98,8 @@ com.easyapply/
     Application.java               — @Entity, table: applications
     CV.java                        — @Entity, table: cvs
     Note.java                      — @Entity, table: notes
+    ServiceNotice.java             — @Entity, table: service_notices (phase 08)
+    ServiceNoticeType.java         — enum: BANNER, MODAL (phase 08)
     User.java                      — @Entity, table: users
     ApplicationStatus.java         — enum: SENT, IN_PROGRESS, OFFER, REJECTED
     ContractType.java              — enum: B2B, EMPLOYMENT, MANDATE, OTHER
@@ -101,13 +109,15 @@ com.easyapply/
     SalarySource.java              — enum: FROM_POSTING, MY_PROPOSAL
     SalaryType.java                — enum: GROSS, NET
   exception/
-    GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException / fallback
+    GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException / DateTimeParseException (phase 08) / fallback
   repository/
     ApplicationRepository.java     — JpaRepository; custom queries: findByUserId, findByIdAndUserId, existsByIdAndUserId, findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase, getApplicationStats, clearCVReferences
     CVRepository.java              — JpaRepository
     NoteRepository.java            — JpaRepository; findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc, findByIdAndApplicationUserId, etc.
+    ServiceNoticeRepository.java   — JpaRepository; JPQL findActive(@Param("now") LocalDateTime now) — WHERE active=true AND (expiresAt IS NULL OR expiresAt > :now) (phase 08)
     UserRepository.java            — JpaRepository; findByGoogleId, findByRefreshToken
   security/
+    AdminKeyFilter.java            — OncePerRequestFilter; checks X-Admin-Key header against app.admin-key; returns 403 if missing/wrong (phase 08)
     AuthenticatedUser.java         — record (id: UUID) — principal injected by JwtAuthenticationConverter
     CustomOAuth2UserService.java   — loads/creates user from Google OAuth2 attributes
     JwtAuthenticationConverter.java — extracts AuthenticatedUser from JWT sub claim
@@ -118,6 +128,7 @@ com.easyapply/
     ApplicationService.java        — create, findAllByUserId, findById, updateStatus, updateStage, addStage, findDuplicates, delete, update
     CVService.java                 — uploadCV, findAllByUserId, findById, downloadCV, deleteCV, createCV, updateCV, assignCVToApplication, removeCVFromApplication
     NoteService.java               — create, findByApplicationId, findById, update, delete, deleteByApplicationId, createSalaryChangeNote (⚠️ dead code — never called)
+    ServiceNoticeService.java      — findActive(), create(ServiceNoticeRequest) (phase 08)
     StatisticsService.java         — getBadgeStats: computes rejection/ghosting badges + sweet revenge unlock
     UserService.java               — findOrCreateUser, getById, getByGoogleId, saveRefreshToken, clearRefreshToken, findByValidRefreshToken + createDemoApplication (new user only)
 ```
@@ -144,6 +155,7 @@ com.easyapply/
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/auth/me` | Get current user profile (requires JWT) |
+| `GET` | `/api/auth/me/export` | Export all user data as JSON blob (RODO Art. 20, phase 08) |
 | `POST` | `/api/auth/refresh` | Issue new access token from refresh token cookie |
 | `POST` | `/api/auth/logout` | Clear refresh token in DB + remove cookie |
 | `POST` | `/api/auth/consent` | Accept privacy policy (phase 07) |
@@ -176,6 +188,18 @@ com.easyapply/
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/statistics/badges` | Get badge stats (rejections, ghosting, offers, badges) |
+
+**SystemController — `/api/system`** (phase 08)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/system/notices/active` | List active notices (public, no auth required) |
+
+**AdminController — `/api/admin`** (phase 08, secured by `X-Admin-Key` header via `AdminKeyFilter`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/admin/notices` | Create a new service notice (returns 201 Created) |
 
 **Spring Security managed**
 
@@ -222,6 +246,7 @@ com.easyapply/
 | V11 | `V11__user_id_not_null.sql` | user_id NOT NULL on applications + cvs |
 | V12 | `V12__drop_stage_history.sql` | DROP TABLE stage_history |
 | V13 | `V13__user_privacy_policy_accepted_at.sql` | Add privacy_policy_accepted_at column (phase 07) |
+| V14 | `V14__service_notices.sql` | Create service_notices table (phase 08) |
 
 ### Current tables
 
@@ -287,6 +312,18 @@ com.easyapply/
 | category | VARCHAR(255) | default 'OTHER' (QUESTIONS/FEEDBACK/OTHER) |
 | created_at | TIMESTAMP | NOT NULL |
 
+**`service_notices`** (phase 08)
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | BIGSERIAL | PK |
+| type | VARCHAR(20) | NOT NULL (BANNER/MODAL) |
+| message_pl | TEXT | NOT NULL |
+| message_en | TEXT | NOT NULL |
+| active | BOOLEAN | NOT NULL, default true |
+| expires_at | TIMESTAMP | nullable (null = no expiry) |
+| created_at | TIMESTAMP | NOT NULL |
+
 **`stage_history`** — DROPPED (V12). Was: id, application_id FK, stage_name, completed, created_at, completed_at.
 
 ### Relations
@@ -295,6 +332,7 @@ com.easyapply/
 - `applications.cv_id` → `cvs.id` (nullable — application may not have a CV assigned)
 - `cvs.user_id` → `users.id`
 - `notes.application_id` → `applications.id` (CASCADE DELETE)
+- `service_notices` — no FK relations; standalone admin-managed table
 
 ---
 
@@ -337,6 +375,8 @@ App.tsx
         /dashboard → ProtectedRoute → ConsentGate (phase 07)
                                       ↓
                                     DashboardPage → AppContent
+          ServiceBanner × N    — red danger banners for BANNER-type notices (phase 08)
+          ServiceModal × N     — modal popups for MODAL-type notices; dismissed per session via sessionStorage (phase 08)
           header
             BadgeWidget        — gamification badges
             LanguageSwitcher   — PL / EN toggle
@@ -369,8 +409,17 @@ App.tsx
 |-----------|------|---------|
 | `ConsentGate` | `components/auth/ConsentGate.tsx` | Fullscreen overlay blocking UI for users without accepted privacy policy |
 | `PrivacyPolicy` | `pages/PrivacyPolicy.tsx` | Public page rendering privacy policy in PL/EN with markdown |
-| `Settings` | `pages/Settings.tsx` | Protected user settings page with account deletion |
+| `Settings` | `pages/Settings.tsx` | Protected user settings page with account deletion and data export (phase 08) |
 | `Footer` | `components/layout/Footer.tsx` | Footer with privacy policy link and contact email |
+
+### New components (phase 08)
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `ServiceBanner` | `components/notices/ServiceBanner.tsx` | Red danger banner for BANNER-type notices; dismissable per page load (useState) |
+| `ServiceModal` | `components/notices/ServiceModal.tsx` | Modal overlay for MODAL-type notices; dismissal persisted in sessionStorage per session |
+| `CountdownLabel` | `components/notices/CountdownLabel.tsx` | Inline `⏳ zostało: X dni X godz MM:SS` label (PL/EN); shown only when expiresAt is set |
+| `useCountdown` | `components/notices/useCountdown.ts` | setInterval-based hook; returns `TimeLeft {days, hours, minutes, seconds, expired} \| null` |
 
 ### Hooks (server state via React Query)
 
@@ -380,6 +429,7 @@ App.tsx
 | `useNotes` | hooks/useNotes.ts | fetch, create, update, delete notes |
 | `useCV` | hooks/useCV.ts | fetch, upload, create, update, delete, assignCV |
 | `useBadgeStats` | hooks/useBadgeStats.ts | fetch badge statistics |
+| `useServiceNotices` | hooks/useServiceNotices.ts | fetch active notices; staleTime 5 min; returns `[]` on error (phase 08) |
 
 ### API calls (api.ts → backend endpoints)
 
@@ -410,6 +460,8 @@ App.tsx
 | `updateNote` | PUT | `/api/notes/{id}` |
 | `deleteNote` | DELETE | `/api/notes/{id}` |
 | `fetchBadgeStats` | GET | `/api/statistics/badges` |
+| `fetchActiveNotices` | GET | `/api/system/notices/active` — returns `[]` on error, never breaks app (phase 08) |
+| `exportMyData` | GET | `/api/auth/me/export` — triggers blob download as `easyapply-export.json` (phase 08) |
 
 ### i18n
 
@@ -608,7 +660,48 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ---
 
-## 9. Not Implemented (from spec)
+## 9. Phase 08 — User Data & Service Notices (2026-04-27)
+
+**Status:** data-export + service-notices **complete**.
+
+### 9a. Data Export (RODO Art. 20)
+
+**Backend:**
+- `GET /api/auth/me/export` in `AuthController` — returns JSON with all user data: profile, all applications (with notes and CV info)
+- Response sent as `Content-Disposition: attachment; filename="easyapply-export.json"` with `Content-Type: application/json`
+
+**Frontend:**
+- Settings page: export section above danger zone — title, description, "Export data" button
+- `exportMyData()` in `api.ts` — fetches the blob and triggers browser download
+- i18n keys: `settings.exportTitle/Description/Button/exporting/exportError` (PL + EN)
+
+### 9b. Service Notices System
+
+**Backend:**
+- `ServiceNotice` entity: id, type (BANNER/MODAL), messagePl, messageEn, active, expiresAt (nullable), createdAt
+- `ServiceNoticeRepository.findActive()` — JPQL query filtering `active=true AND (expiresAt IS NULL OR expiresAt > :now)`
+- `GET /api/system/notices/active` — public endpoint, no auth required; returns list of active notices
+- `POST /api/admin/notices` — creates new notice; secured by `AdminKeyFilter` (X-Admin-Key header); returns 201 Created
+- `AdminKeyFilter` — `OncePerRequestFilter`; reads `${app.admin-key}` from properties; returns 403 if header missing or value wrong
+- `SecurityConfig`: `/api/admin/**` added to `permitAll` (Spring Security skips JWT check; filter handles auth); `X-Admin-Key` added to CORS `allowedHeaders`
+- `GlobalExceptionHandler`: added `DateTimeParseException` handler → 400 with ISO-8601 format error message
+- Flyway V14: `service_notices` table
+- Tests: `SystemControllerTest` (3 tests: empty list, active notice, expired excluded) + `AdminControllerTest` (4 tests: valid key→201, no key→403, wrong key→403, invalid body→400)
+
+**Frontend:**
+- `useServiceNotices` hook (React Query, staleTime 5 min) — fetches `/api/system/notices/active`; returns `[]` on any error so the app never breaks
+- `ServiceBanner` — dismissable red danger banner (background `#dc3545`); state in `useState`, resets on page reload
+- `ServiceModal` — modal overlay; dismissal stored in `sessionStorage` key `dismissed_notices` (array of IDs); reappears after logout because `AuthProvider.signOut()` calls `sessionStorage.removeItem('dismissed_notices')`
+- `CountdownLabel` — shown when `expiresAt` is set and not expired; displays `⏳ zostało: X dni X godz MM:SS` (PL) or `⏳ time left: ...` (EN)
+- `useCountdown` — setInterval-based hook (1s tick); exports `TimeLeft` interface
+- `AppContent` — renders banners above header and modals above TourGuide
+- `notices.css` — red danger theme: bold white text on `#dc3545` background with `border-bottom: 3px solid #a71d2a`
+- i18n key: `notices.ok: "OK, rozumiem"` / `"OK, I understand"` (PL + EN)
+- Tests: `ServiceBanner.test.tsx` (4 tests) + `ServiceModal.test.tsx` (4 tests, uses `sessionStorage.clear()`)
+
+---
+
+## 10. Not Implemented (from spec)
 
 | Item | Source | Notes |
 |------|--------|-------|
@@ -617,7 +710,7 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ---
 
-## 10. v1 Completion Status
+## 11. v1 Completion Status
 
 ### What is done and working
 
@@ -630,13 +723,15 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 - i18n (EN/PL with language switcher)
 - Gamification badges
 - Onboarding/tour
-- Flyway migrations (V1–V13, clean schema)
+- Flyway migrations (V1–V14, clean schema)
 - Multi-user isolation (all queries scoped to user_id from JWT)
 - Privacy policy page (/privacy, public, PL/EN)
 - Consent flow (users must accept privacy policy before accessing app)
 - Account deletion (DELETE /api/auth/me with cascade to all user data)
-- Settings page with account management
-- Vitest unit tests (89/89 backend, 68/68 frontend after phase 07)
+- Settings page with account management and data export
+- Data export (GET /api/auth/me/export, RODO Art. 20 compliance)
+- Service notices system (BANNER/MODAL with countdown; admin POST endpoint; public GET endpoint)
+- Vitest unit tests (backend + frontend, including Phase 08 SystemController and AdminController tests)
 - Cypress E2E tests
 
 ### What is incomplete or pending
@@ -649,6 +744,6 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ### v1 overall assessment
 
-All planned MVP features (ETAP 1–7) are implemented. Phase 07 (Privacy & RODO) has completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
+All planned MVP features (ETAP 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
 
 Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type.
