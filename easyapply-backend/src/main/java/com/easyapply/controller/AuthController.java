@@ -1,15 +1,18 @@
 package com.easyapply.controller;
 
+import com.easyapply.dto.UserExportResponse;
 import com.easyapply.dto.UserResponse;
 import com.easyapply.entity.User;
 import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.security.JwtService;
+import com.easyapply.service.UserExportService;
 import com.easyapply.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,11 +36,14 @@ public class AuthController {
     private final UserService userService;
     private final JwtService jwtService;
     private final MessageSource messageSource;
+    private final UserExportService userExportService;
 
-    public AuthController(UserService userService, JwtService jwtService, MessageSource messageSource) {
+    public AuthController(UserService userService, JwtService jwtService,
+                          MessageSource messageSource, UserExportService userExportService) {
         this.userService = userService;
         this.jwtService = jwtService;
         this.messageSource = messageSource;
+        this.userExportService = userExportService;
     }
 
     /**
@@ -48,6 +54,15 @@ public class AuthController {
     public ResponseEntity<UserResponse> me(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
         User user = userService.getById(authenticatedUser.id());
         return ResponseEntity.ok(UserResponse.fromEntity(user));
+    }
+
+    @GetMapping("/me/export")
+    public ResponseEntity<UserExportResponse> exportMyData(
+            @AuthenticationPrincipal AuthenticatedUser principal) {
+        UserExportResponse export = userExportService.buildExport(principal.id());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"easyapply-export.json\"")
+                .body(export);
     }
 
     /**

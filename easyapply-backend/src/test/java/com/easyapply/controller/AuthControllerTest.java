@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -159,4 +160,43 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$.privacyPolicyAcceptedAt").exists());
     }
+
+    @Test
+    @Order(5)
+    @DisplayName("GET /api/auth/me/export - returns export with profile, applications and notes")
+    void exportMyData_ReturnsFullExport() throws Exception {
+        Application app = new Application();
+        app.setUser(testUser);
+        app.setCompany("Export Corp");
+        app.setPosition("Developer");
+        app.setStatus(ApplicationStatus.SENT);
+        app = applicationRepository.save(app);
+
+        Note note = new Note();
+        note.setApplication(app);
+        note.setContent("Export note");
+        note.setCategory(NoteCategory.QUESTIONS);
+        noteRepository.save(note);
+
+        mockMvc.perform(get("/api/auth/me/export"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", containsString("attachment")))
+                .andExpect(jsonPath("$.profile.email").value(testUser.getEmail()))
+                .andExpect(jsonPath("$.applications").isArray())
+                .andExpect(jsonPath("$.applications.length()").value(1))
+                .andExpect(jsonPath("$.applications[0].notes.length()").value(1));
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("GET /api/auth/me/export - user without applications returns empty list")
+    void exportMyData_NoApplications_ReturnsEmptyList() throws Exception {
+        mockMvc.perform(get("/api/auth/me/export"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applications").isArray())
+                .andExpect(jsonPath("$.applications.length()").value(0));
+    }
+
+    // Note: 401 for missing JWT is enforced by production SecurityConfig (anyRequest().authenticated()).
+    // TestSecurityConfig uses permitAll() so JWT enforcement cannot be tested at the controller layer.
 }

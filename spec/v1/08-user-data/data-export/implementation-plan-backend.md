@@ -44,7 +44,7 @@ filename: easyapply-export.json
 
 **Nowy plik:** `dto/UserExportResponse.java`
 
-- [ ] Stworzyć record `UserExportResponse` z zagnieżdżonymi recordami:
+- [x] Stworzyć record `UserExportResponse` z zagnieżdżonymi recordami:
 
 ```java
 public record UserExportResponse(
@@ -100,7 +100,7 @@ Daty jako `String` (ISO-8601) — spójne z resztą DTO w projekcie.
 **Czego nie eksportujemy:** `id` usera, `google_id`, `refresh_token`,
 wewnętrzne ID CV i notatek, `user_id` w aplikacjach — to dane systemowe.
 
-- [ ] `./mvnw test` — zielone (DTO samo w sobie nic nie psuje)
+- [x] `./mvnw test` — zielone (DTO samo w sobie nic nie psuje)
 
 ---
 
@@ -108,7 +108,7 @@ wewnętrzne ID CV i notatek, `user_id` w aplikacjach — to dane systemowe.
 
 **Nowy plik:** `service/UserExportService.java`
 
-- [ ] Stworzyć serwis z metodą `buildExport(UUID userId)`:
+- [x] Stworzyć serwis z metodą `buildExport(UUID userId)`:
 
 ```java
 @Service
@@ -197,10 +197,9 @@ public class UserExportService {
 }
 ```
 
-- [ ] Sprawdzić czy `NoteRepository` ma metodę `findByApplicationId(Long id)`.
-  Jeśli nie — dodać (bez `AndApplicationUserId`, bo aplikacje już są
-  przefiltrowane po `userId` w serwisie).
-- [ ] `./mvnw test` — zielone
+- [x] Sprawdzić czy `NoteRepository` ma metodę `findByApplicationId(Long id)`.
+  Użyto istniejącej `findByApplicationIdOrderByCreatedAtDesc`.
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -208,8 +207,8 @@ public class UserExportService {
 
 **Plik:** `controller/AuthController.java`
 
-- [ ] Dodać zależność `UserExportService` do konstruktora kontrolera
-- [ ] Dodać metodę `exportMyData`:
+- [x] Dodać zależność `UserExportService` do konstruktora kontrolera
+- [x] Dodać metodę `exportMyData`:
 
 ```java
 @GetMapping("/me/export")
@@ -228,7 +227,7 @@ public ResponseEntity<UserExportResponse> exportMyData(
 Nagłówek `Content-Disposition: attachment` powoduje że przeglądarka pobiera
 plik zamiast go wyświetlać w zakładce.
 
-- [ ] `./mvnw test` — zielone
+- [x] `./mvnw test` — zielone
 
 ---
 
@@ -236,29 +235,29 @@ plik zamiast go wyświetlać w zakładce.
 
 **Plik:** `test/controller/AuthControllerTest.java`
 
-- [ ] Test `GET /api/auth/me/export` — user z 1 aplikacją i 1 notatką:
+- [x] Test `GET /api/auth/me/export` — user z 1 aplikacją i 1 notatką:
   - Response `200 OK`
   - Nagłówek `Content-Disposition` zawiera `attachment`
   - Body zawiera `profile.email` usera testowego
   - Body zawiera listę `applications` z 1 elementem
   - Aplikacja ma listę `notes` z 1 elementem
-- [ ] Test `GET /api/auth/me/export` — user bez aplikacji:
+- [x] Test `GET /api/auth/me/export` — user bez aplikacji:
   - Response `200 OK`
   - `applications` to pusta lista `[]`
-- [ ] Test `GET /api/auth/me/export` bez JWT:
-  - Response `401 Unauthorized`
-- [ ] `./mvnw test` — wszystkie testy zielone
+- [x] Test bez JWT: TestSecurityConfig używa `permitAll()` — 401 nie można przetestować
+  w warstwie kontrolera; egzekwowane przez produkcyjny `SecurityConfig`
+- [x] `./mvnw test` — wszystkie testy zielone
 
 ---
 
 ## Definicja ukończenia (DoD)
 
-- [ ] `GET /api/auth/me/export` zwraca `200` z `Content-Disposition: attachment; filename="easyapply-export.json"`
-- [ ] JSON zawiera profil + aplikacje + notatki + CV usera
-- [ ] JSON nie zawiera `google_id`, `refresh_token`, danych innych userów
-- [ ] Endpoint bez JWT zwraca `401`
-- [ ] Brak zmian w schemacie DB (brak nowej migracji Flyway)
-- [ ] `./mvnw test` — 0 failed
+- [x] `GET /api/auth/me/export` zwraca `200` z `Content-Disposition: attachment; filename="easyapply-export.json"`
+- [x] JSON zawiera profil + aplikacje + notatki + CV usera
+- [x] JSON nie zawiera `google_id`, `refresh_token`, danych innych userów
+- [x] Endpoint bez JWT zwraca `401` (egzekwowane przez produkcyjny `SecurityConfig`; nieprzetestowalne w profilu test z `permitAll()`)
+- [x] Brak zmian w schemacie DB (brak nowej migracji Flyway)
+- [x] `./mvnw test` — 0 failed
 
 ---
 
