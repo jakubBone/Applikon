@@ -55,6 +55,18 @@ Minimalne i wystarczające dla skali projektu.
 
 ---
 
+## Edge cases — decyzje projektowe
+
+| # | Scenariusz | Decyzja |
+|---|---|---|
+| EC-2 | `/api/admin/**` vs JWT — `anyRequest().authenticated()` odrzuca request bez Bearer tokena zanim `AdminKeyFilter` się uruchomi | `/api/admin/**` dodane do `permitAll()` w SecurityConfig; jedynym zabezpieczeniem jest `AdminKeyFilter` z `X-Admin-Key` |
+| EC-3 | `ServiceNoticeType.valueOf("INVALID")` rzuca `IllegalArgumentException` → 500 | Pole `type` w `ServiceNoticeRequest` dostaje `@Pattern(regexp = "^(BANNER\|MODAL)$")` — Spring walidacja zwraca 400 |
+| EC-4 | `LocalDateTime.parse("abc")` rzuca `DateTimeParseException` → 500 | `GlobalExceptionHandler` dostaje handler dla `DateTimeParseException` → 400 z komunikatem |
+| EC-5 | `X-Admin-Key` nie jest w CORS `allowedHeaders` — preflight odrzuca | Dodać `X-Admin-Key` do `config.setAllowedHeaders()` w `SecurityConfig.corsConfigurationSource()` |
+| EC-6 | `expiresAt` w przeszłości przy tworzeniu notice | Brak walidacji — notice zostanie natychmiast niewidoczny; to błąd admina, nie systemu |
+
+---
+
 ## Status realizacji
 
 ### Etap 1 — Flyway migracja V14
@@ -160,10 +172,12 @@ public record ServiceNoticeResponse(
 
 ```java
 public record ServiceNoticeRequest(
-    @NotBlank String type,
+    @NotBlank
+    @Pattern(regexp = "^(BANNER|MODAL)$", message = "type must be BANNER or MODAL")
+    String type,
     @NotBlank String messagePl,
     @NotBlank String messageEn,
-    String expiresAt   // ISO-8601, nullable
+    String expiresAt   // ISO-8601, nullable; brak walidacji czy > now() — błąd admina
 ) {}
 ```
 
@@ -219,7 +233,25 @@ public class ServiceNoticeService {
 
 ---
 
-### Etap 5 — Kontrolery
+### Etap 5 — GlobalExceptionHandler: obsługa `DateTimeParseException`
+
+**Plik:** `exception/GlobalExceptionHandler.java`
+
+- [ ] Dodać handler (EC-4: nieprawidłowy format `expiresAt` → 400 zamiast 500):
+
+```java
+@ExceptionHandler(DateTimeParseException.class)
+public ResponseEntity<Map<String, String>> handleDateTimeParse(DateTimeParseException ex) {
+    return ResponseEntity.badRequest()
+        .body(Map.of("error", "Invalid date format. Expected ISO-8601, e.g. 2026-12-31T23:59:59"));
+}
+```
+
+- [ ] `./mvnw test` — zielone
+
+---
+
+### Etap 7 — Kontrolery
 
 **Nowy plik:** `controller/SystemController.java`
 
@@ -271,7 +303,7 @@ public class AdminController {
 
 ---
 
-### Etap 6 — Zabezpieczenie endpointu admin
+### Etap 8 — Zabezpieczenie endpointu admin
 
 **Nowy plik:** `security/AdminKeyFilter.java`
 
@@ -314,11 +346,12 @@ app.admin-key=${ADMIN_KEY}
 
 **Plik:** `config/SecurityConfig.java`
 
-- [ ] Dodać `/api/admin/**` do listy chronionych ścieżek — powinno być objęte
-  przez istniejącą regułę "wszystko wymaga JWT"; AdminKeyFilter doda drugi
-  poziom ochrony niezależnie od JWT
-- [ ] Zarejestrować `AdminKeyFilter` w łańcuchu filtrów przed
-  `JwtAuthenticationConverter`
+- [ ] Dodać `/api/admin/**` do `permitAll()` — JWT nie jest wymagany dla tego
+  endpointu; jedynym zabezpieczeniem jest `AdminKeyFilter` z nagłówkiem
+  `X-Admin-Key` (EC-2: `anyRequest().authenticated()` blokowałoby curl bez JWT)
+- [ ] Dodać `X-Admin-Key` do `config.setAllowedHeaders()` w
+  `corsConfigurationSource()` (EC-5: bez tego preflight odrzuca request)
+- [ ] Zarejestrować `AdminKeyFilter` w łańcuchu filtrów
 
 **Plik:** `test/application.properties` (lub odpowiednik dla testów)
 
@@ -329,7 +362,7 @@ app.admin-key=${ADMIN_KEY}
 
 ---
 
-### Etap 7 — Testy
+### Etap 9 — Testy
 
 **Nowy plik:** `test/controller/SystemControllerTest.java`
 

@@ -262,6 +262,14 @@ plik zamiast go wyświetlać w zakładce.
 
 ---
 
+## Edge cases — decyzje projektowe
+
+| # | Scenariusz | Decyzja |
+|---|---|---|
+| EC-1 | CV typu `FILE` — `externalUrl` może być null (upload wyłączony od fazy 07) | Eksportujemy metadane jakie są; `externalUrl: null` w JSON to poprawne zachowanie |
+
+---
+
 ## Poza zakresem
 
 - **Eksport CSV** — tylko JSON; wystarczy na potrzeby RODO
