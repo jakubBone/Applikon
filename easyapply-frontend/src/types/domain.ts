@@ -92,6 +92,18 @@ export interface StageUpdateRequest {
 }
 
 // ============================================================
+// Service notices
+// ============================================================
+
+export interface ServiceNotice {
+  id: number
+  type: 'BANNER' | 'MODAL'
+  messagePl: string
+  messageEn: string
+  expiresAt: string | null
+}
+
+// ============================================================
 // Badge / statystyki
 // ============================================================
 

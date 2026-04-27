@@ -5,6 +5,7 @@ import type {
   CV,
   Note,
   NoteCategory,
+  ServiceNotice,
   StageUpdateRequest,
   User,
 } from '../types/domain'
@@ -292,6 +293,16 @@ export const fetchBadgeStats = async (): Promise<BadgeStats> => {
   const response = await apiFetch(`${API_URL}/statistics/badges`, { headers: getHeaders() })
   if (!response.ok) throw new Error('api.fetchStats')
   return response.json() as Promise<BadgeStats>
+}
+
+// ============================================================
+// Service notices
+// ============================================================
+
+export const fetchActiveNotices = async (): Promise<ServiceNotice[]> => {
+  const response = await apiFetch(`${API_URL}/system/notices/active`, { headers: getHeaders() })
+  if (!response.ok) return []
+  return response.json() as Promise<ServiceNotice[]>
 }
 
 // ============================================================

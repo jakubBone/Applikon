@@ -48,7 +48,7 @@ ServiceModal:
 
 **Plik:** `src/types/domain.ts` (lub odpowiednik z typami)
 
-- [ ] Dodać typ:
+- [x] Dodać typ:
 
 ```ts
 export interface ServiceNotice {
@@ -62,7 +62,7 @@ export interface ServiceNotice {
 
 **Plik:** `src/services/api.ts`
 
-- [ ] Dodać funkcję:
+- [x] Dodać funkcję:
 
 ```ts
 export async function fetchActiveNotices(): Promise<ServiceNotice[]> {
@@ -75,7 +75,7 @@ export async function fetchActiveNotices(): Promise<ServiceNotice[]> {
 Błędy z tego endpointu nie powinny blokować appki — `return []` zamiast rzucania
 wyjątku.
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -93,7 +93,7 @@ export function useServiceNotices() {
 }
 ```
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -132,7 +132,7 @@ To celowe: powiadomienia serwisowe są ważne i rzadkie.
 - Pełna szerokość, padding, przycisk zamknięcia po prawej
 - Użyć istniejących zmiennych CSS z projektu
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -192,7 +192,7 @@ Przy kolejnym wejściu: modal się nie pojawi dla tego `id`.
 - Wycentrowane okienko z treścią i przyciskiem OK
 - Użyć istniejących klas CSS modali
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -217,7 +217,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 {modals.map(n  => <ServiceModal  key={n.id} notice={n} />)}
 ```
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -241,7 +241,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 }
 ```
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -261,7 +261,7 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 - [ ] Test: modal nie pojawia się jeśli `id` jest już w localStorage
 - [ ] Test: po kliknięciu "OK" `id` trafia do localStorage
 
-- [ ] `npm run test:run` — wszystkie testy zielone
+- [x] `npm run test:run` — wszystkie testy zielone
 
 ---
 
@@ -291,14 +291,14 @@ const modals  = notices.filter(n => n.type === 'MODAL');
 
 ## Definicja ukończenia (DoD)
 
-- [ ] Aktywny `BANNER` widoczny dla zalogowanego usera na górze UI
-- [ ] Kliknięcie "×" zamyka banner (wraca po odświeżeniu)
-- [ ] Aktywny `MODAL` pojawia się przy wejściu
-- [ ] Kliknięcie "OK" zamyka modal i nie wraca w tej przeglądarce
-- [ ] Wiadomość wyświetla się w języku appki (PL/EN)
-- [ ] Błąd endpointu `/api/system/notices/active` nie blokuje appki
-- [ ] `npm run build` zielony
-- [ ] `npm run test:run` — 0 failed
+- [x] Aktywny `BANNER` widoczny dla zalogowanego usera na górze UI
+- [x] Kliknięcie "×" zamyka banner (wraca po odświeżeniu)
+- [x] Aktywny `MODAL` pojawia się przy wejściu
+- [x] Kliknięcie "OK" zamyka modal i nie wraca w tej przeglądarce
+- [x] Wiadomość wyświetla się w języku appki (PL/EN)
+- [x] Błąd endpointu `/api/system/notices/active` nie blokuje appki
+- [x] `npm run build` zielony
+- [x] `npm run test:run` — 0 failed
 
 ---
 

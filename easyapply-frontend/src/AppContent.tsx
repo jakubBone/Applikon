@@ -12,6 +12,9 @@ import { ApplicationForm } from './components/applications/ApplicationForm'
 import { ApplicationDetails } from './components/applications/ApplicationDetails'
 import { Footer } from './components/layout/Footer'
 import LanguageSwitcher from './components/LanguageSwitcher'
+import { ServiceBanner } from './components/notices/ServiceBanner'
+import { ServiceModal } from './components/notices/ServiceModal'
+import { useServiceNotices } from './hooks/useServiceNotices'
 import {
   useApplications,
   useUpdateStatus,
@@ -34,6 +37,9 @@ export default function AppContent() {
   const [showForm, setShowForm] = useState(false)
 
   const queryClient = useQueryClient()
+  const { data: notices = [] } = useServiceNotices()
+  const banners = notices.filter(n => n.type === 'BANNER')
+  const modals = notices.filter(n => n.type === 'MODAL')
   const { data: applications = [], isLoading } = useApplications()
   const updateStatus = useUpdateStatus()
   const updateStage = useUpdateStage()
@@ -117,6 +123,9 @@ export default function AppContent() {
           </button>
         </div>
       </header>
+
+      {banners.map(n => <ServiceBanner key={n.id} notice={n} />)}
+      {modals.map(n => <ServiceModal key={n.id} notice={n} />)}
 
       <TourGuide />
 
