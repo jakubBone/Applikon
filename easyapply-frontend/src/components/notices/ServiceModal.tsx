@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ServiceNotice } from '../../types/domain'
+import { useCountdown } from './useCountdown'
+import { CountdownLabel } from './CountdownLabel'
 import './notices.css'
 
 const DISMISSED_KEY = 'dismissed_notices'
 
 function getDismissed(): number[] {
   try {
-    return JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]') as number[]
+    return JSON.parse(sessionStorage.getItem(DISMISSED_KEY) || '[]') as number[]
   } catch {
     return []
   }
@@ -15,7 +17,7 @@ function getDismissed(): number[] {
 
 function dismiss(id: number): void {
   const current = getDismissed()
-  localStorage.setItem(DISMISSED_KEY, JSON.stringify([...current, id]))
+  sessionStorage.setItem(DISMISSED_KEY, JSON.stringify([...current, id]))
 }
 
 interface Props {
@@ -25,6 +27,7 @@ interface Props {
 export function ServiceModal({ notice }: Props) {
   const [visible, setVisible] = useState(() => !getDismissed().includes(notice.id))
   const { i18n, t } = useTranslation()
+  const countdown = useCountdown(notice.expiresAt)
 
   if (!visible) return null
 
@@ -39,6 +42,9 @@ export function ServiceModal({ notice }: Props) {
     <div className="service-modal-overlay">
       <div className="service-modal">
         <p className="service-modal-message">{message}</p>
+        {countdown && !countdown.expired && (
+          <CountdownLabel countdown={countdown} />
+        )}
         <button className="service-modal-ok" onClick={handleOk}>
           {t('notices.ok')}
         </button>

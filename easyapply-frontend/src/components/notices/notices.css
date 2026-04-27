@@ -3,32 +3,35 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1.25rem;
-  background: #fef3cd;
-  border-bottom: 1px solid #fde68a;
-  font-size: 0.95rem;
+  padding: 1rem 1.5rem;
+  background: #dc3545;
+  border-bottom: 3px solid #a71d2a;
+  font-size: 1rem;
+  font-weight: 600;
   line-height: 1.4;
 }
 
 .service-banner-message {
   flex: 1;
-  color: #78350f;
+  color: #fff;
+  letter-spacing: 0.01em;
 }
 
 .service-banner-close {
   flex-shrink: 0;
-  background: none;
-  border: none;
-  font-size: 1.4rem;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 4px;
+  font-size: 1.2rem;
   line-height: 1;
-  color: #78350f;
+  color: #fff;
   cursor: pointer;
-  padding: 0 0.25rem;
-  opacity: 0.7;
+  padding: 0.2rem 0.5rem;
+  transition: background 0.15s;
 }
 
 .service-banner-close:hover {
-  opacity: 1;
+  background: rgba(255,255,255,0.35);
 }
 
 .service-modal-overlay {
@@ -72,4 +75,11 @@
 
 .service-modal-ok:hover {
   background: #5a6fd6;
+}
+
+.notice-countdown {
+  font-size: 0.85em;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
 }

@@ -21,7 +21,7 @@ const notice: ServiceNotice = {
 
 describe('ServiceModal', () => {
   beforeEach(() => {
-    localStorage.clear()
+    sessionStorage.clear()
     vi.clearAllMocks()
   })
 
@@ -39,17 +39,17 @@ describe('ServiceModal', () => {
     expect(screen.queryByText('Ważna informacja')).not.toBeInTheDocument()
   })
 
-  it('does not show modal when id is already in localStorage', () => {
-    localStorage.setItem('dismissed_notices', JSON.stringify([42]))
+  it('does not show modal when id is already in sessionStorage', () => {
+    sessionStorage.setItem('dismissed_notices', JSON.stringify([42]))
     render(<ServiceModal notice={notice} />)
     expect(screen.queryByText('Ważna informacja')).not.toBeInTheDocument()
   })
 
-  it('saves id to localStorage after clicking OK', async () => {
+  it('saves id to sessionStorage after clicking OK', async () => {
     render(<ServiceModal notice={notice} />)
     await userEvent.click(screen.getByRole('button', { name: /OK/i }))
 
-    const dismissed = JSON.parse(localStorage.getItem('dismissed_notices') || '[]') as number[]
+    const dismissed = JSON.parse(sessionStorage.getItem('dismissed_notices') || '[]') as number[]
     expect(dismissed).toContain(42)
   })
 })

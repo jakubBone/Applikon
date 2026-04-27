@@ -59,6 +59,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Backend unreachable — log out locally anyway
     }
     clearToken()
+    sessionStorage.removeItem('dismissed_notices')
     setUser(null)
   }
 
