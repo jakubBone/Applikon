@@ -293,3 +293,21 @@ export const fetchBadgeStats = async (): Promise<BadgeStats> => {
   if (!response.ok) throw new Error('api.fetchStats')
   return response.json() as Promise<BadgeStats>
 }
+
+// ============================================================
+// User data export
+// ============================================================
+
+export const exportMyData = async (): Promise<void> => {
+  const response = await apiFetch(`${API_URL}/auth/me/export`, { headers: getHeaders() })
+  if (!response.ok) throw new Error('api.exportMyData')
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'easyapply-export.json'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}

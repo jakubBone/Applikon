@@ -32,6 +32,11 @@
     "emailLabel": "Email",
     "privacyAcceptedAt": "Privacy policy accepted:",
     "dateLocale": "en-US",
+    "exportTitle": "Your data",
+    "exportDescription": "Download all your data stored in EasyApply.",
+    "exportButton": "Download my data",
+    "exporting": "Preparing...",
+    "exportError": "Something went wrong. Try again.",
     "dangerZone": "Danger zone",
     "deleteAccount": {
       "button": "Delete account",

@@ -25,9 +25,9 @@ Dodać przycisk "Pobierz moje dane" w `/settings`, który pobiera plik
 
 **Plik:** `src/services/api.ts` (lub plik z wywołaniami auth API w projekcie)
 
-- [ ] Sprawdzić jak w projekcie przekazywany jest token autoryzacyjny do `fetch`
+- [x] Sprawdzić jak w projekcie przekazywany jest token autoryzacyjny do `fetch`
   (interceptor, wrapper, headers wprost) — dostosować do istniejącego wzorca
-- [ ] Dodać funkcję `exportMyData`:
+- [x] Dodać funkcję `exportMyData`:
 
 ```ts
 export async function exportMyData(): Promise<void> {
@@ -49,7 +49,7 @@ export async function exportMyData(): Promise<void> {
 }
 ```
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -57,14 +57,14 @@ export async function exportMyData(): Promise<void> {
 
 **Plik:** `src/pages/Settings.tsx`
 
-- [ ] Dodać stan lokalny:
+- [x] Dodać stan lokalny:
 
 ```ts
 const [exporting, setExporting] = useState(false);
 const [exportError, setExportError] = useState(false);
 ```
 
-- [ ] Dodać handler:
+- [x] Dodać handler:
 
 ```ts
 async function handleExport() {
@@ -80,7 +80,7 @@ async function handleExport() {
 }
 ```
 
-- [ ] Dodać sekcję w JSX (przed sekcją "Usuń konto"):
+- [x] Dodać sekcję w JSX (przed sekcją "Usuń konto"):
 
 ```tsx
 <section>
@@ -95,7 +95,7 @@ async function handleExport() {
 
 Użyć istniejących klas CSS / komponentów Button z projektu.
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -103,8 +103,8 @@ Użyć istniejących klas CSS / komponentów Button z projektu.
 
 **Pliki:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
-- [ ] Sprawdzić strukturę istniejących kluczy `settings.*` i dopasować poziom zagnieżdżenia
-- [ ] Dodać klucze (PL):
+- [x] Sprawdzić strukturę istniejących kluczy `settings.*` i dopasować poziom zagnieżdżenia
+- [x] Dodać klucze (PL):
 
 ```json
 "settings": {
@@ -116,7 +116,7 @@ Użyć istniejących klas CSS / komponentów Button z projektu.
 }
 ```
 
-- [ ] Dodać klucze (EN):
+- [x] Dodać klucze (EN):
 
 ```json
 "settings": {
@@ -128,7 +128,7 @@ Użyć istniejących klas CSS / komponentów Button z projektu.
 }
 ```
 
-- [ ] `npm run build` zielony
+- [x] `npm run build` zielony
 
 ---
 
@@ -136,12 +136,12 @@ Użyć istniejących klas CSS / komponentów Button z projektu.
 
 **Plik:** `src/test/pages/Settings.test.tsx` (lub odpowiednik w projekcie)
 
-- [ ] Test: sekcja eksportu renderuje się w `/settings`
-- [ ] Test: kliknięcie przycisku wywołuje `exportMyData()`
-- [ ] Test: podczas pobierania przycisk jest `disabled` z tekstem "Przygotowuję..."
-- [ ] Test: gdy `exportMyData()` rzuca błąd — widoczny komunikat błędu
-- [ ] Test: gdy `exportMyData()` się powiedzie — brak komunikatu błędu
-- [ ] `npm run test:run` — wszystkie testy zielone
+- [x] Test: sekcja eksportu renderuje się w `/settings`
+- [x] Test: kliknięcie przycisku wywołuje `exportMyData()`
+- [x] Test: podczas pobierania przycisk jest `disabled` z tekstem "Przygotowuję..."
+- [x] Test: gdy `exportMyData()` rzuca błąd — widoczny komunikat błędu
+- [x] Test: gdy `exportMyData()` się powiedzie — brak komunikatu błędu
+- [x] `npm run test:run` — wszystkie testy zielone
 
 ---
 
@@ -163,13 +163,13 @@ Użyć istniejących klas CSS / komponentów Button z projektu.
 
 ## Definicja ukończenia (DoD)
 
-- [ ] Przycisk "Pobierz moje dane" widoczny w `/settings`
-- [ ] Kliknięcie pobiera plik `easyapply-export.json`
-- [ ] Podczas pobierania przycisk jest `disabled`
-- [ ] Przy błędzie pojawia się komunikat
-- [ ] Tłumaczenia działają w PL i EN
-- [ ] `npm run build` zielony
-- [ ] `npm run test:run` — 0 failed
+- [x] Przycisk "Pobierz moje dane" widoczny w `/settings`
+- [x] Kliknięcie pobiera plik `easyapply-export.json`
+- [x] Podczas pobierania przycisk jest `disabled`
+- [x] Przy błędzie pojawia się komunikat
+- [x] Tłumaczenia działają w PL i EN
+- [x] `npm run build` zielony
+- [x] `npm run test:run` — 0 failed
 
 ---
 

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { Footer } from '../components/layout/Footer'
-import { deleteAccount } from '../services/api'
+import { deleteAccount, exportMyData } from '../services/api'
 import './Settings.css'
 
 export function Settings() {
@@ -14,6 +14,8 @@ export function Settings() {
   const handleBack = () => {
     navigate('/dashboard')
   }
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [confirmInput, setConfirmInput] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -28,6 +30,18 @@ export function Settings() {
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
   }, [showDeleteModal])
+
+  const handleExport = async () => {
+    setExporting(true)
+    setExportError(false)
+    try {
+      await exportMyData()
+    } catch {
+      setExportError(true)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const confirmWord = t('settings.deleteAccount.confirmWord') || 'DELETE'
   const isConfirmValid = confirmInput === confirmWord
@@ -90,6 +104,21 @@ export function Settings() {
             <label>{t('settings.privacyAcceptedAt')}</label>
             <div className="settings-field-value">{privacyAcceptedAt}</div>
           </div>
+        </section>
+
+        <section className="settings-section">
+          <h2>{t('settings.exportTitle')}</h2>
+          <p className="settings-export-description">{t('settings.exportDescription')}</p>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="settings-export-button"
+          >
+            {exporting ? t('settings.exporting') : t('settings.exportButton')}
+          </button>
+          {exportError && (
+            <p className="settings-export-error">{t('settings.exportError')}</p>
+          )}
         </section>
 
         <section className="settings-section settings-danger">

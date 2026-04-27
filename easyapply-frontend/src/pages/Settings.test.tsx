@@ -13,6 +13,7 @@ vi.mock('../services/api', () => ({
   clearToken: vi.fn(),
   logout: vi.fn(),
   deleteAccount: vi.fn(),
+  exportMyData: vi.fn(),
 }))
 
 // Mock translation
@@ -36,6 +37,11 @@ vi.mock('react-i18next', () => ({
         'settings.deleteAccount.confirm': 'Delete my account',
         'settings.deleteAccount.success': 'Account deleted',
         'settings.deleteAccount.error': 'Failed to delete account',
+        'settings.exportTitle': 'Your data',
+        'settings.exportDescription': 'Download all your data stored in EasyApply.',
+        'settings.exportButton': 'Download my data',
+        'settings.exporting': 'Preparing...',
+        'settings.exportError': 'Something went wrong. Try again.',
       }
       return translations[key] || key
     },
@@ -219,6 +225,110 @@ describe('Settings', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('Delete account?')).not.toBeInTheDocument()
+    })
+  })
+
+  it('renders export section in settings', async () => {
+    render(
+      <TestWrapper>
+        <Settings />
+      </TestWrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Your data')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
+    })
+  })
+
+  it('calls exportMyData on button click', async () => {
+    vi.mocked(api.exportMyData).mockResolvedValue(undefined)
+
+    render(
+      <TestWrapper>
+        <Settings />
+      </TestWrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /Download my data/i }))
+
+    await waitFor(() => {
+      expect(api.exportMyData).toHaveBeenCalledOnce()
+    })
+  })
+
+  it('disables export button while exporting', async () => {
+    let resolve: () => void
+    vi.mocked(api.exportMyData).mockImplementation(
+      () => new Promise<void>(r => { resolve = r })
+    )
+
+    render(
+      <TestWrapper>
+        <Settings />
+      </TestWrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /Download my data/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Preparing.../i })).toBeDisabled()
+    })
+
+    resolve!()
+  })
+
+  it('shows error when exportMyData fails', async () => {
+    vi.mocked(api.exportMyData).mockRejectedValue(new Error('network'))
+
+    render(
+      <TestWrapper>
+        <Settings />
+      </TestWrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /Download my data/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Something went wrong/)).toBeInTheDocument()
+    })
+  })
+
+  it('hides error message after successful export', async () => {
+    vi.mocked(api.exportMyData)
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce(undefined)
+
+    render(
+      <TestWrapper>
+        <Settings />
+      </TestWrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /Download my data/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/Something went wrong/)).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /Download my data/i }))
+    await waitFor(() => {
+      expect(screen.queryByText(/Something went wrong/)).not.toBeInTheDocument()
     })
   })
 

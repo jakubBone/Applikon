@@ -69,6 +69,46 @@
   font-size: 0.95rem;
 }
 
+.settings-export-description {
+  margin: 0 0 1rem 0;
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.settings-export-button {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.settings-export-button:hover:not(:disabled) {
+  background: #5a6fd6;
+}
+
+.settings-export-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-export-error {
+  margin: 0.75rem 0 0 0;
+  padding: 0.75rem 1rem;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  color: #c33;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 .settings-danger {
   background: #fff5f5;
   padding: 1.5rem;
