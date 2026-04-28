@@ -40,12 +40,19 @@ public class User {
     @Column(name = "privacy_policy_accepted_at")
     private LocalDateTime privacyPolicyAcceptedAt;
 
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     protected User() {}
 
     public User(String email, String name, String googleId) {
         this.email = email;
         this.name = name;
         this.googleId = googleId;
+    }
+
+    public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
     }
 
     public void acceptPrivacyPolicy() {
@@ -69,9 +76,9 @@ public class User {
         this.refreshTokenExpiry = null;
     }
 
-    public boolean isRefreshTokenValid(String token) {
+    public boolean isRefreshTokenValid(String tokenHash) {
         return refreshToken != null
-                && refreshToken.equals(token)
+                && refreshToken.equals(tokenHash)
                 && refreshTokenExpiry != null
                 && refreshTokenExpiry.isAfter(LocalDateTime.now());
     }

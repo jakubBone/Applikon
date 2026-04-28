@@ -81,7 +81,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         refreshCookie.setMaxAge(refreshTokenExpiryDays * 24 * 60 * 60);
         response.addCookie(refreshCookie);
 
-        log.info("User {} logged in via Google", user.getEmail());
+        log.info("User {} logged in via Google", user.getId());
 
         // Redirect frontend with the access token in the URL
         String redirectUrl = frontendUrl + "/auth/callback?token=" + accessToken;

@@ -5,6 +5,7 @@ import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.CVRepository;
 import com.easyapply.repository.NoteRepository;
 import com.easyapply.repository.UserRepository;
+import com.easyapply.security.TokenHasher;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,13 +58,15 @@ public class UserService {
         return userRepository.findByGoogleId(googleId)
                 .map(existingUser -> {
                     existingUser.updateProfile(name, email);
-                    log.debug("User {} logged in (existing)", email);
+                    existingUser.recordLogin();
+                    log.debug("User logged in (existing)");
                     return existingUser;
                 })
                 .orElseGet(() -> {
                     User newUser = new User(email, name, googleId);
+                    newUser.recordLogin();
                     User saved = userRepository.save(newUser);
-                    log.info("New user registered: {}", email);
+                    log.info("New user registered");
                     createDemoApplication(saved);
                     return saved;
                 });
@@ -83,7 +86,7 @@ public class UserService {
 
     @Transactional
     public void saveRefreshToken(User user, String refreshToken, LocalDateTime expiry) {
-        user.setRefreshToken(refreshToken, expiry);
+        user.setRefreshToken(TokenHasher.hash(refreshToken), expiry);
         userRepository.save(user);
     }
 
@@ -93,15 +96,18 @@ public class UserService {
         userRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public User findByValidRefreshToken(String refreshToken) {
-        User user = userRepository.findByRefreshToken(refreshToken)
+        String tokenHash = TokenHasher.hash(refreshToken);
+        User user = userRepository.findByRefreshToken(tokenHash)
                 .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.token.invalid", null, LocaleContextHolder.getLocale())));
 
-        if (!user.isRefreshTokenValid(refreshToken)) {
+        if (!user.isRefreshTokenValid(tokenHash)) {
             throw new IllegalStateException(messageSource.getMessage("error.token.expired", null, LocaleContextHolder.getLocale()));
         }
 
+        user.recordLogin();
+        userRepository.save(user);
         return user;
     }
 
@@ -145,7 +151,7 @@ public class UserService {
 
         // 5. Delete user
         userRepository.delete(user);
-        log.info("User account deleted: {}", user.getEmail());
+        log.info("User account deleted: {}", userId);
     }
 
     // =========================================================================
@@ -187,6 +193,6 @@ public class UserService {
 
         applicationRepository.save(demo);
 
-        log.info("Demo application created for new user {}", user.getEmail());
+        log.info("Demo application created for user {}", user.getId());
     }
 }
