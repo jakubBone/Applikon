@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation, type TFunction } from 'react-i18next'
 import { NotesList } from '../notes/NotesList'
 import { ApplicationForm } from './ApplicationForm'
@@ -11,6 +11,7 @@ import type { Application } from '../../types/domain'
 interface Props {
   application: Application
   onBack: () => void
+  onDelete: (id: number) => void
 }
 
 function formatDate(dateString: string, locale: string): string {
@@ -49,9 +50,23 @@ function formatSalary(app: Application, locale: string, t: TFunction): string | 
   return salaryStr
 }
 
-export function ApplicationDetails({ application, onBack }: Props) {
+export function ApplicationDetails({ application, onBack, onDelete }: Props) {
   const { t, i18n } = useTranslation()
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showMenu) return
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showMenu])
 
   const salary = formatSalary(application, i18n.language, t)
 
@@ -65,9 +80,28 @@ export function ApplicationDetails({ application, onBack }: Props) {
         <div className="details-title">
           <div className="details-title-row">
             <h2>{application.company}</h2>
-            <button className="edit-btn" onClick={() => setShowEditForm(true)}>
-              {t('details.edit')}
-            </button>
+            <div className="details-menu-wrapper" ref={menuRef}>
+              <button
+                className="details-menu-btn"
+                onClick={(e) => { e.stopPropagation(); setShowMenu(m => !m) }}
+              >⋮</button>
+              {showMenu && (
+                <div className="context-menu">
+                  <button
+                    className="context-menu-item"
+                    onClick={() => { setShowMenu(false); setShowEditForm(true) }}
+                  >
+                    {t('details.edit')}
+                  </button>
+                  <button
+                    className="context-menu-item danger"
+                    onClick={() => { setShowMenu(false); setShowDeleteConfirm(true) }}
+                  >
+                    {t('table.delete')}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <p className="details-position">{application.position}</p>
           <div className="status-info">
@@ -90,6 +124,24 @@ export function ApplicationDetails({ application, onBack }: Props) {
           application={application}
           onClose={() => setShowEditForm(false)}
         />
+      )}
+
+      {showDeleteConfirm && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal">
+            <h3>{t('table.confirmDeleteTitle')}</h3>
+            <p>{t('table.confirmDeleteMsg', { count: 1 })}</p>
+            <p className="confirm-warning">{t('table.confirmDeleteWarning')}</p>
+            <div className="confirm-actions">
+              <button className="confirm-btn cancel" onClick={() => setShowDeleteConfirm(false)}>
+                {t('table.cancel')}
+              </button>
+              <button className="confirm-btn delete" onClick={() => { setShowDeleteConfirm(false); onDelete(application.id) }}>
+                {t('table.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="details-grid">

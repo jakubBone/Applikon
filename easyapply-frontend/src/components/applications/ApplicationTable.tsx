@@ -10,6 +10,7 @@ interface Props {
   onRowClick: (app: Application) => void
   onStatusChange?: (id: number, status: string) => void
   onDelete: (ids: Set<number>) => void
+  onEdit: (app: Application) => void
 }
 
 const getCompanyColor = (company: string): string => {
@@ -38,7 +39,7 @@ const statusConfig: Record<string, { labelKey: ParseKeys<'common'>; color: strin
   ...STATUS_CONFIG,
 }
 
-function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
+function ApplicationTable({ applications, onRowClick, onDelete, onEdit }: Props) {
   const { t } = useTranslation()
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [sortField, setSortField] = useState('appliedAt')
@@ -46,6 +47,9 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null)
+  const [deleteConfirmApp, setDeleteConfirmApp] = useState<Application | null>(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
 
   useEffect(() => {
@@ -53,6 +57,13 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  useEffect(() => {
+    if (menuOpenId === null) return
+    const close = () => { setMenuOpenId(null); setMenuPos(null) }
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [menuOpenId])
 
   const getDaysSince = (dateString: string): string => {
     const date = new Date(dateString)
@@ -209,7 +220,31 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
                   </div>
                   <div className="mobile-card-position">{app.position}</div>
                 </div>
-                <span className="mobile-card-menu">⋮</span>
+                <div
+                  className="mobile-card-menu-wrapper"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span
+                    className="mobile-card-menu"
+                    onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === app.id ? null : app.id) }}
+                  >⋮</span>
+                  {menuOpenId === app.id && (
+                    <div className="context-menu">
+                      <button
+                        className="context-menu-item"
+                        onClick={() => { setMenuOpenId(null); onEdit(app) }}
+                      >
+                        {t('details.edit')}
+                      </button>
+                      <button
+                        className="context-menu-item danger"
+                        onClick={() => { setMenuOpenId(null); setDeleteConfirmApp(app) }}
+                      >
+                        {t('table.delete')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="mobile-card-details">
@@ -314,6 +349,27 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
                 {t('table.cancel')}
               </button>
               <button className="confirm-btn delete" onClick={handleDeleteSelected}>
+                {t('table.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmApp && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal">
+            <h3>{t('table.confirmDeleteTitle')}</h3>
+            <p>{t('table.confirmDeleteMsg', { count: 1 })}</p>
+            <p className="confirm-warning">{t('table.confirmDeleteWarning')}</p>
+            <div className="confirm-actions">
+              <button className="confirm-btn cancel" onClick={() => setDeleteConfirmApp(null)}>
+                {t('table.cancel')}
+              </button>
+              <button className="confirm-btn delete" onClick={() => {
+                onDelete(new Set([deleteConfirmApp.id]))
+                setDeleteConfirmApp(null)
+              }}>
                 {t('table.delete')}
               </button>
             </div>
@@ -426,8 +482,21 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
                         {t(status.labelKey)}
                       </span>
                     </td>
-                    <td className="menu-col">
-                      <span className="row-menu-icon">⋮</span>
+                    <td className="menu-col" onClick={(e) => e.stopPropagation()}>
+                      <span
+                        className="row-menu-icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (menuOpenId === app.id) {
+                            setMenuOpenId(null)
+                            setMenuPos(null)
+                          } else {
+                            const rect = e.currentTarget.getBoundingClientRect()
+                            setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                            setMenuOpenId(app.id)
+                          }
+                        }}
+                      >⋮</span>
                     </td>
                   </tr>
                 )
@@ -446,6 +515,36 @@ function ApplicationTable({ applications, onRowClick, onDelete }: Props) {
       )}
 
       {isMobile && renderMobileCards()}
+
+      {/* Desktop row context menu — fixed to escape table-container overflow:hidden */}
+      {menuOpenId !== null && menuPos && (
+        <div
+          className="context-menu"
+          style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, left: 'auto' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="context-menu-item"
+            onClick={() => {
+              const app = sortedApplications.find(a => a.id === menuOpenId)
+              setMenuOpenId(null); setMenuPos(null)
+              if (app) onEdit(app)
+            }}
+          >
+            {t('details.edit')}
+          </button>
+          <button
+            className="context-menu-item danger"
+            onClick={() => {
+              const app = sortedApplications.find(a => a.id === menuOpenId)
+              setMenuOpenId(null); setMenuPos(null)
+              if (app) setDeleteConfirmApp(app)
+            }}
+          >
+            {t('table.delete')}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

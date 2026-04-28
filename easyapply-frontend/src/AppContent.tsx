@@ -36,6 +36,7 @@ export default function AppContent() {
   const [selectedAppId, setSelectedAppId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [editingApp, setEditingApp] = useState<Application | null>(null)
 
   const queryClient = useQueryClient()
   const { data: notices = [] } = useServiceNotices()
@@ -94,6 +95,18 @@ export default function AppContent() {
 
   const handleDeleteApplications = (ids: Set<number>) => {
     ids.forEach(id => deleteApplication.mutate(id))
+  }
+
+  const handleEditApplication = (app: Application) => {
+    setEditingApp(app)
+  }
+
+  const handleDeleteSingle = (id: number) => {
+    deleteApplication.mutate(id, {
+      onSuccess: () => {
+        if (view === 'details') handleBackToList()
+      }
+    })
   }
 
   return (
@@ -206,17 +219,23 @@ export default function AppContent() {
         <ApplicationForm mode="create" onClose={() => setShowForm(false)} />
       )}
 
+      {editingApp && (
+        <ApplicationForm mode="edit" application={editingApp} onClose={() => setEditingApp(null)} />
+      )}
+
       <main className="main-content">
         {isLoading ? (
           <p className="loading">{t('app.loading')}</p>
         ) : view === 'details' && selectedApp ? (
-          <ApplicationDetails application={selectedApp} onBack={handleBackToList} />
+          <ApplicationDetails application={selectedApp} onBack={handleBackToList} onDelete={handleDeleteSingle} />
         ) : view === 'kanban' ? (
           <KanbanBoard
             applications={applications}
             onStatusChange={handleStatusChange}
             onStageChange={handleStageChange}
             onCardClick={handleViewDetails}
+            onCardEdit={handleEditApplication}
+            onCardDelete={handleDeleteSingle}
           />
         ) : view === 'cv' ? (
           <CVManager
@@ -229,6 +248,7 @@ export default function AppContent() {
             onRowClick={handleViewDetails}
             onStatusChange={handleStatusChange}
             onDelete={handleDeleteApplications}
+            onEdit={handleEditApplication}
           />
         )}
       </main>

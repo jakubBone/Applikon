@@ -1769,3 +1769,71 @@ html, body {
     0 0 15px rgba(102, 126, 234, 0.1),
     inset 0 1px 0 rgba(0, 0, 0, 0.1);
 }
+
+/* Context Menu (shared — kanban card, table row, details view) */
+.card-menu-wrapper,
+.row-menu-wrapper,
+.mobile-card-menu-wrapper,
+.details-menu-wrapper {
+  position: relative;
+}
+
+.context-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 200;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #2c3e50;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.context-menu-item:hover {
+  background: #f5f6fa;
+}
+
+.context-menu-item.danger {
+  color: #e74c3c;
+}
+
+.context-menu-item.danger:hover {
+  background: #fdf0f0;
+}
+
+/* Details menu button (⋮ in details header) */
+.details-menu-btn {
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 1.25rem;
+  color: #555;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.details-menu-btn:hover {
+  background: #f5f6fa;
+  border-color: #667eea;
+  color: #667eea;
+}
+

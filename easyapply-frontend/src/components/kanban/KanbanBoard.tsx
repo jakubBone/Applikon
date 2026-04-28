@@ -26,9 +26,11 @@ interface KanbanBoardProps {
   onStatusChange: (id: number, status: string) => void
   onStageChange: (id: number, data: StageUpdateRequest) => void
   onCardClick: (app: Application) => void
+  onCardEdit: (app: Application) => void
+  onCardDelete: (id: number) => void
 }
 
-function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageChange, onCardClick }: KanbanBoardProps) {
+function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageChange, onCardClick, onCardEdit, onCardDelete }: KanbanBoardProps) {
   const { t } = useTranslation()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [stageModalOpen, setStageModalOpen] = useState(false)
@@ -305,6 +307,8 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
                     onClick={onCardClick}
                     onStageChange={onStageChange}
                     onLongPress={handleLongPress}
+                    onEdit={onCardEdit}
+                    onDelete={onCardDelete}
                   />
                 ))}
               </KanbanColumn>
