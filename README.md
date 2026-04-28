@@ -90,8 +90,24 @@ Specification and architecture artifacts live in [`spec/`](spec/README.md):
 - **v2 microservices vision** — `spec/v2/vision.md`
 
 
+## 🔒 Privacy & Data
+
+EasyApply collects the minimum data needed to operate:
+
+- **What we store:** email, display name, Google ID, and an optional link to your CV hosted externally (Google Drive, Dropbox, etc.). No CV files are uploaded to our servers.
+- **CV files:** deliberately excluded — the upload endpoint is disabled. Users paste a link to their own hosted CV and retain full control over access.
+- **Account deletion:** available at any time via Settings → Delete account. All data (applications, notes, CV records) is permanently removed with no trace left in the database.
+- **Inactive accounts:** automatically deleted after 12 months of inactivity.
+- **Refresh tokens:** stored as SHA-256 hashes — a stolen database cannot be used to hijack sessions.
+- **Logs:** user identifiers in logs are UUIDs only — no emails, names, or tokens in plaintext.
+- **Privacy policy:** available at `/privacy` in the live app (PL/EN).
+- **Contact:** jakub.bone1990@gmail.com
+
+See [`spec/v1/07-privacy-rodo/`](spec/v1/07-privacy-rodo/) for the full design rationale behind these decisions.
+
+
 ## ✅ Status
 
-v1 complete. All planned MVP features implemented, plus: Google OAuth2 authentication, i18n (EN/PL), onboarding tour, gamification badges, Cypress E2E tests.
+v1 complete. All planned MVP features implemented, plus: Google OAuth2 authentication, i18n (EN/PL), onboarding tour, gamification badges, Cypress E2E tests, RODO compliance (privacy policy, consent flow, account deletion, data retention).
 
 v2 (microservices + AI features) — vision defined, implementation not started.

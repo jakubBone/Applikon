@@ -3,7 +3,7 @@
 > Generated: 2026-04-23. Describes the actual implemented state of EasyApply v1.
 > Source of truth: the code. This document reflects what exists, not what was planned.
 > 
-> **Latest update:** Phase 08 (User Data & Service Notices) implemented: data export (RODO Art. 20) and service notices system (BANNER/MODAL with countdown timer).
+> **Latest update:** Phase 07 retention-hygiene completed: `last_login_at` tracking, daily retention cron (`AccountRetentionService`), SHA-256 hashing of refresh tokens, PII removed from logs.
 
 ---
 
@@ -32,6 +32,7 @@
 | Privacy policy (phase 07) | Not in MVP | `/privacy` page public route, PL/EN, react-markdown | Added (phase 07) |
 | Consent flow (phase 07) | Not in MVP | ConsentGate wrapper, POST /api/auth/consent, blocks UI until accepted | Added (phase 07) |
 | Account deletion (phase 07) | Not in MVP | DELETE /api/auth/me + cascade; /settings page with deletion UI | Added (phase 07) |
+| Retention & hygiene (phase 07) | Not in MVP | last_login_at tracking; daily cron removes inactive accounts >12 months; refresh_token stored as SHA-256 hash; PII removed from logs | Added (phase 07) |
 | Data export (phase 08) | Not in MVP | GET /api/auth/me/export returns JSON blob with all user data (RODO Art. 20) | Added (phase 08) |
 | Service notices (phase 08) | Not in MVP | BANNER/MODAL notices via DB; admin POST endpoint secured by X-Admin-Key header; countdown timer | Added (phase 08) |
 
@@ -69,7 +70,7 @@ Based on `spec/v1/01-vision/brief.md`:
 
 ```
 com.easyapply/
-  EasyApplyApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing
+  EasyApplyApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing, @EnableScheduling
   config/
     I18nConfig.java                — MessageSource (i18n/messages), AcceptHeaderLocaleResolver (default: en)
     SecurityConfig.java            — Spring Security, OAuth2, JWT encoder/decoder, CORS
@@ -115,7 +116,7 @@ com.easyapply/
     CVRepository.java              — JpaRepository
     NoteRepository.java            — JpaRepository; findByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc, findByIdAndApplicationUserId, etc.
     ServiceNoticeRepository.java   — JpaRepository; JPQL findActive(@Param("now") LocalDateTime now) — WHERE active=true AND (expiresAt IS NULL OR expiresAt > :now) (phase 08)
-    UserRepository.java            — JpaRepository; findByGoogleId, findByRefreshToken
+    UserRepository.java            — JpaRepository; findByGoogleId, findByRefreshToken, findInactiveUsers(threshold) (phase 07)
   security/
     AdminKeyFilter.java            — OncePerRequestFilter; checks X-Admin-Key header against app.admin-key; returns 403 if missing/wrong (phase 08)
     AuthenticatedUser.java         — record (id: UUID) — principal injected by JwtAuthenticationConverter
@@ -124,13 +125,15 @@ com.easyapply/
     JwtService.java                — generates access token (RS256, 15 min) and refresh token (UUID)
     MdcUserFilter.java             — adds user email to MDC for logging
     OAuth2AuthenticationSuccessHandler.java — on OAuth2 success: issues JWT + refresh token, redirects to frontend
+    TokenHasher.java               — SHA-256 util; used to hash refresh tokens before storing in DB (phase 07)
   service/
+    AccountRetentionService.java   — @Scheduled(cron daily 3:00): deletes accounts inactive > 12 months via UserService.deleteAccount; threshold from app.retention.inactive-months (phase 07)
     ApplicationService.java        — create, findAllByUserId, findById, updateStatus, updateStage, addStage, findDuplicates, delete, update
     CVService.java                 — uploadCV, findAllByUserId, findById, downloadCV, deleteCV, createCV, updateCV, assignCVToApplication, removeCVFromApplication
     NoteService.java               — create, findByApplicationId, findById, update, delete, deleteByApplicationId, createSalaryChangeNote (⚠️ dead code — never called)
     ServiceNoticeService.java      — findActive(), create(ServiceNoticeRequest) (phase 08)
     StatisticsService.java         — getBadgeStats: computes rejection/ghosting badges + sweet revenge unlock
-    UserService.java               — findOrCreateUser, getById, getByGoogleId, saveRefreshToken, clearRefreshToken, findByValidRefreshToken + createDemoApplication (new user only)
+    UserService.java               — findOrCreateUser (calls recordLogin), getById, getByGoogleId, saveRefreshToken (hashes token via TokenHasher), clearRefreshToken, findByValidRefreshToken (hashes + bumps lastLoginAt), acceptPrivacyPolicy, deleteAccount + createDemoApplication (new user only)
 ```
 
 ### All REST endpoints
@@ -247,6 +250,7 @@ com.easyapply/
 | V12 | `V12__drop_stage_history.sql` | DROP TABLE stage_history |
 | V13 | `V13__user_privacy_policy_accepted_at.sql` | Add privacy_policy_accepted_at column (phase 07) |
 | V14 | `V14__service_notices.sql` | Create service_notices table (phase 08) |
+| V15 | `V15__user_last_login_at.sql` | Add last_login_at column to users (phase 07) |
 
 ### Current tables
 
@@ -258,10 +262,11 @@ com.easyapply/
 | email | VARCHAR(255) | NOT NULL, UNIQUE |
 | name | VARCHAR(255) | NOT NULL |
 | google_id | VARCHAR(255) | NOT NULL, UNIQUE |
-| refresh_token | VARCHAR(255) | nullable |
+| refresh_token | VARCHAR(255) | nullable — stores SHA-256 hash of the token, not plaintext (phase 07) |
 | refresh_token_expiry | TIMESTAMP | nullable |
 | created_at | TIMESTAMP | NOT NULL |
 | privacy_policy_accepted_at | TIMESTAMP | nullable (phase 07) |
+| last_login_at | TIMESTAMP | nullable; updated on every login and token refresh (phase 07) |
 
 **`applications`**
 
