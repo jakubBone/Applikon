@@ -1,18 +1,18 @@
-# Plan: Angielskie kody enum + bugfix ContractType
+# Plan: English Enum Codes + ContractType Bugfix
 
-## Zasada pracy (każdy etap)
+## Work Principle (each stage)
 
-1. **Implementacja** — Claude robi zmiany
-2. **Testy** — `mvn test` + `npm run test:run` — oba muszą być zielone
-3. **Commit** — Claude proponuje w konwencji projektu
-4. **Kontynuacja** — Claude pyta czy idziemy dalej
+1. **Implementation** — Claude makes changes
+2. **Tests** — `mvn test` + `npm run test:run` — both must be green
+3. **Commit** — Claude proposes in project convention
+4. **Continue** — Claude asks if we proceed
 
 ---
 
-## Mapowanie starych → nowych wartości
+## Mapping: Old → New Values
 
 ### RejectionReason
-| Stary kod | Nowy kod |
+| Old code | New code |
 |-----------|----------|
 | `BRAK_ODPOWIEDZI` | `NO_RESPONSE` |
 | `ODMOWA_MAILOWA` | `EMAIL_REJECTION` |
@@ -20,61 +20,61 @@
 | `INNE` | `OTHER` |
 
 ### ApplicationStatus
-| Stary kod | Nowy kod |
+| Old code | New code |
 |-----------|----------|
 | `WYSLANE` | `SENT` |
 | `W_PROCESIE` | `IN_PROGRESS` |
 | `OFERTA` | `OFFER` |
 | `ODMOWA` | `REJECTED` |
 
-> Legacy (V3 migration — prawdopodobnie już brak w DB, ale statusConfig je obsługuje):
+> Legacy (V3 migration — likely no longer in DB, but statusConfig handles them):
 > `ROZMOWA` → `IN_PROGRESS`, `ZADANIE` → `IN_PROGRESS`, `ODRZUCONE` → `REJECTED`
 
-> `ZAKONCZONE` — wirtualny status tylko we froncie (Kanban łączy OFFER+REJECTED).
-> Po rename: staje się `FINISHED` (string w STATUSES, nie w backend enum).
+> `ZAKONCZONE` — virtual status only in frontend (Kanban merges OFFER+REJECTED).
+> After rename: becomes `FINISHED` (string in STATUSES, not in backend enum).
 
 ### NoteCategory
-| Stary kod | Nowy kod |
+| Old code | New code |
 |-----------|----------|
 | `PYTANIA` | `QUESTIONS` |
-| `FEEDBACK` | `FEEDBACK` _(bez zmian)_ |
+| `FEEDBACK` | `FEEDBACK` _(no change)_ |
 | `INNE` | `OTHER` |
-| `PYTANIE` (legacy) | `QUESTIONS` _(DB UPDATE + usunięcie z enum)_ |
-| `KONTAKT` (legacy) | `OTHER` _(DB UPDATE + usunięcie z enum)_ |
+| `PYTANIE` (legacy) | `QUESTIONS` _(DB UPDATE + remove from enum)_ |
+| `KONTAKT` (legacy) | `OTHER` _(DB UPDATE + remove from enum)_ |
 
 ### ContractType
-| Stary kod | Nowy kod | Znaczenie |
+| Old code | New code | Meaning |
 |-----------|----------|-----------|
-| `B2B` | `B2B` _(bez zmian)_ | Business-to-Business |
-| `UOP` | `EMPLOYMENT` | Umowa o Pracę |
-| `UZ` | `MANDATE` | Umowa Zlecenie |
-| `INNA` | `OTHER` | Inna |
+| `B2B` | `B2B` _(no change)_ | Business-to-Business |
+| `UOP` | `EMPLOYMENT` | Employment Contract |
+| `UZ` | `MANDATE` | Mandate Contract |
+| `INNA` | `OTHER` | Other |
 
 ### SalaryType
-| Stary kod | Nowy kod |
+| Old code | New code |
 |-----------|----------|
 | `BRUTTO` | `GROSS` |
 | `NETTO` | `NET` |
 
 ---
 
-## ✅ Etap 1 — RejectionReason — WYKONANY
+## ✅ Stage 1 — RejectionReason — COMPLETED
 
 ### Backend
-- [x] `entity/RejectionReason.java` — zmień wartości enum
+- [x] `entity/RejectionReason.java` — change enum values
 - [x] `db/migration/V5__rename_rejection_reasons.sql` — Flyway UPDATE
-- [x] `service/ApplicationService.java` — brak bezpośrednich referencji (pass-through)
+- [x] `service/ApplicationService.java` — no direct references (pass-through)
 - [x] `service/StatisticsService.java` — `BRAK_ODPOWIEDZI` → `NO_RESPONSE`
-- [x] `repository/ApplicationRepository.java` — brak bezpośrednich referencji
-- [x] testy: `ApplicationControllerTest`, `ApplicationServiceTest`, `StatisticsControllerTest`, `StatisticsServiceTest`
+- [x] `repository/ApplicationRepository.java` — no direct references
+- [x] tests: `ApplicationControllerTest`, `ApplicationServiceTest`, `StatisticsControllerTest`, `StatisticsServiceTest`
 
 ### Frontend
-- [x] `types/domain.ts` — `RejectionReason` type naprawiony (był rozsynchronizowany z backendem)
-- [x] `kanban/types.ts` — `REJECTION_REASONS` — zaktualizowane `id` wartości
+- [x] `types/domain.ts` — `RejectionReason` type fixed (was out of sync with backend)
+- [x] `kanban/types.ts` — `REJECTION_REASONS` — updated `id` values
 - [x] `kanban/EndModal.tsx` — `'INNE'` → `'OTHER'`
-- [x] `kanban/ApplicationCard.tsx` — brak bezpośrednich referencji (używa `REJECTION_REASONS`)
+- [x] `kanban/ApplicationCard.tsx` — no direct references (uses `REJECTION_REASONS`)
 
-### Wyniki testów
+### Test Results
 - `mvn test` — 84/84 ✅
 - `npm run test:run` — 67/67 ✅
 
@@ -88,138 +88,138 @@ UPDATE applications SET rejection_reason = 'OTHER'                   WHERE rejec
 
 ---
 
-## ✅ Etap 2 — NoteCategory — WYKONANY
+## ✅ Stage 2 — NoteCategory — COMPLETED
 
 ### Backend
-- [x] `entity/NoteCategory.java` — `PYTANIA`→`QUESTIONS`, `INNE`→`OTHER`, usunięte legacy `PYTANIE`, `KONTAKT`
-- [x] `entity/Note.java` — domyślna wartość `INNE` → `OTHER` (3 miejsca + column default)
+- [x] `entity/NoteCategory.java` — `PYTANIA`→`QUESTIONS`, `INNE`→`OTHER`, removed legacy `PYTANIE`, `KONTAKT`
+- [x] `entity/Note.java` — default value `INNE` → `OTHER` (3 places + column default)
 - [x] `db/migration/V6__rename_note_categories.sql`
-- [x] `dto/NoteRequest.java`, `dto/NoteResponse.java` — brak bezpośrednich referencji
-- [x] `service/UserService.java` — brak referencji do NoteCategory
-- [x] testy: `NoteControllerTest`, `NoteServiceTest`
+- [x] `dto/NoteRequest.java`, `dto/NoteResponse.java` — no direct references
+- [x] `service/UserService.java` — no references to NoteCategory
+- [x] tests: `NoteControllerTest`, `NoteServiceTest`
 
 ### Frontend
 - [x] `types/domain.ts` — `NoteCategory` type
-- [x] `notes/NotesList.tsx` — `CATEGORIES` values + `LEGACY_CATEGORY_MAP` (dodano mapowania dla starych `PYTANIA`/`INNE` z DB)
-- [x] `notes/NotesList.tsx` — domyślny `useState` `'PYTANIA'` → `'QUESTIONS'`
+- [x] `notes/NotesList.tsx` — `CATEGORIES` values + `LEGACY_CATEGORY_MAP` (added mappings for old `PYTANIA`/`INNE` from DB)
+- [x] `notes/NotesList.tsx` — default `useState` `'PYTANIA'` → `'QUESTIONS'`
 
-### Wyniki testów
+### Test Results
 - `mvn test` — 84/84 ✅
 - `npm run test:run` — 67/67 ✅
 
 ---
 
-## ✅ Etap 3 — SalaryType — WYKONANY
+## ✅ Stage 3 — SalaryType — COMPLETED
 
 ### Backend
 - [x] `entity/SalaryType.java` — `BRUTTO`→`GROSS`, `NETTO`→`NET`
 - [x] `db/migration/V7__rename_salary_types.sql`
 - [x] `service/UserService.java` — `SalaryType.NETTO` → `SalaryType.NET`
-- [x] testy: `ApplicationControllerTest` (string literal), `ApplicationServiceTest` (enum ref)
+- [x] tests: `ApplicationControllerTest` (string literal), `ApplicationServiceTest` (enum ref)
 
 ### Frontend
 - [x] `types/domain.ts` — `SalaryType` type
-- [x] `components/applications/SalaryFormSection.tsx` — `value="BRUTTO/NETTO"` i `checked` porównania
-- [x] `components/applications/ApplicationForm.tsx` — domyślna wartość `'BRUTTO'` → `'GROSS'`
-- [x] `ApplicationTable.tsx`, `ApplicationDetails.tsx` — `salaryType.toLowerCase()` działa poprawnie (`'gross'`, `'net'`)
+- [x] `components/applications/SalaryFormSection.tsx` — `value="BRUTTO/NETTO"` and `checked` comparisons
+- [x] `components/applications/ApplicationForm.tsx` — default value `'BRUTTO'` → `'GROSS'`
+- [x] `ApplicationTable.tsx`, `ApplicationDetails.tsx` — `salaryType.toLowerCase()` works correctly (`'gross'`, `'net'`)
 
-### Wyniki testów
+### Test Results
 - `mvn test` — 84/84 ✅
 - `npm run test:run` — 67/67 ✅
 
 ---
 
-## ✅ Etap 4 — ContractType + bugfix wyświetlania — WYKONANY
+## ✅ Stage 4 — ContractType + Display Bugfix — COMPLETED
 
 ### Backend
 - [x] `entity/ContractType.java` — `UOP`→`EMPLOYMENT`, `UZ`→`MANDATE`, `INNA`→`OTHER`
 - [x] `db/migration/V8__rename_contract_types.sql`
 - [x] `service/UserService.java` — `ContractType.UOP` → `ContractType.EMPLOYMENT`
-- [x] testy: `ApplicationServiceTest` (`ContractType.UOP` → `EMPLOYMENT`)
+- [x] tests: `ApplicationServiceTest` (`ContractType.UOP` → `EMPLOYMENT`)
 
-### Frontend — bugfix
-- [x] `types/domain.ts` — naprawiony (był: `UOP|B2B|UZ|UOD|INNE`, teraz: `B2B|EMPLOYMENT|MANDATE|OTHER`)
-- [x] `i18n/locales/en/common.json` — dodano `contractB2B`, `contractEmployment`, `contractMandate`, `contractOther`
-- [x] `i18n/locales/pl/common.json` — odpowiedniki PL
-- [x] `components/applications/SalaryFormSection.tsx` — `<option>` values zaktualizowane, etykiety przez `t()`
-- [x] `components/applications/ApplicationTable.tsx` — inline `contractKeys` map, `t()` zamiast surowej wartości
-- [x] `components/applications/ApplicationDetails.tsx` — `formatSalary` rozszerzone o `t: TFunction`, `CONTRACT_TYPE_KEYS` map
+### Frontend — Bugfix
+- [x] `types/domain.ts` — fixed (was: `UOP|B2B|UZ|UOD|INNE`, now: `B2B|EMPLOYMENT|MANDATE|OTHER`)
+- [x] `i18n/locales/en/common.json` — added `contractB2B`, `contractEmployment`, `contractMandate`, `contractOther`
+- [x] `i18n/locales/pl/common.json` — Polish equivalents
+- [x] `components/applications/SalaryFormSection.tsx` — `<option>` values updated, labels via `t()`
+- [x] `components/applications/ApplicationTable.tsx` — inline `contractKeys` map, `t()` instead of raw value
+- [x] `components/applications/ApplicationDetails.tsx` — `formatSalary` extended with `t: TFunction`, `CONTRACT_TYPE_KEYS` map
 
-### Wyniki testów
+### Test Results
 - `mvn test` — 84/84 ✅
 - `npm run test:run` — 67/67 ✅
 
 ---
 
-## ✅ Etap 5 — ApplicationStatus — WYKONANY
+## ✅ Stage 5 — ApplicationStatus — COMPLETED
 
 ### Backend
 - [x] `entity/ApplicationStatus.java` — WYSLANE→SENT, W_PROCESIE→IN_PROGRESS, OFERTA→OFFER, ODMOWA→REJECTED
-- [x] `entity/Application.java` — domyślna wartość `WYSLANE` → `SENT`
+- [x] `entity/Application.java` — default value `WYSLANE` → `SENT`
 - [x] `db/migration/V9__rename_application_statuses.sql` (incl. legacy ROZMOWA/ZADANIE/ODRZUCONE)
-- [x] `service/ApplicationService.java` — wszystkie odwołania
+- [x] `service/ApplicationService.java` — all references
 - [x] `service/StatisticsService.java` — ODMOWA→REJECTED, OFERTA→OFFER
 - [x] `service/UserService.java` — WYSLANE→SENT
-- [x] testy: `ApplicationControllerTest`, `ApplicationServiceTest`, `StatisticsServiceTest`, `StatisticsControllerTest`, `NoteControllerTest`, `CVServiceTest`, `NoteServiceTest`
+- [x] tests: `ApplicationControllerTest`, `ApplicationServiceTest`, `StatisticsServiceTest`, `StatisticsControllerTest`, `NoteControllerTest`, `CVServiceTest`, `NoteServiceTest`
 
 ### Frontend
 - [x] `types/domain.ts` — `ApplicationStatus` type
-- [x] `constants/applicationStatus.ts` — STATUS_CONFIG klucze i labelKeys
-- [x] `kanban/types.ts` — STATUSES ids i labelKeys
-- [x] `kanban/KanbanBoard.tsx` — wszystkie literały (WYSLANE/W_PROCESIE/OFERTA/ODMOWA/ZAKONCZONE + legacy)
+- [x] `constants/applicationStatus.ts` — STATUS_CONFIG keys and labelKeys
+- [x] `kanban/types.ts` — STATUSES ids and labelKeys
+- [x] `kanban/KanbanBoard.tsx` — all literals (WYSLANE/W_PROCESIE/OFERTA/ODMOWA/ZAKONCZONE + legacy)
 - [x] `kanban/ApplicationCard.tsx` — W_PROCESIE/OFFER/ODMOWA
 - [x] `kanban/EndModal.tsx` — OFERTA/ODMOWA
 - [x] `kanban/MoveModal.tsx` — OFERTA/ODMOWA/ZAKONCZONE
-- [x] `applications/ApplicationTable.tsx` — usunięto legacy statusConfig entries, zaktualizowano fallback
-- [x] `i18n/locales/en/common.json` — statusConfig i kanban klucze przemianowane, legacy usunięte
-- [x] `i18n/locales/pl/common.json` — to samo
-- [x] testy: `App.test.tsx`, `useApplications.test.tsx`
+- [x] `applications/ApplicationTable.tsx` — removed legacy statusConfig entries, updated fallback
+- [x] `i18n/locales/en/common.json` — statusConfig and kanban keys renamed, legacy removed
+- [x] `i18n/locales/pl/common.json` — same
+- [x] tests: `App.test.tsx`, `useApplications.test.tsx`
 
-### Wyniki testów
+### Test Results
 - `mvn test` — 84/84 ✅
 - `npm run test:run` — 67/67 ✅
 
 ---
 
-## ✅ Etap 6 — i18n key cleanup — WYKONANY
+## ✅ Stage 6 — i18n key cleanup — COMPLETED
 
-Rename kluczy JSON z PL-nych nazw na EN (bez zmian DB, tylko frontend):
+Rename JSON keys from Polish names to English (no DB changes, frontend only):
 
-| Stary klucz | Nowy klucz |
+| Old key | New key |
 |-------------|------------|
 | `notes.catPytania` | `notes.catQuestions` |
 | `notes.catInne` | `notes.catOther` |
 | `salary.brutto` | `salary.gross` |
 | `salary.netto` | `salary.net` |
-| `kanban.statusWYSLANE` | `kanban.statusSENT` _(już po Etapie 5)_ |
-| `kanban.statusW_PROCESIE` | `kanban.statusIN_PROGRESS` _(już po Etapie 5)_ |
-| `kanban.statusZAKONCZONE` | `kanban.statusFINISHED` _(już po Etapie 5)_ |
+| `kanban.statusWYSLANE` | `kanban.statusSENT` _(already after Stage 5)_ |
+| `kanban.statusW_PROCESIE` | `kanban.statusIN_PROGRESS` _(already after Stage 5)_ |
+| `kanban.statusZAKONCZONE` | `kanban.statusFINISHED` _(already after Stage 5)_ |
 | `kanban.rejectionBrakOdpowiedzi` | `kanban.rejectionNoResponse` |
 | `kanban.rejectionOdmowaMailowa` | `kanban.rejectionEmailRejection` |
 | `kanban.rejectionOdrzuceniePo` | `kanban.rejectionAfterInterview` |
 | `kanban.rejectionInne` | `kanban.rejectionOther` |
-| `statusConfig.WYSLANE` | `statusConfig.SENT` _(już po Etapie 5)_ |
-| `statusConfig.W_PROCESIE` | `statusConfig.IN_PROGRESS` _(już po Etapie 5)_ |
-| `statusConfig.OFERTA` | `statusConfig.OFFER` _(już po Etapie 5)_ |
-| `statusConfig.ODMOWA` | `statusConfig.REJECTED` _(już po Etapie 5)_ |
+| `statusConfig.WYSLANE` | `statusConfig.SENT` _(already after Stage 5)_ |
+| `statusConfig.W_PROCESIE` | `statusConfig.IN_PROGRESS` _(already after Stage 5)_ |
+| `statusConfig.OFERTA` | `statusConfig.OFFER` _(already after Stage 5)_ |
+| `statusConfig.ODMOWA` | `statusConfig.REJECTED` _(already after Stage 5)_ |
 
-- [x] `en/common.json` + `pl/common.json` — rename kluczy
-- [x] `notes/NotesList.tsx` — `CATEGORIES` i `LEGACY_CATEGORY_MAP` labelKey
+- [x] `en/common.json` + `pl/common.json` — rename keys
+- [x] `notes/NotesList.tsx` — `CATEGORIES` and `LEGACY_CATEGORY_MAP` labelKey
 - [x] `kanban/types.ts` — `REJECTION_REASONS` labelKey
 - [x] `components/applications/SalaryFormSection.tsx` — `t('salary.brutto/netto')` → `t('salary.gross/net')`
 
-### Wyniki testów
+### Test Results
 - `mvn test` — 84/84 ✅
 - `npm run test:run` — 67/67 ✅
 
 ---
 
-## Ważne uwagi
+## Important Notes
 
-- **ZAKONCZONE** nigdy nie istnieje w backendzie — to wirtualna kolumna Kanbana łącząca `OFFER` i `REJECTED`
-- **Legacy statusy** (`ROZMOWA`, `ZADANIE`, `ODRZUCONE`) po Etapie 5 można usunąć z `statusConfig` jeśli V9 migration jest już pewna (można to zrobić opcjonalnie w Etapie 5)
-- **Frontend type mismatches** naprawione przy okazji każdego etapu (były: `ContractType` miał `UOD`/`INNE` zamiast `INNA`, `RejectionReason` miał zupełnie inne wartości niż backend)
+- **ZAKONCZONE** never exists in backend — virtual Kanban column merging `OFFER` and `REJECTED`
+- **Legacy statuses** (`ROZMOWA`, `ZADANIE`, `ODRZUCONE`) after Stage 5 can be removed from `statusConfig` if V9 migration is certain (optional in Stage 5)
+- **Frontend type mismatches** fixed in each stage (were: `ContractType` had `UOD`/`INNE` instead of `INNA`, `RejectionReason` had completely different values than backend)
 
 ---
 
-*Stworzono: 2026-03-29*
+*Created: 2026-03-29*

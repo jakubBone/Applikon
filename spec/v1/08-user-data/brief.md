@@ -1,103 +1,103 @@
-# EasyApply — Faza 08: User Data & Service Notifications
+# EasyApply — Phase 08: User Data & Service Notifications
 
-## 1. Kontekst
+## 1. Context
 
-Faza 07 zamknęła minimalną zgodność RODO: consent flow, polityka prywatności,
-usunięcie konta. Brakuje dwóch ficzerów, które uzupełniają tę warstwę:
+Phase 07 closed minimum RODO compliance: consent flow, privacy policy,
+account deletion. Two features are missing that complete this layer:
 
-- **Przenoszalność danych** — user może pobrać wszystko co o sobie trzymamy.
-  Wymóg RODO Art. 20, świadomie pominięty w fazie 07 jako "poza MVP".
-- **System powiadomień serwisowych** — admin może wyświetlić komunikat
-  wszystkim userom (przerwy techniczne, zmiany regulaminu, aktualizacje).
+- **Data portability** — user can download everything we store about them.
+  RODO Art. 20 requirement, consciously omitted from phase 07 as "outside MVP".
+- **Service notification system** — admin can display a message
+  to all users (maintenance windows, regulatory changes, updates).
 
 ---
 
 ## 2. Problem
 
-Obecnie:
+Currently:
 
-1. **Brak eksportu danych** — user może tylko usunąć konto, ale nie może
-   pobrać swoich danych (aplikacje, notatki, CV linki). Luka w RODO Art. 20.
-2. **Brak kanału komunikacji z userami** — nie ma mechanizmu poinformowania
-   userów o zmianach w serwisie bez modyfikacji kodu i redeployu.
-
----
-
-## 3. Decyzja architektoniczna
-
-### Eksport danych
-
-Endpoint `GET /api/auth/me/export` zwraca plik JSON ze wszystkimi danymi
-usera: profil, lista aplikacji z polami, notatki, CV linki. Dostępny
-z poziomu `/settings`.
-
-### System powiadomień
-
-Tabela `service_notices` — admin dodaje wpis (treść PL + EN, data wygaśnięcia,
-typ). Frontend odpytuje `GET /api/system/notices/active` i wyświetla aktywne
-komunikaty. Admin zarządza przez `POST /api/admin/notices` (zabezpieczony rolą
-ADMIN).
-
-Typy powiadomień:
-- `BANNER` — pasek na górze UI, można zamknąć
-- `MODAL` — popup przy wejściu, wymaga kliknięcia "OK"; nie wraca po zamknięciu
-  (zapamiętane w localStorage)
+1. **No data export** — user can only delete account, but cannot
+   download their data (applications, notes, CV links). Gap in RODO Art. 20.
+2. **No communication channel with users** — no mechanism to inform
+   users about service changes without code modification and redeployment.
 
 ---
 
-## 4. Zakres
+## 3. Architectural Decision
 
-### 4.1. `data-export/` — eksport danych usera
-- Backend: `GET /api/auth/me/export` → JSON z profilem, aplikacjami, notatkami, CV
-- Frontend: przycisk "Pobierz moje dane" w `/settings`, pobiera `easyapply-export.json`
-- Flyway: brak zmian w schemacie
+### Data Export
 
-### 4.2. `service-notices/` — system powiadomień serwisowych
-- Backend: tabela `service_notices`, endpointy admin + public
+Endpoint `GET /api/auth/me/export` returns all user data as JSON file:
+profile, list of applications with fields, notes, CV links. Available
+from `/settings`.
+
+### Notification System
+
+Table `service_notices` — admin adds entry (text PL + EN, expiration date,
+type). Frontend queries `GET /api/system/notices/active` and displays active
+messages. Admin manages via `POST /api/admin/notices` (secured by ADMIN
+role).
+
+Notification types:
+- `BANNER` — bar at top of UI, can be closed
+- `MODAL` — popup on entry, requires "OK", doesn't return after closing
+  (remembered in localStorage)
+
+---
+
+## 4. Scope
+
+### 4.1. `data-export/` — user data export
+- Backend: `GET /api/auth/me/export` → JSON with profile, applications, notes, CV
+- Frontend: "Download my data" button in `/settings`, downloads `easyapply-export.json`
+- Flyway: no schema changes
+
+### 4.2. `service-notices/` — service notification system
+- Backend: `service_notices` table, admin + public endpoints
 - Frontend: `ServiceBanner` + `ServiceModal`
-- Flyway: migracja V14 dodająca tabelę `service_notices`
+- Flyway: migration V14 adds `service_notices` table
 
 ---
 
-## 5. Poza zakresem
+## 5. Out of Scope
 
-- **Push notifications / e-mail** — powiadomienia tylko in-app
-- **Eksport CSV** — tylko JSON
-- **Dashboard admina w UI** — admin zarządza przez API
-- **Wersjonowanie eksportu** — jeden format v1
-- **Szyfrowanie eksportu** — plik niezaszyfrowany, user pobiera przez HTTPS
-
----
-
-## 6. Kryteria sukcesu (Definition of Done fazy)
-
-Faza 08 zamknięta gdy:
-
-1. ✅ Zalogowany user może pobrać `easyapply-export.json` z `/settings`;
-   plik zawiera profil, wszystkie aplikacje z notatkami i CV linkami
-2. ✅ Eksport nie ujawnia danych innych userów
-3. ✅ Admin może utworzyć aktywny notice przez `POST /api/admin/notices`
-4. ✅ Aktywny `BANNER` widoczny dla każdego zalogowanego usera na górze UI
-5. ✅ Aktywny `MODAL` wyświetla się przy wejściu; po "OK" nie wraca w tej sesji
-6. ✅ Wygasłe notices (po `expiresAt`) nie są zwracane przez public endpoint
-7. ✅ `as-built.md` zaktualizowany: nowe endpointy, nowa tabela, nowe komponenty
+- **Push notifications / email** — notifications only in-app
+- **CSV export** — JSON only
+- **Admin dashboard in UI** — admin manages via API
+- **Export versioning** — single v1 format
+- **Export encryption** — file unencrypted, user downloads over HTTPS
 
 ---
 
-## 7. Kolejność wdrożenia
+## 6. Success Criteria (Definition of Done for phase)
 
-1. **`data-export/`** — jeden endpoint + jeden przycisk w UI, zero zmian w DB
-2. **`service-notices/`** — Flyway migracja + backend + dwa komponenty frontend
+Phase 08 is closed when:
+
+1. ✅ Logged-in user can download `easyapply-export.json` from `/settings`;
+   file contains profile, all applications with notes and CV links
+2. ✅ Export doesn't leak data from other users
+3. ✅ Admin can create active notice via `POST /api/admin/notices`
+4. ✅ Active `BANNER` visible to every logged-in user at top of UI
+5. ✅ Active `MODAL` displays on entry; after "OK" doesn't return in this session
+6. ✅ Expired notices (past `expiresAt`) not returned by public endpoint
+7. ✅ `as-built.md` updated: new endpoints, new table, new components
 
 ---
 
-## 8. Powiązane dokumenty
+## 7. Implementation Order
 
-- `spec/v1/as-built.md` — aktualizujemy po każdym wątku
-- `spec/README.md` — dodajemy wiersz o fazie 08
-- `spec/v1/08-user-data/data-export/` — plan backendu i frontendu
-- `spec/v1/08-user-data/service-notices/` — plan backendu i frontendu
+1. **`data-export/`** — one endpoint + one button in UI, zero DB changes
+2. **`service-notices/`** — Flyway migration + backend + two frontend components
 
 ---
 
-*Data utworzenia: 2026-04-26*
+## 8. Related Documents
+
+- `spec/v1/as-built.md` — update after each thread
+- `spec/README.md` — add row for phase 08
+- `spec/v1/08-user-data/data-export/` — backend and frontend plans
+- `spec/v1/08-user-data/service-notices/` — backend and frontend plans
+
+---
+
+*Created: 2026-04-26*

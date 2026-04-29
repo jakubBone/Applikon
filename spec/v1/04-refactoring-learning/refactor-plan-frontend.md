@@ -1,722 +1,510 @@
-# Plan nauki frontendu — EasyApply
+# Frontend Learning Plan — EasyApply
 
-## Kontekst dokumentu
+## Document Context
 
-Ten dokument jest przewodnikiem nauki dla Jakuba — autora projektu EasyApply.
-Jakub jest backendowcem (Java/Spring), który napisał tę aplikację z pomocą Claude Code.
-Z natury jest backendowcem, więc, chce zrozumieć jak działa frontend na poziomie podstawowym.
+This document is a learning guide for Jakub — author of EasyApply.
+Jakub is a backend developer (Java/Spring) who wrote this application with Claude Code help.
+He wants to understand how frontend works at basic level.
 
-**Dokumenty źródłowe:**
-- `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — ten plik (plan nauki + postęp)
-- `spec/v1/03-review/code-review-2026-03-01.md` — Code Review od mentora — źródło wszystkich napraw
+**Source Documents:**
+- `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — this file (plan, rules, progress)
+- `spec/v1/03-review/code-review-2026-03-01.md` — code review from mentor — source of all fixes
 
-**Jak używać tego planu:**
-Wklej go do nowej sesji Claude Code i napisz: _"Kontynuujemy naukę frontendu. Jesteśmy na Etapie X."_
+**How to Use This Plan:**
+Paste it into new Claude Code session and write: _"We're continuing frontend learning. We're at Phase X."_
 
-**Claude na początku każdej sesji czyta:**
-1. `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — ten plik (plan, zasady, postęp)
+**Claude reads at start of each session:**
+1. `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — this file (plan, rules, progress)
 2. `spec/v1/03-review/code-review-2026-03-01.md` — code review
-3. `spec/v1/04-refactoring-learning/learning-notes-frontend.md` — co Jakub już przerobił i zrozumiał
+3. `spec/v1/04-refactoring-learning/learning-notes-frontend.md` — what Jakub already worked through and understood
 
-`learning-notes-frontend.md` to kluczowy kontekst — pokazuje jakim językiem i analogiami tłumaczyć kolejne zagadnienia, co już wiadomo, do czego można się odwoływać.
+`learning-notes-frontend.md` is key context — shows which language and analogies work best for Jakub, what he already knows, what he can reference.
 
 ---
 
-## Projekt: EasyApply
+## Project: EasyApply
 
-**Co robi:** Aplikacja do śledzenia procesów rekrutacyjnych dla juniorów IT.
-Użytkownik loguje się przez Google, dodaje aplikacje o pracę, śledzi etapy rekrutacji
-na tablicy Kanban, zarządza CV i notatkami. System odznak gamifikuje szukanie pracy.
+**What It Does:** Job application tracker for job seekers.
+User logs in via Google, adds job applications, tracks recruitment stages
+on Kanban board, manages CVs and notes. Badge system gamifies job search.
 
-**Stack technologiczny:**
+**Tech Stack:**
 - **Backend:** Java 21, Spring Boot, Spring Security, OAuth2 + JWT (RS256), PostgreSQL, Flyway, Docker
 - **Frontend:** React 18, TypeScript (strict), Vite, React Query (TanStack), React Router, Cypress
 
-**Struktura katalogów frontendu (`easyapply-frontend/src/`):**
+**Frontend Directory Structure (`easyapply-frontend/src/`):**
 ```
-App.tsx                          — korzeń aplikacji, routing, providerzy
-AppContent.tsx                   — główny layout dashboardu (wg CR: warto przemianować na DashboardLayout)
-main.tsx                         — punkt wejścia aplikacji
+App.tsx                          — app root, routing, providers
+AppContent.tsx                   — main dashboard layout (per CR: consider renaming to DashboardLayout)
+main.tsx                         — app entry point
 
 auth/
-  AuthProvider.tsx               — kontekst uwierzytelnienia, sprawdza token przy starcie
-  ProtectedRoute.tsx             — blokuje dostęp do stron dla niezalogowanych
+  AuthProvider.tsx               — authentication context, checks token on startup
+  ProtectedRoute.tsx             — blocks access for logged-out users
 
 pages/
-  LoginPage.tsx                  — strona logowania (tu jest błąd CR: zahardkodowany URL)
-  AuthCallbackPage.tsx           — obsługuje powrót z Google OAuth2
-  DashboardPage.tsx              — główna strona aplikacji
+  LoginPage.tsx                  — login page (CR issue: hardcoded URL)
+  AuthCallbackPage.tsx           — handles Google OAuth2 return
+  DashboardPage.tsx              — main application page
 
 components/
   applications/
-    ApplicationTable.tsx         — tabela wszystkich aplikacji z filtrowaniem i sortowaniem
-    ApplicationForm.tsx          — formularz dodawania/edytowania aplikacji
-    ApplicationDetails.tsx       — panel szczegółów wybranej aplikacji
-    SalaryFormSection.tsx        — sekcja wynagrodzenia w formularzu
+    ApplicationTable.tsx         — table view of applications with filtering/sorting
+    ApplicationForm.tsx          — form for adding/editing applications
+    ApplicationDetails.tsx       — selected application details panel
+    SalaryFormSection.tsx        — salary section in form
   kanban/
-    KanbanBoard.tsx              — tablica Kanban (~987 linii, wg CR wymaga rozbicia)
+    KanbanBoard.tsx              — Kanban board (~987 lines, needs decomposition per CR)
   cv/
-    CVManager.tsx                — zarządzanie CV (~650 linii, wg CR używa useState zamiast React Query)
+    CVManager.tsx                — CV management (~650 lines, uses useState instead of React Query per CR)
   notes/
-    NotesList.tsx                — lista notatek do aplikacji
+    NotesList.tsx                — list of notes for application
   badges/
-    BadgeWidget.tsx              — widget odznak/statystyk
+    BadgeWidget.tsx              — badges/statistics widget
   tour/
-    TourGuide.tsx                — przewodnik po aplikacji (~572 linie)
+    TourGuide.tsx                — app tour guide (~572 lines)
 
 hooks/
-  useApplications.ts             — React Query hook: pobieranie i mutacje aplikacji
-  useCV.ts                       — React Query hook: pobieranie i mutacje CV
-  useNotes.ts                    — React Query hook: pobieranie i mutacje notatek
-  useBadgeStats.ts               — React Query hook: statystyki odznak
+  useApplications.ts             — React Query hook: fetch and mutate applications
+  useCV.ts                       — React Query hook: fetch and mutate CVs
+  useNotes.ts                    — React Query hook: fetch and mutate notes
+  useBadgeStats.ts               — React Query hook: fetch badge statistics
 
 services/
-  api.ts                         — warstwa komunikacji z backendem (fetch, JWT, endpoints)
+  api.ts                         — API communication layer (fetch, JWT, endpoints)
 
 types/
-  domain.ts                      — typy TypeScript odzwierciedlające encje backendu
+  domain.ts                      — TypeScript types mirroring backend entities
 ```
 
 ---
 
-## Zasady trybu Mentor (OBOWIĄZUJĄ przez całą naukę)
+## Mentor Mode Rules (APPLY THROUGHOUT LEARNING)
 
-1. **Poziom tłumaczenia:** Jakub zna Javę i Spring na poziomie podstawowym/średnim.
-   NIE zna frontendu. Tłumacz analogiami do Javy/Springa tam gdzie to możliwe.
-   Łopatologicznie. Żadnych skrótów myślowych.
+1. **Explanation Level:** Jakub knows Java and Spring at basic/intermediate level.
+   Doesn't know frontend. Explain with Java/Spring analogies where possible.
+   Literally. No thought shortcuts.
 
-2. **Interakcja:** Po każdym omówionym zagadnieniu OBOWIĄZKOWO zapytaj czy coś
-   wyjaśnić. Nie przechodź dalej bez wyraźnego potwierdzenia Jakuba ("ok", "rozumiem", "dalej").
+2. **Interaction:** After explaining each topic OBLIGATORILY ask if clear.
+   Don't move forward without explicit confirmation ("ok", "understood", "next").
 
-3. **Quiz po każdym podtemacie:** Po omówieniu każdego małego zagadnienia w ramach etapu
-   (np. "czym jest Vite", "czym jest useState") zadaj Jakubowi 5 pytań sprawdzających zrozumienie.
-   Pytania mają być konkretne, odnosić się do projektu, nie do abstrakcji.
-   Czekaj na odpowiedzi, poprawiaj błędy, zanim przejdziesz dalej.
+3. **Quiz After Each Subtopic:** After explaining each small topic in a phase
+   (e.g., "what is Vite", "what is useState") ask Jakub 5 comprehension questions.
+   Questions must be concrete, reference the project, not abstractions.
+   Wait for answers, fix mistakes before moving.
 
-4. **Notatki po każdym dużym etapie:** Po zakończeniu całego etapu (1–10) zapisz podsumowanie
-   do pliku `spec/v1/04-refactoring-learning/learning-notes-frontend.md`. Format: nagłówek etapu, kluczowe pojęcia z wyjaśnieniami,
-   analogie do Javy, najważniejsze pliki projektu których dotyczył etap.
-   Plik ma służyć Jakubowi jako ściągawka do której może wracać.
+4. **Notes After Each Large Phase:** After completing entire phase (1–10) save summary
+   to `spec/v1/04-refactoring-learning/learning-notes-frontend.md`. Format: phase heading, key concepts with explanations,
+   Java analogies, most important project files that apply to phase.
+   File serves as Jakub's cheat sheet.
 
-5. **Zawsze pokazuj kod:** Omawiaj konkretne pliki z projektu, nie abstrakcyjne przykłady.
-   Wskazuj linię pliku (format: `plik.tsx:42`).
+5. **Always Show Code:** Discuss specific project files, not abstract examples.
+   Point to line numbers (format: `file.tsx:42`).
 
-6. **CR zintegrowany z nauką:** Przy każdym etapie — jeśli Code Review (spec/v1/03-review/code-review-2026-03-01.md) wskazuje
-   problem w omawianym pliku — najpierw wytłumacz mechanizm, potem napraw razem z Jakubem.
-   Nie naprawiaj bez wyjaśnienia "dlaczego". Przed naprawą przeczytaj aktualny stan pliku.
+6. **CR Integrated With Learning:** When code review points to problem in current phase — first explain mechanism, then fix together with Jakub.
+   Don't fix without explanation — reason matters.
 
-7. **Nie pomijaj pytań.** Jeśli Jakub zapyta o cokolwiek — odpowiedz zanim przejdziesz dalej.
+7. **Don't Ask "Ready to move on?"** — make decisions based on quiz results and whether Jakub confirmed understanding.
 
-8. **Nie commituj.** Jakub robi commity sam. Nigdy nie uruchamiaj `git commit`.
+8. **Don't Commit:** Jakub makes commits himself. Never run `git commit`.
 
 ---
 
-## Flow pracy przy każdej naprawie z CR
+## Work Flow For Each CR Fix
 
-Każda zmiana w kodzie musi przejść przez ten proces. Nie pomijaj żadnego kroku.
+Each code change must go through this process. Don't skip steps.
 
 ```
-1. WYJAŚNIJ   — wytłumacz mechanizm (dlaczego to błąd / jak to działa)
-2. PRZECZYTAJ — odczytaj aktualny plik przed zmianą (Read tool)
-3. NAPRAW     — wprowadź zmianę (Edit tool)
-4. TESTY      — sprawdź czy zmiana dotyka istniejących testów:
-                  a) uruchom: npm test (Vitest) w katalogu easyapply-frontend
-                  b) jeśli test się sypie — zaktualizuj test, uruchom ponownie
-                  c) jeśli zmiana dodaje nową logikę — zaproponuj nowy test
-5. BUILD      — sprawdź czy TypeScript się kompiluje: npm run build
-6. PRZEGLĄDARKA — przypomnij Jakubowi żeby ręcznie przetestował zmianę w przeglądarce
-                  (podaj konkretnie co kliknąć / co sprawdzić)
-7. PYTANIE    — zapytaj: "Czy zaznaczyć CR-X jako naprawione w tabeli postępu?"
-8. AKTUALIZUJ — jeśli Jakub potwierdzi: zaktualizuj status w tabelach poniżej (⬜ → ✅)
-                  oraz dodaj wpis w "Notatki z sesji"
+1. EXPLAIN   — explain mechanism (why it's error / how it works)
+2. READ      — read current file before change (Read tool)
+3. FIX       — make change (Edit tool)
+4. TESTS     — check if change touches existing tests:
+                  a) run: npm test (Vitest) in easyapply-frontend
+                  b) if test breaks — update test, run again
+                  c) if new logic — propose new test
+5. BUILD     — check TypeScript compiles: npm run build
+6. BROWSER   — remind Jakub to manually test in browser
+                  (give specifics: what to click / what to check)
+7. QUESTION  — ask: "Should we mark CR-X as fixed in progress table?"
+8. UPDATE    — if Jakub confirms: update status in tables (⬜ → ✅)
+                  and add entry to "Session Notes"
 ```
 
-**Ważne zasady:**
-- Krok 4 (testy) jest **obowiązkowy** — nawet dla małych zmian
-- Krok 6 (przeglądarka) to zawsze zadanie dla Jakuba, nie dla Claude
-- Krok 7 (pytanie o zaznaczenie) — Claude pyta, Jakub decyduje
-- Jeśli testy nie przechodzą — **nie przechodź dalej** dopóki nie są zielone
+**Important Rules:**
+- Step 4 (tests) is **mandatory** — even for small changes
+- Step 6 (browser) is always Jakub's task, not Claude's
+- Step 7 (question) — Claude asks, Jakub decides
+- If tests don't pass — **don't move forward** until green
 
 ---
 
-## Postęp nauki
+## Learning Progress
 
-| Etap | Temat | Nauka | CR naprawione w tym etapie |
-|------|-------|-------|---------------------------|
-| 1 | Ekosystem i narzędzia | ✅ | — |
-| 2 | Komponent — podstawowa jednostka | ✅ | — |
-| 3 | Stan (state) i rerenderowanie | ✅ | — |
-| 4 | Hooki React | ✅ | — |
-| 5 | React Query — serce frontendu | ✅ | CR-7 |
-| 6 | Routing i ochrona stron | ✅ | — |
-| 7 | Komunikacja front↔back | ✅ | CR-3, CR-4, CR-9 |
-| 8 | OAuth2 i JWT — pełny przepływ | ✅ | CR-5, CR-6 |
-| 9 | TypeScript w React | ✅ | CR-2, CR-8 |
-| 10 | Testowanie frontendu | ✅ | — |
+| Phase | Topic | Learning | CR Fixed This Phase |
+|-------|-------|----------|-------------------|
+| 1 | Ecosystem and Tools | ✅ | — |
+| 2 | Component — Basic Unit | ✅ | — |
+| 3 | State (state) and Re-rendering | ✅ | — |
+| 4 | React Hooks | ✅ | — |
+| 5 | React Query — Frontend Heart | ✅ | CR-7 |
+| 6 | Routing and Page Protection | ✅ | — |
+| 7 | Frontend ↔ Backend Communication | ✅ | CR-3, CR-4, CR-9 |
+| 8 | OAuth2 and JWT — Complete Login Flow | ✅ | CR-5, CR-6 |
+| 9 | TypeScript in React | ✅ | CR-2, CR-8 |
+| 10 | Frontend Testing | ✅ | — |
 
-Po zakończeniu każdego etapu Claude pyta:
-> _"Czy uznajemy Etap X za zaliczony? Zaktualizuję tabelę i notatki z sesji."_
-
----
-
-## Lista napraw z CR (śledzenie postępu)
-
-Źródło: `spec/v1/03-review/code-review-2026-03-01.md` (review z 2026-03-01, reviewer: DR & AI)
-
-### 🔴 Krytyczne (bezpieczeństwo / poprawność)
-
-| ID | Problem | Plik(i) | Etap | Status | Przetestowane |
-|----|---------|---------|------|--------|---------------|
-| CR-2 | Brak walidacji URL-i (XSS przez href) | `ApplicationDetails.tsx`, `CVManager.tsx` | Etap 9 | ✅ | ✅ |
-| CR-3 | Kontrakt refresh tokena (`token` vs `accessToken`) | `api.ts` + backend kontroler | Etap 7 | ✅ | ✅ |
-| CR-4 | Zahardkodowany `http://localhost:8080` w LoginPage | `LoginPage.tsx` | Etap 7 | ✅ | ✅ |
-| CR-5 | Brak SameSite na ciasteczku refresh_token | `OAuth2AuthenticationSuccessHandler.java` | Etap 8 | ✅ | ✅ |
-| CR-6 | Brak Error Boundary + crash `new URL()` w CVManager | `App.tsx`, `CVManager.tsx` | Etap 8 | ✅ | ✅ |
-
-### 🟡 Ważne (jakość / spójność)
-
-| ID | Problem | Plik(i) | Etap | Status | Przetestowane |
-|----|---------|---------|------|--------|---------------|
-| CR-7 | CVManager używa useState zamiast useCV() | `CVManager.tsx` | Etap 5 | ✅ | ✅ |
-| CR-8 | Duplikaty stałych kolorów statusów | `ApplicationDetails.tsx`, `ApplicationTable.tsx` | Etap 9 | ✅ | ✅ |
-| CR-9 | `apiFetch()` redirect bez przerywania przetwarzania | `api.ts` | Etap 7 | ✅ | ✅ |
-| CR-11 | Brak memoizacji sort/filter | `ApplicationTable.tsx` | Etap 3 | ✅ | ✅ |
-| CR-12 | KanbanBoard.tsx ~987 linii — wymaga rozbicia | `KanbanBoard.tsx` | opcjonalny | ✅ | ✅ |
-
-**Legenda kolumn:**
-- **Status** ⬜/✅ — czy zmiana w kodzie została wprowadzona
-- **Przetestowane** ⬜/✅ — czy testy przeszły AND Jakub sprawdził w przeglądarce
+After each phase Claude asks:
+> _"Should we mark Phase X as complete? I'll update table and notes with session info."_
 
 ---
 
-## Szczegółowy opis etapów
+## List of Fixes from CR (Progress Tracking)
+
+Source: `spec/v1/03-review/code-review-2026-03-01.md` (review 2026-03-01, reviewer: DR & AI)
+
+### 🔴 Critical (security / correctness)
+
+| ID | Problem | File(s) | Phase | Status | Tested |
+|----|---------|---------|-------|--------|--------|
+| CR-2 | Missing URL validation (XSS through href) | `ApplicationDetails.tsx`, `CVManager.tsx` | Phase 9 | ✅ | ✅ |
+| CR-3 | Refresh token contract (`token` vs `accessToken`) | `api.ts` + backend controller | Phase 7 | ✅ | ✅ |
+| CR-4 | Hardcoded `http://localhost:8080` in LoginPage | `LoginPage.tsx` | Phase 7 | ✅ | ✅ |
+| CR-5 | Missing SameSite on refresh_token cookie | `OAuth2AuthenticationSuccessHandler.java` | Phase 8 | ✅ | ✅ |
+| CR-6 | Missing Error Boundary + crash `new URL()` in CVManager | `App.tsx`, `CVManager.tsx` | Phase 8 | ✅ | ✅ |
+
+### 🟡 Important (quality / consistency)
+
+| ID | Problem | File(s) | Phase | Status | Tested |
+|----|---------|---------|-------|--------|--------|
+| CR-7 | CVManager uses useState instead of useCV() | `CVManager.tsx` | Phase 5 | ✅ | ✅ |
+| CR-8 | Duplicate status color constants | `ApplicationDetails.tsx`, `ApplicationTable.tsx` | Phase 9 | ✅ | ✅ |
+| CR-9 | `apiFetch()` redirect without stopping processing | `api.ts` | Phase 7 | ✅ | ✅ |
+| CR-11 | Missing memoization for sort/filter | `ApplicationTable.tsx` | Phase 3 | ✅ | ✅ |
+| CR-12 | KanbanBoard.tsx ~987 lines — needs decomposition | `KanbanBoard.tsx` | optional | ✅ | ✅ |
+
+**Legend:**
+- **Status** ⬜/✅ — code change done
+- **Tested** ⬜/✅ — tests passed AND Jakub tested in browser
 
 ---
 
-### Etap 1 — Ekosystem i narzędzia
+## Detailed Phase Descriptions
 
-**Cel:** Zrozumieć czym jest React, TypeScript i Vite na poziomie "co to jest i po co".
+---
 
-**Analogie do Javy:**
-- React ≈ framework do budowania UI (jak Spring, ale dla przeglądarki)
-- TypeScript ≈ Java (typowanie statyczne) vs JavaScript ≈ dynamiczna Groovy
-- Vite ≈ Maven/Gradle (buduje projekt, zarządza zależnościami)
+### Phase 1 — Ecosystem and Tools
+
+**Goal:** Understand what React, TypeScript, Vite are at "what is it and why" level.
+
+**Java Analogies:**
+- React ≈ UI framework (like Spring, but for browser)
+- TypeScript ≈ Java (static typing) vs JavaScript ≈ dynamic Groovy
+- Vite ≈ Maven/Gradle (builds project, manages dependencies)
 - `package.json` ≈ `pom.xml`
-- `node_modules/` ≈ repozytorium Maven `~/.m2`
+- `node_modules/` ≈ Maven repository `~/.m2`
 - `npm run dev` ≈ `mvn spring-boot:run`
 
-**Co omawiamy:**
-- Jak przeglądarka uruchamia kod JavaScript (DOM, event loop — podstawy)
-- Czym jest SPA (Single Page Application) vs tradycyjna strona
-- Jak Vite kompiluje TypeScript → JavaScript i serwuje go przeglądarce
-- Co to jest `index.html` + `main.tsx` jako punkt wejścia (analogia do `main()` w Javie)
-- Przegląd struktury katalogów `src/`
+**What We Discuss:**
+- How browser runs JavaScript (DOM, event loop — basics)
+- What SPA (Single Page Application) is vs traditional page
+- How Vite compiles TypeScript → JavaScript and serves to browser
+- What `index.html` + `main.tsx` are as entry point (analogy to `main()` in Java)
+- Overview of `src/` directory structure
 
-**Pliki do otwarcia:**
-- `easyapply-frontend/package.json` — zależności (jak pom.xml)
-- `easyapply-frontend/vite.config.ts` — konfiguracja buildu
-- `easyapply-frontend/src/main.tsx` — punkt wejścia
-- `easyapply-frontend/src/App.tsx` — korzeń aplikacji
+**Files to Open:**
+- `easyapply-frontend/package.json` — dependencies (like pom.xml)
+- `easyapply-frontend/vite.config.ts` — build config
+- `easyapply-frontend/src/main.tsx` — entry point
+- `easyapply-frontend/src/App.tsx` — app root
 
-**CR powiązane:** brak na tym etapie.
-
----
-
-### Etap 2 — Komponent — podstawowa jednostka
-
-**Cel:** Zrozumieć czym jest komponent React, JSX, props.
-
-**Analogie do Javy:**
-- Komponent ≈ klasa z metodą `render()` (ale zapisana jako funkcja)
-- JSX ≈ szablony (jak Thymeleaf/JSP, ale w kodzie TypeScript)
-- Props ≈ parametry konstruktora / argumenty metody (dane przekazywane do komponentu)
-- Renderowanie ≈ generowanie HTML (tylko dynamiczne, w przeglądarce)
-
-**Co omawiamy:**
-- Czym jest JSX (`<div>`, `<LoginPage />`) — dlaczego HTML w TypeScript?
-- Jak React zamienia JSX w drzewko DOM (Virtual DOM — idea, nie szczegóły)
-- Props — jak przekazywać dane do komponentu
-- Eksport i import komponentów (analogia do klas w Javie)
-- Jak komponenty się zagnieżdżają (App → AuthProvider → Routes → LoginPage)
-
-**Pliki do otwarcia:**
-- `src/App.tsx` — kompozycja komponentów, routing na najwyższym poziomie
-- `src/pages/LoginPage.tsx` — prosty komponent strony
-- `src/components/badges/BadgeWidget.tsx` — mały komponent z props
-
-**CR powiązane:** brak na tym etapie.
+**CR Related:** none on this phase.
 
 ---
 
-### Etap 3 — Stan (state) i rerenderowanie
+### Phase 2 — Component — Basic Unit
 
-**Cel:** Zrozumieć `useState`, jak React aktualizuje UI i dlaczego to inne niż w Javie.
+**Goal:** Understand React component, JSX, props.
 
-**Analogie do Javy:**
-- `useState` ≈ pole w klasie + setter, który automatycznie odświeża widok
-- W Javie zmieniasz pole → nic się nie dzieje w UI. W React zmieniasz state → React
-  automatycznie przerenderowuje komponent (wywołuje funkcję komponentu od nowa)
+**Java Analogies:**
+- Component ≈ class with `render()` method (but written as function)
+- JSX ≈ templates (like Thymeleaf/JSP, but in TypeScript code)
+- Props ≈ constructor parameters / method arguments (data passed to component)
+- Rendering ≈ generating HTML (dynamic, in browser)
 
-**Co omawiamy:**
-- `const [value, setValue] = useState(initial)` — destructuring, jak to czytać
-- Dlaczego NIE modyfikujemy stanu bezpośrednio (jak `this.field = x` w Javie)
-- Rerenderowanie — co to znaczy, że komponent "się odrenderowuje"
-- Zasada: jeden stan → jeden source of truth
-- Kiedy `useState` a kiedy zwykła zmienna
+**What We Discuss:**
+- What JSX is (`<div>`, `<LoginPage />`) — why HTML in TypeScript?
+- How React converts JSX to DOM tree (Virtual DOM — idea, not details)
+- Props — passing data to component
+- Component export/import (analogy to Java classes)
+- Component nesting (App → AuthProvider → Routes → LoginPage)
 
-**Pliki do otwarcia:**
-- `src/auth/AuthProvider.tsx` — `useState` dla `user` i `isLoading` (linijki 34-35)
-- `src/components/applications/ApplicationTable.tsx` — filtry i sortowanie jako stan
+**Files to Open:**
+- `src/App.tsx` — component composition, routing at top level
+- `src/pages/LoginPage.tsx` — simple page component
+- `src/components/badges/BadgeWidget.tsx` — small component with props
 
-**CR powiązane:**
-- CR-11 (memoizacja): `ApplicationTable.tsx` — sort/filter bez memoizacji przy każdym renderze.
-  Omawiamy co to `useMemo` i kiedy jest potrzebne.
-
----
-
-### Etap 4 — Hooki React
-
-**Cel:** Zrozumieć czym są hooki, `useEffect`, i własne hooki w projekcie.
-
-**Analogie do Javy:**
-- Hooki ≈ metody lifecycle (jak `@PostConstruct`, `@PreDestroy` w Springu)
-- `useEffect` ≈ kod który musi się wykonać "po stronie" — np. po załadowaniu komponentu
-- Własny hook (`useApplications`) ≈ serwis w Springu (enkapsuluje logikę, można reużywać)
-
-**Co omawiamy:**
-- `useEffect(fn, [deps])` — kiedy się odpala, co to tablica zależności
-- Typowe użycia: fetch danych przy starcie, subskrypcje, sprzątanie
-- Różnica między `useEffect` a `useState`
-- Czym są własne hooki i dlaczego muszą zaczynać się od `use`
-- Przegląd hooków projektu: `useApplications`, `useCV`, `useNotes`, `useBadgeStats`
-
-**Pliki do otwarcia:**
-- `src/auth/AuthProvider.tsx` — `useEffect` sprawdzający token przy starcie (linijki 37-53)
-- `src/hooks/useApplications.ts` — własny hook oparty na React Query
-- `src/hooks/useNotes.ts` — własny hook
-
-**CR powiązane:**
-- CR-7 (zapowiedź): `CVManager.tsx` używa `useState + useEffect` zamiast gotowego `useCV()`.
-  Przy tym etapie tłumaczymy dlaczego to niespójność. Naprawiamy przy Etapie 5.
+**CR Related:** none on this phase.
 
 ---
 
-### Etap 5 — React Query — serce frontendu
+### Phase 3 — State and Re-rendering
 
-**Cel:** Zrozumieć dlaczego React Query to kluczowa biblioteka i jak działa w projekcie.
+**Goal:** Understand `useState`, how React updates UI, why it's different from Java.
 
-**Analogie do Javy:**
-- React Query ≈ warstwa cache'owania (jak Spring Cache + @Cacheable)
-- `useQuery` ≈ wywołanie repozytorium z automatycznym zarządzaniem stanem loading/error/data
-- `useMutation` ≈ wywołanie serwisu mutującego dane (POST/PUT/DELETE) z automatyczną invalidacją
-- `queryKeys` ≈ nazwy cache'u (jak klucze w @Cacheable)
+**Java Analogy:**
+- `useState` ≈ field + setter, except setter automatically refreshes view
+- In Java change field → nothing in UI happens. In React change state → React auto re-renders component
 
-**Co omawiamy:**
-- Problem bez React Query: ręczny `useState` + `useEffect` + obsługa loading/error (jak w CVManager)
-- `useQuery({ queryKey, queryFn })` — pobieranie danych z automatycznym cachowaniem
-- `useMutation({ mutationFn, onSuccess })` — mutacje z invalidacją cache
-- Stale time i refetching — kiedy React Query sam odświeża dane
-- `queryClient.invalidateQueries` — jak unieważnić cache po mutacji
+**What We Discuss:**
+- `const [value, setValue] = useState(initial)` — destructuring, how to read
+- Why NOT modify state directly (not like `this.field = x` in Java)
+- Re-rendering — what "component re-renders" means
+- Rule: one state → one source of truth
+- When to use `useState` vs regular variable
 
-**Pliki do otwarcia:**
-- `src/hooks/useApplications.ts` — kompletny przykład useQuery + useMutation
-- `src/hooks/useCV.ts` — hook do CV (który CVManager powinien, ale nie używa)
-- `src/components/cv/CVManager.tsx` — antyprzykład: useState+useEffect
+**Files to Open:**
+- `src/auth/AuthProvider.tsx` — `useState` for `user` and `isLoading` (lines 34-35)
+- `src/components/applications/ApplicationTable.tsx` — filters and sorting as state
 
-**CR powiązane:**
-- **CR-7:** Naprawiamy `CVManager.tsx` — zamieniamy `useState + useEffect + fetchCVs()`
-  na gotowy hook `useCV()`. Stosujemy pełny flow pracy (testy + przeglądarka).
+**CR Related:**
+- CR-11 (memoization): `ApplicationTable.tsx` — sort/filter without memoization on every render.
+  Explain `useMemo` and when needed.
 
 ---
 
-### Etap 6 — Routing i ochrona stron
+### Phase 4 — React Hooks
 
-**Cel:** Zrozumieć jak działa nawigacja w SPA i jak chronione są strony dla niezalogowanych.
+**Goal:** Understand hooks, `useEffect`, and custom hooks in project.
 
-**Analogie do Javy:**
-- React Router ≈ Spring MVC `@RequestMapping` (mapowanie URL → komponent)
-- `ProtectedRoute` ≈ Spring Security filter (blokuje dostęp bez autentykacji)
-- `AuthProvider` + Context ≈ `SecurityContextHolder` (globalny stan uwierzytelnienia)
-- `useContext` ≈ wstrzykiwanie beana przez `@Autowired`
+**Java Analogies:**
+- Hooks ≈ lifecycle methods (like `@PostConstruct`, `@PreDestroy` in Spring)
+- `useEffect` ≈ code that must execute "on the side" — e.g., after component loads
+- Custom hook (`useApplications`) ≈ service in Spring (encapsulates logic, reusable)
 
-**Co omawiamy:**
-- Jak SPA obsługuje URL bez przeładowania strony (history API)
-- `<Routes>` i `<Route path="..." element={...}>` — mapowanie URL → komponent
-- `Navigate` — przekierowanie (jak `redirect:` w Spring MVC)
-- Context API — globalny stan (dlaczego nie props drilling)
-- `AuthProvider` — jak `createContext`, `Provider`, `useContext` tworzą globalny stan usera
-- `ProtectedRoute` — jak sprawdza czy user jest zalogowany i gdzie przekierowuje
+**What We Discuss:**
+- `useEffect(fn, [deps])` — when it fires, what dependency array means
+- Common uses: fetch data on startup, subscriptions, cleanup
+- Difference between `useEffect` and `useState`
+- Custom hooks and why they start with `use`
+- Overview of project hooks: `useApplications`, `useCV`, `useNotes`, `useBadgeStats`
 
-**Pliki do otwarcia:**
-- `src/App.tsx` — pełna konfiguracja routingu
-- `src/auth/AuthProvider.tsx` — Context API, tworzenie globalnego stanu auth
-- `src/auth/ProtectedRoute.tsx` — guard komponentu
+**Files to Open:**
+- `src/auth/AuthProvider.tsx` — `useEffect` checking token on startup (lines 37-53)
+- `src/hooks/useApplications.ts` — custom hook based on React Query
+- `src/hooks/useNotes.ts` — custom hook
 
-**CR powiązane:** brak napraw, ale omawiamy ideę Error Boundary (zapowiedź CR-6 z Etapu 8).
-
----
-
-### Etap 7 — Komunikacja front↔back
-
-**Cel:** Zrozumieć w jaki sposób frontend wysyła zapytania HTTP do Spring Boota i jak obsługuje odpowiedzi.
-
-**Analogie do Javy:**
-- `fetch()` ≈ `RestTemplate` / `WebClient` (klient HTTP)
-- `api.ts` ≈ klasa serwisu HTTP (enkapsuluje wszystkie wywołania REST)
-- JSON request/response ≈ `@RequestBody` / `@ResponseBody` w Spring
-- `Authorization: Bearer TOKEN` ≈ nagłówek weryfikowany przez Spring Security filter
-
-**Co omawiamy:**
-- Jak działa `fetch(url, options)` — metoda, nagłówki, body
-- Funkcja `apiFetch()` — co robi z odpowiedzią 401 (i jaki jest CR problem z tym)
-- Funkcja `getHeaders()` — skąd bierze token i dlaczego Bearer
-- CORS — dlaczego backend musi "zezwolić" frontendowi na zapytania
-- `credentials: 'include'` — co to znaczy (wysyłanie ciasteczek z refresh tokenem)
-- Przegląd wszystkich endpointów w `api.ts` i ich odpowiedniki w Spring kontrolerach
-
-**Pliki do otwarcia:**
-- `src/services/api.ts` — cała warstwa API
-- (backend) `easyapply-backend/.../controller/` — żeby zobaczyć jak pasują do siebie
-
-**CR powiązane (do naprawy w tym etapie):**
-- **CR-3:** Kontrakt refresh tokena — backend zwraca `"token"`, frontend oczekuje `"accessToken"`
-  (`api.ts:71`). Wyjaśniamy + naprawiamy obydwa końce. Flow pracy + testy + przeglądarka.
-- **CR-4:** `LoginPage.tsx` — zahardkodowany `http://localhost:8080`.
-  Wyjaśniamy zmienne środowiskowe Vite (`import.meta.env`). Naprawiamy. Sprawdzamy `.env.example`.
-- **CR-9:** `apiFetch()` po redirect nie przerywa przetwarzania — wyjaśniamy i naprawiamy.
+**CR Related:**
+- CR-7 (preview): `CVManager.tsx` uses `useState + useEffect` instead of ready `useCV()`.
+  Show inconsistency. Fix in Phase 5.
 
 ---
 
-### Etap 8 — OAuth2 i JWT — pełny przepływ logowania
+### Phase 5 — React Query — Frontend Heart
 
-**Cel:** Prześledzić krok po kroku co się dzieje od kliknięcia "Zaloguj przez Google"
-do pojawienia się dashboardu. Rozumieć role każdego pliku.
+**Goal:** Understand why React Query is key and how it works in project.
 
-**Analogie do Javy:**
-- `AuthCallbackPage.tsx` ≈ kontroler obsługujący callback OAuth2
-- JWT w localStorage ≈ sesja po stronie klienta (zamiast `HttpSession` po stronie serwera)
-- httpOnly cookie z refresh tokenem ≈ sesja serwera (niedostępna dla JS)
+**Java Analogies:**
+- React Query ≈ caching layer (like Spring Cache + @Cacheable)
+- `useQuery` ≈ repository call with automatic state management loading/error/data
+- `useMutation` ≈ service method mutating data (POST/PUT/DELETE) with auto cache invalidation
+- `queryKeys` ≈ cache names (like value in `@Cacheable("applications")`)
 
-**Co omawiamy:**
-Pełny przepływ krok po kroku:
-1. Klik "Zaloguj przez Google" → redirect do Google (`LoginPage.tsx`)
-2. Google odsyła na `/auth/callback?token=...` (`AuthCallbackPage.tsx`)
-3. Frontend zapisuje token w localStorage i przekierowuje na `/dashboard`
-4. `AuthProvider` przy starcie sprawdza localStorage i pobiera dane usera (`/api/auth/me`)
-5. `ProtectedRoute` sprawdza `isAuthenticated` i wpuszcza lub wyrzuca na `/login`
-6. Przy każdym zapytaniu API token leci w headerze `Authorization: Bearer`
-7. Po 15 minutach token wygasa → `apiFetch` dostaje 401 → redirect na `/login`
-8. Refresh token w cookie → endpoint `/api/auth/refresh` → nowy access token
+**What We Discuss:**
+- Problem without React Query: manual `useState` + `useEffect` + loading/error handling (like CVManager)
+- `useQuery({ queryKey, queryFn })` — fetch with auto cache
+- `useMutation({ mutationFn, onSuccess })` — mutations with cache invalidation
+- Stale time and refetching — when React Query refreshes data
+- `queryClient.invalidateQueries` — invalidate cache after mutation
 
-**Dlaczego dwa tokeny:** access token (krótki, w localStorage) vs refresh token (długi, httpOnly cookie)
+**Files to Open:**
+- `src/hooks/useApplications.ts` — complete example useQuery + useMutation
+- `src/hooks/useCV.ts` — hook to CV (which CVManager should use)
+- `src/components/cv/CVManager.tsx` — anti-example: useState+useEffect
 
-**Pliki do otwarcia:**
-- `src/pages/LoginPage.tsx` — przekierowanie do Google
-- `src/pages/AuthCallbackPage.tsx` — odbiór tokenu
-- `src/auth/AuthProvider.tsx` — sprawdzenie sesji przy starcie
+**CR Related:**
+- **CR-7:** Fix `CVManager.tsx` — replace `useState + useEffect + fetchCVs()`
+  with `useCV()` hook. Full work flow (tests + browser).
+
+---
+
+### Phase 6 — Routing and Page Protection
+
+**Goal:** Understand SPA navigation and page protection for logged-in users.
+
+**Java Analogies:**
+- React Router ≈ Spring MVC `@RequestMapping` (URL → component)
+- `ProtectedRoute` ≈ Spring Security filter (blocks access)
+- `AuthProvider` + Context ≈ `SecurityContextHolder` (global auth state)
+- `useContext` ≈ `@Autowired` (getting dependency)
+
+**What We Discuss:**
+- How SPA handles URL without page reload (History API)
+- `<Routes>` and `<Route>` — mapping URL → component
+- `<Navigate>` — redirect (like `redirect:` in Spring MVC)
+- Context API — global state (why not props drilling)
+- `AuthProvider` — how `createContext`, `Provider`, `useContext` create global auth state
+- `ProtectedRoute` — checks if logged in, redirects or allows
+
+**Files to Open:**
+- `src/App.tsx` — full routing config
+- `src/auth/AuthProvider.tsx` — Context API, global auth state
+- `src/auth/ProtectedRoute.tsx` — component guard
+
+**CR Related:** none fixes, but preview Error Boundary (CR-6 from Phase 8).
+
+---
+
+### Phase 7 — Frontend ↔ Backend Communication
+
+**Goal:** Understand how frontend sends HTTP requests to Spring Boot and handles responses.
+
+**Java Analogies:**
+- `fetch()` ≈ `RestTemplate` / `WebClient` (HTTP client)
+- `api.ts` ≈ service class (encapsulates all REST calls)
+- JSON request/response ≈ `@RequestBody` / `@ResponseBody` in Spring
+- `Authorization: Bearer TOKEN` ≈ header verified by Spring Security filter
+
+**What We Discuss:**
+- How `fetch(url, options)` works — method, headers, body
+- Function `apiFetch()` — what it does with 401 response (and CR problem)
+- Function `getHeaders()` — where token comes from and why Bearer
+- CORS — why backend must "allow" frontend requests
+- `credentials: 'include'` — sends refresh token cookie
+- All endpoints in `api.ts` and their Spring controller equivalents
+
+**Files to Open:**
+- `src/services/api.ts` — entire API layer
+- (backend) `easyapply-backend/.../controller/` — compare with Spring endpoints
+
+**CR Related (to fix in this phase):**
+- **CR-3:** Token contract — backend returns `"token"`, frontend expects `"accessToken"`
+  (`api.ts:71`). Explain + fix both ends. Full work flow + tests + browser.
+- **CR-4:** `LoginPage.tsx` — hardcoded `http://localhost:8080`.
+  Explain Vite environment variables (`import.meta.env`). Fix. Check `.env.example`.
+- **CR-9:** `apiFetch()` on redirect doesn't stop processing — explain and fix.
+
+---
+
+### Phase 8 — OAuth2 and JWT — Complete Login Flow
+
+**Goal:** Trace step by step what happens from clicking "Login with Google"
+to seeing dashboard. Understand role of each file.
+
+**Java Analogies:**
+- `AuthCallbackPage.tsx` ≈ controller handling OAuth2 callback
+- JWT in localStorage ≈ client-side session (instead of `HttpSession` on server)
+- httpOnly cookie with refresh token ≈ server session (inaccessible to JS)
+
+**What We Discuss:**
+Complete flow step by step:
+1. Click "Login with Google" → redirect to Google (`LoginPage.tsx`)
+2. Google logs user in
+3. Google redirects to `/auth/callback?token=...` (`AuthCallbackPage.tsx`)
+4. Frontend saves token in localStorage and navigates to `/dashboard`
+5. `AuthProvider` on startup checks localStorage and fetches user data (`/api/auth/me`)
+6. `ProtectedRoute` checks `isAuthenticated` and allows or throws out
+7. On every API request, token goes in `Authorization: Bearer` header
+8. After 15 min, token expires → 401 → redirect to `/login`
+9. Refresh token in cookie → endpoint `/api/auth/refresh` → new access token
+
+**Why Two Tokens:** access token (short, in localStorage) vs refresh token (long, httpOnly cookie)
+
+**Files to Open:**
+- `src/pages/LoginPage.tsx` — redirect to Google
+- `src/pages/AuthCallbackPage.tsx` — receive token from URL
+- `src/auth/AuthProvider.tsx` — check session on startup
 - `src/services/api.ts` — `refreshToken()`, `getHeaders()`
-- (backend) `OAuth2AuthenticationSuccessHandler.java` — jak Spring generuje token
+- (backend) `OAuth2AuthenticationSuccessHandler.java` — token generation
 
-**CR powiązane (do naprawy w tym etapie):**
-- **CR-5:** Brak `SameSite` na ciasteczku refresh_token — wyjaśniamy CSRF,
-  naprawiamy po stronie backendu (`OAuth2AuthenticationSuccessHandler.java`). Testy + restart backendu.
-- **CR-6:** Error Boundary — wyjaśniamy czym jest i naprawiamy (dodajemy do `App.tsx`).
-  Przy okazji naprawiamy `new URL()` crash w `CVManager.tsx`. Testy + przeglądarka.
-
----
-
-### Etap 9 — TypeScript w React
-
-**Cel:** Zrozumieć jak TypeScript dodaje bezpieczeństwo typów do kodu frontendu
-i jak `domain.ts` odzwierciedla backend.
-
-**Analogie do Javy:**
-- `interface` w TypeScript ≈ `interface` / POJO / rekord w Javie
-- `type` ≈ `enum` lub typ złożony
-- `T | null` ≈ `Optional<T>` lub nullable w Javie
-- TypeScript strict mode ≈ `-Xlint:all` + Checkstyle w Javie
-
-**Co omawiamy:**
-- Czym jest TypeScript vs JavaScript (kompilacja, type checking)
-- `interface Application` vs `class Application` w Javie — dlaczego tu interfejsy
-- Union types (`'WYSLANE' | 'W_PROCESIE'`) vs enum Javy
-- `| null` i `?` — jak TypeScript wymusza obsługę braku wartości
-- Generics w TypeScript (np. `Promise<Application[]>`)
-- Strict mode — co dają flagi `noUnusedLocals`, `noUnusedParameters`
-
-**Pliki do otwarcia:**
-- `src/types/domain.ts` — wszystkie typy projektu
-- `src/services/api.ts` — jak typy są używane przy fetch
-- `easyapply-frontend/tsconfig.json` — konfiguracja strict mode
-
-**CR powiązane (do naprawy w tym etapie):**
-- **CR-2:** Walidacja URL-i — `javascript:` XSS przez href.
-  Wyjaśniamy atak, piszemy funkcję `isSafeUrl()`, naprawiamy `ApplicationDetails.tsx` i `CVManager.tsx`.
-  Flow pracy + testy + przeglądarka.
-- **CR-8:** Duplikaty stałych kolorów statusów — wyodrębniamy do `src/constants/`.
-  Omawiamy zasadę DRY. Naprawiamy. Testy + przeglądarka.
+**CR Related (to fix in this phase):**
+- **CR-5:** Missing `SameSite` on refresh_token cookie — explain CSRF,
+  fix on backend side (`OAuth2AuthenticationSuccessHandler.java`). Tests + restart.
+- **CR-6:** Error Boundary — explain purpose and fix (add to `App.tsx`).
+  Also fix `new URL()` crash in `CVManager.tsx`. Tests + browser.
 
 ---
 
-### Etap 10 — Testowanie frontendu
+### Phase 9 — TypeScript in React
 
-**Cel:** Zrozumieć piramidę testów i jak testy frontendowe różnią się od JUnit.
+**Goal:** Understand how TypeScript adds type safety to frontend
+and how `domain.ts` mirrors backend.
 
-**Analogie do Javy:**
-- Vitest ≈ JUnit 5 (testy jednostkowe)
-- Testing Library (`@testing-library/react`) ≈ Mockito + asercje na zachowaniu (nie implementacji)
-- Cypress ≈ Selenium (testy E2E, przeglądarka)
-- Mock Service Worker (MSW) ≈ `@MockBean` w Spring Test
+**Java Analogies:**
+- `interface` in TypeScript ≈ `interface` / POJO / record in Java
+- `type` ≈ `enum` or complex type
+- `T | null` ≈ `Optional<T>` or nullable in Java
+- TypeScript strict mode ≈ `-Xlint:all` + Checkstyle in Java
 
-**Co omawiamy:**
-- Piramida testów: unit → integracja → E2E
-- Jak testować komponent (renderowanie, symulacja kliknięć, asercje na DOM)
-- Czym jest `test-utils.tsx` w projekcie — wrapper z providerami
-- Przegląd istniejących testów: `AuthProvider.test.tsx`, `useApplications.test.tsx`
-- Co warto przetestować wg CR: hooki React Query, komponenty z logiką warunkową
+**What We Discuss:**
+- What TypeScript is vs JavaScript (compilation, type checking)
+- `interface Application` vs `class Application` in Java — why interfaces here
+- Union types (`'SENT' | 'IN_PROGRESS'`) vs Java enum
+- `| null` and `?` — how TypeScript enforces handling missing values
+- Generics in TypeScript (e.g., `Promise<Application[]>`)
+- Strict mode — what do flags `noUnusedLocals`, `noUnusedParameters` give
 
-**Pliki do otwarcia:**
-- `src/test/test-utils.tsx` — setup testów
-- `src/test/auth/AuthProvider.test.tsx` — test komponentu z kontekstem
-- `src/test/hooks/useApplications.test.tsx` — test hooka
+**Files to Open:**
+- `src/types/domain.ts` — all project types
+- `src/services/api.ts` — how types used in fetch
+- `easyapply-frontend/tsconfig.json` — strict mode config
 
-**CR powiązane:**
-- Omawiamy co jeszcze warto pokryć testami i dlaczego — na podstawie wskazań w `spec/v1/03-review/code-review-2026-03-01.md`.
-
----
-
-## Notatki z sesji
-
-Po każdej sesji Claude uzupełnia tę sekcję. Format: data, co omówiono, co zrozumiano,
-co wymaga powtórki, jakie CR naprawiono, jaki jest następny krok.
-
----
-
-### Sesja 1 — 2026-03-03
-**Omówiono:**
-- Ustalono zakres nauki: front + security backendu + przepływ front↔back
-- Ustalono poziom startowy: Jakub nie zna frontendu od zera
-- Omówiono plan nauki i zatwierdzono
-- Ustalono flow pracy przy naprawach CR (testy → build → przeglądarka → pytanie o zaznaczenie)
-- Dodano referencję do `spec/v1/03-review/code-review-2026-03-01.md` jako dokumentu źródłowego
-- Ukończono Etap 1 — ekosystem narzędzi, przepływ Vite, pliki package.json / index.html / main.tsx / App.tsx
-- Do zapamiętania: porty (5432/5173/8080), JSX ≠ HTML, przeglądarka rozumie tylko JS nie JSX
-
-**CR naprawione:** brak
-
-**Następny krok:** Etap 3 — Stan (state) i rerenderowanie
+**CR Related (to fix in this phase):**
+- **CR-2:** URL validation — `javascript:` XSS through href.
+  Explain attack, write `isSafeUrl()` function, fix `ApplicationDetails.tsx` and `CVManager.tsx`.
+  Full work flow + tests + browser.
+- **CR-8:** Duplicate status colors — extract to `src/constants/`.
+  Explain DRY. Fix. Tests + browser.
 
 ---
 
-### Sesja 2 — 2026-03-12
-**Omówiono:**
-- Etap 3 częściowo — `useState`, `useEffect`, przepływ logowania krok po kroku
-- Pliki: `AuthProvider.tsx`, `ProtectedRoute.tsx`, `AuthCallbackPage.tsx`
+### Phase 10 — Frontend Testing
 
-**Co NIE przyswoił (wymagane powtórzenie):**
-- Jak działa `useState` i skąd pochodzi setter (`setUser`)
-- Dlaczego `[]` w `useEffect` ≠ przekazywanie wartości
-- Co by się stało bez `if (isLoading) return null` w ProtectedRoute
-- Łańcuch reaktywności: `setUser(null)` → `isAuthenticated=false` → ProtectedRoute → redirect
+**Goal:** Understand test pyramid and how frontend tests differ from JUnit.
 
-**CR naprawione:** brak
+**Java Analogies:**
+- Vitest ≈ JUnit 5 (unit tests)
+- Testing Library (`@testing-library/react`) ≈ Mockito + assertions on behavior
+- Cypress ≈ Selenium (E2E tests, browser)
+- Mock Service Worker (MSW) ≈ `@MockBean` in Spring Test
 
-**Następny krok:** ⚠️ Powtórka Etapu 3 od początku — zacznij od `useState` na prostszym przykładzie (`ApplicationTable` filtr tekstowy), quiz po jednym pojęciu na raz. Szczegóły w `spec/v1/04-refactoring-learning/learning-notes-frontend.md`.
+**What We Discuss:**
+- Test pyramid: unit → integration → E2E
+- How to test component (render, simulate clicks, assert on DOM)
+- What `test-utils.tsx` does in project — wrapper with providers
+- Overview of existing tests: `AuthProvider.test.tsx`, `useApplications.test.tsx`
+- What's worth testing per CR: React Query hooks, conditional components
 
----
+**Files to Open:**
+- `src/test/test-utils.tsx` — test setup
+- `src/test/auth/AuthProvider.test.tsx` — component test with context
+- `src/test/hooks/useApplications.test.tsx` — hook test
 
-### Sesja 3 — 2026-03-13
-**Omówiono:**
-- **Etap 3 — UKOŃCZONY** — `useState` i `useEffect` w pełni zrozumiane
-- Rozpoczęto od zera: zwykła zmienna vs `useState` (Java `repaint()` vs React auto-render)
-- Przykład z rzeczywistego projektu: `ApplicationTable.tsx` (linijka 60 — `searchQuery`)
-- Quiz `useState`: 5/5 ✅ — Jakub zrozumiał: `setState` → re-render całej funkcji
-- `useEffect` z `[]` — analogia do `@PostConstruct` w Spring'u
-- Quiz `useEffect`: 5/5 ✅ — Jakub zrozumiał nieskończoną pętlę z `[user]`
-- Rzeczywisty kod: `AuthProvider.tsx` (linie 37-53) — pełny przepływ sprawdzania tokena na starcie
-- Trzy scenariusze: token ważny → zalogowany, brak tokena → niezalogowany, token wygasł → niezalogowany
-
-**Kluczowe zdanie (zapamiętane):**
-> `useState` = zmienna + setter + automatyczny re-render
-
-**CR naprawione:** brak
-
-**Następny krok:** Etap 4 — Hooki React (`useEffect` bardziej zaawansowany, własne hooki)
+**CR Related:**
+- Discuss what more to cover per CR notes.
 
 ---
 
-### Sesja 4 — 2026-03-17
-**Omówiono:**
-- **Etap 4 — UKOŃCZONY** — hooki React w pełni zrozumiane
-- Czym są hooki: funkcje podpinające logikę do frameworka (≈ `@Autowired` w Springu)
-- Zasady hooków: tylko na najwyższym poziomie funkcji, tylko w komponentach/hookach, prefiks `use`
-- `useEffect` zaawansowany: cleanup (`return () => {...}` ≈ `@PreDestroy`), wiele efektów w jednym komponencie
-- Własne hooki = serwisy Springowe: `useNotes.ts` ≈ `NoteService.java` (enkapsulacja logiki, reużywalność)
-- Hooki z konfiguracją: `staleTime` (cache — `useBadgeStats`), `enabled` (warunkowe odpytywanie — `useCheckDuplicate`)
-- Zapowiedź CR-7: `CVManager.tsx` nie używa gotowego `useCVs()` — niespójność i duplikacja
-- Quiz: 4.5/5 ✅
+## Session Notes
 
-**Kluczowe zdania (zapamiętane):**
-> Hook = "React, daj mi dostęp do [stanu / efektu / kontekstu / ...]" — jak `@Autowired`
-> Własny hook = serwis Springowy. Enkapsuluje logikę, używasz w wielu komponentach.
-
-**CR naprawione:** brak
-
-**Następny krok:** Etap 5 — React Query (useQuery, useMutation, invalidacja cache, naprawa CR-7)
+After each session Claude updates this section. Format: date, what discussed, what understood,
+what needs repeat, which CR fixed, next step.
 
 ---
 
-### Sesja 5 — 2026-03-17
-**Omówiono:**
-- **Etap 5 — UKOŃCZONY** — React Query zrozumiany, CR-7 naprawiony
-- Problem bez React Query: ręczny `useState` + `useEffect` + `fetchCVs()` (CVManager jako antyprzykład)
-- `useQuery` = pobieranie danych z automatycznym cache, loading, error (≈ `@Cacheable` w Springu)
-- `useMutation` = operacje zapisu (POST/PUT/DELETE) z `onSuccess` do unieważnienia cache (≈ `@CacheEvict`)
-- `queryKey` = nazwa cache (jak wartość w `@Cacheable("applications")`)
-- `invalidateQueries` = unieważnij cache → React Query sam pobierze dane od nowa
-- `refetchOnWindowFocus` = automatyczne odświeżanie przy powrocie na zakładkę
-- Unieważnianie wielu cache'ów: `useDeleteCV` unieważnia `cvKeys.all` + `applicationKeys.all` (bo usunięcie CV odpina je od aplikacji)
-- Naprawa CR-7: zamiana ręcznego `useState`+`useEffect`+`fetchCVs()` na hooki `useCVs()`, `useUploadCV()`, `useCreateCV()`, `useUpdateCV()`, `useDeleteCV()`
-- Usunięto 2 `useState` (`cvList`, `uploading`), ręczną funkcję `fetchCVs()`, `useEffect` z pobieraniem
-- Testy: 67/67 zielone, build przechodzi, Jakub przetestował w przeglądarce
-- Quiz: 2.5/5 — słabsze punkty: `refetchOnWindowFocus`, uzasadnienie unieważniania wielu cache'ów
+### Session 1 — 2026-03-03
+**Discussed:**
+- Established learning scope: frontend + security + frontend↔backend flow
+- Established starting level: Jakub doesn't know frontend from scratch
+- Reviewed learning plan and approved
+- Established work flow for CR fixes (tests → build → browser → question about marking done)
+- Added reference to `spec/v1/03-review/code-review-2026-03-01.md` as source
+- Completed Phase 1 — tools ecosystem, Vite flow, files package.json / index.html / main.tsx / App.tsx
+- To remember: ports (5432/5173/8080), JSX ≠ HTML, browser understands only JS not JSX
 
-**CR naprawione:** CR-7 ✅
+**CR Fixed:** none
 
-**Następny krok:** Etap 6 — Routing i ochrona stron
+**Next Step:** Phase 3 — State and Re-rendering
 
 ---
 
-### Sesja 6 — 2026-03-17
-**Omówiono:**
-- **Etap 6 — UKOŃCZONY** — routing, Context API, ProtectedRoute zrozumiane
-- SPA i History API: React Router przechwytuje kliknięcia, zmienia URL bez zapytania do serwera
-- `<Routes>` i `<Route>` = `@RequestMapping` w Springu — mapowanie URL → komponent
-- `<Navigate>` = `redirect:` w Spring MVC, `replace` chroni przed pętlą "Wstecz"
-- `path="*"` = catch-all (jak `default:` w switch) — bez niego pusty ekran
-- Context API = kontener Springa: `createContext` (deklaracja), `Provider` (rejestracja), `useContext` (`@Autowired`)
-- `useAuth()` = wrapper na `useContext` z walidacją (jak `if (param == null) throw`)
-- `isLoading` = "jeszcze sprawdzam, nie podejmuj decyzji" — chroni przed fałszywym redirectem na `/login`
-- `ProtectedRoute` = Spring Security filter: `isLoading` → czekaj, `!isAuthenticated` → wyrzuć, inaczej → wpuść
-- Kolejność sprawdzeń w ProtectedRoute ma znaczenie (najpierw isLoading, potem isAuthenticated)
-- Zapowiedź Error Boundary (CR-6, Etap 8)
-- Quiz SPA: 5/5, Quiz Routes: 4/5, Quiz Context: 3/5, Quiz ProtectedRoute: 2.5/5
-
-**Kluczowe zdania (zapamiętane):**
-> Context API = kontener Springa. `createContext` → `Provider` → `useContext` = deklaracja → rejestracja → `@Autowired`
-> `isLoading` = "jeszcze sprawdzam, nie podejmuj decyzji"
-
-**CR naprawione:** brak
-
-**Następny krok:** Etap 7 — Komunikacja front↔back (api.ts, fetch, CORS, naprawa CR-3, CR-4, CR-9)
-
----
-
-### Sesja 7 — 2026-03-20
-
-**Omówiono:**
-- **Etap 7 — UKOŃCZONY** — komunikacja front↔back w pełni zrozumiana
-- `fetch()` — klient HTTP w przeglądarce (analogia: `RestTemplate` w Javie)
-- `api.ts` — warstwa centralizująca wszystkie API calls z autentykacją
-- JSON — uniwersalny format danych między frontendem a backendem
-- Kontrakt API: backend zwraca konkretne pola, frontend na nich polega
-- Naprawa CR-3: backend `"token"` → `"accessToken"` (align z frontend expectations)
-- Naprawa CR-4: zahardkodowany URL → `import.meta.env.VITE_API_URL` (zmienne środowiskowe Vite)
-- Naprawa CR-9: `apiFetch()` po 401 redirect teraz `throw new Error()` (stops execution)
-- Network tab DevTools: 200 OK vs 304 Not Modified (browser caching)
-- Wszystkie CR przetestowane w przeglądarce i backendu
-- Commits: ebf9e4e (CR-3), c286e04 (CR-4), 7188a5d (CR-9)
-
-**Kluczowe zdania (zapamiętane):**
-> `fetch()` = klient HTTP, wysyła JSON, otrzymuje JSON
-> API kontrakt = backend decyduje, frontend się dostosowuje
-> 304 Not Modified = cache jest ok, oszczędność transferu
-> `throw Error()` po redirect = stop przetwarzania
-
-**Co NIE przyswoił:**
-- Etap 8 — OAuth2 i JWT przepływ — wyjaśniane zbyt szybko
-- Brakuje step-by-step tracingu: którego pliku do którego, jak się wywołują metody
-- Jakub wyraźnie stwierdził: "Nie rozumiem. Trzeba od nowa, plik po pliku, funkcja po funkcji"
-
-**CR naprawione:** CR-3 ✅, CR-4 ✅, CR-9 ✅
-
-**Następny krok:** ⚠️ **Etap 8 — OD NOWA Z STEP-BY-STEP TRACINGIEM**
-- Zacząć od LoginPage.tsx
-- Pokazać co się wysyła do backendu i co wraca
-
----
-
-### Sesja 8 — 2026-03-23
-
-**Omówiono:**
-- **Etap 8 (część 1) — UKOŃCZONY** — OAuth2 i JWT zrozumiane
-- Step-by-step tracing 8 kroków: LoginPage → Google → AuthCallback → AuthProvider → ProtectedRoute
-- `window.location.href` ≠ `fetch()` — to przeładowanie strony, nie API call
-- Dwa tokeny: access token (localStorage, 15 min) + refresh token (httpOnly cookie, 7 dni)
-- localStorage = ręczne zarządzanie, cookie = automatyczne wysyłanie
-- Token w każdym żądaniu: `Authorization: Bearer {token}` w headerze
-- 401 Unauthorized = token wygasł → `apiFetch()` → redirect `/login`
-- **Pytanie Jakuba (edukacyjne):** "CSRF wyłączony ale SameSite włączony? WTF?"
-  - Odpowiedź: dwie różne ochrony, pracują niezależnie
-  - CSRF token (synchronizer pattern) zbędny w SPA
-  - SameSite (na ciasteczku) = ochrona przed CSRF z obcej domeny
-  - Znaleziony problem: komentarz kodu był mylący ("nie ma cookies")
-- Quiz: 5/5 ✅
-
-**Kluczowe zdania (zapamiętane):**
-> `window.location.href` = przeładowanie strony, nie fetch()
-> Dwa tokeny: access (localStorage, krótki) + refresh (cookie, długi)
-> SameSite na ciasteczku = przeglądarka wysyła TYLKO z naszej domeny
-> CSRF disable + SameSite = dwie różne warstwy ochrony, oba ważne
-
-**CR naprawione:** CR-5 ✅ (SameSite na refresh_token cookie)
-
-**Następny krok:** CR-6 (Error Boundary) + zakończenie Etapu 8
-- Tracing: LoginPage → Google → AuthCallbackPage → AuthProvider → api.ts → backend (OAuth2AuthenticationSuccessHandler, AuthController)
-- Każdy krok: co się wysyła, gdzie się zapisuje, gdzie się czyta, jakie metody się wywołują
-- Rysować przepływ (strzałki między plikami)
-- Później: nowy commit i testy
-
----
-
-### Sesja 9 — 2026-03-24
-
-**Omówiono:**
-- **Etap 8 — UKOŃCZONY** — pełna nauka OAuth2 i JWT
-- CR-6 (Error Boundary) — weryfikacja: już był w kodzie + zacommitowany
-- Error Boundary jako klasa komponentu (nie funkcja) — dlaczego: lifecycle metody (`getDerivedStateFromError`, `componentDidCatch`)
-- Testy: 67/67 ✅ zielonych
-- Build: TypeScript się kompiluje ✅
-- Przeglądarka: Error Boundary pracuje (testowali złe URL, aplikacja nie się wysypała) ✅
-
-**Kluczowe zdania (zapamiętane):**
-> Error Boundary = try/catch dla całego poddrzewa komponentów. Kiedy potomek wysypie się — fallback UI zamiast białego ekranu.
-
-**CR naprawione:** CR-5 ✅, CR-6 ✅
-
-**Następny krok:** Etap 9 — TypeScript w React (CR-2 walidacja URL-i XSS, CR-8 duplikaty kolorów)
-
----
-
-### Sesja 10 — 2026-03-24 (ciąg dalszy)
-
-**Omówiono:**
-- **Etap 9 (część 1) — CR-2 NAPRAWIONY** — XSS walidacja URL-ów
-- TypeScript union types (`'WYSLANE' | 'W_PROCESIE'`) — enum w Javie
-- Interface vs Class — czemu interface do DTO
-- `| null` — Optional w Javie vs TypeScript
-- `isSafeUrl()` — walidacja URL-i w utility (blokuje javascript:, data:, vbscript:)
-- Walidacja w **input stage** (nie output) — fail fast principle
-- HTML5 `type="url"` — browser validation (słaba, łatwo obejść)
-- Nasza validacja — real security, sprawdza schemat URL-a
-- Testy: 67/67 ✅, Build ✅, Browser test ✅
-- Commit: 794a453
-
-**Kluczowe zdania (zapamiętane):**
-> Fail fast — blokuj na wejściu, nie potem na wyświe tleniu
-> Union type `'A' | 'B'` = enum w Javie
-> `new URL()` sparsuje URL i wyłapie błędy formatu
-
-**CR naprawione:** CR-2 ✅
-
-**Następny krok:** CR-8 (duplikaty kolorów statusów — DRY principle)
+(Rest of session notes will be added as learning progresses)

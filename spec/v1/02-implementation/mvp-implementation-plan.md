@@ -1,16 +1,16 @@
-# EasyApply — Plan Prac MVP (Updated)
+# EasyApply — MVP Implementation Plan (Updated)
 
 ---
 
-## ETAP 1: Backend API
+## PHASE 1: Backend API
 
-**Cel:** Działające REST API zwracające i zapisujące aplikacje w PostgreSQL z obsługą widełek wynagrodzeń, typów umów i treści ogłoszeń.
+**Goal:** Working REST API returning and saving applications to PostgreSQL with support for salary ranges, contract types, and job posting content.
 
-### Kroki:
+### Steps:
 
-1. **Stwórz projekt Spring Boot z PostgreSQL**
-   - Wygeneruj projekt: Spring Initializr (Java 21, Spring Boot 3.4, dependencies: Web, Data JPA, PostgreSQL, Validation)
-   - Skonfiguruj `application.properties`:
+1. **Create Spring Boot project with PostgreSQL**
+   - Generate project: Spring Initializr (Java 21, Spring Boot 3.4, dependencies: Web, Data JPA, PostgreSQL, Validation)
+   - Configure `application.properties`:
      ```properties
      spring.datasource.url=jdbc:postgresql://localhost:5432/easyapply_db
      spring.datasource.username=postgres
@@ -20,100 +20,100 @@
      spring.servlet.multipart.max-file-size=5MB
      spring.servlet.multipart.max-request-size=5MB
      ```
-   - Stwórz bazę PostgreSQL: `CREATE DATABASE easyapply_db;`
+   - Create PostgreSQL database: `CREATE DATABASE easyapply_db;`
 
-2. **Zdefiniuj encję Application**
-   - Stwórz `Application.java` z polami:
+2. **Define Application entity**
+   - Create `Application.java` with fields:
      - id, company, position, link
-     - salaryMin, salaryMax (widełki wynagrodzeń)
+     - salaryMin, salaryMax (salary ranges)
      - currency (PLN/EUR/USD/GBP)
-     - salaryType (enum: BRUTTO, NETTO)
-     - contractType (enum: B2B, UOP, UZ, INNA)
-     - salarySource (enum - źródło stawki)
+     - salaryType (enum: GROSS, NET)
+     - contractType (enum: B2B, EMPLOYMENT, CONTRACT, OTHER)
+     - salarySource (enum - source of rate)
      - source, status, jobDescription, agency, appliedAt
-     - currentStage (aktualny etap rekrutacji)
-     - rejectionReason (enum: BRAK_ODPOWIEDZI, ODMOWA_MAILOWA, ODRZUCENIE_PO_ROZMOWIE, INNE)
-     - rejectionDetails (szczegóły odmowy)
-     - cv (relacja @ManyToOne do CV)
-     - stageHistory (relacja @OneToMany do StageHistory)
-   - Dodaj enum `ApplicationStatus` (WYSLANE, W_PROCESIE, OFERTA, ODMOWA)
-   - Dodaj walidację: @NotBlank dla company/position, @Min(0) dla salaryMin/salaryMax
-   - Dodaj `@EntityListeners(AuditingEntityListener.class)` do klasy Application
-   - Pole appliedAt: `@CreatedDate private LocalDateTime appliedAt;` (auto-ustawiane na czas dodania)
+     - currentStage (current recruitment stage)
+     - rejectionReason (enum: NO_RESPONSE, EMAIL_REJECTION, REJECTED_AFTER_INTERVIEW, OTHER)
+     - rejectionDetails (rejection details)
+     - cv (relation @ManyToOne to CV)
+     - stageHistory (relation @OneToMany to StageHistory)
+   - Add `ApplicationStatus` enum (SENT, IN_PROCESS, OFFER, REJECTION)
+   - Add validation: @NotBlank for company/position, @Min(0) for salaryMin/salaryMax
+   - Add `@EntityListeners(AuditingEntityListener.class)` to Application class
+   - appliedAt field: `@CreatedDate private LocalDateTime appliedAt;` (auto-set on creation)
 
-3. **Zdefiniuj encję StageHistory (historia etapów)**
-   - Stwórz `StageHistory.java` z polami: id, application, stageName, completed, createdAt, completedAt
-   - Relacja @ManyToOne z Application
-   - Metoda `markCompleted()` do zamykania etapów
+3. **Define StageHistory entity (recruitment stage history)**
+   - Create `StageHistory.java` with fields: id, application, stageName, completed, createdAt, completedAt
+   - @ManyToOne relation with Application
+   - `markCompleted()` method to close stages
 
-4. **Zbuduj repository i service**
-   - Stwórz `ApplicationRepository extends JpaRepository`
-   - Stwórz `StageHistoryRepository extends JpaRepository`
-   - Stwórz `ApplicationService` z metodami:
-     - create() - tworzy aplikację z początkowym wpisem w historii etapów
+4. **Build repository and service**
+   - Create `ApplicationRepository extends JpaRepository`
+   - Create `StageHistoryRepository extends JpaRepository`
+   - Create `ApplicationService` with methods:
+     - create() - creates application with initial stage history entry
      - findAll(), findById()
-     - updateStatus(), updateStage() - obsługa przejść między statusami
-     - addStage() - dodawanie nowego etapu rekrutacji
-     - findDuplicates() - wykrywanie duplikatów (company + position, case-insensitive)
+     - updateStatus(), updateStage() - handle status transitions
+     - addStage() - add new recruitment stage
+     - findDuplicates() - detect duplicates (company + position, case-insensitive)
      - update(), delete()
 
-5. **Zbuduj REST controller**
-   - Endpoint: `POST /api/applications` (tworzy aplikację, @Valid dla walidacji)
-   - Endpoint: `GET /api/applications` (zwraca listę)
-   - Endpoint: `GET /api/applications/{id}` (zwraca szczegóły)
-   - Endpoint: `PUT /api/applications/{id}` (aktualizuje aplikację)
-   - Endpoint: `DELETE /api/applications/{id}` (usuwa aplikację)
-   - Endpoint: `PATCH /api/applications/{id}/status` (zmienia status)
-   - Endpoint: `PATCH /api/applications/{id}/stage` (zmienia etap z obsługą zakończenia)
-   - Endpoint: `POST /api/applications/{id}/stage` (dodaje nowy etap)
-   - Endpoint: `GET /api/applications/check-duplicate` (sprawdza duplikaty)
-   - Endpoint: `PATCH /api/applications/{id}/cv` (przypisuje CV)
+5. **Build REST controller**
+   - Endpoint: `POST /api/applications` (creates application, @Valid for validation)
+   - Endpoint: `GET /api/applications` (returns list)
+   - Endpoint: `GET /api/applications/{id}` (returns details)
+   - Endpoint: `PUT /api/applications/{id}` (updates application)
+   - Endpoint: `DELETE /api/applications/{id}` (deletes application)
+   - Endpoint: `PATCH /api/applications/{id}/status` (changes status)
+   - Endpoint: `PATCH /api/applications/{id}/stage` (changes stage with completion support)
+   - Endpoint: `POST /api/applications/{id}/stage` (adds new stage)
+   - Endpoint: `GET /api/applications/check-duplicate` (checks for duplicates)
+   - Endpoint: `PATCH /api/applications/{id}/cv` (assigns CV)
 
-6. **Dodaj konfigurację CORS**
-   - Stwórz `@Configuration` klasę `CorsConfig` z `WebMvcConfigurer`
-   - Zezwól na requesty z `http://localhost:5173` (frontend Vite)
-   - Dozwolone metody: GET, POST, PUT, PATCH, DELETE
-   - Dozwolone headers: Content-Type, Authorization
+6. **Add CORS configuration**
+   - Create `@Configuration` class `CorsConfig` with `WebMvcConfigurer`
+   - Allow requests from `http://localhost:5173` (Vite frontend)
+   - Allowed methods: GET, POST, PUT, PATCH, DELETE
+   - Allowed headers: Content-Type, Authorization
 
-7. **Dodaj globalną obsługę błędów**
-   - Stwórz `@RestControllerAdvice` klasę `GlobalExceptionHandler`
-   - Obsłuż `MethodArgumentNotValidException` (walidacja) → 400 Bad Request
-   - Obsłuż `EntityNotFoundException` → 404 Not Found
-   - Obsłuż `Exception` (fallback) → 500 Internal Server Error
-   - Zwróć JSON z `{"error": "message", "timestamp": "..."}`
+7. **Add global error handling**
+   - Create `@RestControllerAdvice` class `GlobalExceptionHandler`
+   - Handle `MethodArgumentNotValidException` (validation) → 400 Bad Request
+   - Handle `EntityNotFoundException` → 404 Not Found
+   - Handle `Exception` (fallback) → 500 Internal Server Error
+   - Return JSON with `{"error": "message", "timestamp": "..."}`
 
-8. **Włącz JPA Auditing**
-   - Dodaj `@EnableJpaAuditing` do głównej klasy aplikacji (@SpringBootApplication)
-   - Umożliwi to działanie @CreatedDate dla pola appliedAt
+8. **Enable JPA Auditing**
+   - Add `@EnableJpaAuditing` to main application class (@SpringBootApplication)
+   - This enables @CreatedDate to work for appliedAt field
 
-### Edge cases do obsłużenia:
+### Edge cases to handle:
 
-- **Wielowalutowość:** Pole `currency` (String: PLN/EUR/USD/GBP) bez przelicznika
-- **Widełki wynagrodzeń:** Pola `salaryMin` i `salaryMax` (Integer, nullable)
-- **Typ wynagrodzenia:** Pole `salaryType` (enum: BRUTTO/NETTO)
-- **Typ umowy:** Pole `contractType` (enum: B2B/UOP/UZ/INNA)
-- **Wygasłe linki:** Pole `jobDescription` (TEXT) na treść ogłoszenia
-- **Rekrutacja ukryta:** Pole `agency` (String, nullable) na nazwę agencji pośredniczącej
-- **Elastyczne etapy:** Pole `currentStage` (String) + tabela `stage_history`
-- **Powody odmowy:** Pole `rejectionReason` (enum) + `rejectionDetails` (String)
+- **Multi-currency:** `currency` field (String: PLN/EUR/USD/GBP) without converter
+- **Salary ranges:** `salaryMin` and `salaryMax` fields (Integer, nullable)
+- **Salary type:** `salaryType` field (enum: GROSS/NET)
+- **Contract type:** `contractType` field (enum: B2B/EMPLOYMENT/CONTRACT/OTHER)
+- **Expired links:** `jobDescription` field (TEXT) for job posting content
+- **Hidden recruitment:** `agency` field (String, nullable) for agency name
+- **Flexible stages:** `currentStage` field (String) + `stage_history` table
+- **Rejection reasons:** `rejectionReason` field (enum) + `rejectionDetails` (String)
 
-### Definicja "done":
+### Definition of "done":
 
-- Aplikacja zapisuje się w PostgreSQL z wszystkimi polami (appliedAt auto-generowane)
-- API zwraca JSON z zapisanymi danymi
-- Walidacja działa (błąd 400 przy pustej firmie, komunikat JSON)
-- Status można zmieniać przez PATCH
-- Etapy rekrutacji są śledzone w historii
-- CORS działa (frontend może wywołać API z localhost:5173)
-- Error handling zwraca czytelne błędy w formacie JSON
+- Application is saved in PostgreSQL with all fields (appliedAt auto-generated)
+- API returns JSON with saved data
+- Validation works (400 error for empty company, JSON message)
+- Status can be changed via PATCH
+- Recruitment stages are tracked in history
+- CORS works (frontend can call API from localhost:5173)
+- Error handling returns readable errors in JSON format
 
 ### Test:
 
 ```bash
-# Uruchom backend
+# Start backend
 ./mvnw spring-boot:run
 
-# Test 1: Dodaj aplikację z widełkami (appliedAt auto-generowane)
+# Test 1: Add application with salary ranges (appliedAt auto-generated)
 curl -X POST http://localhost:8080/api/applications \
   -H "Content-Type: application/json" \
   -d '{
@@ -122,300 +122,300 @@ curl -X POST http://localhost:8080/api/applications \
     "salaryMin":8000,
     "salaryMax":12000,
     "currency":"PLN",
-    "salaryType":"BRUTTO",
+    "salaryType":"GROSS",
     "contractType":"B2B",
     "link":"https://careers.google.com/123",
     "source":"LinkedIn",
     "jobDescription":"Java 11+, Spring Boot, Docker",
     "agency":null
   }'
-# Zwraca: {"id":1, "company":"Google", ..., "appliedAt":"2026-01-18T12:34:56", "status":"WYSLANE"}
+# Returns: {"id":1, "company":"Google", ..., "appliedAt":"2026-01-18T12:34:56", "status":"SENT"}
 
-# Test 2: Sprawdź listę
+# Test 2: Check list
 curl http://localhost:8080/api/applications
-# Zwraca JSON array z aplikacjami
+# Returns JSON array with applications
 
-# Test 3: Walidacja - brak company (powinno zwrócić 400)
+# Test 3: Validation - missing company (should return 400)
 curl -X POST http://localhost:8080/api/applications \
   -H "Content-Type: application/json" \
   -d '{"position":"Dev","salaryMin":5000,"currency":"PLN"}'
-# Zwraca: {"error":"company: Nazwa firmy nie może być pusta", ...}
+# Returns: {"error":"company: Company name cannot be empty", ...}
 
-# Test 4: Zmiana etapu na "W procesie"
+# Test 4: Change stage to "In process"
 curl -X PATCH http://localhost:8080/api/applications/1/stage \
   -H "Content-Type: application/json" \
-  -d '{"status":"W_PROCESIE","currentStage":"Rozmowa z HR"}'
+  -d '{"status":"IN_PROCESS","currentStage":"HR Interview"}'
 
-# Test 5: Sprawdzenie duplikatów
+# Test 5: Check for duplicates
 curl "http://localhost:8080/api/applications/check-duplicate?company=Google&position=Junior%20Java%20Dev"
-# Zwraca: [{"id":1, "company":"Google", ...}]
+# Returns: [{"id":1, "company":"Google", ...}]
 ```
 
 ---
 
-## ETAP 2: Frontend - Formularz i Lista
+## PHASE 2: Frontend - Form and List
 
-**Cel:** React UI wyświetlające listę aplikacji, formularz dodawania z widełkami wynagrodzeń i ostrzeżenie o duplikatach.
+**Goal:** React UI displaying application list, form for adding with salary ranges and duplicate warning.
 
-### Kroki:
+### Steps:
 
-1. **Stwórz projekt React z JavaScript**
+1. **Create React project with JavaScript**
    - `npm create vite@latest easyapply-frontend -- --template react`
-   - Zainstaluj @dnd-kit: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities`
-   - Stwórz plik `src/services/api.js` z funkcjami API
+   - Install @dnd-kit: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities`
+   - Create `src/services/api.js` with API functions
 
-2. **Zbuduj serwis API**
-   - Stwórz `src/services/api.js` z funkcjami:
+2. **Build API service**
+   - Create `src/services/api.js` with functions:
      - fetchApplications(), createApplication(), updateApplication()
      - updateApplicationStatus(), updateApplicationStage()
      - checkDuplicate(), deleteApplication()
-   - Użyj fetch API do komunikacji z http://localhost:8080/api/applications
+   - Use fetch API to communicate with http://localhost:8080/api/applications
 
-3. **Zbuduj komponent App.jsx**
-   - Zarządzanie stanem aplikacji (applications, view, formData, selectedApp)
-   - Przełączanie widoków: Kanban, Lista, CV, Szczegóły
-   - Formularz dodawania aplikacji w modalu z polami:
-     - company, position (wymagane)
-     - salaryMin, salaryMax, isRange (checkbox dla widełek)
+3. **Build App.jsx component**
+   - Application state management (applications, view, formData, selectedApp)
+   - View switching: Kanban, List, CV, Details
+   - Add application form in modal with fields:
+     - company, position (required)
+     - salaryMin, salaryMax, isRange (checkbox for ranges)
      - currency (select: PLN/EUR/USD/GBP)
-     - salaryType (radio: Brutto/Netto)
-     - contractType (select: B2B/UoP/UZ/Inna)
+     - salaryType (radio: Gross/Net)
+     - contractType (select: B2B/Employment/Contract/Other)
      - source, link, jobDescription (textarea)
-   - UWAGA: appliedAt jest auto-generowane przez backend (@CreatedDate) - NIE dodawać do formularza
-   - Przed wysłaniem: wywołaj checkDuplicate() i pokaż ostrzeżenie jeśli firma+stanowisko już istnieją
-   - Formularz edycji aplikacji (ten sam layout co dodawanie)
+   - NOTE: appliedAt is auto-generated by backend (@CreatedDate) - DO NOT add to form
+   - Before sending: call checkDuplicate() and show warning if company+position exists
+   - Application edit form (same layout as adding)
 
-4. **Zbuduj komponent SalaryFormSection**
-   - Wydzielony komponent dla sekcji wynagrodzenia
-   - Input dla salaryMin, opcjonalny input dla salaryMax (widoczny gdy isRange=true)
-   - Select dla waluty
-   - Radio buttons dla typu (brutto/netto)
-   - Select dla typu umowy
+4. **Build SalaryFormSection component**
+   - Separate component for salary section
+   - Input for salaryMin, optional input for salaryMax (visible when isRange=true)
+   - Select for currency
+   - Radio buttons for type (gross/net)
+   - Select for contract type
 
-5. **Widok szczegółów aplikacji**
-   - Wyświetlanie wszystkich danych aplikacji
-   - Status i aktualny etap
-   - Link do oferty (jeśli istnieje)
-   - Przypisane CV z możliwością pobrania
-   - Lista notatek (NotesList)
-   - Przycisk "Edytuj" otwierający formularz edycji
+5. **Application details view**
+   - Display all application data
+   - Status and current stage
+   - Link to offer (if exists)
+   - Assigned CV with download option
+   - Notes list (NotesList)
+   - "Edit" button opening edit form
 
-### Edge cases do obsłużenia:
+### Edge cases to handle:
 
-- **Re-aplikacja:** Wywołanie `GET /api/applications/check-duplicate?company=X&position=Y` przed zapisem, komunikat: "Już aplikowałeś do tej firmy na to stanowisko (data: XX.XX.XXXX). Kontynuować?"
-- **Duplikaty ofert:** Ostrzeżenie na podstawie company + position (case-insensitive)
-- **Widełki vs pojedyncza stawka:** Checkbox "Widełki" pokazuje/ukrywa pole salaryMax
+- **Reapplication:** Call `GET /api/applications/check-duplicate?company=X&position=Y` before save, message: "You already applied to this company for this position (date: XX.XX.XXXX). Continue?"
+- **Duplicate offers:** Warning based on company + position (case-insensitive)
+- **Ranges vs single salary:** Checkbox "Salary ranges" shows/hides salaryMax field
 
-### Definicja "done":
+### Definition of "done":
 
-- Formularz działa, dane trafiają do bazy przez API
-- Lista odświeża się po dodaniu aplikacji
-- Duplikat wyświetla ostrzeżenie (ale pozwala zapisać)
-- Widełki wynagrodzeń wyświetlają się poprawnie (np. "8 000 - 12 000 PLN brutto, B2B")
-- Widok szczegółów pokazuje wszystkie dane aplikacji
-- Edycja aplikacji działa poprawnie
+- Form works, data reaches database via API
+- List refreshes after adding application
+- Duplicate shows warning (but allows saving)
+- Salary ranges display correctly (e.g., "8,000 - 12,000 PLN gross, B2B")
+- Details view shows all application data
+- Editing application works correctly
 
 ### Test:
 
 ```bash
-# Uruchom frontend
+# Start frontend
 npm run dev
 
-# W przeglądarce:
-1. Otwórz http://localhost:5173
-2. Kliknij "+ Dodaj aplikację"
-3. Wypełnij formularz: Google, Junior Java Developer, 8000-12000 PLN brutto B2B, LinkedIn
-4. Kliknij "Dodaj aplikację" → aplikacja pojawia się w widoku
-5. Dodaj ponownie: Google, Junior Java Developer → OSTRZEŻENIE: "Już aplikowałeś 18.01.2026"
-6. Kliknij "Kontynuuj mimo duplikatu" → duplikat się zapisuje
-7. Odśwież stronę (F5) → obie aplikacje nadal widoczne
-8. Kliknij na kartę aplikacji → widok szczegółów
-9. Kliknij "Edytuj" → zmień stawkę na 10000-15000 → Zapisz
-10. Sprawdź czy stawka się zaktualizowała
+# In browser:
+1. Open http://localhost:5173
+2. Click "+ Add application"
+3. Fill form: Google, Junior Java Developer, 8000-12000 PLN gross B2B, LinkedIn
+4. Click "Add application" → application appears in view
+5. Add again: Google, Junior Java Developer → WARNING: "You already applied 18.01.2026"
+6. Click "Continue despite duplicate" → duplicate is saved
+7. Refresh page (F5) → both applications still visible
+8. Click on application card → details view
+9. Click "Edit" → change salary to 10000-15000 → Save
+10. Check if salary was updated
 ```
 
 ---
 
-## ETAP 3: Kanban Board z elastycznymi etapami
+## PHASE 3: Kanban Board with Flexible Stages
 
-**Cel:** Tablica Kanban z 3 kolumnami, drag & drop z modali wyboru etapu i zakończenia procesu.
+**Goal:** Kanban board with 3 columns, drag & drop with stage selection and completion modals.
 
-### Kroki:
+### Steps:
 
-1. **Zainstaluj bibliotekę drag & drop**
+1. **Install drag & drop library**
    - `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities`
-   - Stwórz komponent `KanbanBoard.jsx`
+   - Create `KanbanBoard.jsx` component
 
-2. **Zbuduj 3 kolumny Kanban**
-   - **Wysłane (WYSLANE)** - nowe aplikacje
-   - **W procesie (W_PROCESIE)** - z aktualnym etapem rekrutacji
-   - **Zakończone (ZAKONCZONE)** - oferty (OFERTA) i odmowy (ODMOWA)
-   - Każda kolumna = droppable container z listą kart aplikacji
-   - Karta aplikacji = draggable element (firma, stanowisko, data aplikacji)
+2. **Build 3 Kanban columns**
+   - **Sent (SENT)** - new applications
+   - **In process (IN_PROCESS)** - with current recruitment stage
+   - **Completed (COMPLETED)** - offers (OFFER) and rejections (REJECTION)
+   - Each column = droppable container with list of application cards
+   - Application card = draggable element (company, position, application date)
 
-3. **Zbuduj komponent ApplicationCard**
-   - Wyświetla: firma, stanowisko, data aplikacji
-   - Dla W_PROCESIE: dropdown wyboru etapu (predefiniowane + własne)
-   - Dla ODMOWA: wyświetla powód odmowy
-   - Dla OFERTA: ikona ✓
-   - Dla ODMOWA: ikona ✗
+3. **Build ApplicationCard component**
+   - Displays: company, position, application date
+   - For IN_PROCESS: stage selection dropdown (predefined + custom)
+   - For REJECTION: shows rejection reason
+   - For OFFER: checkmark icon
+   - For REJECTION: X icon
 
-4. **Predefiniowane etapy rekrutacji**
-   - Rozmowa z HR
-   - Rozmowa techniczna
-   - Rozmowa z managerem
-   - Zadanie rekrutacyjne
-   - Rozmowa finalna
-   - + możliwość dodania własnego etapu
+4. **Predefined recruitment stages**
+   - HR interview
+   - Technical interview
+   - Interview with manager
+   - Recruitment task
+   - Final interview
+   - + ability to add custom stage
 
-5. **Dodaj obsługę drag & drop**
-   - Przeciągnięcie do "W procesie" → otwiera modal wyboru etapu (StageModal)
-   - Przeciągnięcie do "Zakończone" → otwiera modal zakończenia (EndModal)
-   - Przeciągnięcie do "Wysłane" → resetuje etapy i status
-   - Wywołaj `PATCH /api/applications/{id}/stage` z odpowiednimi danymi
+5. **Add drag & drop handling**
+   - Drag to "In process" → opens stage selection modal (StageModal)
+   - Drag to "Completed" → opens completion modal (EndModal)
+   - Drag to "Sent" → resets stages and status
+   - Call `PATCH /api/applications/{id}/stage` with appropriate data
 
-6. **Modal wyboru etapu (StageModal)**
-   - Lista predefiniowanych etapów do wyboru
-   - Input dla własnego etapu + przycisk "Dodaj"
-   - Aktualny etap podświetlony
+6. **Stage selection modal (StageModal)**
+   - List of predefined stages to choose from
+   - Input for custom stage + "Add" button
+   - Current stage highlighted
 
-7. **Modal zakończenia (EndModal)**
-   - Wybór: Oferta otrzymana / Odmowa
-   - Dla odmowy: select powodu + opcjonalne szczegóły
-   - Powody: Brak odpowiedzi, Odmowa mailowa, Odrzucenie po rozmowie, Inny powód
+7. **Completion modal (EndModal)**
+   - Choice: Offer received / Rejection
+   - For rejection: select reason + optional details
+   - Reasons: No response, Email rejection, Rejected after interview, Other reason
 
-### Edge cases do obsłużenia:
+### Edge cases to handle:
 
-- **Cofnięcie do poprzedniej kolumny:** Czyści dane etapu/odmowy
-- **Zmiana etapu na karcie:** Dropdown bezpośrednio na karcie w kolumnie "W procesie"
-- **Własne etapy:** Input pozwala na dodanie dowolnego etapu
+- **Reverting to previous column:** Clears stage/rejection data
+- **Changing stage on card:** Dropdown directly on card in "In process" column
+- **Custom stages:** Input allows adding any stage
 
-### Definicja "done":
+### Definition of "done":
 
-- 3 kolumny Kanban wyświetlają się na stronie
-- Aplikacje rozkładają się po kolumnach wg statusu
-- Drag & drop działa płynnie
-- Modal etapu otwiera się przy przeciągnięciu do "W procesie"
-- Modal zakończenia otwiera się przy przeciągnięciu do "Zakończone"
-- Status i etap zmieniają się w bazie po wyborze
-- Po odświeżeniu strony karty pozostają w nowych kolumnach
+- 3 Kanban columns display on page
+- Applications distribute across columns by status
+- Drag & drop works smoothly
+- Stage selection modal opens when dragging to "In process"
+- Completion modal opens when dragging to "Completed"
+- Status and stage change in database after selection
+- Cards stay in new columns after page refresh
 
 ### Test:
 
 ```bash
-# W przeglądarce:
-1. Dodaj aplikację "Google, Junior Dev" → trafia do kolumny "Wysłane"
-2. Przeciągnij kartę do kolumny "W procesie"
-3. W modalu wybierz "Rozmowa z HR" → karta ma etap "Rozmowa z HR"
-4. Kliknij dropdown na karcie → zmień na "Rozmowa techniczna"
-5. Przeciągnij kartę do kolumny "Zakończone"
-6. W modalu wybierz "Odmowa" → powód "Brak odpowiedzi"
-7. Karta ma ikonę ✗ i pokazuje "Brak odpowiedzi"
-8. Odśwież stronę (F5) → karta nadal w "Zakończone" z powodem odmowy
-9. Przeciągnij kartę z powrotem do "Wysłane"
-10. Sprawdź backend: curl http://localhost:8080/api/applications/1
-   # status: "WYSLANE", currentStage: null, rejectionReason: null
+# In browser:
+1. Add application "Google, Junior Dev" → goes to "Sent" column
+2. Drag card to "In process" column
+3. In modal select "HR Interview" → card shows "HR Interview" stage
+4. Click dropdown on card → change to "Technical Interview"
+5. Drag card to "Completed" column
+6. In modal select "Rejection" → reason "No response"
+7. Card shows X icon and "No response"
+8. Refresh page (F5) → card still in "Completed" with rejection reason
+9. Drag card back to "Sent"
+10. Check backend: curl http://localhost:8080/api/applications/1
+   # status: "SENT", currentStage: null, rejectionReason: null
 ```
 
 ---
 
-## ETAP 4: Zarządzanie CV (3 typy)
+## PHASE 4: CV Management (3 Types)
 
-**Cel:** Zarządzanie CV z 3 typami: plik PDF, link zewnętrzny, notatka. Przypisywanie CV do aplikacji.
+**Goal:** CV management with 3 types: PDF file, external link, note. Assign CV to applications.
 
-### Kroki:
+### Steps:
 
-1. **Dodaj encję CV w backendzie**
-   - Stwórz `CV.java` z polami:
+1. **Add CV entity in backend**
+   - Create `CV.java` with fields:
      - id
      - type (enum: FILE, LINK, NOTE)
-     - fileName (wewnętrzna nazwa pliku UUID)
-     - originalFileName (oryginalna nazwa wyświetlana)
-     - filePath (ścieżka dla typu FILE)
-     - fileSize (rozmiar dla typu FILE)
-     - externalUrl (URL dla typu LINK)
+     - fileName (internal UUID filename)
+     - originalFileName (original displayed name)
+     - filePath (path for FILE type)
+     - fileSize (size for FILE type)
+     - externalUrl (URL for LINK type)
      - uploadedAt (@CreatedDate)
-   - Dodaj tabelę `cvs` w bazie
-   - Stwórz `CVRepository`
+   - Add `cvs` table to database
+   - Create `CVRepository`
 
-2. **Zbuduj serwis CVService**
-   - Metoda `uploadFile(MultipartFile file)`: walidacja (tylko PDF, max 5MB), zapis do `./uploads/cv/`, generuj UUID filename
-   - Metoda `createLinkOrNote(name, type, externalUrl)`: tworzy CV typu LINK lub NOTE
-   - Metoda `loadFile(Long id)`: odczyt pliku z dysku (Resource)
-   - Metoda `delete(Long id)`: usuwa CV i plik (jeśli FILE)
-   - Metoda `update(Long id, name, externalUrl)`: aktualizuje nazwę i URL
-   - Metoda `assignCVToApplication(appId, cvId)`: przypisuje CV do aplikacji
-   - Metoda `removeCVFromApplication(appId)`: usuwa przypisanie
+2. **Build CVService**
+   - Method `uploadFile(MultipartFile file)`: validate (only PDF, max 5MB), save to `./uploads/cv/`, generate UUID filename
+   - Method `createLinkOrNote(name, type, externalUrl)`: create CV of LINK or NOTE type
+   - Method `loadFile(Long id)`: read file from disk (Resource)
+   - Method `delete(Long id)`: delete CV and file (if FILE)
+   - Method `update(Long id, name, externalUrl)`: update name and URL
+   - Method `assignCVToApplication(appId, cvId)`: assign CV to application
+   - Method `removeCVFromApplication(appId)`: remove assignment
 
-3. **Zbuduj REST endpoint do CV**
-   - Endpoint: `POST /api/cv/upload` (przyjmuje MultipartFile, zwraca CV)
-   - Endpoint: `POST /api/cv` (tworzy CV typu LINK lub NOTE)
-   - Endpoint: `GET /api/cv` (lista wszystkich CV)
-   - Endpoint: `GET /api/cv/{id}` (zwraca metadata CV)
-   - Endpoint: `GET /api/cv/{id}/download` (zwraca plik PDF, Content-Disposition: attachment)
-   - Endpoint: `PUT /api/cv/{id}` (aktualizuje nazwę i URL)
-   - Endpoint: `DELETE /api/cv/{id}` (usuwa CV)
+3. **Build REST endpoint for CV**
+   - Endpoint: `POST /api/cv/upload` (accepts MultipartFile, returns CV)
+   - Endpoint: `POST /api/cv` (creates CV of LINK or NOTE type)
+   - Endpoint: `GET /api/cv` (list all CVs)
+   - Endpoint: `GET /api/cv/{id}` (returns CV metadata)
+   - Endpoint: `GET /api/cv/{id}/download` (returns PDF file, Content-Disposition: attachment)
+   - Endpoint: `PUT /api/cv/{id}` (updates name and URL)
+   - Endpoint: `DELETE /api/cv/{id}` (deletes CV)
 
-4. **Zbuduj komponent CVManager w frontend**
-   - Widok główny: lista CV pogrupowana według typu (Pliki, Linki, Na komputerze)
-   - Panel szczegółów wybranego CV
-   - Modal dodawania CV z wyborem typu:
-     - "Prześlij plik" → upload PDF
-     - "Nie przesyłaj pliku" → link zewnętrzny lub tylko nazwa
-   - Walidacja: tylko .pdf, max 5MB
-   - Lista aplikacji przypisanych do CV
-   - Możliwość przypisania CV do aplikacji (modal wyboru)
-   - Możliwość usunięcia przypisania
-   - Edycja nazwy i URL (dla typu LINK/NOTE)
+4. **Build CVManager component in frontend**
+   - Main view: CV list grouped by type (Files, Links, On my computer)
+   - Selected CV details panel
+   - Add CV modal with type selection:
+     - "Upload file" → upload PDF
+     - "Don't upload file" → external link or name only
+   - Validation: only .pdf, max 5MB
+   - List of applications assigned to CV
+   - Ability to assign CV to application (selection modal)
+   - Ability to remove assignment
+   - Edit name and URL (for LINK/NOTE type)
 
-5. **Grupowanie CV**
-   - 📄 Przesłane pliki (FILE) - pokazuje rozmiar
-   - 🔗 Linki zewnętrzne (LINK) - pokazuje domenę
-   - 💻 Na moim komputerze (NOTE) - pokazuje "na komputerze"
-   - Licznik użyć przy każdym CV
+5. **CV grouping**
+   - 📄 Uploaded files (FILE) - shows size
+   - 🔗 External links (LINK) - shows domain
+   - 💻 On my computer (NOTE) - shows "on my computer"
+   - Usage counter for each CV
 
-### Edge cases do obsłużenia:
+### Edge cases to handle:
 
-- **Walidacja typu pliku:** Tylko PDF dozwolone
-- **Walidacja rozmiaru:** Max 5MB
-- **Jedno CV może być przypisane do wielu aplikacji**
-- **Usunięcie CV:** Usuwa też z przypisanych aplikacji (relacja)
-- **Link zewnętrzny:** Może być pusty dla typu NOTE
+- **File type validation:** Only PDF allowed
+- **Size validation:** Max 5MB
+- **One CV can be assigned to multiple applications**
+- **Deleting CV:** Also removes from assigned applications (relation)
+- **External link:** Can be empty for NOTE type
 
-### Definicja "done":
+### Definition of "done":
 
-- Upload PDF działa, plik zapisuje się na dysku serwera
-- Można tworzyć CV typu LINK (z URL) i NOTE (tylko nazwa)
-- Metadata CV zapisuje się w tabeli `cvs`
-- CV można przypisać do aplikacji
-- Pobieranie CV typu FILE działa (klik → download pliku)
-- Otwieranie CV typu LINK działa (otwiera URL w nowej karcie)
-- Walidacja blokuje pliki > 5MB i nie-PDF
-- Grupowanie CV działa poprawnie
-- Edycja i usuwanie CV działa
+- PDF upload works, file is saved to server disk
+- Can create LINK CV (with URL) and NOTE CV (name only)
+- CV metadata is saved in `cvs` table
+- CV can be assigned to application
+- Downloading CV file type works (click → download file)
+- Opening CV link type works (opens URL in new tab)
+- Validation blocks files > 5MB and non-PDF
+- CV grouping works correctly
+- Editing and deleting CV works
 
 ### Test:
 
 ```bash
-# W przeglądarce:
-1. Przejdź do zakładki "CV"
-2. Kliknij "+ Dodaj CV"
-3. Wybierz "Prześlij plik" → wybierz CV_Java.pdf (2MB) → sukces
-4. CV pojawia się w grupie "Przesłane pliki"
-5. Kliknij "+ Dodaj CV" → wybierz "Nie przesyłaj pliku"
-6. Wybierz "W chmurze" → wpisz nazwę "CV_Frontend.pdf" → wklej link Google Drive → Zapisz
-7. CV pojawia się w grupie "Linki zewnętrzne"
-8. Kliknij "+ Dodaj CV" → "Nie przesyłaj pliku" → "Na moim komputerze" → nazwa "CV_Ogólne.pdf" → Zapisz
-9. CV pojawia się w grupie "Na moim komputerze"
-10. Wybierz CV_Java.pdf → kliknij "Przypisz" → wybierz aplikację "Google - Junior Dev"
-11. Otwórz szczegóły aplikacji Google → widać: "CV: CV_Java.pdf" + przycisk "Pobierz"
-12. Kliknij "Pobierz" → plik się pobiera
+# In browser:
+1. Go to "CV" tab
+2. Click "+ Add CV"
+3. Select "Upload file" → select CV_Java.pdf (2MB) → success
+4. CV appears in "Uploaded files" group
+5. Click "+ Add CV" → select "Don't upload file"
+6. Select "In cloud" → enter name "CV_Frontend.pdf" → paste Google Drive link → Save
+7. CV appears in "External links" group
+8. Click "+ Add CV" → "Don't upload file" → "On my computer" → name "CV_General.pdf" → Save
+9. CV appears in "On my computer" group
+10. Select CV_Java.pdf → click "Assign" → select application "Google - Junior Dev"
+11. Open Google application details → see: "CV: CV_Java.pdf" + "Download" button
+12. Click "Download" → file downloads
 
-# Test walidacji:
-1. Spróbuj przesłać plik README.txt → błąd: "Dozwolone są tylko pliki PDF"
-2. Spróbuj przesłać plik Large_CV.pdf (10MB) → błąd: "Plik nie może przekraczać 5MB"
+# Validation test:
+1. Try uploading README.txt → error: "Only PDF files allowed"
+2. Try uploading Large_CV.pdf (10MB) → error: "File cannot exceed 5MB"
 
-# Test backend:
+# Backend test:
 curl -X POST http://localhost:8080/api/cv/upload \
   -F "file=@CV_Java.pdf"
 
@@ -424,317 +424,317 @@ curl http://localhost:8080/api/cv/1/download --output downloaded.pdf
 
 ---
 
-## ETAP 5: Notatki z kategoriami
+## PHASE 5: Notes with Categories
 
-**Cel:** Dodawanie notatek tekstowych do aplikacji z podziałem na kategorie (Pytania, Feedback, Inne). Edycja i usuwanie notatek.
+**Goal:** Add text notes to applications with categories (Questions, Feedback, Other). Edit and delete notes.
 
-### Kroki:
+### Steps:
 
-1. **Dodaj encję Note w backendzie**
-   - Stwórz `Note.java` z polami:
+1. **Add Note entity in backend**
+   - Create `Note.java` with fields:
      - id
      - content (TEXT, @NotBlank)
-     - category (enum: PYTANIA, FEEDBACK, INNE)
+     - category (enum: QUESTIONS, FEEDBACK, OTHER)
      - createdAt (@CreatedDate)
      - application (@ManyToOne, nullable = false)
-   - Dodaj enum `NoteCategory` z wartościami: PYTANIA, FEEDBACK, INNE
-   - Dodaj tabelę `notes` w bazie
-   - Stwórz `NoteRepository`
+   - Add `NoteCategory` enum with values: QUESTIONS, FEEDBACK, OTHER
+   - Add `notes` table to database
+   - Create `NoteRepository`
 
-2. **Zbuduj serwis NoteService**
-   - Metoda `findByApplicationId(Long appId)`: zwraca notatki dla aplikacji (najnowsze pierwsze)
-   - Metoda `create(Long appId, String content, NoteCategory category)`: tworzy notatkę
-   - Metoda `update(Long noteId, String content, NoteCategory category)`: aktualizuje notatkę
-   - Metoda `delete(Long noteId)`: usuwa notatkę
-   - Metoda `deleteByApplicationId(Long appId)`: usuwa wszystkie notatki aplikacji (cascade)
+2. **Build NoteService**
+   - Method `findByApplicationId(Long appId)`: return notes for application (newest first)
+   - Method `create(Long appId, String content, NoteCategory category)`: create note
+   - Method `update(Long noteId, String content, NoteCategory category)`: update note
+   - Method `delete(Long noteId)`: delete note
+   - Method `deleteByApplicationId(Long appId)`: delete all application notes (cascade)
 
-3. **Zbuduj REST endpoint do notatek**
-   - Endpoint: `GET /api/applications/{id}/notes` (zwraca listę notatek dla aplikacji)
-   - Endpoint: `POST /api/applications/{id}/notes` (dodaje nową notatkę)
-   - Endpoint: `PUT /api/notes/{id}` (aktualizuje notatkę)
-   - Endpoint: `DELETE /api/notes/{id}` (usuwa notatkę)
+3. **Build REST endpoint for notes**
+   - Endpoint: `GET /api/applications/{id}/notes` (returns notes list for application)
+   - Endpoint: `POST /api/applications/{id}/notes` (adds new note)
+   - Endpoint: `PUT /api/notes/{id}` (updates note)
+   - Endpoint: `DELETE /api/notes/{id}` (deletes note)
 
-4. **Zbuduj komponent NotesList w frontend**
-   - Formularz dodawania notatki:
-     - Przyciski wyboru kategorii (Pytania z rozmowy, Feedback, Inne)
-     - Textarea do wpisania treści
-     - Przycisk "Dodaj notatkę"
-   - Lista notatek pod formularzem (najnowsza na górze):
-     - Tag kategorii (kolorowany)
-     - Treść notatki
-     - Względny czas (np. "5 min temu", "wczoraj", "3 dni temu")
-     - Przyciski "Edytuj" i "Usuń"
-   - Tryb edycji notatki (inline)
+4. **Build NotesList component in frontend**
+   - Note adding form:
+     - Category selection buttons (Interview questions, Feedback, Other)
+     - Textarea for note content
+     - "Add note" button
+   - Notes list below form (newest on top):
+     - Category tag (colored)
+     - Note content
+     - Relative time (e.g., "5 min ago", "yesterday", "3 days ago")
+     - "Edit" and "Delete" buttons
+   - Inline note edit mode
 
-5. **Kolorowanie kategorii**
-   - PYTANIA: niebieski (#3498db)
-   - FEEDBACK: zielony (#27ae60)
-   - INNE: szary (#95a5a6)
+5. **Category coloring**
+   - QUESTIONS: blue (#3498db)
+   - FEEDBACK: green (#27ae60)
+   - OTHER: gray (#95a5a6)
 
-6. **Względny czas**
-   - < 1 min: "Przed chwilą"
-   - < 60 min: "X min temu"
-   - < 24h: "X godz. temu"
-   - 1 dzień: "Wczoraj"
-   - < 7 dni: "X dni temu"
-   - >= 7 dni: "DD.MM.YYYY"
+6. **Relative time**
+   - < 1 min: "Just now"
+   - < 60 min: "X min ago"
+   - < 24h: "X hours ago"
+   - 1 day: "Yesterday"
+   - < 7 days: "X days ago"
+   - >= 7 days: "DD.MM.YYYY"
 
-### Edge cases do obsłużenia:
+### Edge cases to handle:
 
-- **Pusta notatka:** Walidacja @NotBlank blokuje puste notatki
-- **Domyślna kategoria:** INNE (jeśli nie wybrano)
-- **Usuwanie aplikacji:** Kaskadowe usuwanie notatek
+- **Empty note:** @NotBlank validation blocks empty notes
+- **Default category:** OTHER (if not selected)
+- **Deleting application:** Cascading note deletion
 
-### Definicja "done":
+### Definition of "done":
 
-- Notatki zapisują się w bazie z timestampem i kategorią
-- Lista notatek wyświetla się pod aplikacją
-- Kategorie są kolorowane
-- Względny czas wyświetla się poprawnie
-- Edycja notatki działa (inline)
-- Usuwanie notatki działa (z potwierdzeniem)
-- Usunięcie aplikacji usuwa też notatki
+- Notes are saved in database with timestamp and category
+- Notes list displays under application
+- Categories are colored
+- Relative time displays correctly
+- Note editing works (inline)
+- Note deletion works (with confirmation)
+- Deleting application also deletes notes
 
 ### Test:
 
 ```bash
-# W przeglądarce:
-1. Otwórz szczegóły aplikacji "Google - Junior Dev"
-2. W sekcji notatek wybierz kategorię "Pytania z rozmowy"
-3. Wpisz: "Pytali o Spring Boot, Docker i Kubernetes"
-4. Kliknij "Dodaj notatkę" → notatka pojawia się na liście
-5. Zobacz tag "Pytania z rozmowy" (niebieski) i czas "Przed chwilą"
-6. Dodaj kolejną notatkę kategorii "Feedback": "Pozytywny feedback, zaproszenie na rozmowę techniczną"
-7. Kliknij "Edytuj" przy pierwszej notatce → zmień treść → "Zapisz"
-8. Kliknij "Usuń" przy drugiej notatce → potwierdź → notatka znika
-9. Odśwież stronę → pierwsza notatka nadal widoczna
+# In browser:
+1. Open details for application "Google - Junior Dev"
+2. In notes section select category "Interview questions"
+3. Type: "Asked about Spring Boot, Docker and Kubernetes"
+4. Click "Add note" → note appears in list
+5. See tag "Interview questions" (blue) and time "Just now"
+6. Add another note category "Feedback": "Positive feedback, invited to technical interview"
+7. Click "Edit" on first note → change content → "Save"
+8. Click "Delete" on second note → confirm → note disappears
+9. Refresh page → first note still visible
 
-# Test backend:
+# Backend test:
 curl http://localhost:8080/api/applications/1/notes
 
 curl -X POST http://localhost:8080/api/applications/1/notes \
   -H "Content-Type: application/json" \
-  -d '{"content":"Kontakt: jan.kowalski@google.com","category":"INNE"}'
+  -d '{"content":"Contact: jan.kowalski@google.com","category":"OTHER"}'
 ```
 
 ---
 
-## ETAP 6: Widok tabelaryczny
+## PHASE 6: Table View
 
-**Cel:** Alternatywny widok listy aplikacji w formie tabeli z sortowaniem, filtrowaniem i masowym usuwaniem.
+**Goal:** Alternative list view of applications in table form with sorting, filtering, and bulk deletion.
 
-### Kroki:
+### Steps:
 
-1. **Zbuduj komponent ApplicationTable**
-   - Tabela z kolumnami: Checkbox, Firma, Stanowisko, Stawka, Status, Data aplikacji
-   - Sortowanie po: dacie, firmie, stanowisku
-   - Filtrowanie po statusie (wszystkie, wysłane, w procesie, oferta, odmowa)
-   - Wyszukiwanie tekstowe (firma, stanowisko)
-   - Licznik dni od aplikacji
+1. **Build ApplicationTable component**
+   - Table with columns: Checkbox, Company, Position, Salary, Status, Application date
+   - Sorting by: date, company, position
+   - Filtering by status (all, sent, in process, offer, rejection)
+   - Text search (company, position)
+   - Days counter since application
 
-2. **Zaznaczanie i masowe usuwanie**
-   - Checkbox przy każdym wierszu
-   - Przycisk "Usuń wybrane" (pojawia się gdy coś zaznaczono)
-   - Potwierdzenie usunięcia
-   - Wywołanie DELETE /api/applications/{id} dla każdego zaznaczonego
+2. **Checkbox and bulk deletion**
+   - Checkbox for each row
+   - "Delete selected" button (appears when something selected)
+   - Deletion confirmation
+   - Call DELETE /api/applications/{id} for each selected
 
-3. **Kliknięcie na wiersz**
-   - Otwiera widok szczegółów aplikacji
+3. **Click on row**
+   - Opens application details view
 
-### Definicja "done":
+### Definition of "done":
 
-- Tabela wyświetla wszystkie aplikacje
-- Sortowanie działa (kliknięcie na nagłówek kolumny)
-- Filtrowanie po statusie działa
-- Wyszukiwanie działa
-- Masowe usuwanie działa
-- Kliknięcie na wiersz otwiera szczegóły
+- Table displays all applications
+- Sorting works (click column header)
+- Status filtering works
+- Search works
+- Bulk deletion works
+- Clicking row opens details
 
 ### Test:
 
 ```bash
-# W przeglądarce:
-1. Przejdź do zakładki "Lista"
-2. Dodaj 5 aplikacji z różnymi statusami
-3. Kliknij nagłówek "Data" → sortowanie malejące
-4. Kliknij ponownie → sortowanie rosnące
-5. Wybierz filtr "W procesie" → tylko aplikacje w procesie
-6. Wpisz "Google" w wyszukiwarce → tylko aplikacje Google
-7. Zaznacz 2 aplikacje checkboxami
-8. Kliknij "Usuń wybrane" → potwierdź → aplikacje znikają
+# In browser:
+1. Go to "List" tab
+2. Add 5 applications with different statuses
+3. Click "Date" header → descending sort
+4. Click again → ascending sort
+5. Select "In process" filter → only in-process applications
+6. Type "Google" in search → only Google applications
+7. Check 2 applications
+8. Click "Delete selected" → confirm → applications disappear
 ```
 
 ---
 
-## ETAP 7: Gamifikacja (odznaki)
+## PHASE 7: Gamification (Badges)
 
-**Cel:** System odznak motywacyjnych za odrzucenia i ghosting. Widget wyświetlający postęp.
+**Goal:** Motivation badge system for rejections and ghosting. Widget displaying progress.
 
-### Kroki:
+### Steps:
 
-1. **Zbuduj serwis StatisticsService w backendzie**
-   - Metoda `getBadgeStats()` zwracająca:
-     - totalRejections (liczba odmów)
-     - totalGhosting (liczba odmów z powodem BRAK_ODPOWIEDZI)
-     - totalOffers (liczba ofert)
-     - rejectionBadge (aktualna odznaka za odrzucenia)
-     - ghostingBadge (aktualna odznaka za ghosting)
-     - sweetRevengeUnlocked (czy odblokowano "Sweet Revenge")
+1. **Build StatisticsService in backend**
+   - Method `getBadgeStats()` returning:
+     - totalRejections (rejection count)
+     - totalGhosting (rejections with NO_RESPONSE reason)
+     - totalOffers (offers count)
+     - rejectionBadge (current rejection badge)
+     - ghostingBadge (current ghosting badge)
+     - sweetRevengeUnlocked (whether "Sweet Revenge" is unlocked)
 
-2. **Odznaki za odrzucenia** (progi: 5, 10, 25, 50, 100)
-   - 🥊 Rozgrzewka (5): "Dopiero zaczynasz. Rynek pracy jeszcze nie wie, z kim zadziera."
-   - 🍳 Patelnia (10): "Odrzucenia spływają po Tobie jak jajecznica po patelni."
-   - 🦾 Niezniszczalny (25): "25 firm nie doceniło Twojego potencjału. To ich problem."
-   - 👑 Legenda Linkedina (50): "Pół setki odmów i wciąż w grze. Szacunek."
-   - 🎰 Statystyczna Pewność (100): "Przy takiej próbie, kolejna MUSI być ta właściwa."
+2. **Rejection badges** (thresholds: 5, 10, 25, 50, 100)
+   - 🥊 Warmup (5): "You're just starting. The job market doesn't know who they're dealing with."
+   - 🍳 Skillet (10): "Rejections slide off you like eggs in a pan."
+   - 🦾 Indestructible (25): "25 companies underestimated your potential. Their loss."
+   - 👑 LinkedIn Legend (50): "Fifty rejections and still in the game. Respect."
+   - 🎰 Statistical Certainty (100): "With such a sample size, the next one HAS to be it."
 
-3. **Odznaki za ghosting** (progi: 5, 15, 30, 50, 100)
-   - 👻 Widmo (5): "5 firm nie odpowiedziało wcale. Sprawdź, czy mają internet."
-   - 🧘 Cierpliwy Mnich (15): "Czekanie to też umiejętność. Właśnie ją opanowujesz."
-   - 🔍 Detektyw (30): "30 spraw bez rozwiązania. Może to nie Ty, może to oni."
-   - 🫥 Człowiek-Duch (50): "50 firm udaje, że nie istniejesz. Ale Ty wiesz lepiej."
-   - 🤫 Król Ciszy (100): "100 firm milczy. Gratuluję wytrwałości!"
+3. **Ghosting badges** (thresholds: 5, 15, 30, 50, 100)
+   - 👻 Specter (5): "5 companies didn't respond at all. Check if they have internet."
+   - 🧘 Patient Monk (15): "Waiting is a skill. You're mastering it."
+   - 🔍 Detective (30): "30 unsolved cases. Maybe it's them, not you."
+   - 🫥 Ghost-Man (50): "50 companies pretend you don't exist. But you know better."
+   - 🤫 King of Silence (100): "100 companies silent. Congratulations on perseverance!"
 
 4. **Sweet Revenge**
-   - Odblokowane gdy: totalRejections >= 10 AND totalOffers > 0
-   - "Słodka zemsta - zdobyłeś ofertę po wielu odrzuceniach!"
+   - Unlocked when: totalRejections >= 10 AND totalOffers > 0
+   - "Sweet revenge - you got an offer despite many rejections!"
 
-5. **Zbuduj REST endpoint**
-   - Endpoint: `GET /api/statistics/badges` (zwraca BadgeStatsResponse)
+5. **Build REST endpoint**
+   - Endpoint: `GET /api/statistics/badges` (returns BadgeStatsResponse)
 
-6. **Zbuduj komponent BadgeWidget w frontend**
-   - Wyświetla aktualną odznakę za odrzucenia (jeśli jest)
-   - Wyświetla aktualną odznakę za ghosting (jeśli jest)
-   - Pokazuje postęp do następnej odznaki
-   - Sweet Revenge jako specjalna odznaka
-   - Rozwijany panel ze szczegółami
+6. **Build BadgeWidget component in frontend**
+   - Displays current rejection badge (if any)
+   - Displays current ghosting badge (if any)
+   - Shows progress to next badge
+   - Sweet Revenge as special badge
+   - Expandable panel with details
 
-### Definicja "done":
+### Definition of "done":
 
-- Statystyki obliczają się poprawnie
-- Widget wyświetla odpowiednie odznaki
-- Postęp do następnej odznaki jest widoczny
-- Sweet Revenge odblokowuje się przy spełnieniu warunków
+- Statistics calculate correctly
+- Widget displays appropriate badges
+- Progress to next badge is visible
+- Sweet Revenge unlocks when conditions met
 
 ### Test:
 
 ```bash
-# W przeglądarce:
-1. Dodaj 5 aplikacji i oznacz je jako odmowa (dowolny powód)
-2. Widget pokazuje odznakę "Rozgrzewka" 🥊
-3. Dodaj jeszcze 5 odmów → Widget pokazuje "Patelnia" 🍳
-4. Zmień 3 odmowy na powód "Brak odpowiedzi"
-5. Widget pokazuje odznakę ghosting jeśli próg osiągnięty
-6. Zmień jedną aplikację na "Oferta"
-7. Jeśli masz 10+ odmów → pojawia się "Sweet Revenge"
+# In browser:
+1. Add 5 applications and mark as rejection (any reason)
+2. Widget shows "Warmup" badge 🥊
+3. Add 5 more rejections → Widget shows "Skillet" 🍳
+4. Change 3 rejections to "No response" reason
+5. Widget shows ghosting badge if threshold reached
+6. Change one application to "Offer"
+7. If 10+ rejections → "Sweet Revenge" appears
 
-# Test backend:
+# Backend test:
 curl http://localhost:8080/api/statistics/badges
 ```
 
 ---
 
-## TEST INTEGRACYJNY MVP
+## INTEGRATION TEST MVP
 
-### Scenariusz sukcesu (happy path):
+### Success Scenario (happy path):
 
-**Użytkownik: Junior Developer szukający pracy**
+**User: Junior Developer looking for work**
 
-1. **Dodawanie aplikacji:**
-   - Otwiera http://localhost:5173
-   - Klika "+ Dodaj aplikację"
-   - Wypełnia formularz: Google, Junior Java Developer, 10000-15000 PLN brutto B2B, LinkedIn
-   - Wkleja treść ogłoszenia w textarea
-   - Kliknie "Dodaj aplikację" → aplikacja pojawia się w kolumnie "Wysłane" na Kanban
+1. **Adding applications:**
+   - Opens http://localhost:5173
+   - Clicks "+ Add application"
+   - Fills form: Google, Junior Java Developer, 10000-15000 PLN gross B2B, LinkedIn
+   - Pastes job posting content in textarea
+   - Clicks "Add application" → application appears in "Sent" column on Kanban
 
-2. **Upload CV:**
-   - Przechodzi do zakładki "CV"
-   - Klika "+ Dodaj CV" → "Prześlij plik"
-   - Wybiera plik CV_Java_Spring.pdf
-   - CV pojawia się na liście
-   - Klika "Przypisz" → wybiera aplikację "Google - Junior Java Developer"
-   - Widzi CV przypisane do aplikacji
+2. **CV upload:**
+   - Goes to "CV" tab
+   - Clicks "+ Add CV" → "Upload file"
+   - Selects CV_Java_Spring.pdf
+   - CV appears in list
+   - Clicks "Assign" → selects application "Google - Junior Java Developer"
+   - Sees CV assigned to application
 
-3. **Śledzenie postępu:**
-   - Po tygodniu: przeciąga kartę "Google" z "Wysłane" do "W procesie"
-   - W modalu wybiera "Rozmowa z HR"
-   - Otwiera szczegóły aplikacji
-   - Dodaje notatkę kategorii "Pytania": "Pytali o Spring Boot, Docker, REST API"
-   - Dodaje notatkę kategorii "Inne": "Rekruter: Anna Nowak, anna.nowak@google.com"
+3. **Tracking progress:**
+   - After a week: drags "Google" card from "Sent" to "In process"
+   - In modal selects "HR Interview"
+   - Opens application details
+   - Adds note category "Questions": "Asked about Spring Boot, Docker, REST API"
+   - Adds note category "Other": "Recruiter: Anna Nowak, anna.nowak@google.com"
 
-4. **Zmiana etapu:**
-   - Na karcie klika dropdown → zmienia etap na "Rozmowa techniczna"
-   - Dodaje kolejną notatkę: "Zadanie domowe: REST API w Spring Boot"
+4. **Changing stage:**
+   - On card clicks dropdown → changes stage to "Technical Interview"
+   - Adds another note: "Homework: REST API in Spring Boot"
 
-5. **Zakończenie procesu:**
-   - Przeciąga kartę do kolumny "Zakończone"
-   - W modalu wybiera "Oferta otrzymana"
-   - Karta ma ikonę ✓
-   - Widget odznak aktualizuje się (jeśli wcześniej były odmowy)
+5. **Completing process:**
+   - Drags card to "Completed" column
+   - In modal selects "Offer received"
+   - Card shows ✓ icon
+   - Badge widget updates (if previous rejections)
 
-6. **Sprawdzenie duplikatów:**
-   - Próbuje dodać ponownie: Google, Junior Java Developer
-   - Dostaje ostrzeżenie: "Już aplikowałeś do tej firmy na to stanowisko (18.01.2026)"
-   - Może kontynuować lub anulować
+6. **Checking duplicates:**
+   - Tries adding again: Google, Junior Java Developer
+   - Gets warning: "You already applied to this company for this position (18.01.2026)"
+   - Can continue or cancel
 
-7. **Widok tabelaryczny:**
-   - Przechodzi na widok "Lista"
-   - Sortuje po dacie aplikacji
-   - Filtruje tylko "Oferty"
-   - Widzi wszystkie otrzymane oferty
+7. **Table view:**
+   - Goes to "List" view
+   - Sorts by application date
+   - Filters only "Offers"
+   - Sees all received offers
 
-### Scenariusz błędu:
+### Error Scenario:
 
-**Błąd 1: Użytkownik próbuje dodać aplikację bez wymaganych pól**
-- Akcja: Nie wypełnia pola "Firma", klika "Dodaj aplikację"
-- Wynik: Pole jest podświetlone, formularz nie wysyła się (walidacja HTML5)
-- Aplikacja NIE zapisuje się
+**Error 1: User tries adding application without required fields**
+- Action: Doesn't fill "Company" field, clicks "Add application"
+- Result: Field is highlighted, form doesn't submit (HTML5 validation)
+- Application NOT saved
 
-**Błąd 2: Użytkownik próbuje uploadować plik .docx zamiast PDF**
-- Akcja: Wybiera plik CV.docx, klika "Upload"
-- Wynik: Alert: "Dozwolone są tylko pliki PDF"
-- Plik NIE jest uploadowany
+**Error 2: User tries uploading .docx instead of PDF**
+- Action: Selects CV.docx file, clicks "Upload"
+- Result: Alert: "Only PDF files allowed"
+- File NOT uploaded
 
-**Błąd 3: Użytkownik próbuje uploadować plik 10MB**
-- Akcja: Wybiera plik Large_CV.pdf (10MB), klika "Upload"
-- Wynik: Alert: "Plik nie może przekraczać 5MB"
-- Plik NIE jest uploadowany
+**Error 3: User tries uploading 10MB file**
+- Action: Selects Large_CV.pdf (10MB), clicks "Upload"
+- Result: Alert: "File cannot exceed 5MB"
+- File NOT uploaded
 
-**Błąd 4: Backend nie działa (port 8080 zajęty)**
-- Akcja: Użytkownik próbuje dodać aplikację
-- Wynik: Console error, brak ładowania danych
-- Lista aplikacji pokazuje "Ładowanie..." lub pusty stan
+**Error 4: Backend not running (port 8080 occupied)**
+- Action: User tries adding application
+- Result: Console error, no data loading
+- Application list shows "Loading..." or empty state
 
-**Błąd 5: Użytkownik wpisuje ujemną stawkę**
-- Akcja: Wpisuje "-5000" w pole salaryMin
-- Wynik: Backend zwraca błąd walidacji: "Stawka musi być dodatnia"
-- Aplikacja NIE zapisuje się
+**Error 5: User enters negative salary**
+- Action: Types "-5000" in salaryMin field
+- Result: Backend returns validation error: "Salary must be positive"
+- Application NOT saved
 
-### Finalna weryfikacja MVP:
+### Final MVP Verification:
 
-**Kryteria akceptacji:**
-- ✅ Użytkownik może dodać 20 aplikacji z różnymi danymi
-- ✅ Wszystkie aplikacje przetrwają odświeżenie strony (zapisane w bazie)
-- ✅ Data aplikacji (appliedAt) jest auto-generowana - użytkownik nie musi jej podawać
-- ✅ Przeciąganie kart Kanban zmienia status w bazie
-- ✅ Modal etapu otwiera się przy przejściu do "W procesie"
-- ✅ Modal zakończenia otwiera się przy przejściu do "Zakończone"
-- ✅ Predefiniowane i własne etapy rekrutacji działają
-- ✅ Upload CV działa (3 typy: plik, link, notatka)
-- ✅ Przypisanie CV do aplikacji działa
-- ✅ Można pobrać uploadowany plik PDF
-- ✅ Notatki zapisują się z kategoriami i timestampem
-- ✅ Edycja i usuwanie notatek działa
-- ✅ Duplikaty są wykrywane i wyświetlają ostrzeżenie
-- ✅ Widełki wynagrodzeń działają (PLN, EUR, USD, GBP, brutto/netto, B2B/UoP)
-- ✅ Treść ogłoszenia zapisuje się w bazie (wygasłe linki)
-- ✅ Widok tabelaryczny z sortowaniem i filtrowaniem działa
-- ✅ Masowe usuwanie aplikacji działa
-- ✅ CORS działa - frontend komunikuje się z backendem bez błędów
-- ✅ Error handling zwraca czytelne błędy (walidacja, 404, 500)
-- ✅ System odznak motywacyjnych działa
+**Acceptance criteria:**
+- ✅ User can add 20 applications with various data
+- ✅ All applications survive page refresh (saved in database)
+- ✅ Application date (appliedAt) is auto-generated - user doesn't provide it
+- ✅ Dragging Kanban cards changes status in database
+- ✅ Stage selection modal opens when transitioning to "In process"
+- ✅ Completion modal opens when transitioning to "Completed"
+- ✅ Predefined and custom recruitment stages work
+- ✅ CV upload works (3 types: file, link, note)
+- ✅ Assigning CV to application works
+- ✅ Downloading uploaded PDF file works
+- ✅ Notes save with categories and timestamp
+- ✅ Note editing and deletion work
+- ✅ Duplicates are detected and warning displayed
+- ✅ Salary ranges work (PLN, EUR, USD, GBP, gross/net, B2B/Employment)
+- ✅ Job posting content saves in database (expired links)
+- ✅ Table view with sorting and filtering works
+- ✅ Bulk deletion of applications works
+- ✅ CORS works - frontend communicates with backend without errors
+- ✅ Error handling returns readable errors (validation, 404, 500)
+- ✅ Motivation badge system works
 
-**Test end-to-end (5 minut):**
+**End-to-end test (5 minutes):**
 
 ```bash
 # Terminal 1: Backend
@@ -745,29 +745,29 @@ cd easyapply-backend
 cd easyapply-frontend
 npm run dev
 
-# Przeglądarka: http://localhost:5173
-1. Dodaj 3 aplikacje (Google/PLN brutto B2B, Meta/USD netto UoP, Amazon/EUR brutto B2B)
-2. Przejdź do CV → upload 2 CV (CV_Java.pdf, CV_React.pdf)
-3. Przypisz CV_Java do Google, CV_React do Meta
-4. Przeciągnij Google z "Wysłane" do "W procesie" → wybierz "Rozmowa z HR"
-5. Na karcie zmień etap na "Rozmowa techniczna"
-6. Otwórz szczegóły Google → dodaj notatkę "Pytania": "Spring Boot, Docker"
-7. Dodaj notatkę "Feedback": "Pozytywny, zaproszenie na kolejny etap"
-8. Przeciągnij Google do "Zakończone" → wybierz "Oferta"
-9. Przeciągnij Meta do "Zakończone" → wybierz "Odmowa" → "Brak odpowiedzi"
-10. Sprawdź widget odznak
-11. Przejdź do widoku "Lista" → sortuj po firmie → filtruj "Oferty"
-12. Zaznacz Amazon → kliknij "Usuń wybrane"
-13. Odśwież stronę (F5)
-14. Sprawdź: Google w "Zakończone" z ✓, Meta z ✗ i "Brak odpowiedzi", Amazon usunięty
+# Browser: http://localhost:5173
+1. Add 3 applications (Google/PLN gross B2B, Meta/USD net Employment, Amazon/EUR gross B2B)
+2. Go to CV → upload 2 CVs (CV_Java.pdf, CV_React.pdf)
+3. Assign CV_Java to Google, CV_React to Meta
+4. Drag Google from "Sent" to "In process" → select "HR Interview"
+5. On card click dropdown → change stage to "Technical Interview"
+6. Open Google details → add note "Questions": "Spring Boot, Docker"
+7. Add note "Feedback": "Positive, invited to next stage"
+8. Drag Google to "Completed" → select "Offer"
+9. Drag Meta to "Completed" → select "Rejection" → "No response"
+10. Check badge widget
+11. Go to "List" view → sort by company → filter "Offers"
+12. Select Amazon → click "Delete selected"
+13. Refresh page (F5)
+14. Verify: Google in "Completed" with ✓, Meta with ✗ and "No response", Amazon deleted
 
-# Sukces: MVP działa!
+# Success: MVP works!
 ```
 
 ---
 
 
-## ARCHITEKTURA KOŃCOWA
+## FINAL ARCHITECTURE
 
 ### Backend (Spring Boot 3.4, Java 21)
 
@@ -815,31 +815,31 @@ easyapply-backend/
 │   ├── exception/
 │   │   └── GlobalExceptionHandler.java
 │   └── EasyApplyApplication.java
-└── uploads/cv/  (przechowywanie plików CV)
+└── uploads/cv/  (CV file storage)
 ```
 
-### Frontend (React 19, Vite)
+### Frontend (React 18, Vite)
 
 ```
 easyapply-frontend/
 ├── src/
-│   ├── App.jsx              (główny komponent, routing, state)
-│   ├── KanbanBoard.jsx      (tablica Kanban z drag & drop)
-│   ├── ApplicationCard.jsx  (karta aplikacji)
-│   ├── ApplicationTable.jsx (widok tabelaryczny)
-│   ├── CVManager.jsx        (zarządzanie CV)
-│   ├── NotesList.jsx        (lista notatek)
-│   ├── BadgeWidget.jsx      (widget odznak)
+│   ├── App.jsx              (main component, routing, state)
+│   ├── KanbanBoard.jsx      (Kanban board with drag & drop)
+│   ├── ApplicationCard.jsx  (application card)
+│   ├── ApplicationTable.jsx (table view)
+│   ├── CVManager.jsx        (CV management)
+│   ├── NotesList.jsx        (notes list)
+│   ├── BadgeWidget.jsx      (badge widget)
 │   ├── services/
-│   │   └── api.js           (komunikacja z API)
-│   └── *.css                (style)
+│   │   └── api.js           (API communication)
+│   └── *.css                (styles)
 └── index.html
 ```
 
-### Baza danych (PostgreSQL)
+### Database (PostgreSQL)
 
 ```sql
--- Tabele:
+-- Tables:
 applications (id, company, position, link, salary_min, salary_max, currency,
               salary_type, contract_type, salary_source, source, status,
               job_description, agency, cv_id, current_stage, rejection_reason,

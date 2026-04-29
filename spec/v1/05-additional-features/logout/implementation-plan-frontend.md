@@ -1,32 +1,32 @@
-# Plan implementacji logout — EasyApply Frontend
+# Logout Implementation Plan — EasyApply Frontend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each stage)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `npm run build` + `npm run test:run`, oba muszą być zielone
-3. **Weryfikacja manualna** — użytkownik odpala `npm run dev` i sprawdza wzrokowo
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(frontend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
+3. **Manual verification** — user runs `npm run dev` and verifies visually
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to next stage
 
 ---
 
-## Status realizacji
+## Status
 
-### Etap 1 — Podpięcie backendu do `signOut()`
+### Stage 1 — Connect backend to `signOut()`
 
-**Problem:** `AuthProvider.signOut()` tylko czyści localStorage i resetuje stan Reacta.
-Nie wywołuje `POST /api/auth/logout`, przez co refresh token zostaje w bazie danych.
+**Problem:** `AuthProvider.signOut()` only clears localStorage and resets React state.
+Does not call `POST /api/auth/logout`, so refresh token stays in database.
 
-**Plik:** `src/auth/AuthProvider.tsx`
+**File:** `src/auth/AuthProvider.tsx`
 
-- [x] Zaimportować `logout` z `../services/api`
-- [x] Zmienić `signOut` na funkcję `async`, która wywołuje `await logout()` przed `clearToken()` + `setUser(null)`
-- [x] Obsłużyć błąd (np. brak sieci): mimo błędu backendu wyczyścić token lokalnie i wylogować usera
-- [x] `npm run test:run` zielony
+- [x] Import `logout` from `../services/api`
+- [x] Change `signOut` to async function that calls `await logout()` before `clearToken()` + `setUser(null)`
+- [x] Handle error (e.g., no network): despite backend error, clear token locally and log out user
+- [x] `npm run test:run` green
 
-**Schemat po zmianie:**
+**Scheme after change:**
 
 ```ts
 const signOut = async () => {
@@ -40,18 +40,18 @@ const signOut = async () => {
 }
 ```
 
-> `api.ts` już eksportuje `logout()` (linia 63) — nie trzeba pisać nowej funkcji.
+> `api.ts` already exports `logout()` (line 63) — no need to write new function.
 
 ---
 
-### Etap 2 — Klucze i18n dla przycisku wylogowania
+### Stage 2 — i18n keys for logout button
 
-**Pliki:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
+**Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
-- [x] Dodać klucz `auth.logout` w obu plikach JSON
-- [x] `npm run build` zielony (TypeScript nie narzeka na nieznany klucz)
+- [x] Add `auth.logout` key in both JSON files
+- [x] `npm run build` green (TypeScript doesn't complain about unknown key)
 
-**Klucze:**
+**Keys:**
 
 ```json
 // pl/common.json
@@ -65,24 +65,24 @@ const signOut = async () => {
 }
 ```
 
-> Jeśli sekcja `auth` już istnieje w plikach JSON — dopisać tylko klucz `logout` do istniejącego obiektu.
+> If `auth` section already exists in JSON files — add only `logout` key to existing object.
 
 ---
 
-### Etap 3 — Przycisk wylogowania w headerze
+### Stage 3 — Logout button in header
 
-**Plik:** `src/AppContent.tsx`
+**File:** `src/AppContent.tsx`
 
-- [x] Zaimportować `useAuth` z `./auth/AuthProvider`
-- [x] Pobrać `signOut` i `user` z `useAuth()`
-- [x] Dodać przycisk `Wyloguj` w `.header-right` (obok `LanguageSwitcher` i `BadgeWidget`)
-- [x] Przycisk wywołuje `signOut()` po kliknięciu
-- [x] Przycisk używa klucza `t('auth.logout')`
-- [x] Dodać atrybut `data-cy="logout-btn"` do przycisku
-- [x] `npm run build` zielony
-- [ ] Weryfikacja manualna: przycisk widoczny w headerze, kliknięcie wylogowuje i przekierowuje na login
+- [x] Import `useAuth` from `./auth/AuthProvider`
+- [x] Get `signOut` and `user` from `useAuth()`
+- [x] Add `Log out` button in `.header-right` (next to `LanguageSwitcher` and `BadgeWidget`)
+- [x] Button calls `signOut()` on click
+- [x] Button uses `t('auth.logout')` key
+- [x] Add `data-cy="logout-btn"` attribute to button
+- [x] `npm run build` green
+- [ ] Manual verification: button visible in header, click logs out and redirects to login
 
-**Schemat w JSX:**
+**JSX scheme:**
 
 ```tsx
 // header-right
@@ -97,71 +97,71 @@ const signOut = async () => {
 </button>
 ```
 
-> `void signOut()` — `signOut` jest teraz `async`, `onClick` nie przyjmuje Promise, `void` tłumi warning TypeScripta.
+> `void signOut()` — `signOut` is now `async`, `onClick` doesn't accept Promise, `void` suppresses TypeScript warning.
 
 ---
 
-### Etap 4 — Aktualizacja testów
+### Stage 4 — Update tests
 
-**Plik:** `src/test/auth/AuthProvider.test.tsx`
+**File:** `src/test/auth/AuthProvider.test.tsx`
 
-Obecny test `signOut` (linia 83) sprawdza tylko `clearToken`. Po Etapie 1 `signOut` wywołuje też `api.logout`.
+Existing test `signOut` (line 83) only checks `clearToken`. After Stage 1, `signOut` also calls `api.logout`.
 
-- [x] Dodać `logout: vi.fn()` do mocka `vi.mock('../../services/api', ...)`
-- [x] Zaktualizować test `'signOut — clears token and resets user state to null'`:
+- [x] Add `logout: vi.fn()` to `vi.mock('../../services/api', ...)`
+- [x] Update test `'signOut — clears token and resets user state to null'`:
   - `vi.mocked(api.logout).mockResolvedValue(undefined)` (happy path)
   - `expect(api.logout).toHaveBeenCalledOnce()`
-  - `expect(api.clearToken).toHaveBeenCalled()` (jak dotychczas)
-- [x] Dodać test dla przypadku błędu backendu:
+  - `expect(api.clearToken).toHaveBeenCalled()` (as before)
+- [x] Add test for backend error case:
   - `vi.mocked(api.logout).mockRejectedValue(new Error('network error'))`
-  - Po kliknięciu `signOut` user nadal zostaje wylogowany (`isAuthenticated: false`)
-  - `clearToken` nadal został wywołany
-- [x] Zmienić tekst przycisku w teście z `'Wyloguj'` na `'auth.logout'` (klucz i18n) lub użyć `data-testid`
-- [x] `npm run test:run` zielony
+  - After clicking `signOut` user is still logged out (`isAuthenticated: false`)
+  - `clearToken` was still called
+- [x] Change button text in test from `'Wyloguj'` to `'auth.logout'` (i18n key) or use `data-testid`
+- [x] `npm run test:run` green
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [x] `POST /api/auth/logout` jest wywoływany przy każdym wylogowaniu
-- [x] Mimo błędu sieciowego user zostaje wylogowany lokalnie
-- [x] Przycisk widoczny w headerze po zalogowaniu
-- [x] Klucze i18n działają w PL i EN
-- [x] `npm run build` bez błędów TypeScript
+- [x] `POST /api/auth/logout` is called on every logout
+- [x] Despite network error, user is logged out locally
+- [x] Button visible in header after login
+- [x] i18n keys work in PL and EN
+- [x] `npm run build` without TypeScript errors
 - [x] `npm run test:run` — 0 failed tests
-- [ ] Weryfikacja manualna: kliknięcie przycisku wylogowuje i pokazuje stronę logowania
+- [ ] Manual verification: clicking button logs out and shows login page
 
 ---
 
-## Diagram przepływu
+## Flow Diagram
 
 ```
-User klika "Log out"
+User clicks "Log out"
        ↓
 signOut() (AuthProvider)
        ↓
 await api.logout()  →  POST /api/auth/logout  →  204
-   (lub błąd — ignorowany)
+   (or error — ignored)
        ↓
 clearToken()           (localStorage)
        ↓
 setUser(null)          (React state)
        ↓
-ProtectedRoute wykrywa brak usera → redirect do /login
+ProtectedRoute detects no user → redirect to /login
 ```
 
 ---
 
-## Pliki do zmiany
+## Files to Change
 
-| Plik | Zmiana |
+| File | Change |
 |------|--------|
-| `src/auth/AuthProvider.tsx` | `signOut` wywołuje backend przed wyczyszczeniem stanu |
-| `src/i18n/locales/pl/common.json` | Klucz `auth.logout` |
-| `src/i18n/locales/en/common.json` | Klucz `auth.logout` |
-| `src/AppContent.tsx` | Przycisk wylogowania w headerze |
-| `src/test/auth/AuthProvider.test.tsx` | Mock `api.logout`, nowe asercje |
+| `src/auth/AuthProvider.tsx` | `signOut` calls backend before clearing state |
+| `src/i18n/locales/pl/common.json` | Key `auth.logout` |
+| `src/i18n/locales/en/common.json` | Key `auth.logout` |
+| `src/AppContent.tsx` | Logout button in header |
+| `src/test/auth/AuthProvider.test.tsx` | Mock `api.logout`, new assertions |
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-07*
+*Last update: 2026-04-07*

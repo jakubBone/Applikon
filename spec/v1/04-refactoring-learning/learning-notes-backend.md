@@ -379,21 +379,6 @@ Fixed: `refreshCookie.setAttribute("SameSite", "Strict")` in `OAuth2Authenticati
 
 ---
 
-### Key Files for This Phase (Phase 1)
-
-| File | What It Does |
-|------|---------|
-| `SecurityConfig.java` | Heart of configuration — RSA, JWT, CORS, access rules |
-| `JwtAuthenticationConverter.java` | JWT (claims) → AuthenticatedUser |
-| `AuthenticatedUser.java` | Record: id (UUID), email, name |
-| `MdcUserFilter.java` | Adds userId to every log |
-| `CustomOAuth2UserService.java` | Creates/updates User after Google login |
-| `OAuth2AuthenticationSuccessHandler.java` | Generates JWT, sets cookie after OAuth2 |
-| `ApplicationController.java` | Example use of @AuthenticationPrincipal |
-| `ApplicationService.java` | Example of @Transactional |
-
----
-
 ## Phase 3 — Security: Data Validation and Files
 
 ### CR-1 — Path Traversal
@@ -420,18 +405,6 @@ Magic bytes = first bytes of file identify its real type. PDF always starts with
 
 **Fix:** Read first 5 bytes from `file.getInputStream()` and compare with `%PDF-`. Both must match: Content-Type + magic bytes.
 
-```java
-byte[] header = new byte[5];
-if (file.getInputStream().read(header) < 5
-        || header[0] != 0x25 || header[1] != 0x50
-        || header[2] != 0x44 || header[3] != 0x46
-        || header[4] != 0x2D) {
-    throw new IllegalArgumentException(...);
-}
-```
-
-`MultipartFile.getInputStream()` can be called multiple times (temporary file on disk) — `Files.copy` below works correctly.
-
 ### CR-B1 — URL Validation (Defense in Depth)
 
 Frontend validates URL — but API is public, someone can send request bypassing frontend.
@@ -439,12 +412,6 @@ Frontend validates URL — but API is public, someone can send request bypassing
 `javascript:alert(document.cookie)` saved as `externalUrl` → frontend renders `<a href="javascript:...">` → XSS on click.
 
 **Fix:** URL must start with `http://` or `https://`. Applies to both `createCV` and `updateCV`.
-
-```java
-if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
-    throw new IllegalArgumentException(...);
-}
-```
 
 ### CR-B2 — @NotNull on StageUpdateRequest
 
@@ -503,65 +470,29 @@ Principle: **Don't edit historical Flyway migrations** — Flyway verifies check
 `extends ResponseEntityExceptionHandler` = you inherit from Spring MVC base class that already handles internal exceptions (e.g., `MethodArgumentNotValidException`). You can override its methods via `@Override`.
 `@Order(HIGHEST_PRECEDENCE)` = if there were multiple handlers — this one has priority.
 
-**Who throws, who catches:**
-
-| Who Throws | Where in Code | Who Catches |
-|-----------|----------------|-----------|
-| Spring (`@Valid` fail) | automatic on controller entry | `handleMethodArgumentNotValid` |
-| `new EntityNotFoundException(...)` | in services, when missing in DB | `handleEntityNotFoundException` |
-| `new IllegalArgumentException(...)` | CVService (path traversal, magic bytes, URL) | `handleIllegalArgumentException` |
-| Anything else | anywhere | `handleGenericException` |
-
-**ProblemDetail** = Spring class (RFC 9457). Instead of custom JSON you use ready structure:
-```json
-{ "status": 400, "title": "...", "detail": "..." }
-```
+**ProblemDetail** = Spring class (RFC 9457). Instead of custom JSON you use ready structure.
 `problem.setProperty("errors", map)` — adds custom field to response.
 
-**MessageSource** = translation mechanism. Keys in `messages.properties` / `messages_pl.properties`,
-`messageSource.getMessage("key", null, locale)` returns text in user's language.
+**MessageSource** = translation mechanism. Keys in `messages.properties` / `messages_pl.properties`.
 
 ### CR-B9 — Validation Errors as Field Map
 
 Before: all errors in one string in `detail` → frontend didn't know which field to highlight.
 
-After: map `field → message` in `errors`, `detail` = fixed string `"Validation failed"`.
-
-```json
-{
-  "status": 400,
-  "title": "Validation Error",
-  "detail": "Validation failed",
-  "errors": {
-    "company": "Company name is required"
-  }
-}
-```
-
-`problem.setProperty("errors", map)` — RFC 9457, adds custom field to ProblemDetail.
-`Collectors.toMap(..., (first, second) -> first)` — merge function if two errors for same field (take first).
+After: map `field → message` in `errors`, `detail` = fixed string.
 
 ### CR-B4 — Object[] → Projection
 
 JPQL constructor expression: `SELECT new com.easyapply.dto.ApplicationStats(SUM(...), ...)` returns typed record instead of `Object[]`.
 
-`ApplicationStats` uses `Long` (not `long`) because SQL `SUM` can return `NULL` if no rows.
-Methods `rejections()`, `ghosting()`, `offers()` handle null → 0.
-
-Old `normalizeStats()` and `getStatValue()` in service removed.
-
 ### CR-B5 — Parallel Arrays → BadgeDefinition Record
 
-Before: 4 arrays per badge type (`NAMES`, `ICONS`, `DESCRIPTIONS`, `THRESHOLDS`) — synchronized by index.
-After: `record BadgeDefinition(String name, String icon, String description, int threshold)` — one object per badge.
-
-`BadgeDefinition` is `private record` inside `StatisticsService` — not needed outside service.
+Before: 4 arrays per badge type — synchronized by index.
+After: `record BadgeDefinition(String name, String icon, String description, int threshold)`.
 
 ### CR-B10 — Comments on Business Rules
 
 Comments explain **why** rule exists, not **what** code does.
-Example: `// Rolling back to SENT resets the entire recruitment progress — stages are no longer relevant as the process starts from scratch.`
-
 Code comments always in **English**.
 
 ### Key Files
@@ -569,7 +500,7 @@ Code comments always in **English**.
 | File | What Changed |
 |------|-------------|
 | `ApplicationService.java` | CR-10: removed `@Transactional` from `markCurrentStageCompleted()`; CR-B10: comments |
-| `V11__user_id_not_null.sql` | CR-B7: NOT NULL on `user_id` in `applications` and `cvs` |
+| `V11__user_id_not_null.sql` | CR-B7: NOT NULL on `user_id` |
 | `GlobalExceptionHandler.java` | CR-B9: validation errors as field map |
 | `ApplicationStats.java` (new) | CR-B4: projection for statistics query |
 | `StatisticsService.java` | CR-B4: Object[] → ApplicationStats; CR-B5: arrays → BadgeDefinition[] |
@@ -583,41 +514,16 @@ Code comments always in **English**.
 
 **Service Tests** (`@ExtendWith(MockitoExtension.class)`):
 - Spring doesn't start — only JUnit + Mockito
-- Repositories mocked (`@Mock`) — database doesn't exist
-- Test pure logic in isolation, fast (milliseconds)
+- Repositories mocked — database doesn't exist
+- Test pure logic in isolation, fast
 
 **Controller Tests** (`@SpringBootTest + @AutoConfigureMockMvc`):
 - Full Spring context starts with H2 in memory
-- `MockMvc` simulates HTTP without running server
 - Go through entire stack: controller → service → repository → H2
-- Slower (seconds), but more realistic — these are integration tests
 
 ### TestSecurityConfig — Why No JWT
 
-Main config blocks every request without JWT (`401`). In tests we don't generate tokens.
-
-`TestSecurityConfig` is active only on `@Profile("test")` with `@Order(1)` — higher priority than main config (default `@Order(100)`). Spring Security takes first matching filter chain → everything allowed.
-
-Authentication in tests: `@BeforeEach` sets `AuthenticatedUser` manually in `SecurityContextHolder` — controller gets it via `@AuthenticationPrincipal` same as production.
-
-### @Order in Project — Three Different Contexts
-
-| Where | Applies To | What It Controls |
-|---|---|---|
-| `TestSecurityConfig` | `@Bean SecurityFilterChain` | Which filter chain Spring Security picks |
-| `GlobalExceptionHandler` | `@RestControllerAdvice` | Which exception handler has priority |
-| Test classes | `@Test` methods (JUnit) | Test execution order within one class |
-
-Different contexts — don't interfere with each other.
-
-### Strict Stubbing in Mockito
-
-`@ExtendWith(MockitoExtension.class)` enables `STRICT_STUBS` by default. Unused mock = error `UnnecessaryStubbingException`. Philosophy: if you set a mock that wasn't called — either test is wrong or code changed and test is outdated.
-
-### updateStage vs addStage — Semantic Difference
-
-- `updateStage()` (PATCH) — changes application status between kanban columns (SENT → IN_PROGRESS → REJECTED). Does **NOT save** to `stage_history`.
-- `addStage()` (POST) — adds new stage within `IN_PROGRESS`. **Saves** new entry to `stage_history`.
+Main config blocks every request without JWT (401). In tests we use `TestSecurityConfig` active only `@Profile("test")`.
 
 ### Added Tests (6 New, Total 90)
 
@@ -627,14 +533,9 @@ Different contexts — don't interfere with each other.
 | `uploadCV_pathTraversalFilename_doesNotEscape` | `CVServiceTest` | CR-1: file with `../` in name lands in uploadDir |
 | `createCV_javascriptUrl_throws` | `CVServiceTest` | CR-B1: `javascript:` URL rejected |
 | `createCV_dataUrl_throws` | `CVServiceTest` | CR-B1: `data:` URL rejected |
-| `updateStage_NullStatus_ReturnsBadRequest` | `ApplicationControllerTest` | CR-B2: missing status → 400 with `errors.status` field |
+| `updateStage_NullStatus_ReturnsBadRequest` | `ApplicationControllerTest` | CR-B2: missing status → 400 with `errors.status` |
 | `addStage_savesStageHistoryEntry` | `ApplicationServiceTest` | `addStage()` saves entry to `stage_history` |
 
-### Testing Pattern — Throw vs Verify Effect
+---
 
-| Approach | Example | Test Checks |
-|---|---|---|
-| Reject bad input | magic bytes, URL schema, null status | `assertThrows(...)` |
-| Sanitize / replace | path traversal → UUID | `assertTrue(path.startsWith(uploadDir))` |
-
-Path traversal doesn't throw — service silently ignores unsafe name and uses UUID. Test verifies effect (safe path), not exception.
+*Last updated: 2026-03-28*

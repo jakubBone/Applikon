@@ -1,192 +1,192 @@
-# EasyApply – aplikacja do trackowania rekrutacji
+# EasyApply – Job Application Tracker
 
 # 1. Problem
-Kandydaci IT aplikują na dużą liczbę ofert pracy na różnych job boardach oraz przez LinkedIn. 
-Proces ten szybko staje się chaotyczny i trudny do kontrolowania.
+IT candidates apply to a large number of job offers on various job boards and LinkedIn. 
+This process quickly becomes chaotic and difficult to control.
 
-**Najczęstsze problemy (uporządkowane według priorytetu)**:
-- **Gubienie się w aplikacjach:** Trudność w ustaleniu, na jakim etapie jest konkretna rekrutacja.
-- **Chaos w dokumentach:** Tworzenie wielu wersji CV pod daną ofertęa /firmę; brak wiedzy, która wersja trafiła do danej firmy.
-- **Utrata danych finansowych:** Zapominanie, jaką stawkę podało się w formularzu aplikacyjnym, w tym walutę i warunki (np. B2B vs UoP).
-- **Rozproszone notatki:** Brak miejsca na dane kontaktowe do rekruterów, pytania z rozmów, feedback oraz treść wiadomości wysłanej w polu „informacja do rekrutera”.
-- **Ephemeral Content:** Linki do ogłoszeń wygasają, co uniemożliwia powrót do wymagań przed rozmową.
+**Most common problems (ranked by priority)**:
+- **Losing track of applications:** Difficulty in determining at which stage a particular recruitment process is.
+- **Document chaos:** Creating multiple CV versions for different offers/companies; no way to know which version was sent to a particular company.
+- **Loss of salary data:** Forgetting what salary rate was provided in the application form, including currency and conditions (e.g., B2B vs employment contract).
+- **Scattered notes:** No place to store recruiter contact details, interview questions, feedback, and the text of messages sent in the "recruiter information" field.
+- **Ephemeral content:** Job posting links expire, making it impossible to review requirements before an interview.
 
-- **Bariera wejścia AI:** Research firmy przed rozmową zajmuje zbyt dużo czasu
-- **Brak dopasowania CV:** Trudność w dostosowaniu CV pod konkretną ofertę, by przejść przez systemy ATS (automatyczne odrzucenia) 
+- **AI barrier:** Company research before an interview takes too much time
+- **CV mismatch:** Difficulty in adapting CV to a specific offer to pass through ATS (Applicant Tracking Systems) automatic rejection
 
-**Efekt:** Brak kontroli nad procesem, zwiększony stres przed rozmową, brak wyciągania wniosków z porażek oraz marnowanie czasu na powtarzające się błędy.
-
----
-
-# 2. Użytkownik
-Kandydaci aktywnie szukający pracy, aplikujący na 10-20 ofert miesięcznie, korzystający głównie z LinkedIn i NoFluffJobs/JustJoinIT:
-- Zmieniający branżę z non-IT do IT (bez doświadczenia)
-- Junior/Mid Developerzy (0-4 lata doświadczenia)
+**Result:** Lack of control over the process, increased stress before interviews, inability to learn from failures, and wasted time on repeated mistakes.
 
 ---
 
-# 3. Dlaczego ta aplikacja?
-- **Luka rynkowa:** Narzędzie projektowane w 100% pod potrzeby kandydata, a nie rekrutera – w odróżnieniu od narzędzi jak LinkedIn czy ATS-y firm.
-- **End-to-end:** Obsługa od momentu wysłania CV, przez research pracodawców, aż po archiwum zakończonych procesów.
-- **Wygoda:** Jedno "źródło prawdy" zamiast rozproszonych plików Excel, Notion czy e-maili.
+# 2. User
+Job candidates actively seeking work, applying to 10-20 offers per month, primarily using LinkedIn and NoFluffJobs/JustJoinIT:
+- Career changers from non-IT to IT (without experience)
+- Junior/Mid Developers (0-4 years of experience)
 
-**Analiza konkurencji:**
+---
 
-| Konkurent | Wady | Nasze wyróżniki |
+# 3. Why This Application?
+- **Market gap:** A tool designed 100% for candidate needs, not recruiters – unlike LinkedIn or company ATS systems.
+- **End-to-end:** Handling from CV submission, through employer research, to archive of completed processes.
+- **Convenience:** Single "source of truth" instead of scattered Excel files, Notion, or emails.
+
+**Competitive analysis:**
+
+| Competitor | Weaknesses | Our advantages |
 |-----------|------|-----------------|
-| Huntr.co | Ograniczony UI, brak polskiej lokalizacji | Polski rynek, prostota |
-| Teal | Płatny ($29/mies), brak wersji mobilnej | Darmowe MVP, focus na IT |
-| Notion templates | Wymaga ręcznej konfiguracji | Gotowe rozwiązanie out-of-the-box |
+| Huntr.co | Limited UI, no Polish localization | Polish market, simplicity |
+| Teal | Paid ($29/month), no mobile version | Free MVP, IT-focused |
+| Notion templates | Requires manual configuration | Ready-made out-of-the-box solution |
 
 ---
 
 # 4. MVP (Minimum Viable Product)
-1. **Rejestr aplikacji (CRUD):** Firma, stanowisko, link, data (auto-generowana), stawka (z walutą), status, źródło oferty.
-2. **Widok Kanban:** Przeciąganie aplikacji między kolumnami: *Wysłane → Rozmowa → Zadanie → Oferta → Odrzucone*.
-3. **Zarządzanie CV:** Upload plików PDF (lokalny storage, max 5MB) i przypisywanie do aplikacji.
-4. **Notatnik:** Sekcja na pytania techniczne, feedback, dane kontaktowe (plaintext).
+1. **Application Registry (CRUD):** Company, position, link, date (auto-generated), salary (with currency), status, offer source.
+2. **Kanban View:** Drag applications between columns: *Sent → Interview → Task → Offer → Rejected*.
+3. **CV Management:** Upload PDF files (local storage, max 5MB) and assign to applications.
+4. **Notes:** Section for technical questions, feedback, contact details (plaintext).
 
 ---
 
 # 5. Edge Cases
-- **Re-aplikacja:** Powiadomienie o wcześniejszych aplikacjach do tej samej firmy.
-- **Rekrutacja ukryta:** Obsługa relacji Agencja – Klient końcowy.
-- **Wygasłe linki:** Automatyczny zapis wklejonej treści ogłoszenia w bazie danych.
-- **Zmiana stawki:** Śledzenie historii negocjacji finansowych.
-- **Wielowalutowość:** Obsługa różnych walut (PLN, EUR, USD) bez automatycznego przelicznika.
-- **Duplikaty ofert:** Wykrywanie tej samej oferty na różnych portalach (po nazwie firmy + stanowisku).
+- **Reapplication:** Notification about previous applications to the same company.
+- **Hidden recruitment:** Handling Agency – End client relationships.
+- **Expired links:** Automatic saving of pasted job posting content to the database.
+- **Salary change:** Tracking history of financial negotiations.
+- **Multi-currency:** Support for different currencies (PLN, EUR, USD) without automatic converter.
+- **Duplicate offers:** Detection of the same offer on different platforms (by company name + position).
 
 ---
 
-# 6. MVP — kroki biznesowe
+# 6. MVP – Business Steps
 
-## Krok 1: Backend API
+## Step 1: Backend API
 
-| Aspekt | Opis |
+| Aspect | Description |
 |--------|------|
-| **Cel** | REST API do zapisywania i pobierania aplikacji z bazy danych PostgreSQL |
-| **Dlaczego** | Fundament aplikacji — bez backendu frontend nie ma z czym się komunikować |
-| **Warunki brzegowe** | PostgreSQL działający (easyapply_db), API zwraca JSON, walidacja działa, CORS skonfigurowany dla localhost:5173 |
-| **Sukces gdy** | Mogę dodać aplikację przez curl/Postman, API zwraca JSON, dane zapisują się w bazie i przetrwają restart serwera |
+| **Goal** | REST API to save and retrieve applications from PostgreSQL database |
+| **Why** | Foundation of the app – frontend has nothing to communicate with without a backend |
+| **Conditions** | PostgreSQL running (easyapply_db), API returns JSON, validation works, CORS configured for localhost:5173 |
+| **Success when** | I can add an application via curl/Postman, API returns JSON, data is saved in database and survives server restart |
 
-## Krok 2: Frontend Lista
+## Step 2: Frontend List
 
-| Aspekt | Opis |
+| Aspect | Description |
 |--------|------|
-| **Cel** | React UI do przeglądania listy aplikacji i dodawania nowych przez formularz |
-| **Dlaczego** | Rozwiązuje główny problem — "gubienie się w aplikacjach". Jedno miejsce zamiast chaosu |
-| **Warunki brzegowe** | Frontend komunikuje się z backendem (localhost:8080), dane przetrwają odświeżenie strony, dodanie aplikacji max 1 minuta |
-| **Sukces gdy** | Mogę dodać 10 aplikacji przez formularz w przeglądarce, wszystkie widzę na liście z kluczowymi danymi (firma, stanowisko, stawka, waluta, data) |
+| **Goal** | React UI to view list of applications and add new ones via form |
+| **Why** | Solves the main problem – "losing track of applications". One place instead of chaos |
+| **Conditions** | Frontend communicates with backend (localhost:8080), data survives page refresh, adding application takes max 1 minute |
+| **Success when** | I can add 10 applications via form in browser, all visible in list with key data (company, position, salary, currency, date) |
 
-## Krok 3: Śledzenie statusu aplikacji
+## Step 3: Application Status Tracking
 
-| Aspekt | Opis |
+| Aspect | Description |
 |--------|------|
-| **Cel** | Użytkownik może zmieniać status aplikacji (Wysłane → Rozmowa → Zadanie → Oferta → Odrzucone) i widzieć to na widoku Kanban |
-| **Dlaczego** | Rozwiązuje "na jakim etapie jest rekrutacja?" — wizualna kontrola procesu |
-| **Warunki brzegowe** | 5 statusów (hardcoded). Zmiana statusu przez drag & drop lub select. Widać ile aplikacji w każdym statusie |
-| **Sukces gdy** | Widzę tablicę Kanban, przeciągam kartę między kolumnami, status się zapisuje |
+| **Goal** | User can change application status (Sent → Interview → Task → Offer → Rejected) and see it on Kanban view |
+| **Why** | Solves "at what stage is the recruitment?" – visual process control |
+| **Conditions** | 5 statuses (hardcoded). Change status via drag & drop or select. See how many applications in each status |
+| **Success when** | I see the Kanban board, drag cards between columns, status is saved |
 
-## Krok 4: Zarządzanie CV
+## Step 4: CV Management
 
-| Aspekt | Opis |
+| Aspect | Description |
 |--------|------|
-| **Cel** | Użytkownik może uploadować pliki CV (PDF) i przypisywać je do aplikacji |
-| **Dlaczego** | Rozwiązuje "która wersja CV trafiła do tej firmy?" |
-| **Warunki brzegowe** | Tylko PDF, max 5MB. Jedno CV może być przypisane do wielu aplikacji. Można podejrzeć/pobrać CV |
-| **Sukces gdy** | Uploaduję 3 wersje CV, przypisuję różne do różnych aplikacji, widzę która wersja gdzie poszła |
+| **Goal** | User can upload CV files (PDF) and assign them to applications |
+| **Why** | Solves "which CV version was sent to this company?" |
+| **Conditions** | Only PDF, max 5MB. One CV can be assigned to multiple applications. Can view/download CV |
+| **Success when** | I upload 3 CV versions, assign different ones to different applications, see which version went where |
 
-## Krok 5: Notatki i archiwum ogłoszeń
+## Step 5: Notes and Job Posting Archive
 
-| Aspekt | Opis |
+| Aspect | Description |
 |--------|------|
-| **Cel** | Użytkownik może dodawać notatki do aplikacji (pytania z rozmów, feedback, dane kontaktowe) oraz zapisać treść ogłoszenia |
-| **Dlaczego** | Rozwiązuje "rozproszone notatki" i "wygasłe linki do ogłoszeń" |
-| **Warunki brzegowe** | Notatki plaintext (bez formatowania). Wiele notatek per aplikacja. Treść ogłoszenia jako jedno pole tekstowe |
-| **Sukces gdy** | Po rozmowie zapisuję pytania i feedback. Przed następną rozmową mogę to przeczytać. Ogłoszenie jest dostępne nawet gdy link wygasł |
+| **Goal** | User can add notes to applications (interview questions, feedback, contact details) and save job posting content |
+| **Why** | Solves "scattered notes" and "expired job posting links" |
+| **Conditions** | Notes plaintext (no formatting). Multiple notes per application. Job posting content as single text field |
+| **Success when** | After an interview I save questions and feedback. Before next interview I can read them. Posting is available even when link expired |
 
 ---
 
 
-# 7. TECHNOLOGIA
+# 7. TECHNOLOGY
 
-## Biblioteki
+## Libraries
 
-### STDLIB (wbudowane, preferowane):
+### STDLIB (built-in, preferred):
 
 **Backend (Java 21):**
-- `java.util.*`: Kolekcje (List, Map, Set) do zarządzania danymi w pamięci
-- `java.time.*`: Obsługa dat aplikacji (LocalDate, LocalDateTime)
-- `java.nio.file.*`: Operacje na plikach CV (zapis, odczyt, usuwanie)
-- `java.util.UUID`: Generowanie unikalnych identyfikatorów dla CV
+- `java.util.*`: Collections (List, Map, Set) for in-memory data management
+- `java.time.*`: Application date handling (LocalDate, LocalDateTime)
+- `java.nio.file.*`: CV file operations (write, read, delete)
+- `java.util.UUID`: Generate unique identifiers for CVs
 
 **Frontend (JavaScript/TypeScript):**
-- `fetch API`: Komunikacja HTTP z backendem
-- `localStorage`: Opcjonalne cachowanie danych użytkownika
+- `fetch API`: HTTP communication with backend
+- `localStorage`: Optional user data caching
 
-### ZEWNĘTRZNE (tylko jeśli stdlib nie wystarczy):
+### EXTERNAL (only if stdlib is insufficient):
 
 **Backend:**
-- **Spring Boot 3.4**: Framework webowy (stdlib nie ma REST API / dependency injection)
-- **Spring Data JPA**: ORM do komunikacji z PostgreSQL (stdlib nie ma mapowania obiektowo-relacyjnego)
-- **PostgreSQL JDBC Driver**: Sterownik bazy danych (wymagany do połączenia)
-- **Hibernate Validator**: Walidacja danych wejściowych (stdlib ma podstawową walidację, ale brak integracji ze Spring)
-- **Lombok** (opcjonalnie): Redukcja boilerplate (gettery, settery, constructory)
+- **Spring Boot 3.4**: Web framework (stdlib lacks REST API / dependency injection)
+- **Spring Data JPA**: ORM for PostgreSQL communication (stdlib lacks object-relational mapping)
+- **PostgreSQL JDBC Driver**: Database driver (required for connection)
+- **Hibernate Validator**: Input data validation (stdlib has basic validation, but no Spring integration)
+- **Lombok** (optional): Reduce boilerplate (getters, setters, constructors)
 
 **Frontend:**
-- **React 18**: Biblioteka UI (stdlib nie ma komponentów reaktywnych)
-- **TypeScript**: Typowanie statyczne (JavaScript nie ma typów)
-- **Tailwind CSS**: Utility-first CSS (stdlib nie ma gotowych stylów)
-- **@dnd-kit/core**: Drag & drop dla Kanban (stdlib nie ma natywnego DnD w React)
-- **React Router**: Routing między widokami (stdlib nie ma routingu SPA)
+- **React 18**: UI library (stdlib lacks reactive components)
+- **TypeScript**: Static typing (JavaScript lacks types)
+- **Tailwind CSS**: Utility-first CSS (stdlib lacks ready-made styles)
+- **@dnd-kit/core**: Drag & drop for Kanban (stdlib lacks native DnD in React)
+- **React Router**: Routing between views (stdlib lacks SPA routing)
 
-**Baza danych:**
-- **PostgreSQL 16**: Relacyjna baza danych (stdlib nie ma bazy danych)
+**Database:**
+- **PostgreSQL 16**: Relational database (stdlib lacks database)
 
 ---
 
-# Struktura plików (minimalna, dla MVP)
+# File Structure (minimal, for MVP)
 
 ## Backend (`src/main/java/com/easyapply/`)
 
 ```
 ├── controller/
-│   └── ApplicationController.java       # REST API endpoints (CRUD aplikacji)
+│   └── ApplicationController.java       # REST API endpoints (CRUD applications)
 ├── service/
-│   ├── ApplicationService.java          # Logika biznesowa aplikacji
-│   └── CVStorageService.java            # Zarządzanie plikami CV (upload, download, delete)
+│   ├── ApplicationService.java          # Business logic for applications
+│   └── CVStorageService.java            # CV file management (upload, download, delete)
 ├── repository/
-│   ├── ApplicationRepository.java       # Spring Data JPA repository dla aplikacji
-│   └── NoteRepository.java              # Repository dla notatek
+│   ├── ApplicationRepository.java       # Spring Data JPA repository for applications
+│   └── NoteRepository.java              # Repository for notes
 ├── entity/
-│   ├── Application.java                 # Encja aplikacji (firma, stanowisko, status, stawka)
-│   ├── Note.java                        # Encja notatki (tekst, data, relacja do aplikacji)
-│   └── ApplicationStatus.java           # Enum (WYSŁANE, ROZMOWA, ZADANIE, OFERTA, ODRZUCONE)
+│   ├── Application.java                 # Application entity (company, position, status, salary)
+│   ├── Note.java                        # Note entity (text, date, relation to application)
+│   └── ApplicationStatus.java           # Enum (SENT, INTERVIEW, TASK, OFFER, REJECTED)
 └── dto/
-    ├── ApplicationRequest.java          # DTO do tworzenia/edycji aplikacji
-    └── ApplicationResponse.java         # DTO do zwracania danych aplikacji
+    ├── ApplicationRequest.java          # DTO for creating/editing applications
+    └── ApplicationResponse.java         # DTO for returning application data
 ```
 
 ## Frontend (`src/`)
 
 ```
 ├── components/
-│   ├── KanbanBoard.tsx                  # Tablica Kanban z kolumnami statusów
-│   ├── ApplicationCard.tsx              # Karta aplikacji (przeciągalna)
-│   ├── ApplicationForm.tsx              # Formularz dodawania/edycji aplikacji
-│   ├── CVUpload.tsx                     # Komponent uploadu CV
-│   └── NotesList.tsx                    # Lista notatek do aplikacji
+│   ├── KanbanBoard.tsx                  # Kanban board with status columns
+│   ├── ApplicationCard.tsx              # Application card (draggable)
+│   ├── ApplicationForm.tsx              # Form for adding/editing applications
+│   ├── CVUpload.tsx                     # CV upload component
+│   └── NotesList.tsx                    # List of notes for application
 ├── services/
-│   └── api.ts                           # Funkcje fetch do komunikacji z backendem
+│   └── api.ts                           # Fetch functions for backend communication
 ├── types/
 │   └── application.ts                   # TypeScript interfaces (Application, Note, Status)
 ├── pages/
-│   ├── Dashboard.tsx                    # Główny widok (Kanban + lista)
-│   └── ApplicationDetails.tsx           # Szczegóły aplikacji (CV, notatki, historia)
-└── App.tsx                              # Root component z routingiem
+│   ├── Dashboard.tsx                    # Main view (Kanban + list)
+│   └── ApplicationDetails.tsx           # Application details (CV, notes, history)
+└── App.tsx                              # Root component with routing
 ```
 
-## Baza danych (PostgreSQL)
+## Database (PostgreSQL)
 
 ```
 └── schema.sql
@@ -197,22 +197,18 @@ Kandydaci aktywnie szukający pracy, aplikujący na 10-20 ofert miesięcznie, ko
 
 ---
 
-# 8. Przyszłość
+# 8. Future
 
-| Faza | Zakres |
+| Phase | Scope |
 |------|--------|
-| **v1.1** | Funkcje AI — przygotowanie do rozmowy, analiza CV vs ogłoszenie |
-| **v2.0** | Architektura (opcjonalnie, edukacyjnie) — event-driven, mikroserwisy |
+| **v1.1** | AI features – interview preparation, CV vs job posting analysis |
+| **v2.0** | Architecture (optional, educational) – event-driven, microservices |
 
 
-| Wybór | Uzasadnienie |
+| Choice | Justification |
 |-------|--------------|
-| Spring Security + OAuth2 | Logowanie/autoryzacja |
-| Session-based | Prostsze niż JWT dla aplikacji z jednym backendem |
-| pg_vector | v1.1 | Embeddingi dla AI |
-| Spring AI + Ollama/Groq | v1.1 | Funkcje AI |
-| Kafka, mikroserwisy | v2.0 | Nauka architektury (opcjonalnie) |
-
-
-
-
+| Spring Security + OAuth2 | Login/authorization |
+| Session-based | Simpler than JWT for app with single backend |
+| pg_vector | v1.1 | Embeddings for AI |
+| Spring AI + Ollama/Groq | v1.1 | AI features |
+| Kafka, microservices | v2.0 | Architecture learning (optional) |

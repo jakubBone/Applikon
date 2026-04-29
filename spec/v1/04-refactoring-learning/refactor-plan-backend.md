@@ -1,502 +1,498 @@
-# Plan nauki backendu — EasyApply
+# Backend Learning Plan — EasyApply
 
-## Kontekst dokumentu
+## Document Context
 
-Ten dokument jest przewodnikiem nauki backendu dla Jakuba — autora projektu EasyApply.
-Jakub jest junior Java developerem. Zna Spring Boot na poziomie podstawowym/średnim.
-Backend został napisany z pomocą AI — Jakub rozumie ogólną architekturę, ale nie chce zgłębić 
-głębiej wszystkie szczegóły implementacji. Główne luki: security, walidacja, wzorce projektowe.
+This document is a learning guide for Jakub — author of EasyApply.
+Jakub is a junior Java developer. He knows Spring Boot at basic/intermediate level.
+Backend was written with AI help — Jakub understands general architecture but doesn't want to dig deep into all implementation details. Main gaps: security, validation, design patterns.
 
-**Cel:** Zrozumieć lepiej przepływ backendu, naprawić problemy z Code Review, uzupełnić luki
-w security. Nie uczymy od zera — tłumaczymy to, co wymaga wyjaśnienia.
+**Goal:** Better understand backend flow, fix code review problems, fill security gaps. Not learning from zero — explaining what needs clarification.
 
-**Dokumenty źródłowe:**
-- `spec/v1/04-refactoring-learning/refactor-plan-backend.md` — ten plik (plan nauki + postęp)
-- `spec/v1/03-review/code-review-2026-03-01.md` — Code Review od mentora (DR & AI, 2026-03-01) — źródło napraw
-- `spec/v1/04-refactoring-learning/learning-notes-backend.md` — notatki z nauki backendu
+**Source Documents:**
+- `spec/v1/04-refactoring-learning/refactor-plan-backend.md` — this file (plan, rules, progress)
+- `spec/v1/03-review/code-review-2026-03-01.md` — code review from mentor (DR & AI, 2026-03-01) — source of fixes
+- `spec/v1/04-refactoring-learning/learning-notes-backend.md` — notes from learning
 
-**Jak używać tego planu:**
-Wklej go do nowej sesji Claude Code i napisz: _"Kontynuujemy naukę backendu. Jesteśmy na Etapie X."_
+**How to Use This Plan:**
+Paste it into new Claude Code session and write: _"We're continuing backend learning. We're at Phase X."_
 
-**Claude na początku każdej sesji czyta:**
-1. `spec/v1/04-refactoring-learning/refactor-plan-backend.md` — ten plik (plan, zasady, postęp)
-2. `spec/v1/03-review/code-review-2026-03-01.md` — code review od mentora
-3. `spec/v1/04-refactoring-learning/learning-notes-backend.md` — co Jakub już przerobił i zrozumiał
+**Claude reads at start of each session:**
+1. `spec/v1/04-refactoring-learning/refactor-plan-backend.md` — this file (plan, rules, progress)
+2. `spec/v1/03-review/code-review-2026-03-01.md` — code review from mentor
+3. `spec/v1/04-refactoring-learning/learning-notes-backend.md` — what Jakub already worked through and understood
 
 ---
 
-## Projekt: EasyApply — backend
+## Project: EasyApply — backend
 
-**Stack:** Java 21, Spring Boot 3.4.1, Spring Security, OAuth2 + JWT (RS256),
+**Stack:** Java 21, Spring Boot 3.4.1, Spring Security, OAuth2 + JWT (RS256),  
 PostgreSQL, Flyway, Docker, Maven
 
-**Struktura pakietów (`com.easyapply`):**
+**Package Structure (`com.easyapply`):**
 ```
-EasyApplyApplication.java              — punkt wejścia (@SpringBootApplication)
+EasyApplyApplication.java              — entry point (@SpringBootApplication)
 
 config/
-  SecurityConfig.java                  — konfiguracja Spring Security, CORS, OAuth2, JWT
+  SecurityConfig.java                  — Spring Security, CORS, OAuth2, JWT config
 
 controller/
-  ApplicationController.java           — CRUD aplikacji o pracę
+  ApplicationController.java           — CRUD job applications
   AuthController.java                  — /api/auth/me, /api/auth/refresh, /api/auth/logout
-  CVController.java                    — upload/CRUD plików CV
-  NoteController.java                  — CRUD notatek
-  StatisticsController.java            — statystyki i odznaki
+  CVController.java                    — upload/CRUD CV files
+  NoteController.java                  — CRUD notes
+  StatisticsController.java            — statistics and badges
 
 dto/
-  ApplicationRequest.java              — dane wejściowe tworzenia/edycji aplikacji
-  ApplicationResponse.java             — dane wyjściowe aplikacji
-  BadgeResponse.java                   — pojedyncza odznaka
-  BadgeStatsResponse.java              — statystyki z odznakami
-  NoteRequest.java                     — dane wejściowe notatki
-  NoteResponse.java                    — dane wyjściowe notatki
-  StageHistoryResponse.java            — historia etapów
-  StageUpdateRequest.java              — zmiana etapu rekrutacji
-  StatusUpdateRequest.java             — zmiana statusu
-  UserResponse.java                    — dane użytkownika
+  ApplicationRequest.java              — input data for creating/editing applications
+  ApplicationResponse.java             — output data for applications
+  BadgeResponse.java                   — single badge
+  BadgeStatsResponse.java              — statistics with badges
+  NoteRequest.java                     — input data for notes
+  NoteResponse.java                    — output data for notes
+  StageHistoryResponse.java            — stage history
+  StageUpdateRequest.java              — recruitment stage change
+  StatusUpdateRequest.java             — status change
+  UserResponse.java                    — user data
 
 entity/
-  Application.java                     — encja aplikacji o pracę
-  ApplicationStatus.java               — enum statusów (WYSLANE, W_PROCESIE, OFERTA, ODMOWA, GHOSTING)
-  CV.java                              — encja CV (plik lub link)
+  Application.java                     — job application entity
+  ApplicationStatus.java               — enum statuses (SENT, IN_PROCESS, OFFER, REJECTION, GHOSTING)
+  CV.java                              — CV entity (file or link)
   CVType.java                          — enum: UPLOADED, EXTERNAL_LINK
-  ContractType.java                    — enum: UOP, B2B, UZ, UD
-  Note.java                            — encja notatki
-  NoteCategory.java                    — enum kategorii notatek
-  RejectionReason.java                 — enum powodów odmowy
-  SalarySource.java                    — enum źródła informacji o wynagrodzeniu
-  SalaryType.java                      — enum: BRUTTO, NETTO
-  StageHistory.java                    — encja historii etapów
-  User.java                            — encja użytkownika (Google OAuth2)
+  ContractType.java                    — enum: EMPLOYMENT, B2B, CONTRACT, OTHER
+  Note.java                            — note entity
+  NoteCategory.java                    — enum note categories
+  RejectionReason.java                 — enum rejection reasons
+  SalarySource.java                    — enum salary information source
+  SalaryType.java                      — enum: GROSS, NET
+  StageHistory.java                    — stage history entity
+  User.java                            — user entity (Google OAuth2)
 
 exception/
-  GlobalExceptionHandler.java          — @ControllerAdvice, obsługa błędów
+  GlobalExceptionHandler.java          — @ControllerAdvice, error handling
 
 repository/
-  ApplicationRepository.java           — JPA repo + custom query (statystyki)
+  ApplicationRepository.java           — JPA repo + custom query (statistics)
   CVRepository.java                    — JPA repo CV
-  NoteRepository.java                  — JPA repo notatek
-  StageHistoryRepository.java          — JPA repo historii etapów
-  UserRepository.java                  — JPA repo użytkowników
+  NoteRepository.java                  — JPA repo notes
+  StageHistoryRepository.java          — JPA repo stage history
+  UserRepository.java                  — JPA repo users
 
 security/
-  AuthenticatedUser.java               — wrapper na dane zalogowanego użytkownika
-  CustomOAuth2UserService.java         — tworzenie/aktualizacja User po zalogowaniu przez Google
-  JwtAuthenticationConverter.java      — konwersja JWT → Authentication (Spring Security)
-  JwtService.java                      — generowanie i walidacja tokenów JWT (RS256)
-  MdcUserFilter.java                   — dodaje userId do MDC (kontekst logowania)
-  OAuth2AuthenticationSuccessHandler.java — generuje JWT po zalogowaniu OAuth2, ustawia cookie
+  AuthenticatedUser.java               — wrapper for logged-in user data
+  CustomOAuth2UserService.java         — creating/updating User after Google login
+  JwtAuthenticationConverter.java      — JWT → Authentication (Spring Security)
+  JwtService.java                      — JWT generation and validation (RS256)
+  MdcUserFilter.java                   — adds userId to MDC (logging context)
+  OAuth2AuthenticationSuccessHandler.java — generates JWT after OAuth2 login, sets cookie
 
 service/
-  ApplicationService.java              — logika biznesowa aplikacji, etapy, statusy
-  CVService.java                       — upload plików, walidacja, zarządzanie CV
-  NoteService.java                     — CRUD notatek
-  StatisticsService.java               — statystyki, odznaki, progi
-  UserService.java                     — zarządzanie użytkownikami
+  ApplicationService.java              — business logic for applications, stages, statuses
+  CVService.java                       — file upload, validation, CV management
+  NoteService.java                     — CRUD notes
+  StatisticsService.java               — statistics, badges, thresholds
+  UserService.java                     — user management
 ```
 
-**Migracje Flyway:**
+**Flyway Migrations:**
 ```
-V1__init_schema.sql                    — schemat początkowy (applications, cvs, notes, stage_history)
-V2__add_session_id.sql                 — dodanie session_id
-V3__migrate_deprecated_statuses.sql    — migracja starych statusów
-V4__auth_schema.sql                    — tabela users, kolumny user_id w applications/cvs
+V1__init_schema.sql                    — initial schema (applications, cvs, notes, stage_history)
+V2__add_session_id.sql                 — add session_id
+V3__migrate_deprecated_statuses.sql    — migrate old statuses
+V4__auth_schema.sql                    — users table, user_id columns in applications/cvs
 ```
 
-**Testy:**
+**Tests:**
 ```
-config/TestSecurityConfig.java                  — konfiguracja security dla testów
-security/WithMockAuthenticatedUser.java         — adnotacja do mockowania zalogowanego usera
-security/WithMockAuthenticatedUserSecurityContextFactory.java — factory dla powyższej
+config/TestSecurityConfig.java                  — security config for tests
+security/WithMockAuthenticatedUser.java         — annotation for mocking logged-in user
+security/WithMockAuthenticatedUserSecurityContextFactory.java — factory for above
 
 controller/
-  ApplicationControllerTest.java                — testy REST kontrolera aplikacji
-  CVControllerTest.java                         — testy REST kontrolera CV
-  NoteControllerTest.java                       — testy REST kontrolera notatek
-  StatisticsControllerTest.java                 — testy REST kontrolera statystyk
+  ApplicationControllerTest.java                — REST controller tests
+  CVControllerTest.java                         — REST controller tests
+  NoteControllerTest.java                       — REST controller tests
+  StatisticsControllerTest.java                 — REST controller tests
 
 service/
-  ApplicationServiceTest.java                   — testy logiki biznesowej aplikacji
-  CVServiceTest.java                            — testy logiki CV
-  NoteServiceTest.java                          — testy logiki notatek
-  StatisticsServiceTest.java                    — testy logiki statystyk
+  ApplicationServiceTest.java                   — business logic tests
+  CVServiceTest.java                            — CV logic tests
+  NoteServiceTest.java                          — note logic tests
+  StatisticsServiceTest.java                    — statistics logic tests
 ```
 
 ---
 
-## Zasady trybu Mentor (OBOWIĄZUJĄ przez całą naukę)
+## Mentor Mode Rules (APPLY THROUGHOUT LEARNING)
 
-1. **Poziom tłumaczenia:** Jakub jest junior Java devem. Zna Spring Boot podstawy.
-   NIE tłumacz co to `@Service`, `@Repository`, `@RestController` — to wie.
-   TŁUMACZ dokładnie: security (OAuth2, JWT, CSRF, path traversal, XSS),
-   wzorce (State Machine, AOP proxy), i rzeczy gdzie widać luki z CR.
+1. **Explanation Level:** Jakub is junior Java dev. Knows Spring Boot basics.
+   DO NOT explain what `@Service`, `@Repository`, `@RestController` are — he knows.
+   DO explain: security (OAuth2, JWT, CSRF, path traversal, XSS),
+   patterns (State Machine, AOP proxy), things where CR shows gaps.
 
-2. **Interakcja:** Po każdym omówionym zagadnieniu zapytaj czy rozumie.
-   Nie przechodź dalej bez potwierdzenia Jakuba.
+2. **Interaction:** After explaining each topic ask if Jakub understands.
+   Don't move forward without confirmation.
 
-3. **Pytania kontrolne:** Po każdym etapie 2-3 pytania sprawdzające.
-   Konkretne, odnoszące się do projektu.
+3. **Control Questions:** After each phase 2-3 specific questions.
+   Concrete, referencing the project.
 
-4. **Notatki po każdym etapie:** Zapisz podsumowanie do `spec/v1/04-refactoring-learning/learning-notes-backend.md`.
-   Format: nagłówek etapu, kluczowe pojęcia, ważne pliki, co naprawiono.
+4. **Notes After Each Phase:** Save summary to `spec/v1/04-refactoring-learning/learning-notes-backend.md`.
+   Format: phase heading, key concepts, important files, what was fixed.
 
-5. **Zawsze pokazuj kod:** Omawiaj konkretne pliki z projektu. Wskazuj linię.
+5. **Always Show Code:** Discuss specific project files. Point to line.
 
-6. **CR zintegrowany z nauką:** Przy każdym etapie — jeśli CR wskazuje problem —
-   najpierw wytłumacz mechanizm, potem napraw razem z Jakubem.
+6. **CR Integrated With Learning:** When CR points to problem in current phase —
+   first explain mechanism, then fix together with Jakub.
 
-7. **Nice to have:** Na końcu każdego etapu, przed przejściem do następnego,
-   pokaż listę opcjonalnych napraw ("nice to have") z tego etapu i zapytaj:
-   _"Mamy jeszcze X nice-to-have. Robimy, czy idziemy dalej?"_
+7. **Ask for Confirmation:** Don't skip questions. If Jakub asks — answer.
 
-8. **Nie pomijaj pytań.** Jeśli Jakub zapyta o cokolwiek — odpowiedz.
-
-9. **Nie commituj.** Jakub robi commity sam.
+8. **Don't Commit:** Jakub makes commits himself.
 
 ---
 
-## Flow pracy przy każdej naprawie z CR
+## Work Flow For Each CR Fix
 
-Identyczny jak przy froncie. Każda zmiana musi przejść przez ten proces:
+Same as frontend. Each change goes through:
 
 ```
-1. WYJAŚNIJ   — wytłumacz mechanizm (dlaczego to błąd / jak to działa)
-2. PRZECZYTAJ — odczytaj aktualny plik przed zmianą (Read tool)
-3. NAPRAW     — wprowadź zmianę (Edit tool)
-4. TESTY      — sprawdź czy zmiana dotyka istniejących testów:
-                  a) uruchom: mvn test w katalogu easyapply-backend
-                  b) jeśli test się sypie — zaktualizuj test, uruchom ponownie
-                  c) jeśli zmiana dodaje nową logikę — zaproponuj i napisz nowy test
-5. BUILD      — sprawdź kompilację: mvn compile
-6. RESTART    — przypomnij Jakubowi żeby zrestartował backend i przetestował ręcznie
-                  (podaj konkretnie co sprawdzić — jaki endpoint, jaki request)
-7. PYTANIE    — zapytaj: "Czy zaznaczyć CR-X jako naprawione w tabeli postępu?"
-8. AKTUALIZUJ — jeśli Jakub potwierdzi: zaktualizuj status w tabelach poniżej (⬜ → ✅)
-                  oraz dodaj wpis w "Notatki z sesji"
+1. EXPLAIN   — explain mechanism (why it's error / how it works)
+2. READ      — read current file before change (Read tool)
+3. FIX       — make change (Edit tool)
+4. TESTS     — check if change touches existing tests:
+                  a) run: mvn test in easyapply-backend
+                  b) if test breaks — update test, run again
+                  c) if new logic — propose and write new test
+5. BUILD     — check compilation: mvn compile
+6. RESTART   — remind Jakub to restart backend and test manually
+                  (give specific: which endpoint, which request)
+7. QUESTION  — ask: "Mark CR-X as fixed in progress table?"
+8. UPDATE    — if Jakub confirms: update status in tables (⬜ → ✅)
+                  and add entry to "Session Notes"
 ```
 
-**Ważne zasady:**
-- Krok 4 (testy) jest **obowiązkowy** — nawet dla małych zmian
-- Krok 4c — nowe testy piszemy **tylko gdy pojawia się nowa logika** (np. walidacja magic bytes)
-  lub gdy istniejące testy nie pokrywają scenariusza (np. path traversal)
-- Krok 6 (restart) to zawsze zadanie dla Jakuba, nie dla Claude
-- Jeśli testy nie przechodzą — **nie przechodź dalej** dopóki nie są zielone
+**Important Rules:**
+- Step 4 (tests) is **mandatory** — even for small changes
+- Step 4c — new tests only when new logic appears (e.g., magic bytes validation)
+  or existing tests don't cover scenario (e.g., path traversal)
+- Step 6 (restart) is Jakub's task, not Claude's
+- If tests don't pass — **don't move forward** until green
 
 ---
 
-## Postęp nauki
+## Learning Progress
 
-| Etap | Temat | Nauka | CR naprawione w tym etapie |
-|------|-------|-------|---------------------------|
-| 1 | Przegląd architektury — przepływ i elementy | ✅ | — |
-| 2 | Security — OAuth2, JWT, ciasteczka | ✅ | CR-5, CR-3 (backend) |
-| 3 | Security — walidacja danych i plików | ✅ | CR-1, CR-B1, CR-B2, CR-B3 |
-| 4 | Jakość kodu i wzorce | ✅ | CR-10, CR-B4, CR-B5, CR-B7, CR-B8, CR-B9, CR-B10 |
-| 5 | Testy — przegląd, uzupełnienie, pokrycie | ✅ | — |
+| Phase | Topic | Learning | CR Fixed This Phase |
+|-------|-------|----------|-------------------|
+| 1 | Architecture Overview — flow and components | ✅ | — |
+| 2 | Security — OAuth2, JWT, cookies | ✅ | CR-5, CR-3 (backend) |
+| 3 | Security — data and file validation | ✅ | CR-1, CR-B1, CR-B2, CR-B3 |
+| 4 | Code Quality and Patterns | ✅ | CR-10, CR-B4, CR-B5, CR-B7, CR-B8, CR-B9, CR-B10 |
+| 5 | Testing — overview, completion, coverage | ✅ | — |
 
-Po zakończeniu każdego etapu Claude pyta:
-> _"Czy uznajemy Etap X za zaliczony? Zaktualizuję tabelę i notatki."_
-
----
-
-## Lista napraw z CR (śledzenie postępu)
-
-Źródło: `spec/v1/03-review/code-review-2026-03-01.md` (review z 2026-03-01, reviewer: DR & AI)
-
-### 🔴 Krytyczne (bezpieczeństwo / poprawność)
-
-| ID | Problem | Plik(i) | Etap | Status | Przetestowane |
-|----|---------|---------|------|--------|---------------|
-| CR-1 | Path traversal przy uploadzie CV | `CVService.java` | 3 | ✅ | ✅ |
-| CR-5 | Brak SameSite na ciasteczku refresh_token | `OAuth2AuthenticationSuccessHandler.java` | 2 | ✅ | ✅ |
-| CR-3 | Kontrakt refresh tokena — backend zwraca `"token"` zamiast `"accessToken"` | `AuthController.java` | 2 | ✅ | ✅ |
-| CR-B1 | Brak walidacji URL-i w backendzie (externalUrl w CV) | `CVService.java` | 3 | ✅ | ✅ |
-| CR-B3 | Walidacja plików oparta tylko na Content-Type, brak magic bytes | `CVService.java` | 3 | ✅ | ✅ |
-
-### 🟡 Ważne (jakość / poprawność)
-
-| ID | Problem | Plik(i) | Etap | Status | Przetestowane |
-|----|---------|---------|------|--------|---------------|
-| CR-B2 | Brak @NotNull na status w StageUpdateRequest | `StageUpdateRequest.java` | 3 | ✅ | ✅ |
-| CR-10 | @Transactional na prywatnej metodzie (AOP ignoruje) | `ApplicationService.java` | 4 | ✅ | ✅ |
-| CR-B7 | user_id nullable — brak NOT NULL constraint | nowa migracja Flyway | 4 | ✅ | ✅ |
-| CR-B9 | Błędy walidacji jako string zamiast mapy pól | `GlobalExceptionHandler.java` | 4 | ✅ | ✅ |
-
-### 🟢 Nice to have (jakość kodu)
-
-| ID | Problem | Plik(i) | Etap | Status | Przetestowane |
-|----|---------|---------|------|--------|---------------|
-| CR-B4 | Object[] w zapytaniu statystycznym → projection/DTO | `ApplicationRepository.java`, `StatisticsService.java` | 4 | ✅ | ✅ |
-| CR-B5 | 5 równoległych tablic w StatisticsService → record Badge | `StatisticsService.java` | 4 | ✅ | ✅ |
-| CR-B8 | Deprecated enums w NoteCategory (PYTANIE, KONTAKT) | `NoteCategory.java` + migracja | 4 | ✅ | ✅ |
-| CR-B10 | Brak komentarzy przy regułach biznesowych w updateStage() | `ApplicationService.java` | 4 | ✅ | ✅ |
-
-**Legenda:**
-- **Status** ⬜/✅ — czy zmiana w kodzie została wprowadzona
-- **Przetestowane** ⬜/✅ — czy testy przeszły AND Jakub sprawdził ręcznie
+After each phase Claude asks:
+> _"Should we mark Phase X as complete? I'll update table and notes."_
 
 ---
 
-## Szczegółowy opis etapów
+## List of Fixes from CR (Progress Tracking)
+
+Source: `spec/v1/03-review/code-review-2026-03-01.md` (review 2026-03-01, reviewer: DR & AI)
+
+### 🔴 Critical (security / correctness)
+
+| ID | Problem | File(s) | Phase | Status | Tested |
+|----|---------|---------|-------|--------|--------|
+| CR-1 | Path traversal in CV upload | `CVService.java` | 3 | ✅ | ✅ |
+| CR-5 | Missing SameSite on refresh_token cookie | `OAuth2AuthenticationSuccessHandler.java` | 2 | ✅ | ✅ |
+| CR-3 | Refresh token contract — backend returns `"token"` instead of `"accessToken"` | `AuthController.java` | 2 | ✅ | ✅ |
+| CR-B1 | No URL validation in backend (externalUrl in CV) | `CVService.java` | 3 | ✅ | ✅ |
+| CR-B3 | File validation only Content-Type, missing magic bytes | `CVService.java` | 3 | ✅ | ✅ |
+
+### 🟡 Important (correctness / quality)
+
+| ID | Problem | File(s) | Phase | Status | Tested |
+|----|---------|---------|-------|--------|--------|
+| CR-B2 | No @NotNull on status in StageUpdateRequest | `StageUpdateRequest.java` | 3 | ✅ | ✅ |
+| CR-10 | @Transactional on private method (AOP ignores) | `ApplicationService.java` | 4 | ✅ | ✅ |
+| CR-B7 | user_id nullable — no NOT NULL constraint | new Flyway migration | 4 | ✅ | ✅ |
+| CR-B9 | Validation errors as string instead of field map | `GlobalExceptionHandler.java` | 4 | ✅ | ✅ |
+
+### 🟢 Nice to Have (code quality)
+
+| ID | Problem | File(s) | Phase | Status | Tested |
+|----|---------|---------|-------|--------|--------|
+| CR-B4 | Object[] in statistics query → projection/DTO | `ApplicationRepository.java`, `StatisticsService.java` | 4 | ✅ | ✅ |
+| CR-B5 | 5 parallel arrays in StatisticsService → record Badge | `StatisticsService.java` | 4 | ✅ | ✅ |
+| CR-B8 | Deprecated enums in NoteCategory (PYTANIE, KONTAKT) | `NoteCategory.java` + migration | 4 | ✅ | ✅ |
+| CR-B10 | Comments on business rules in updateStage() | `ApplicationService.java` | 4 | ✅ | ✅ |
+
+**Legend:**
+- **Status** ⬜/✅ — code change done
+- **Tested** ⬜/✅ — tests passed AND Jakub verified manually
 
 ---
 
-### Etap 1 — Przegląd architektury — przepływ i elementy
+## Detailed Phase Descriptions
 
-**Cel:** Zrozumieć jak request przechodzi przez backend od HTTP do bazy danych i z powrotem.
-Wiedzieć co robi każda warstwa i jak się łączą. Nie od zera — na poziomie "wiem co gdzie szukać".
+---
 
-**Co omawiamy:**
+### Phase 1 — Architecture Overview — Flow and Components
 
-1. **Przepływ request → response (na przykładzie tworzenia aplikacji):**
+**Goal:** Understand how request flows through backend from HTTP to database and back.
+Know what each layer does and how they connect. Not from zero — at level "I know where to look".
+
+**What We Discuss:**
+
+1. **Request → Response Flow (creating application example):**
    ```
    POST /api/applications
      → Spring Security filter chain (JWT → Authentication)
-     → MdcUserFilter (userId do logów)
+     → MdcUserFilter (userId to logs)
      → ApplicationController.create()
-     → @Valid → walidacja DTO
+     → @Valid → DTO validation
      → ApplicationService.create()
      → ApplicationRepository.save()
      → response DTO → JSON → 201 Created
    ```
 
-2. **Security filter chain — co się dzieje ZANIM request trafi do kontrolera:**
-   - `SecurityConfig.java` — konfiguracja: które endpointy publiczne, które chronione
-   - `JwtAuthenticationConverter` — jak JWT z nagłówka `Authorization: Bearer` zamienia się
-     na obiekt `Authentication` w Spring Security
-   - `MdcUserFilter` — dodaje userId do MDC (kontekst logów)
-   - `@AuthenticationPrincipal AuthenticatedUser` — jak kontroler dostaje dane zalogowanego usera
+2. **Security filter chain — before request reaches controller:**
+   - `SecurityConfig.java` — config: which endpoints public, which protected
+   - `JwtAuthenticationConverter` — JWT from `Authorization: Bearer` to Spring Security Authentication
+   - `MdcUserFilter` — adds userId to MDC (logging context)
+   - `@AuthenticationPrincipal AuthenticatedUser` — how controller gets logged-in user
 
-3. **Warstwy i ich odpowiedzialności:**
-   - Controller — walidacja wejścia (@Valid), mapowanie HTTP, kody odpowiedzi
-   - Service — logika biznesowa, transakcje, reguły
-   - Repository — dostęp do bazy (Spring Data JPA)
-   - Entity — model danych (tabele)
-   - DTO — kontrakt z frontendem (request/response)
+3. **Layers and Their Responsibilities:**
+   - Controller — HTTP validation (@Valid), mapping, response codes
+   - Service — business logic, transactions, rules
+   - Repository — database access (Spring Data JPA)
+   - Entity — data model (tables)
+   - DTO — contract with frontend (request/response)
 
-4. **Przegląd konfiguracji:**
-   - `application.properties` — zmienne środowiskowe, profile (local/dev/prod)
-   - `SecurityConfig.java` — CORS, OAuth2, JWT, publiczne endpointy
-   - Flyway migracje — ewolucja schematu bazy
+4. **Configuration Overview:**
+   - `application.properties` — environment variables, profiles (local/dev/prod)
+   - `SecurityConfig.java` — heart of security
+   - Flyway migrations — schema evolution
 
-**Pliki do otwarcia:**
-- `SecurityConfig.java` — serce konfiguracji security
-- `ApplicationController.java` — przykładowy kontroler
-- `ApplicationService.java` — przykładowy serwis
-- `application.properties` — konfiguracja
+**Files to Open:**
+- `SecurityConfig.java` — security core
+- `ApplicationController.java` — example controller
+- `ApplicationService.java` — example service
+- `application.properties` — config
 
-**CR powiązane:** brak napraw, tylko przegląd.
+**CR Related:** none, just overview.
 
 ---
 
-### Etap 2 — Security — OAuth2, JWT, ciasteczka
+### Phase 2 — Security — OAuth2, JWT, Cookies
 
-**Cel:** Zrozumieć pełny przepływ logowania od strony backendu.
-Naprawić problemy z ciasteczkami i kontraktem tokenów.
+**Goal:** Understand complete login flow from backend side.
+Fix cookie and token contract issues.
 
-**Co omawiamy:**
+**What We Discuss:**
 
-1. **Przepływ OAuth2 (backend side) krok po kroku:**
+1. **OAuth2 Flow (backend side) step by step:**
    ```
    1. Frontend redirect → Google
    2. Google callback → Spring Security OAuth2 filter
-   3. CustomOAuth2UserService — tworzy/aktualizuje User w bazie
+   3. CustomOAuth2UserService — creates/updates User in database
    4. OAuth2AuthenticationSuccessHandler:
-      a) generuje access token (JWT, RS256, 15 min)
-      b) generuje refresh token (JWT, RS256, 7 dni)
-      c) ustawia refresh token jako httpOnly cookie
-      d) redirect na frontend z access tokenem w URL
+      a) generates access token (JWT, RS256, 15 min)
+      b) generates refresh token (JWT, RS256, 7 days)
+      c) sets refresh token as httpOnly cookie
+      d) redirect frontend with access token in URL
    ```
 
-2. **JwtService — generowanie i walidacja tokenów:**
-   - RS256 (asymetryczny) — klucz prywatny podpisuje, publiczny weryfikuje
-   - Dlaczego RS256 a nie HS256
+2. **JwtService — token generation:**
+   - RS256 (asymmetric) — private key signs, public key verifies
+   - Why RS256 not HS256
    - Claims: subject (userId), iat, exp
 
 3. **Refresh token flow:**
-   - AuthController.refresh() — walidacja cookie, generowanie nowego access tokena
-   - Dlaczego refresh token w httpOnly cookie (niedostępny dla JS = ochrona przed XSS)
+   - AuthController.refresh() — validates cookie, generates new access token
+   - Why refresh token in httpOnly cookie (unreachable by JS = XSS protection)
 
-4. **CSRF i SameSite — co to jest i dlaczego ważne:**
-   - Atak CSRF — ktoś wysyła request z Twojego ciasteczka bez Twojej wiedzy
-   - SameSite=Lax — przeglądarka nie wysyła cookie z obcych stron
-   - Dlaczego brak SameSite to problem (CR-5)
+4. **CSRF and SameSite — what is it and why:**
+   - CSRF Attack — attacker tricks browser into sending request from your cookie
+   - SameSite=Lax — browser won't send cookie from foreign sites
+   - Why missing SameSite is problem (CR-5)
 
-5. **Kontrakt refresh tokena (CR-3):**
-   - Backend zwraca `"token"`, frontend oczekuje `"accessToken"`
-   - Jak to naprawić i dlaczego to powoduje że refresh nie działa
+5. **Token contract (CR-3):**
+   - Backend returns `"token"`, frontend expects `"accessToken"`
+   - How this breaks refresh
+   - How to fix and why
 
-**Pliki do otwarcia:**
-- `OAuth2AuthenticationSuccessHandler.java` — generowanie tokenów, cookie
-- `JwtService.java` — tworzenie i walidacja JWT
-- `CustomOAuth2UserService.java` — tworzenie usera po OAuth2
+**Files to Open:**
+- `OAuth2AuthenticationSuccessHandler.java` — token generation, cookie
+- `JwtService.java` — JWT creation and validation
+- `CustomOAuth2UserService.java` — user creation after OAuth2
 - `AuthController.java` — /me, /refresh, /logout
-- `SecurityConfig.java` — konfiguracja filtrów
+- `SecurityConfig.java` — filter configuration
 
-**CR do naprawy:**
-- **CR-5:** Dodaj `SameSite=Lax` do ciasteczka refresh_token. Wyjaśniamy CSRF, naprawiamy.
-- **CR-3 (backend part):** Napraw klucz w odpowiedzi refresh — `"token"` → `"accessToken"`.
+**CR to Fix:**
+- **CR-5:** Add `SameSite=Lax` to refresh_token cookie. Explain CSRF, fix.
+- **CR-3 (backend part):** Fix key in response — `"token"` → `"accessToken"`.
 
-**Nice to have na koniec etapu:** brak
+**Nice to Have at End of Phase:** none
 
 ---
 
-### Etap 3 — Security — walidacja danych i plików
+### Phase 3 — Security — Data and File Validation
 
-**Cel:** Naprawić krytyczne luki bezpieczeństwa — path traversal, walidacja URL-i,
-walidacja plików, walidacja DTO. To najważniejszy etap pod kątem bezpieczeństwa.
+**Goal:** Fix critical security holes — path traversal, URL validation,
+file validation, DTO validation. Most important phase for security.
 
-**Co omawiamy:**
+**What We Discuss:**
 
-1. **Path traversal (CR-1) — KRYTYCZNY:**
-   - Jak działa atak: nazwa pliku `../../etc/cron.d/malicious` → zapis poza katalogiem uploads
-   - Jak się bronić: `resolve()` + `normalize()` + `startsWith(uploadDir)`
-   - Lepsze podejście: UUID jako nazwa na dysku, oryginalna nazwa tylko w bazie
-   - Pokaz na kodzie `CVService.java` — gdzie dokładnie jest luka
+1. **Path Traversal (CR-1) — CRITICAL:**
+   - How attack works: filename `../../etc/cron.d/malicious` → write outside uploads
+   - Defense: `resolve()` + `normalize()` + `startsWith(uploadDir)`
+   - Better approach: UUID as filename on disk, original name only in database
+   - Show in code `CVService.java` — where exactly is the hole
 
-2. **Walidacja URL-i w backendzie (CR-B1):**
-   - Frontend waliduje, ale backend też musi (defense in depth)
-   - `externalUrl` w CV — ktoś może wysłać `javascript:alert(1)` bezpośrednio do API
-   - Walidacja schematu: dopuść tylko `http://` i `https://`
+2. **URL Validation in Backend (CR-B1):**
+   - Frontend validates, but API is public, someone can bypass
+   - `externalUrl` in CV — someone sends `javascript:alert(1)` directly to API
+   - Validation: scheme only `http://` or `https://`
 
-3. **Walidacja plików — magic bytes (CR-B3):**
-   - Content-Type jest deklaratywny — przeglądarka go ustawia, atakujący może sfałszować
-   - Magic bytes — pierwsze bajty pliku identyfikują jego typ:
+3. **File Validation — Magic Bytes (CR-B3):**
+   - Content-Type is browser-set and easily forged
+   - Magic bytes — first bytes identify file type:
      - PDF: `%PDF-` (hex: `25 50 44 46 2D`)
-     - DOCX: `50 4B 03 04` (bo DOCX to ZIP)
-   - Sprawdzamy: magic bytes + Content-Type + rozszerzenie (trojna walidacja)
+     - DOCX: `50 4B 03 04` (DOCX is ZIP)
+   - Validate: magic bytes + Content-Type + extension (triple validation)
 
-4. **Walidacja DTO — @NotNull (CR-B2):**
-   - `StageUpdateRequest.status` — brak @NotNull → null przechodzi do serwisu → NPE → 500
-   - Powinno być: @NotNull → czytelne 400 Bad Request
-   - Kiedy dodawać walidację: na granicy systemu (API), nie wewnątrz serwisu
+4. **DTO Validation — @NotNull (CR-B2):**
+   - `StageUpdateRequest.status` — no @NotNull → null passes → NPE → 500
+   - Should be @NotNull → readable 400 Bad Request
+   - Rule: validation at system boundary (API), not inside service
 
-**Pliki do otwarcia:**
-- `CVService.java` — upload, path traversal, walidacja pliku, URL
-- `StageUpdateRequest.java` — brak @NotNull
-- `GlobalExceptionHandler.java` — jak błędy walidacji są zwracane
+**Files to Open:**
+- `CVService.java` — upload, path traversal, file validation, URL
+- `StageUpdateRequest.java` — missing @NotNull
+- `GlobalExceptionHandler.java` — how validation errors returned
 
-**CR do naprawy:**
-- **CR-1:** Path traversal — naprawiamy upload w `CVService.java`
-- **CR-B1:** Walidacja URL-i — dodajemy sprawdzenie schematu w `CVService.java`
-- **CR-B3:** Magic bytes — dodajemy walidację zawartości pliku w `CVService.java`
-- **CR-B2:** @NotNull na status w `StageUpdateRequest.java`
+**CR to Fix:**
+- **CR-1:** Path traversal — fix upload in `CVService.java`
+- **CR-B1:** URL validation — add scheme check in `CVService.java`
+- **CR-B3:** Magic bytes — add file content validation in `CVService.java`
+- **CR-B2:** @NotNull on status in `StageUpdateRequest.java`
 
-**Nice to have na koniec etapu:** brak (wszystko w tym etapie jest ważne)
+**Nice to Have at End of Phase:** none (all important)
 
 ---
 
-### Etap 4 — Jakość kodu i wzorce
+### Phase 4 — Code Quality and Patterns
 
-**Cel:** Naprawić problemy z jakością kodu, wzorcami, integralnością danych.
-Etap mieszany — część napraw jest ważna (stage history, user_id NOT NULL),
-część to "nice to have" (Object[] → projection).
+**Goal:** Fix code quality, patterns, data integrity.
+Phase mixed — some fixes important (stage history, user_id NOT NULL),
+some nice-to-have (Object[] → projection).
 
-**Co omawiamy:**
+**What We Discuss:**
 
-1. **@Transactional na prywatnej metodzie (CR-10):**
-   - Jak działa Spring AOP — proxy opakowuje bean
-   - Proxy przechwytuje tylko publiczne metody wywołane z zewnątrz
-   - Prywatna metoda = proxy nie widzi = @Transactional ignorowany
-   - W tym przypadku: brak praktycznego wpływu (wywołana z transakcyjnej metody),
-     ale adnotacja jest myląca — usuwamy
+1. **@Transactional on Private Method (CR-10):**
+   - How Spring AOP works — proxy wraps bean
+   - Proxy intercepts only public methods called from outside
+   - Private method = proxy can't see = @Transactional ignored
+   - Here: no practical impact (called from transactional method),
+     but annotation misleading — remove for clarity
 
-2. **user_id nullable (CR-B7):**
-   - Migracja V4 dodaje kolumnę jako nullable ("na razie, bo istniejące wiersze mają null")
-   - Ale nigdy nie dodaje NOT NULL
-   - Tworzymy nową migrację: backfill + ALTER TABLE SET NOT NULL
+2. **user_id Nullable (CR-B7):**
+   - Migration V4 adds column nullable ("for now, existing have null")
+   - But never adds NOT NULL
+   - Result: database allows orphaned records
+   - Fix: new migration — backfill + ALTER TABLE SET NOT NULL
 
-4. **Błędy walidacji jako string (CR-B9):**
-   - Aktualnie: błędy łączone w jeden tekst → frontend nie wie które pole
-   - Poprawnie: mapa `{pole: komunikat}` przez `ProblemDetail.setProperty()`
+3. **Validation Errors as String (CR-B9):**
+   - Now: all errors concatenated in one text → frontend doesn't know which field
+   - Correct: map `{field: message}` via `ProblemDetail.setProperty()`
    - Standard RFC 9457
 
-5. **[Nice to have] Object[] → projection (CR-B4):**
-   - Zapytanie statystyczne zwraca Object[] — brak typów, kruche
+4. **[Nice to Have] Object[] → Projection (CR-B4):**
+   - Statistics query returns Object[] — lose types, brittle
    - JPQL constructor expression: `SELECT new StatsDto(...) FROM ...`
-   - Alternatywa: interface-based projection
+   - Alternatively: interface projection
 
-6. **[Nice to have] Równoległe tablice → record (CR-B5):**
-   - 5 tablic (nazwy, ikony, opisy, progi, kolory) zsynchronizowanych po indeksie
-   - Jeden element przesunięty = wszystkie odznaki popsute
-   - Rozwiązanie: `record Badge(String name, String icon, String description, int threshold, String color)`
+5. **[Nice to Have] Parallel Arrays → Record (CR-B5):**
+   - 5 arrays (names, icons, descriptions, thresholds, colors) synchronized by index
+   - One element off = all badges broken
+   - Solution: `record Badge(String name, String icon, String description, int threshold, String color)`
 
-7. **[Nice to have] Deprecated enums (CR-B8):**
-   - `NoteCategory`: PYTANIE i KONTAKT współistnieją z PYTANIA, FEEDBACK, INNE
-   - Migracja Flyway zamieni stare → nowe, potem usunięcie z enuma
+6. **[Nice to Have] Deprecated Enums (CR-B8):**
+   - `NoteCategory`: PYTANIE and KONTAKT coexist with PYTANIA, FEEDBACK, INNE
+   - Flyway migration replaces old → new, then remove from enum
 
-8. **[Nice to have] Komentarze przy regułach biznesowych (CR-B10):**
-   - `updateStage()` — złożona logika warunkowa bez komentarzy
-   - Dodajemy komentarze wyjaśniające "dlaczego", nie "co"
+7. **[Nice to Have] Comments on Business Rules (CR-B10):**
+   - `updateStage()` — complex conditional logic without comments
+   - Comments explain "why" rule exists, not "what" code does
 
-**Pliki do otwarcia:**
+**Files to Open:**
 - `ApplicationService.java` — @Transactional, updateStage(), stage history
-- `StageHistoryRepository.java` — zapis historii
-- `GlobalExceptionHandler.java` — format błędów
+- `StageHistoryRepository.java` — save history
+- `GlobalExceptionHandler.java` — error format
 - `StatisticsService.java` — parallel arrays, Object[]
 - `ApplicationRepository.java` — custom query
 - `NoteCategory.java` — deprecated enums
 
-**CR do naprawy (ważne):**
-- **CR-10:** Usunięcie @Transactional z prywatnej metody
-- **CR-B7:** Nowa migracja — NOT NULL na user_id
-- **CR-B9:** Błędy walidacji jako mapa pól
+**CR to Fix (Important):**
+- **CR-10:** Remove @Transactional from private method
+- **CR-B7:** New migration — NOT NULL on user_id
+- **CR-B9:** Validation errors as field map
 
-**Nice to have na koniec etapu:**
+**Nice to Have at End of Phase:**
 - CR-B4: Object[] → projection/DTO
-- CR-B5: Równoległe tablice → record Badge
-- CR-B8: Deprecated enums + migracja
-- CR-B10: Komentarze przy regułach biznesowych
+- CR-B5: Parallel arrays → record Badge
+- CR-B8: Deprecated enums + migration
+- CR-B10: Comments on business rules
 
 ---
 
-### Etap 5 — Testy — przegląd, uzupełnienie, pokrycie
+### Phase 5 — Testing — Overview, Completion, Coverage
 
-**Cel:** Zrozumieć istniejące testy, uruchomić je, uzupełnić o scenariusze
-wynikające z napraw (path traversal, null status, magic bytes, walidacja URL).
+**Goal:** Understand existing tests, run them, add tests for fixed items
+(path traversal, null status, magic bytes, URL validation).
 
-**Co omawiamy:**
+**What We Discuss:**
 
-1. **Przegląd istniejących testów:**
-   - Jak działa `@WebMvcTest` — testy kontrolerów bez pełnego kontekstu
-   - `@MockBean` — mockowanie serwisów
-   - `@WithMockAuthenticatedUser` — custom adnotacja do mockowania auth
-   - `TestSecurityConfig` — konfiguracja security dla testów
-   - Testy serwisów — mockowanie repozytoriów przez Mockito
+1. **Test Levels:**
+   - Service tests (`@ExtendWith(MockitoExtension.class)`) — no Spring, fast
+   - Controller tests (`@SpringBootTest + @AutoConfigureMockMvc`) — full context, slow
 
-2. **Uruchomienie testów i przegląd wyników:**
-   - `mvn test` — co przechodzi, co nie
-   - Jak czytać stack trace z testów
-   - Jak uruchomić pojedynczy test
+2. **TestSecurityConfig — why no JWT:**
+   - Main config blocks every request without JWT (401). In tests we don't generate tokens.
+   - `TestSecurityConfig` active only `@Profile("test")` with `@Order(1)` — higher priority
+   - Spring Security takes first matching chain → everything allowed
+   - Auth in tests: `@BeforeEach` sets `AuthenticatedUser` manually in `SecurityContextHolder`
 
-3. **Uzupełnienie testów o scenariusze z napraw:**
-   - Test path traversal — nazwa pliku z `../` powinna być odrzucona
-   - Test magic bytes — plik z fałszywym Content-Type powinien być odrzucony
-   - Test null status — StageUpdateRequest bez statusu → 400
-   - Test walidacji URL — `javascript:` URL powinien być odrzucony
-   - Test stage history — updateStage() powinno tworzyć wpis w historii
+3. **@Order in Project — Three Contexts:**
+   - `TestSecurityConfig` @Bean SecurityFilterChain — which filter chain Spring picks
+   - `GlobalExceptionHandler` @RestControllerAdvice — exception handler priority
+   - Test classes @Test methods — test execution order
 
-4. **Czym NIE zajmujemy się:**
-   - Nie piszemy testów E2E (za duży scope)
-   - Nie piszemy testów integracyjnych z bazą (mamy H2 w testach, ale to na przyszłość)
-   - Nie konfigurujemy JaCoCo (temat na przyszłość)
+4. **Strict Stubbing in Mockito:**
+   - `STRICT_STUBS` by default — unused mock = error. Philosophy: test is stale if mock not called
 
-**Pliki do otwarcia:**
-- `src/test/java/com/easyapply/service/CVServiceTest.java` — testy CV
-- `src/test/java/com/easyapply/service/ApplicationServiceTest.java` — testy aplikacji
-- `src/test/java/com/easyapply/controller/ApplicationControllerTest.java` — testy kontrolera
-- `src/test/resources/application-test.properties` — konfiguracja testów
+5. **updateStage vs addStage — Semantic Difference:**
+   - `updateStage()` (PATCH) — changes status (SENT → IN_PROCESS → REJECTED). Does NOT save stage_history.
+   - `addStage()` (POST) — adds stage within IN_PROCESS. Saves to stage_history.
 
-**CR powiązane:** brak nowych napraw, uzupełniamy testy dla napraw z etapów 2-4.
+6. **Added Tests (6 New, Total 90):**
+   - magic bytes, path traversal, URL validation, null status, stage history
 
----
+**Files to Open:**
+- `src/test/java/com/easyapply/service/CVServiceTest.java` — CV tests
+- `src/test/java/com/easyapply/service/ApplicationServiceTest.java` — app tests
+- `src/test/java/com/easyapply/controller/ApplicationControllerTest.java` — controller tests
+- `src/test/resources/application-test.properties` — test config
 
-## Notatki z sesji
-
-Po każdej sesji Claude uzupełnia tę sekcję. Format: data, co omówiono,
-co naprawiono, co wymaga powtórki, następny krok.
+**CR Related:** none new, add tests for fixes from phases 2-4.
 
 ---
 
-(Notatki będą uzupełniane po każdej sesji)
+## Session Notes
+
+After each session Claude updates this section. Format: date, what discussed,
+what understood, what needs repeat, next step.
+
+---
+
+(Session notes will be added after each session)

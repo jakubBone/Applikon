@@ -423,7 +423,7 @@ App.tsx
 |-----------|------|---------|
 | `ServiceBanner` | `components/notices/ServiceBanner.tsx` | Red danger banner for BANNER-type notices; dismissable per page load (useState) |
 | `ServiceModal` | `components/notices/ServiceModal.tsx` | Modal overlay for MODAL-type notices; dismissal persisted in sessionStorage per session |
-| `CountdownLabel` | `components/notices/CountdownLabel.tsx` | Inline `⏳ zostało: X dni X godz MM:SS` label (PL/EN); shown only when expiresAt is set |
+| `CountdownLabel` | `components/notices/CountdownLabel.tsx` | Inline `⏳ time left: X days X hours MM:SS` label (PL/EN); shown only when expiresAt is set |
 | `useCountdown` | `components/notices/useCountdown.ts` | setInterval-based hook; returns `TimeLeft {days, hours, minutes, seconds, expired} \| null` |
 
 ### Hooks (server state via React Query)
@@ -555,7 +555,7 @@ Reality: `ApplicationResponse` record has no `stageHistory` field. `domain.ts` o
 
 ### 6g. Salary change auto-note: dead code
 
-The i18n implementation plan describes `service/NoteService.java` — auto-nota salary change i18n.  
+The i18n implementation plan describes `service/NoteService.java` — auto-note salary change i18n.  
 `NoteService.createSalaryChangeNote()` was implemented with i18n support.  
 However, `ApplicationService.update()` does **not** call it — no salary change comparison logic, no note creation on update.  
 The method exists and is reachable from the `NoteController` tests, but is never triggered in the application flow.
@@ -688,7 +688,7 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 - `GET /api/system/notices/active` — public endpoint, no auth required; returns list of active notices
 - `POST /api/admin/notices` — creates new notice; secured by `AdminKeyFilter` (X-Admin-Key header); returns 201 Created
 - `AdminKeyFilter` — `OncePerRequestFilter`; reads `${app.admin-key}` from properties; returns 403 if header missing or value wrong
-- `SecurityConfig`: `/api/admin/**` added to `permitAll` (Spring Security skips JWT check; filter handles auth); `X-Admin-Key` added to CORS `allowedHeaders`
+- `SecurityConfig`: `/api/admin/**` added to `permitAll()` (Spring Security skips JWT check; filter handles auth); `X-Admin-Key` added to CORS `allowedHeaders`
 - `GlobalExceptionHandler`: added `DateTimeParseException` handler → 400 with ISO-8601 format error message
 - Flyway V14: `service_notices` table
 - Tests: `SystemControllerTest` (3 tests: empty list, active notice, expired excluded) + `AdminControllerTest` (4 tests: valid key→201, no key→403, wrong key→403, invalid body→400)
@@ -697,11 +697,11 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 - `useServiceNotices` hook (React Query, staleTime 5 min) — fetches `/api/system/notices/active`; returns `[]` on any error so the app never breaks
 - `ServiceBanner` — dismissable red danger banner (background `#dc3545`); state in `useState`, resets on page reload
 - `ServiceModal` — modal overlay; dismissal stored in `sessionStorage` key `dismissed_notices` (array of IDs); reappears after logout because `AuthProvider.signOut()` calls `sessionStorage.removeItem('dismissed_notices')`
-- `CountdownLabel` — shown when `expiresAt` is set and not expired; displays `⏳ zostało: X dni X godz MM:SS` (PL) or `⏳ time left: ...` (EN)
+- `CountdownLabel` — shown when `expiresAt` is set and not expired; displays `⏳ time left: X days X hours MM:SS` (PL) or `⏳ time left: ...` (EN)
 - `useCountdown` — setInterval-based hook (1s tick); exports `TimeLeft` interface
 - `AppContent` — renders banners above header and modals above TourGuide
 - `notices.css` — red danger theme: bold white text on `#dc3545` background with `border-bottom: 3px solid #a71d2a`
-- i18n key: `notices.ok: "OK, rozumiem"` / `"OK, I understand"` (PL + EN)
+- i18n key: `notices.ok: "OK, I understand"` / `"OK, I understand"` (PL + EN)
 - Tests: `ServiceBanner.test.tsx` (4 tests) + `ServiceModal.test.tsx` (4 tests, uses `sessionStorage.clear()`)
 
 ---

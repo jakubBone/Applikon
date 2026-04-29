@@ -1,55 +1,55 @@
-# Plan implementacji logout — EasyApply Backend
+# Logout Implementation Plan — EasyApply Backend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each stage)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `mvn test`, musi być zielony
-3. **Weryfikacja manualna** — użytkownik testuje endpoint ręcznie (opcjonalnie)
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(backend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Status realizacji
-
-### Etap 0 — Weryfikacja stanu (brak implementacji wymagana)
-
-- [x] `controller/AuthController.java` — endpoint `POST /api/auth/logout` istnieje
-- [x] Endpoint: usuwa `refreshToken` z DB przez `userService.clearRefreshToken(user)`
-- [x] Endpoint: ustawia cookie `refresh_token` z `maxAge=0` (kasuje po stronie klienta)
-- [x] Endpoint: wymaga aktywnego JWT (`@AuthenticationPrincipal AuthenticatedUser`)
-- [x] `mvn test` zielony
-
-> Backend jest kompletny. Żadne zmiany w kodzie produkcyjnym nie są wymagane.
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `mvn test` must be green
+3. **Manual verification** — user manually tests the endpoint (optional)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to next stage
 
 ---
 
-## Architektura endpointu
+## Status
+
+### Stage 0 — State Verification (no implementation required)
+
+- [x] `controller/AuthController.java` — endpoint `POST /api/auth/logout` exists
+- [x] Endpoint: removes `refreshToken` from DB via `userService.clearRefreshToken(user)`
+- [x] Endpoint: sets cookie `refresh_token` with `maxAge=0` (clears client-side)
+- [x] Endpoint: requires active JWT (`@AuthenticationPrincipal AuthenticatedUser`)
+- [x] `mvn test` green
+
+> Backend is complete. No changes to production code are required.
+
+---
+
+## Endpoint Architecture
 
 ```
 POST /api/auth/logout
 Authorization: Bearer <access_token>
 → 204 No Content
 
-Efekty uboczne:
-  1. User.refreshToken = null  (w DB)
-  2. Cookie refresh_token      (usunięty przez maxAge=0)
+Side effects:
+  1. User.refreshToken = null  (in DB)
+  2. Cookie refresh_token      (deleted via maxAge=0)
 ```
 
-**Dlaczego JWT nie jest unieważniany?**
-Access token jest stateless — nie da się go unieważnić bez blacklisty tokenów.
-Wylogowanie usuwa refresh token, przez co użytkownik nie może odnowić sesji po wygaśnięciu access tokena.
-Frontend usuwa access token z localStorage natychmiast po wywołaniu logout.
+**Why is JWT not invalidated?**
+Access token is stateless — cannot be invalidated without a token blacklist.
+Logout removes refresh token, so user cannot renew session after access token expires.
+Frontend deletes access token from localStorage immediately after logout.
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- Blacklisting access tokenów — nadmiarowe dla tej aplikacji
-- Wylogowanie ze wszystkich urządzeń — osobny feature
+- Blacklisting access tokens — unnecessary for this application
+- Logout from all devices — separate feature
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-07*
+*Last update: 2026-04-07*

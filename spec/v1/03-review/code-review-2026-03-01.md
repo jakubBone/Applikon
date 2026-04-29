@@ -1,436 +1,438 @@
-### 👤 Informacje podstawowe
-**Autor:** Jakub
-**Projekt:** EasyApply — aplikacja do śledzenia procesów rekrutacyjnych dla juniorów IT
-**Data review:** 2026-03-01
-**Reviewer:** DR & AI
-**Poziom zaawansowania:** Początkujący/średniozaawansowany — widać solidne podstawy oraz ambicję w zakresie architektury, ale pojawiają się luki typowe dla osób bez doświadczenia komercyjnego
+# Code Review: EasyApply Project (2026-03-01)
+
+### 👤 Basic Information
+**Author:** Jakub  
+**Project:** EasyApply — job application tracker for junior IT candidates  
+**Review Date:** 2026-03-01  
+**Reviewers:** DR & AI  
+**Skill Level:** Beginner/Intermediate — solid foundations and ambition in architecture visible, but typical gaps for someone without commercial experience  
 
 ---
 
-## 🌟 CZĘŚĆ I: PODSUMOWANIE OGÓLNE
+## 🌟 PART I: GENERAL SUMMARY
 
-### ✅ Co zasługuje na pochwałę
+### ✅ What Deserves Praise
 
-1. **Dojrzała architektura full-stack** — projekt łączy Spring Boot (Java 21) z React + TypeScript, PostgreSQL i Docker Compose. To nie jest trywialne zadanie i świadczy o odwadze i ambicji. Podział na backend/frontend z wyraźnymi warstwami (controller → service → repository → entity) to wzorcowe podejście.
+1. **Mature full-stack architecture** — the project combines Spring Boot (Java 21) with React + TypeScript, PostgreSQL, and Docker Compose. This is not trivial and shows courage and ambition. Clear separation into backend/frontend with proper layers (controller → service → repository → entity) is textbook approach.
 
-2. **Poprawne zastosowanie OAuth2 + JWT** — przepływ autentykacji przez Google OAuth2, generowanie access tokenów (RS256) z 15-minutowym czasem życia i refresh tokenów przechowywanych w httpOnly cookie to solidna implementacja. Komentarze w kodzie (np. w `OAuth2AuthenticationSuccessHandler`) wyjaśniają „dlaczego", a nie tylko „co" — tak pisze się dobrą dokumentację.
+2. **Correct OAuth2 + JWT implementation** — authentication flow through Google OAuth2, access token generation (RS256) with 15-minute lifespan, and refresh tokens stored in httpOnly cookie — solid implementation. Comments in code (e.g., in `OAuth2AuthenticationSuccessHandler`) explain "why" not just "what" — that's good documentation.
 
-3. **Migracje bazodanowe z Flyway** — zamiast polegać na `ddl-auto=update` (częsty błąd początkujących), projekt używa wersjonowanych migracji SQL. Ustawienie `ddl-auto=validate` w produkcji to profesjonalna decyzja.
+3. **Database migrations with Flyway** — instead of relying on `ddl-auto=update` (common beginner mistake), project uses versioned SQL migrations. Setting `ddl-auto=validate` in production shows professional thinking.
 
-4. **React Query (TanStack Query)** — świetny wybór do zarządzania stanem serwerowym. Hooki (`useApplications`, `useCV`, `useNotes`) są czytelne, poprawnie konfigurują cache i invalidację. Wzorzec z `queryKeys` jako stałymi zapobiega literówkom.
+4. **React Query (TanStack Query)** — excellent choice for server state management. Hooks (`useApplications`, `useCV`, `useNotes`) are readable, correctly configured for cache and invalidation. Pattern with `queryKeys` as constants prevents typos.
 
-5. **TypeScript z trybem strict** — cała konfiguracja (`noUnusedLocals`, `noUnusedParameters`, `isolatedModules`) wymusza dyscyplinę. Typy domenowe w `domain.ts` są dobrze zaprojektowane.
+5. **TypeScript with strict mode** — entire configuration (`noUnusedLocals`, `noUnusedParameters`, `isolatedModules`) enforces discipline. Domain types in `domain.ts` well designed.
 
-6. **Docker Compose z health checks** — konfiguracja wielokontenerowa z warunkiem `service_healthy` dla bazy danych, volume'ami dla danych i uploadu, oraz health checkami dla backendu świadczy o myśleniu operacyjnym.
+6. **Docker Compose with health checks** — multi-container configuration with `service_healthy` condition for database, volumes for data and uploads, plus health checks for backend shows operational thinking.
 
-7. **MDC Logging** — dodanie `userId` do kontekstu logowania (via `MdcUserFilter`) to zaawansowana technika, która ułatwia debugowanie w środowisku wieloużytkownikowym.
-
----
-
-## 🎓 CZĘŚĆ II: ROZWÓJ I EDUKACJA
-
-### 💭 Pytania do przemyślenia
-
-1. **Co się stanie, gdy użytkownik kliknie „Zaloguj przez Google" i backend jest niedostępny?** Przyjrzyj się plikowi `LoginPage.tsx` — czy adres URL backendu powinien być na sztywno zapisany w kodzie? Jak to wpłynie na deployment?
-
-2. **Wyobraź sobie, że masz 500 aplikacji o pracę. Jak zachowa się widok tabeli i Kanban board?** Zastanów się, co oznaczają operacje `filter()` i `sort()` wykonywane przy każdym renderze bez memoizacji. Poczytaj o `useMemo` i kiedy jest naprawdę potrzebne.
-
-3. **Dlaczego `markCurrentStageCompleted()` jest oznaczone `@Transactional` na prywatnej metodzie?** Sprawdź, jak Spring AOP obsługuje adnotacje na metodach prywatnych. Odpowiedź może Cię zaskoczyć.
-
-4. **Co się dzieje z plikiem CV na dysku, jeśli zapis do bazy danych się nie powiedzie?** Przyjrzyj się kolejności operacji w `CVService.uploadCV()` — czy operacje na plikach są objęte transakcją bazodanową?
-
-5. **Jakie dane zobaczy atakujący, jeśli zdoła wstrzyknąć skrypt JavaScript na stronę z linkiem do oferty pracy?** Zastanów się nad walidacją linków URL w `ApplicationDetails.tsx` i `CVManager.tsx`.
-
-### 📚 Koncepcje do zgłębienia
-
-| Koncepcja | Dlaczego jest ważna | Gdzie się pojawia w Twoim kodzie |
-|-----------|---------------------|----------------------------------|
-| **Memoizacja w React** | Zapobiega kosztownym przeliczeniom przy każdym renderze | `ApplicationTable.tsx` — sortowanie i filtrowanie |
-| **Spring AOP Proxy** | Adnotacje `@Transactional` na prywatnych metodach nie działają | `ApplicationService.markCurrentStageCompleted()` |
-| **State Machine Pattern** | Porządkuje złożone przejścia stanów | `ApplicationService.updateStage()` |
-| **Content Security Policy** | Chroni przed atakami XSS na poziomie nagłówków HTTP | Konfiguracja Nginx i Spring Security |
-| **SameSite Cookie Attribute** | Ochrona przed CSRF w nowoczesnych przeglądarkach | `OAuth2AuthenticationSuccessHandler` |
-| **React Error Boundary** | Zapobiega „białemu ekranowi" po błędzie w komponencie | Brak w projekcie — warto dodać |
-| **Paginacja API** | Niezbędna przy dużych zbiorach danych | Endpointy `/api/applications` |
-| **Interceptor HTTP (retry po odświeżeniu tokenu)** | Pozwala na przezroczyste odświeżanie sesji bez przerywania pracy użytkownika | `api.ts` — brak interceptora, redirect na 401 |
-| **Integralność danych (NOT NULL constraints)** | Gwarantuje, że każdy rekord ma właściciela | Migracja V4 — kolumna user_id bez NOT NULL |
-
-### 📖 Słowniczek terminów
-
-| Termin | Wyjaśnienie | Materiały do nauki |
-|--------|-------------|-------------------|
-| **OAuth2** | Protokół autoryzacji pozwalający logować się przez zewnętrzne serwisy (np. Google) | [OAuth 2.0 Simplified](https://www.oauth.com/) |
-| **JWT (JSON Web Token)** | Standardowy format tokenu do bezstanowej autentykacji | [JWT.io Introduction](https://jwt.io/introduction) |
-| **RS256** | Algorytm podpisu asymetrycznego (klucz prywatny podpisuje, publiczny weryfikuje) | [Auth0 - RS256 vs HS256](https://auth0.com/blog/rs256-vs-hs256-whats-the-difference/) |
-| **httpOnly Cookie** | Ciasteczko niewidoczne dla JavaScript — ochrona przed XSS | [MDN - Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie) |
-| **CSRF** | Atak polegający na wykonaniu akcji w imieniu zalogowanego użytkownika | [OWASP - CSRF](https://owasp.org/www-community/attacks/csrf) |
-| **N+1 Problem** | Wykonanie N dodatkowych zapytań SQL zamiast jednego z JOIN | [Hibernate N+1](https://vladmihalcea.com/n-plus-1-query-problem/) |
-| **EntityGraph (JPA)** | Mechanizm sterowania eager/lazy loading bez zmiany mappingu | [Baeldung - JPA EntityGraph](https://www.baeldung.com/jpa-entity-graph) |
-| **Flyway** | Narzędzie do wersjonowania i migracji schematu bazy danych | [Flyway Documentation](https://documentation.red-gate.com/flyway) |
-| **React Query** | Biblioteka do zarządzania stanem serwerowym i cachowaniem | [TanStack Query Docs](https://tanstack.com/query/latest) |
-| **useMemo** | Hook React do memoizacji kosztownych obliczeń | [React Docs - useMemo](https://react.dev/reference/react/useMemo) |
-| **Spring AOP Proxy** | Mechanizm proxy w Spring — adnotacje działają tylko na publicznych metodach wywołanych z zewnątrz beana | [Baeldung - Spring AOP](https://www.baeldung.com/spring-aop) |
-| **ProblemDetail (RFC 9457)** | Standardowy format odpowiedzi błędów w REST API | [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) |
-| **Path Traversal** | Atak polegający na ucieczce z dozwolonego katalogu plików | [OWASP - Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal) |
-| **XSS** | Wstrzyknięcie złośliwego kodu JavaScript do strony | [OWASP - XSS](https://owasp.org/www-community/attacks/xss/) |
-| **Magic Bytes** | Pierwsze bajty pliku identyfikujące jego typ niezależnie od rozszerzenia (np. PDF: `%PDF-`) | [Wikipedia - File Signatures](https://en.wikipedia.org/wiki/List_of_file_signatures) |
-| **JaCoCo** | Narzędzie do mierzenia pokrycia kodu testami w projektach Java | [JaCoCo Documentation](https://www.jacoco.org/jacoco/trunk/doc/) |
-| **HTTP Interceptor** | Mechanizm przechwytywania żądań/odpowiedzi HTTP w celu dodania logiki (np. odświeżanie tokenu) | [Axios Interceptors](https://axios-http.com/docs/interceptors) |
-
-### 🔍 Obszary do samodzielnej analizy
-
-1. **Przyjrzyj się plikowi `KanbanBoard.tsx`** — ma blisko 1000 linii kodu. Zastanów się, ile komponentów, hooków i modali jest w nim zagnieżdżonych. Poczytaj o zasadzie Single Responsibility Principle i spróbuj wyodrębnić przynajmniej 3 niezależne pliki.
-
-2. **Sprawdź, jak `CVManager.tsx` pobiera dane** — porównaj to z tym, jak dane pobierają `ApplicationTable` czy `NotesList`. Zauważ różnicę: jeden komponent używa React Query, drugi `useState` + `useEffect` z ręcznym `fetchCVs()`. Zastanów się, dlaczego to niespójność i jakie problemy może powodować.
-
-3. **Przeanalizuj endpoint `/api/applications`** — zwraca wszystkie aplikacje użytkownika bez paginacji. Wyobraź sobie, że użytkownik ma 2000 rekordów z historią etapów. Poczytaj o Spring Data `Pageable` i jak wpływa na wydajność.
-
-### 🎯 Niedostatki wiedzy do uzupełnienia
-
-1. **Bezpieczeństwo aplikacji webowych** — walidacja URL-i, ochrona przed XSS, poprawne ustawianie atrybutów cookies (SameSite), Content Security Policy. To absolutna podstawa przed wejściem na rynek pracy.
-
-2. **Optymalizacja wydajności React** — memoizacja (`useMemo`, `useCallback`, `React.memo`), wirtualizacja długich list, dekompozycja dużych komponentów. Kluczowe przy skalowaniu aplikacji.
-
-3. **Wzorce projektowe w Spring** — w szczególności State Machine Pattern (dla przejść statusów), prawidłowe użycie `@Transactional` (proxy vs self-invocation), obsługa błędów i walidacja danych wejściowych.
-
-4. **Testowanie** — projekt ma infrastrukturę testową (Vitest, Cypress), ale pokrycie kodu testami wymaga rozszerzenia. Poczytaj o piramidzie testów i strategii „test the behavior, not the implementation".
+7. **MDC Logging** — adding `userId` to logging context (via `MdcUserFilter`) is advanced technique that greatly helps debugging in multi-user environments.
 
 ---
 
-## ⚙️ CZĘŚĆ III: TECHNICZNY CODE REVIEW
+## 🎓 PART II: LEARNING AND EDUCATION
 
-### 📊 Analiza tematyczna
+### 💭 Questions to Consider
 
-#### 1️⃣ Poprawność algorytmu
+1. **What happens when user clicks "Login with Google" and backend is unavailable?** Look at `LoginPage.tsx` — should backend URL be hardcoded in code? How will that affect deployment?
 
-Ogólna logika aplikacji jest poprawna — CRUD aplikacji, zarządzanie CV, notatki, system odznak. Przepływ OAuth2 działa zgodnie ze specyfikacją. Kilka uwag:
+2. **Imagine you have 500 job applications. How will table and Kanban board behave?** Think about what `filter()` and `sort()` without memoization mean on every render. Read about `useMemo` and when it's really needed.
 
-```
-⚠️ Problem: [KRYTYCZNY] Kontrakt JSON dla refresh tokena jest niespójny między backendem a frontendem
-📍 Lokalizacja: Kontroler autentykacji (backend) i warstwa API (frontend)
-💡 Wskazówka: Backend zwraca klucz "token", a frontend oczekuje "accessToken". To oznacza, że mechanizm odświeżania sesji faktycznie nie działa — po wygaśnięciu access tokena użytkownik jest wylogowywany zamiast cicho odświeżany. Sprawdź oba pliki i ujednolić nazwy kluczy.
-```
+3. **Why is `markCurrentStageCompleted()` marked `@Transactional` on a private method?** Check how Spring AOP handles annotations on private methods. The answer might surprise you.
 
-```
-⚠️ Problem: [WAŻNY] Historia etapów rekrutacji nie jest aktualizowana przy głównym przepływie zmiany statusu
-📍 Lokalizacja: Serwis aplikacji — metoda aktualizacji etapu oraz metoda dodawania etapu (backend)
-💡 Wskazówka: Gdy przeciągasz kartę na tablicy Kanban, frontend wywołuje metodę aktualizacji etapu, która zmienia status, ale nie tworzy wpisów w tabeli historii etapów. Osobna metoda dodawania etapu (z zapisem historii) istnieje, ale nie jest wywoływana z poziomu UI. W efekcie tabela stage_history nie odzwierciedla rzeczywistych przejść użytkownika. Zastanów się nad ujednoliceniem tych dwóch ścieżek w jeden spójny przepływ.
-```
+4. **What happens to CV file on disk if database write fails?** Look at `CVService.uploadCV()` step order — are file operations covered by database transaction?
 
-```
-⚠️ Problem: Metoda markCurrentStageCompleted() jest prywatna i oznaczona @Transactional
-📍 Lokalizacja: Serwis obsługujący logikę aplikacji (backend)
-💡 Wskazówka: Spring AOP nie przechwytuje wywołań prywatnych metod — adnotacja @Transactional jest tu ignorowana. W tym konkretnym przypadku wpływ praktyczny jest minimalny, bo metoda jest wywoływana z publicznej metody addStage(), która już ma aktywną transakcję. Mimo to warto usunąć mylącą adnotację — dla czytelności kodu i pokazania, że rozumiesz jak działa Spring AOP.
-```
+5. **What data will attacker see if they manage to inject JavaScript into page with job posting links?** Think about URL validation in `ApplicationDetails.tsx` and `CVManager.tsx`.
 
-```
-⚠️ Problem: Logika przejść stanów (WYSLANE → W_PROCESIE → OFERTA/ODMOWA) jest rozproszona w jednej dużej metodzie z wieloma zagnieżdżonymi warunkami
-📍 Lokalizacja: Metoda aktualizacji etapu w serwisie aplikacji
-💡 Wskazówka: Poczytaj o wzorcu State Machine — pozwala on zdefiniować dozwolone przejścia i akcje towarzyszące w sposób deklaratywny. Spring Statemachine lub nawet prosty enum z metodą canTransitionTo() znacząco uprościłby kod.
-```
+### 📚 Concepts to Study
 
-#### 2️⃣ Krytyczne problemy
+| Concept | Why Important | Where in Your Code |
+|---------|---------------|--------------------|
+| **Memoization in React** | Prevents expensive recalculations on every render | `ApplicationTable.tsx` — sorting and filtering |
+| **Spring AOP Proxy** | `@Transactional` on private methods doesn't work | `ApplicationService.markCurrentStageCompleted()` |
+| **State Machine Pattern** | Orders complex state transitions | `ApplicationService.updateStage()` |
+| **Content Security Policy** | Protects against XSS at HTTP header level | Nginx config and Spring Security |
+| **SameSite Cookie Attribute** | Protects against CSRF in modern browsers | `OAuth2AuthenticationSuccessHandler` |
+| **React Error Boundary** | Prevents "white screen" when component crashes | Missing from project — worth adding |
+| **API Pagination** | Essential with large datasets | Endpoints `/api/applications` |
+| **HTTP Interceptor (retry after token refresh)** | Transparent session refresh without interruption | `api.ts` — currently redirects on 401 |
+| **Data Integrity (NOT NULL constraints)** | Guarantees every record has owner | Migration V4 — `user_id` column without NOT NULL |
 
-```
-⚠️ Problem: [KRYTYCZNY] Adres URL backendu jest zahardkodowany na "http://localhost:8080" w komponencie logowania
-📍 Lokalizacja: Strona logowania (frontend)
-💡 Wskazówka: W produkcji ten link nie zadziała. Sprawdź, jak używasz zmiennych środowiskowych Vite (import.meta.env) w innych częściach kodu — zastosuj to samo podejście tutaj.
-```
+### 📖 Terminology Glossary
 
-```
-⚠️ Problem: [KRYTYCZNY] Brak walidacji URL-i zewnętrznych (linki do ofert pracy i CV)
-📍 Lokalizacja: Komponenty wyświetlające szczegóły aplikacji i menedżer CV (frontend)
-💡 Wskazówka: Link może zawierać schemat "javascript:" zamiast "https://". Poczytaj o XSS przez atrybut href i napisz prostą funkcję walidującą, która dopuszcza tylko schematy http/https/mailto.
-```
+| Term | Explanation | Learning Materials |
+|------|-------------|-------------------|
+| **OAuth2** | Authorization protocol allowing login via external services (e.g., Google) | [OAuth 2.0 Simplified](https://www.oauth.com/) |
+| **JWT (JSON Web Token)** | Standard token format for stateless authentication | [JWT.io Introduction](https://jwt.io/introduction) |
+| **RS256** | Asymmetric signature algorithm (private key signs, public key verifies) | [Auth0 - RS256 vs HS256](https://auth0.com/blog/rs256-vs-hs256-whats-the-difference/) |
+| **httpOnly Cookie** | Cookie invisible to JavaScript — protection against XSS | [MDN - Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie) |
+| **CSRF** | Attack that tricks browser into performing action on your behalf | [OWASP - CSRF](https://owasp.org/www-community/attacks/csrf) |
+| **N+1 Problem** | Executing N additional SQL queries instead of one with JOIN | [Hibernate N+1](https://vladmihalcea.com/n-plus-1-query-problem/) |
+| **EntityGraph (JPA)** | Mechanism to control eager/lazy loading without changing mapping | [Baeldung - JPA EntityGraph](https://www.baeldung.com/jpa-entity-graph) |
+| **Flyway** | Tool for versioning and migrating database schema | [Flyway Documentation](https://documentation.red-gate.com/flyway) |
+| **React Query** | Library for managing server state and caching | [TanStack Query Docs](https://tanstack.com/query/latest) |
+| **useMemo** | React hook to memoize expensive calculations | [React Docs - useMemo](https://react.dev/reference/react/useMemo) |
+| **Spring AOP Proxy** | Proxy mechanism in Spring — annotations work only on public methods called from outside bean | [Baeldung - Spring AOP](https://www.baeldung.com/spring-aop) |
+| **ProblemDetail (RFC 9457)** | Standard format for REST API error responses | [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) |
+| **Path Traversal** | Attack escaping allowed directory with `../` sequences | [OWASP - Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal) |
+| **XSS** | Injecting malicious JavaScript into page | [OWASP - XSS](https://owasp.org/www-community/attacks/xss/) |
+| **Magic Bytes** | First bytes of file identifying its actual type (e.g., PDF: `%PDF-`) | [Wikipedia - File Signatures](https://en.wikipedia.org/wiki/List_of_file_signatures) |
+| **JaCoCo** | Tool measuring code test coverage in Java projects | [JaCoCo Documentation](https://www.jacoco.org/jacoco/trunk/doc/) |
+| **HTTP Interceptor** | Mechanism intercepting HTTP requests/responses to add logic (e.g., token refresh) | [Axios Interceptors](https://axios-http.com/docs/interceptors) |
 
-```
-⚠️ Problem: [KRYTYCZNY] Brak atrybutu SameSite na ciasteczku refresh_token
-📍 Lokalizacja: Handler sukcesu OAuth2 (backend security)
-💡 Wskazówka: Bez SameSite atakujący może wykonać żądanie CSRF do endpointu /api/auth/refresh i uzyskać nowy access token. Sprawdź, jak ustawić SameSite=Strict lub Lax na obiekcie Cookie w Javie.
-```
+### 🔍 Areas for Self-Analysis
 
-```
-⚠️ Problem: [KRYTYCZNY] Walidacja plików CV opiera się wyłącznie na nagłówku Content-Type
-📍 Lokalizacja: Serwis obsługi CV (backend)
-💡 Wskazówka: Content-Type jest ustawiany przez przeglądarkę i można go łatwo sfałszować. Poczytaj o "magic bytes" (sygnatura pliku) — plik PDF zawsze zaczyna się od "%PDF-". Sprawdzaj faktyczną zawartość pliku, nie tylko deklarowany typ.
-```
+1. **Look at `KanbanBoard.tsx`** — nearly 1000 lines of code. How many components, hooks, and modals are nested in it? Read about Single Responsibility Principle and try extracting at least 3 independent files.
 
-```
-⚠️ Problem: [KRYTYCZNY] Podatność na path traversal przy uploadzie plików CV
-📍 Lokalizacja: Serwis obsługi CV — metoda uploadu (backend)
-💡 Wskazówka: Oryginalna nazwa pliku z żądania multipart trafia bezpośrednio do ścieżki zapisu (UUID + "_" + oryginalna nazwa). Atakujący może manipulować nazwą pliku w żądaniu (np. "../../etc/cron.d/malicious") i zapisać plik poza katalogiem uploads. Sprawdź, czy po resolve() wynikowa ścieżka nadal zaczyna się od katalogu docelowego (normalize() + startsWith()). Jeszcze lepsze podejście — używaj wyłącznie UUID jako nazwy pliku na dysku, a oryginalną nazwę przechowuj tylko w bazie danych.
-```
+2. **Check how `CVManager.tsx` fetches data** — compare with `ApplicationTable` and `NotesList`. Notice: one uses React Query, another `useState + useEffect` with manual `fetchCVs()`. Think why this inconsistency is problematic.
 
-```
-⚠️ Problem: [WAŻNY] Pole status w żądaniu aktualizacji etapu nie ma walidacji @NotNull
-📍 Lokalizacja: DTO żądania aktualizacji etapu (backend)
-💡 Wskazówka: Jeśli frontend wyśle żądanie bez pola status (lub z wartością null), serwis wywoła setStatus(null) na encji, co skutkuje błędem 500 zamiast czytelnego 400. Dodaj adnotację @NotNull i zastanów się nad regułami biznesowymi — np. czy przy statusie ODMOWA pole rejectionReason powinno być wymagane.
-```
+3. **Analyze endpoint `/api/applications`** — returns all user applications without pagination. Imagine user has 2000 records with stage history. Read about Spring Data `Pageable` and its performance impact.
 
-#### 3️⃣ Zasada KISS (prostota)
+### 🎯 Knowledge Gaps to Fill
 
-```
-⚠️ Problem: KanbanBoard.tsx ma blisko 1000 linii z wieloma zagnieżdżonymi komponentami, modalami i logiką drag & drop
-📍 Lokalizacja: Komponent tablicy Kanban (frontend)
-💡 Wskazówka: Zastanów się nad rozbiciem na: KanbanCard, KanbanColumn, StageModal, EndModal, MoveModal i hook useKanbanDragDrop. Każdy plik powinien mieć jedną odpowiedzialność.
-```
+1. **Web application security** — URL validation, XSS protection, proper cookie attributes (SameSite), Content Security Policy. Absolute foundation before entering job market.
 
-```
-⚠️ Problem: TourGuide.tsx — ponad 570 linii z interwałem uruchamianym co 100ms do przeliczania pozycji
-📍 Lokalizacja: Komponent przewodnika po aplikacji (frontend)
-💡 Wskazówka: Poczytaj o ResizeObserver — to natywne API przeglądarki, które reaguje na zmiany rozmiaru elementów bez potrzeby ciągłego odpytywania (polling). Jest bardziej wydajne niż setInterval.
-```
+2. **React performance optimization** — memoization (`useMemo`, `useCallback`, `React.memo`), long list virtualization, component decomposition. Essential when scaling.
+
+3. **Spring design patterns** — especially State Machine Pattern (for status transitions), proper `@Transactional` usage (proxy vs self-invocation), data validation patterns.
+
+4. **Testing** — project has test infrastructure (Vitest, Cypress), but code test coverage needs expansion. Read about test pyramid and "test the behavior, not the implementation" strategy.
+
+---
+
+## ⚙️ PART III: TECHNICAL CODE REVIEW
+
+### 📊 Thematic Analysis
+
+#### 1️⃣ Algorithm Correctness
+
+Overall logic is correct — CRUD applications, CV management, notes, badge system work as specified. OAuth2 flow follows specification. Few observations:
 
 ```
-⚠️ Problem: Statystyki odznak — 5 równoległych tablic (nazwy, ikony, opisy, progi, kolory) muszą być idealnie zsynchronizowane
-📍 Lokalizacja: Serwis statystyk (backend)
-💡 Wskazówka: Jeden element przesunięty o indeks psuje wszystkie odznaki. Zastanów się nad stworzeniem klasy Badge lub rekordu, który grupuje te dane razem.
-```
-
-#### 4️⃣ Czytelność kodu
-
-```
-⚠️ Problem: Zapytanie statystyczne w repozytorium zwraca Object[] — utrata czytelności i bezpieczeństwa typów
-📍 Lokalizacja: Repozytorium aplikacji i serwis statystyk (backend)
-💡 Wskazówka: Poczytaj o JPQL constructor expressions (SELECT new com.easyapply.dto.StatsDto(...) FROM ...) lub interface-based projections w Spring Data. Pozwalają one zwrócić typowany wynik zamiast surowej tablicy obiektów.
+⚠️ Problem: [CRITICAL] JSON contract for refresh token inconsistent between backend and frontend
+📍 Location: Authentication controller (backend) and API layer (frontend)
+💡 Hint: Backend returns key "token", frontend expects "accessToken". This means the session refresh mechanism actually doesn't work — after access token expires, user is logged out instead of being refreshed silently. Check both files and align key names.
 ```
 
 ```
-⚠️ Problem: Mapowanie pól entity ↔ DTO wykonywane ręcznie setter po setterze
-📍 Lokalizacja: Metoda create() i update() w serwisie aplikacji (backend)
-💡 Wskazówka: Przyjrzyj się bibliotece MapStruct lub zastanów się nad metodą fabryczną Application.fromRequest(). Ręczne mapowanie 12+ pól jest podatne na pominięcie nowego pola.
-```
-
-#### 5️⃣ Styl i konwencje
-
-Ogólnie styl kodu jest spójny i czytelny. Polskie komunikaty UI to dobry wybór dla docelowego użytkownika. Kilka uwag:
-
-```
-⚠️ Problem: Niespójność w podejściu do pobierania danych — CVManager używa useState+useEffect, reszta komponentów React Query
-📍 Lokalizacja: Menedżer CV vs. pozostałe komponenty (frontend)
-💡 Wskazówka: Masz gotowe hooki useCV() — zastanów się, dlaczego CVManager ich nie używa i czy warto to ujednolicić. Spójność w kodzie ułatwia jego utrzymanie.
+⚠️ Problem: [IMPORTANT] Recruitment stage history not updated in main status change flow
+📍 Location: Application service — stage update method and stage addition method (backend)
+💡 Hint: When you drag card on Kanban board, frontend calls stage update method which changes status but doesn't create entries in stage_history table. Separate method for adding stage (with history save) exists but isn't called from UI. Result: stage_history table doesn't reflect actual user transitions. Think about unifying both paths into one consistent flow.
 ```
 
 ```
-⚠️ Problem: Zdeprecjonowane wartości w enumie kategorii notatek (PYTANIE, KONTAKT) współistnieją z nowymi (PYTANIA, FEEDBACK, INNE)
-📍 Lokalizacja: Enum kategorii notatek (backend) i mapowanie w komponencie notatek (frontend)
-💡 Wskazówka: Poczytaj o strategiach migracji danych — jeśli stare wartości nie są już używane, rozważ migrację Flyway, która je zamieni, a potem usunięcie z enuma.
-```
-
-#### 6️⃣ Struktura i organizacja
-
-Pozytywne:
-- Podział na warstwy (controller/service/repository/entity) jest wzorcowy
-- Frontend ma logiczny podział: auth/, pages/, components/, hooks/, services/, types/
-- Komponenty przeniesione do subdirectoriów (applications/, kanban/, cv/, notes/)
-
-```
-⚠️ Problem: Komponent AppContent.tsx to generyczna nazwa, a pełni rolę głównego layoutu dashboardu
-📍 Lokalizacja: Główny komponent zawartości (frontend)
-💡 Wskazówka: Rozważ zmianę nazwy na DashboardLayout lub MainLayout — nazwa powinna komunikować przeznaczenie.
+⚠️ Problem: Method markCurrentStageCompleted() is private and marked @Transactional
+📍 Location: Application service — business logic (backend)
+💡 Hint: Spring AOP doesn't intercept calls to private methods — @Transactional annotation is ignored here. Practical impact in this case is minimal because method is called from public addStage() which already has active transaction. Still worth removing misleading annotation — for code clarity and to demonstrate understanding of Spring AOP.
 ```
 
 ```
-⚠️ Problem: Stałe kolorów statusów są zduplikowane w co najmniej dwóch komponentach
-📍 Lokalizacja: Szczegóły aplikacji i tabela aplikacji (frontend)
-💡 Wskazówka: Wyodrębnij wspólne stałe (kolory statusów, formatowanie dat) do pliku utils/ lub constants/ — zasada DRY (Don't Repeat Yourself).
+⚠️ Problem: Logic for state transitions (SENT → IN_PROGRESS → OFFER/REJECTION) scattered in one large method with many nested conditions
+📍 Location: Stage update method in application service
+💡 Hint: Read about State Machine pattern — it lets you define allowed transitions and accompanying actions declaratively. Spring Statemachine or even simple enum with canTransitionTo() method would significantly simplify code.
+```
+
+#### 2️⃣ Critical Problems
+
+```
+⚠️ Problem: [CRITICAL] Backend URL hardcoded to "http://localhost:8080" in login component
+📍 Location: Login page (frontend)
+💡 Hint: On production this won't work. Check how you use Vite environment variables (import.meta.env) elsewhere in code — apply same pattern here.
 ```
 
 ```
-⚠️ Problem: [WAŻNY] Kolumna user_id w tabelach applications i cvs pozostaje bez ograniczenia NOT NULL
-📍 Lokalizacja: Migracja bazodanowa V4 (backend)
-💡 Wskazówka: Migracja dodaje kolumnę user_id jako nullable („na razie nullable, bo istniejące wiersze mają null"), ale nigdy nie dodaje finalnego ograniczenia NOT NULL. To oznacza, że baza danych dopuszcza rekordy bez właściciela — takie „osierocone" dane będą niewidoczne w zapytaniach filtrowanych po użytkowniku. Dodaj kolejną migrację Flyway, która ustawi NOT NULL po wyczyszczeniu ewentualnych nulli.
-```
-
-#### 7️⃣ Dokumentacja i komentarze
-
-Pozytywne:
-- Komentarze w `OAuth2AuthenticationSuccessHandler` wyjaśniają "dlaczego" (np. dlaczego token w URL)
-- JSDoc w `api.ts` opisuje logikę nagłówków i autentykacji
-- Polskie komentarze w `App.tsx` wyjaśniają konfigurację React Query
-
-```
-⚠️ Problem: Brak komentarzy przy regułach biznesowych w updateStage()
-📍 Lokalizacja: Serwis aplikacji — metoda aktualizacji etapu (backend)
-💡 Wskazówka: Złożona logika warunkowa (co się dzieje przy przejściu z ODMOWA do W_PROCESIE?) powinna mieć komentarze wyjaśniające reguły biznesowe. Przyszłe "Ty" podziękujesz obecnemu "Ty".
-```
-
-#### 8️⃣ Testowalność
-
-```
-⚠️ Problem: Infrastruktura testowa istnieje (Vitest, Cypress, test-utils.tsx), ale pokrycie kodu jest ograniczone
-📍 Lokalizacja: Katalog test/ (frontend)
-💡 Wskazówka: Priorytety testowania: 1) Hooki React Query, 2) Komponenty z logiką warunkową (KanbanBoard, CVManager), 3) Funkcje pomocnicze. Poczytaj o piramidzie testów — unit testy na dole, E2E na szczycie.
+⚠️ Problem: [CRITICAL] No validation of external URLs (job posting links and CV links)
+📍 Location: Components displaying application details and CV manager (frontend)
+💡 Hint: Link can contain scheme "javascript:" instead of "https://". Read about XSS through href attribute and write simple validation function allowing only http/https/mailto schemes.
 ```
 
 ```
-⚠️ Problem: Backend — testy jednostkowe serwisów istnieją (ApplicationServiceTest, CVServiceTest, NoteServiceTest, StatisticsServiceTest), ale warto sprawdzić ich pokrycie
-📍 Lokalizacja: Katalog test/ (backend)
-💡 Wskazówka: Dobrze, że testy serwisów są napisane — to ważny fundament. Sprawdź, czy pokrywają kluczowe scenariusze brzegowe: co się dzieje przy null status w updateStage()? Czy path traversal w nazwie pliku jest przetestowany? Poczytaj o JaCoCo — narzędziu do mierzenia pokrycia kodu testami.
-```
-
-#### 9️⃣ Obsługa błędów
-
-```
-⚠️ Problem: [WAŻNY] Brak globalnego Error Boundary w aplikacji React
-📍 Lokalizacja: Komponent główny aplikacji (frontend)
-💡 Wskazówka: Bez Error Boundary jeden błąd w dowolnym komponencie powoduje "biały ekran". Poczytaj o React Error Boundaries — to klasa komponentu z metodą componentDidCatch().
+⚠️ Problem: [CRITICAL] Missing SameSite attribute on refresh_token cookie
+📍 Location: OAuth2 authentication success handler (backend security)
+💡 Hint: Without SameSite, attacker can execute CSRF request to /api/auth/refresh endpoint and obtain new access token. Check how to set SameSite=Strict or Lax on Cookie object in Java.
 ```
 
 ```
-⚠️ Problem: [WAŻNY] Błędy walidacji w API zwracane jako jeden ciąg tekstowy zamiast struktury klucz-wartość
-📍 Lokalizacja: Globalny handler wyjątków (backend)
-💡 Wskazówka: Frontend nie może zmapować błędów do konkretnych pól formularza (np. "pole company jest wymagane"). Poczytaj o ProblemDetail.setProperty() — pozwala dodać dodatkowe dane do odpowiedzi.
+⚠️ Problem: [CRITICAL] File validation relies solely on Content-Type header
+📍 Location: CV service (backend)
+💡 Hint: Content-Type is set by browser and easily forged. Read about "magic bytes" (file signature) — PDF always starts with "%PDF-". Check actual file content, not just declared type.
 ```
 
 ```
-⚠️ Problem: [WAŻNY] Usuwanie pliku CV po błędzie logowane jako warning, ale CV oznaczane jako usunięte w bazie
-📍 Lokalizacja: Serwis CV (backend)
-💡 Wskazówka: To powoduje "wyciek" plików na dysku. Zastanów się nad wzorcem kompensacji — co robić, gdy operacja na pliku się nie powiedzie.
+⚠️ Problem: [CRITICAL] Path traversal vulnerability in CV file upload
+📍 Location: CV service — upload method (backend)
+💡 Hint: Original filename from request goes directly into save path (UUID + "_" + original name). Attacker can manipulate filename (e.g., "../../etc/cron.d/malicious") and write file outside uploads directory. Check if resolved path still starts with target directory (normalize() + startsWith()). Even better approach — use UUID as disk filename, store original name only in database.
 ```
 
 ```
-⚠️ Problem: [WAŻNY] Wywołanie new URL() bez obsługi wyjątku powoduje crash komponentu
-📍 Lokalizacja: Menedżer CV — wyświetlanie listy (frontend)
-💡 Wskazówka: Jeśli użytkownik zapisał nieprawidłowy adres URL jako link do CV, wywołanie new URL(externalUrl).hostname rzuca wyjątek TypeError, który — przy braku Error Boundary — powoduje „biały ekran". Owiń parsowanie URL w try/catch i wyświetl tekst zastępczy (np. samą wartość URL lub komunikat „nieprawidłowy link").
+⚠️ Problem: [IMPORTANT] Field status in stage update request has no @NotNull validation
+📍 Location: Stage update DTO (backend)
+💡 Hint: If frontend sends request without status field (or with null), service calls setStatus(null) on entity, resulting in 500 error instead of readable 400. Add @NotNull annotation and consider business rules — e.g., should rejectionReason be required when status is REJECTION.
+```
+
+#### 3️⃣ KISS Principle (Simplicity)
+
+```
+⚠️ Problem: KanbanBoard.tsx has nearly 1000 lines with multiple nested components, modals, and drag & drop logic
+📍 Location: Kanban board component (frontend)
+💡 Hint: Consider splitting into: KanbanCard, KanbanColumn, StageModal, EndModal, MoveModal and hook useKanbanDragDrop. Each file should have single responsibility.
 ```
 
 ```
-⚠️ Problem: Funkcja apiFetch() przy odpowiedzi 401 wykonuje redirect, ale nie przerywa dalszego przetwarzania
-📍 Lokalizacja: Warstwa API (frontend)
-💡 Wskazówka: Po window.location.href dalszy kod może się jeszcze wykonać. Zastanów się, czy throw new Error() po redirectcie nie byłby bezpieczniejszy.
+⚠️ Problem: TourGuide.tsx — over 570 lines with interval running every 100ms to recalculate positions
+📍 Location: App tour guide component (frontend)
+💡 Hint: Read about ResizeObserver — native browser API reacting to element size changes without continuous polling. More efficient than setInterval.
+```
+
+```
+⚠️ Problem: Badge statistics — 5 parallel arrays (names, icons, descriptions, thresholds, colors) must be perfectly synchronized
+📍 Location: Statistics service (backend)
+💡 Hint: One element shifted by index breaks all badges. Consider class or record Badge grouping this data together.
+```
+
+#### 4️⃣ Code Readability
+
+```
+⚠️ Problem: Statistical query returns Object[] — loss of type safety and readability
+📍 Location: Application repository and statistics service (backend)
+💡 Hint: Read about JPQL constructor expressions (SELECT new com.easyapply.dto.StatsDto(...) FROM ...) or interface-based projections in Spring Data. They return typed result instead of raw object array.
+```
+
+```
+⚠️ Problem: Mapping entity ↔ DTO done manually setter by setter
+📍 Location: create() and update() methods in application service (backend)
+💡 Hint: Check MapStruct library or consider factory method Application.fromRequest(). Manual mapping of 12+ fields is error-prone and misses new fields.
+```
+
+#### 5️⃣ Style and Conventions
+
+Polish UI messages are good choice for target user. Few observations:
+
+```
+⚠️ Problem: Inconsistent data fetching approach — CVManager uses useState+useEffect, rest of components use React Query
+📍 Location: CV manager vs. other components (frontend)
+💡 Hint: You have ready hooks useCV() — why doesn't CVManager use them and is worth unifying. Code consistency helps maintenance.
+```
+
+```
+⚠️ Problem: Deprecated values in note category enum (PYTANIE, KONTAKT) coexist with new ones (PYTANIA, FEEDBACK, INNE)
+📍 Location: Note category enum (backend) and mapping in notes component (frontend)
+💡 Hint: Read about data migration strategies — if old values aren't used anymore, consider Flyway migration replacing them, then remove from enum.
+```
+
+#### 6️⃣ Structure and Organization
+
+Positive:
+- Separation into layers (controller/service/repository/entity) is textbook
+- Frontend has logical division: auth/, pages/, components/, hooks/, services/, types/
+- Components moved to subdirectories (applications/, kanban/, cv/, notes/)
+
+```
+⚠️ Problem: AppContent.tsx is generic name but serves as main dashboard layout
+📍 Location: Main content component (frontend)
+💡 Hint: Consider renaming to DashboardLayout or MainLayout — name should communicate purpose.
+```
+
+```
+⚠️ Problem: Status colors constants duplicated in at least two components
+📍 Location: Application details and table (frontend)
+💡 Hint: Extract shared constants (status colors, date formatting) to utils/ or constants/ file — DRY principle.
+```
+
+```
+⚠️ Problem: [IMPORTANT] Column user_id in applications and cvs tables remains without NOT NULL constraint
+📍 Location: Database migration V4 (backend)
+💡 Hint: Migration adds user_id as nullable ("for now, existing rows have null"), but never adds final NOT NULL constraint. Result: database allows records without owner — such "orphaned" data will be invisible in queries filtered by user. Add another Flyway migration setting NOT NULL after cleaning any null values.
+```
+
+#### 7️⃣ Documentation and Comments
+
+Positive:
+- Comments in `OAuth2AuthenticationSuccessHandler` explain "why" (e.g., why token in URL)
+- JSDoc in `api.ts` describes header logic and authentication
+- Polish comments in `App.tsx` explain React Query configuration
+
+```
+⚠️ Problem: No comments on business rules in updateStage()
+📍 Location: Application service — stage update method (backend)
+💡 Hint: Complex conditional logic (what happens when transitioning from REJECTION to IN_PROGRESS?) should have comments explaining business rules. Future "you" will thank present "you".
+```
+
+#### 8️⃣ Testability
+
+```
+⚠️ Problem: Test infrastructure exists (Vitest, Cypress, test-utils.tsx), but code coverage is limited
+📍 Location: test/ directory (frontend)
+💡 Hint: Testing priorities: 1) React Query hooks, 2) Components with conditional logic (KanbanBoard, CVManager), 3) Helper functions. Read about test pyramid — unit tests at bottom, E2E on top.
+```
+
+```
+⚠️ Problem: Backend — unit tests of services exist (ApplicationServiceTest, CVServiceTest, NoteServiceTest, StatisticsServiceTest), but worth checking coverage
+📍 Location: test/ directory (backend)
+💡 Hint: Good that service tests exist — important foundation. Check if they cover edge cases: what if status is null in updateStage()? Is path traversal in filename tested? Read about JaCoCo — tool measuring code test coverage.
+```
+
+#### 9️⃣ Error Handling
+
+```
+⚠️ Problem: [IMPORTANT] Missing global Error Boundary in React app
+📍 Location: Main application component (frontend)
+💡 Hint: Without Error Boundary one error in any component causes "white screen". Read about React Error Boundaries — class component with componentDidCatch() method.
+```
+
+```
+⚠️ Problem: [IMPORTANT] Validation errors in API returned as one text string instead of field-to-message structure
+📍 Location: Global exception handler (backend)
+💡 Hint: Frontend can't map errors to specific form fields (e.g., "company field required"). Read about ProblemDetail.setProperty() — allows adding custom data to response.
+```
+
+```
+⚠️ Problem: [IMPORTANT] Deleting CV file on error logged as warning but CV marked as deleted in database
+📍 Location: CV service (backend)
+💡 Hint: This causes "file leak" on disk. Consider compensation pattern — what to do when file operation fails.
+```
+
+```
+⚠️ Problem: [IMPORTANT] Calling new URL() without exception handling causes component crash
+📍 Location: CV manager — displaying list (frontend)
+💡 Hint: If user saved invalid URL as CV link, calling new URL(externalUrl).hostname throws TypeError, which — without Error Boundary — causes "white screen". Wrap URL parsing in try/catch and display fallback text (e.g., just the URL value or "invalid link" message).
+```
+
+```
+⚠️ Problem: apiFetch() on 401 redirect but doesn't stop further processing
+📍 Location: API layer (frontend)
+💡 Hint: After window.location.href later code can still execute. Consider throw new Error() after redirect to be safer.
 ```
 
 ---
 
-## ⚖️ CZĘŚĆ IV: ANALIZA ROZWIĄZAŃ
+## ⚖️ PART IV: SOLUTION ANALYSIS
 
-### Porównanie podejść
+### Approach Comparison
 
-| Twoje rozwiązanie | Zalety | Wady | Alternatywa | Kiedy stosować |
+| Your Solution | Advantages | Disadvantages | Alternative | When to Use |
 |---|---|---|---|---|
-| Token JWT w parametrze URL po OAuth2 | Proste do implementacji w przepływie redirect | Widoczny w logach serwera, historii przeglądarki, podatny na XSS | Fragment URL (#token=...) lub postMessage() | Fragment URL — gdy masz SPA z client-side routing |
-| localStorage do przechowywania access tokena | Łatwy dostęp z JavaScript, przeżywa odświeżenie strony | Dostępny dla każdego skryptu JS (XSS) | httpOnly cookie z flagą Secure + SameSite | Cookie — gdy priorytetem jest bezpieczeństwo |
-| Ręczne mapowanie entity → DTO (setter po setterze) | Brak dodatkowej biblioteki, pełna kontrola | Łatwo pominąć pole, boilerplate | MapStruct, ModelMapper lub metoda fabryczna | MapStruct — dla projektów z wieloma DTO |
-| useState + useEffect w CVManager | Działa, prostota implementacji | Brak cache, ręczne loading/error state, niespójne z resztą kodu | React Query (TanStack Query) — już używany w projekcie | React Query — zawsze, gdy pobierasz dane z API |
-| Object[] dla zapytań statystycznych | Szybkie do napisania | Brak typów, zmiana kolejności kolumn psuje odczyt | JPQL constructor expression lub interface projection | Constructor expression — dla złożonych zapytań |
-| 5 równoległych tablic w StatisticsService | Szybkie do napisania | Każda zmiana wymaga synchronizacji 5 tablic | Klasa/rekord Badge z polami: name, icon, description, threshold, color | Rekord — gdy dane są powiązane logicznie |
-| Walidacja Content-Type pliku | Minimalna ochrona, łatwa implementacja | Content-Type jest deklaratywny, łatwo go sfałszować | Walidacja magic bytes (sygnatura pliku) + Content-Type + rozszerzenie | Trojna walidacja — dla upload plików w produkcji |
-| setInterval(100ms) w TourGuide | Proste, zawsze aktualne pozycje | Zużywa CPU, 10 wywołań na sekundę | ResizeObserver + MutationObserver | Observer — gdy reagujesz na zmiany DOM |
-| Redirect do /login na 401 | Proste, gwarancja wylogowania | Użytkownik traci kontekst, brak cichego odświeżania | Interceptor: 401 → refresh → ponowienie żądania | Interceptor — gdy masz mechanizm refresh token |
+| JWT in URL parameter after OAuth2 | Simple to implement in redirect flow | Visible in server logs, browser history, vulnerable to XSS | URL fragment (#token=...) or postMessage() | Fragment URL — when you have SPA with client-side routing |
+| localStorage for access token | Easy access from JavaScript, survives page refresh | Accessible to any JS script (XSS) | httpOnly cookie with Secure + SameSite flags | Cookie — when priority is security |
+| Manual entity → DTO mapping (setter by setter) | No extra library, full control | Error-prone, boilerplate, easy to miss field | MapStruct, ModelMapper or factory method | MapStruct — for projects with many DTOs |
+| useState + useEffect in CVManager | Works, simplicity | No cache, manual loading/error state, inconsistent with rest | React Query (TanStack Query) — already in project | React Query — always for fetching from API |
+| Object[] for statistical queries | Fast to write | No types, column order shift breaks retrieval | JPQL constructor expression or interface projection | Constructor expression — for complex queries |
+| 5 parallel arrays in StatisticsService | Fast to write | Each change requires synchronizing 5 arrays | Class/record Badge with fields: name, icon, description, threshold, color | Record — when data logically related |
+| Content-Type only for file validation | Minimal effort, easy implementation | Content-Type is declarative, easily forged | Magic bytes validation + Content-Type + extension | Triple validation — for production file uploads |
+| setInterval(100ms) in TourGuide | Simple, always up-to-date positions | Wastes CPU, 10 calls per second | ResizeObserver + MutationObserver | Observer — when reacting to DOM changes |
+| Redirect to /login on 401 | Simple, guarantees logout | User loses context, no silent refresh | Interceptor: 401 → refresh → retry request | Interceptor — when you have refresh token mechanism |
 
 ---
 
-## 📊 CZĘŚĆ V: METRYKI I STANDARDY
+## 📊 PART V: METRICS AND STANDARDS
 
-### Zgodność z konwencjami
+### Convention Compliance
 
-| Obszar | Ocena | Uwagi |
-|--------|-------|-------|
-| **Nazewnictwo (Java)** | ✅ Bardzo dobrze | CamelCase, klasy/interfejsy poprawne, metody opisowe |
-| **Nazewnictwo (TypeScript)** | ✅ Bardzo dobrze | PascalCase dla komponentów, camelCase dla zmiennych |
-| **Struktura projektu** | ✅ Dobrze | Warstwy backend i frontend poprawnie rozdzielone |
-| **REST API** | ✅ Dobrze | Poprawne metody HTTP, kody statusu (201, 204), nazwy zasobów |
-| **Git commits** | ✅ Dobrze | Conventional Commits, sensowne opisy |
-| **TypeScript strict** | ✅ Bardzo dobrze | Włączony tryb strict z dodatkowymi regułami |
-| **Obsługa null/undefined** | ⚠️ Do poprawy | Zdarzają się non-null assertions (!) bez walidacji |
-| **Separacja warstw** | ✅ Dobrze | Kontrolery nie zawierają logiki biznesowej |
+| Area | Rating | Notes |
+|------|--------|-------|
+| **Naming (Java)** | ✅ Very Good | CamelCase correct, classes/interfaces proper, methods descriptive |
+| **Naming (TypeScript)** | ✅ Very Good | PascalCase for components, camelCase for variables |
+| **Project Structure** | ✅ Good | Backend and frontend properly separated |
+| **REST API** | ✅ Good | Correct HTTP methods, status codes (201, 204), resource names |
+| **Git Commits** | ✅ Good | Conventional Commits, sensible descriptions |
+| **TypeScript strict** | ✅ Very Good | Strict mode enabled with additional rules |
+| **Null/undefined Handling** | ⚠️ Needs Improvement | Non-null assertions (!) occasionally appear without validation |
+| **Layer Separation** | ✅ Good | Controllers don't contain business logic |
 
-### Złożoność kodu
+### Code Complexity
 
-| Plik | Linie kodu | Ocena złożoności | Uwagi |
-|------|-----------|-----------------|-------|
-| `KanbanBoard.tsx` | ~987 | 🔴 Wysoka | Wymaga dekompozycji — za dużo odpowiedzialności |
-| `CVManager.tsx` | ~650 | 🟡 Średnia | Można wydzielić modele i formularze |
-| `TourGuide.tsx` | ~572 | 🟡 Średnia | Logika pozycjonowania do osobnego hooka |
-| `ApplicationService.java` | ~196 | 🟢 Niska | Ale metoda updateStage() jest zbyt złożona |
-| `StatisticsService.java` | ~120 | 🟡 Średnia | Kruchy kod z równoległymi tablicami |
-| `api.ts` | ~275 | 🟢 Niska | Czytelny, dobrze zorganizowany |
+| File | Lines | Complexity | Notes |
+|------|-------|-----------|-------|
+| `KanbanBoard.tsx` | ~987 | 🔴 High | Needs decomposition — too many responsibilities |
+| `CVManager.tsx` | ~650 | 🟡 Medium | Could extract models and forms |
+| `TourGuide.tsx` | ~572 | 🟡 Medium | Position logic could be separate hook |
+| `ApplicationService.java` | ~196 | 🟢 Low | But updateStage() method too complex |
+| `StatisticsService.java` | ~120 | 🟡 Medium | Fragile code with parallel arrays |
+| `api.ts` | ~275 | 🟢 Low | Readable, well organized |
 
-### Potencjalne problemy wydajnościowe
+### Potential Performance Issues
 
-| Problem | Wpływ | Gdzie |
-|---------|-------|-------|
-| Brak paginacji API | 🔴 Wysoki przy wielu rekordach | Endpoint `/api/applications` |
-| Brak memoizacji sort/filter | 🟡 Średni | `ApplicationTable.tsx` |
-| Brak cachowania statystyk | 🟡 Średni | `StatisticsService` — przelicza przy każdym żądaniu |
-| setInterval(100ms) | 🟡 Średni | `TourGuide.tsx` |
-| 10+ useState w jednym komponencie | 🟡 Niski-średni | `KanbanBoard.tsx` — potencjalne nadmiarowe renderowania |
+| Problem | Impact | Where |
+|---------|--------|-------|
+| No API pagination | 🔴 High with many records | Endpoint `/api/applications` |
+| No memoization for sort/filter | 🟡 Medium | `ApplicationTable.tsx` |
+| No statistics caching | 🟡 Medium | `StatisticsService` — recalculates every request |
+| setInterval(100ms) | 🟡 Medium | `TourGuide.tsx` |
+| 10+ useState in one component | 🟡 Low-Medium | `KanbanBoard.tsx` — potential excessive re-renders |
 
-### Potencjalne problemy z integralnością danych
+### Potential Data Integrity Problems
 
-| Problem | Wpływ | Gdzie |
-|---------|-------|-------|
-| user_id nullable (brak NOT NULL) | 🔴 Wysoki — osierocone rekordy | Migracja V4: tabele applications, cvs |
-| Niespójna historia etapów | 🟡 Średni — brak audytu przejść | updateStage() nie zapisuje do stage_history |
-| Kontrakt refresh token rozbieżny | 🔴 Wysoki — mechanizm nie działa | Backend: "token", frontend: "accessToken" |
-
----
-
-## 🎯 CZĘŚĆ VI: PLAN DZIAŁANIA
-
-### Do zrobienia teraz (przed merge)
-
-1. **🔴 Zabezpiecz upload CV przed path traversal** — ścieżka zapisu pliku zawiera oryginalną nazwę bez sanityzacji. Dodaj walidację: po `resolve()` sprawdź `normalize()` + `startsWith(uploadDir)`. Najlepiej — zapisuj pliki pod samym UUID, a oryginalną nazwę trzymaj tylko w bazie danych.
-
-2. **🔴 Dodaj walidację URL-i (backend + frontend)** — w serwisie CV backend akceptuje dowolny `externalUrl` bez sprawdzenia schematu. Na frontendzie linki trafiają do `href` i `window.open()` bez filtrowania. Dodaj centralną walidację dopuszczającą wyłącznie schematy `http:` / `https:`.
-
-3. **🔴 Napraw kontrakt refresh tokena** — backend zwraca klucz `"token"`, frontend oczekuje `"accessToken"`. Ujednolić nazwy i rozważyć dodanie interceptora, który przy 401 spróbuje odświeżyć token zanim przekieruje na stronę logowania.
-
-4. **🔴 Przenieś adres URL backendu do zmiennej środowiskowej** — `LoginPage.tsx` ma zahardkodowane `http://localhost:8080`. Użyj `import.meta.env.VITE_API_URL` lub dedykowanej zmiennej `VITE_BACKEND_URL`.
-
-5. **🔴 Dodaj atrybut SameSite do ciasteczka refresh_token** — w handlerze sukcesu OAuth2 ustaw jawnie `SameSite=Lax` lub `Strict` — nie polegaj na domyślnym zachowaniu przeglądarek.
-
-6. **🔴 Dodaj Error Boundary i napraw crash w CVManager** — jeden błąd (np. `new URL()` na nieprawidłowym adresie) powoduje „biały ekran". Dodaj globalny Error Boundary i owiń parsowanie URL w try/catch z tekstem zastępczym.
-
-### Do przemyślenia i poprawy
-
-7. **🟡 Ujednolić przepływ zmiany etapów i historię** — metoda aktualizacji etapu (wywoływana z Kanbana) nie tworzy wpisów w historii etapów. Metoda dodawania etapu (z zapisem historii) nie jest używana przez UI. Ujednolicić w jeden spójny przepływ, który zawsze aktualizuje historię.
-
-8. **🟡 Dodaj walidację @NotNull do pola status w StageUpdateRequest** — brak walidacji prowadzi do błędu 500 zamiast czytelnego 400. Rozważ też wymagalność pola rejectionReason przy statusie ODMOWA.
-
-9. **🟡 Dodaj ograniczenie NOT NULL na kolumnie user_id** — migracja V4 dodaje kolumnę jako nullable, ale nigdy nie ustawia NOT NULL. Utwórz nową migrację Flyway z backfillem i ograniczeniem.
-
-10. **🟡 Wzmocnij walidację uploadów CV** — sprawdzaj magic bytes pliku (sygnatura PDF: `%PDF-`), nie tylko nagłówek Content-Type.
-
-11. **🟡 Rozbij KanbanBoard.tsx** — wyodrębnij KanbanCard, KanbanColumn, modale (StageModal, EndModal, MoveModal) i hook `useKanbanDragDrop` do osobnych plików.
-
-12. **🟡 Ujednolić pobieranie danych w CVManager** — zamień useState+useEffect na hooki React Query (masz już `useCV()`). To poprawi spójność i obsługę cache.
-
-13. **🟡 Dodaj paginację do `/api/applications`** — użyj Spring Data `Pageable`. Frontend może domyślnie ładować stronę po stronie, zyskasz wydajność przy dużej ilości danych.
-
-14. **🟡 Popraw strukturę odpowiedzi walidacyjnych** — zamiast łączyć błędy w jeden ciąg tekstowy, zwracaj mapę `{pole: komunikat}` przez `ProblemDetail.setProperty()`.
-
-15. **🟡 Uporządkuj @Transactional na prywatnej metodzie** — adnotacja na `markCurrentStageCompleted()` jest ignorowana przez Spring AOP. Wpływ praktyczny jest zerowy (wywoływana z transakcyjnej metody), ale warto usunąć mylącą adnotację dla czytelności.
-
-16. **🟡 Wyodrębnij stałe kolorów statusów** — przenieś `STATUS_COLORS` do wspólnego pliku `constants/` i importuj w obu komponentach.
-
-### Do nauki na przyszłość
-
-17. **📘 Bezpieczeństwo webowe** — poczytaj o OWASP Top 10, Content Security Policy, path traversal, Subresource Integrity. To fundamenty pracy komercyjnej.
-
-18. **📘 Wzorzec State Machine** — dla logiki przejść statusów aplikacji. Poczytaj o Spring Statemachine lub prostszych implementacjach z enumem.
-
-19. **📘 Testowanie** — testy serwisów istnieją (dobra baza!). Sprawdź ich pokrycie narzędziem JaCoCo. Rozważ dodanie testów dla scenariuszy brzegowych (null status, path traversal, niespójne URL). Na frontendzie — testy komponentów z Testing Library.
-
-20. **📘 Optymalizacja wydajności** — poczytaj o React Profiler, memoizacji (`useMemo`), wirtualizacji list (react-window/react-virtuoso), code splitting z React.lazy().
-
-21. **📘 Cachowanie backendowe** — Spring Cache z @Cacheable dla statystyk odznak, nagłówki Cache-Control w odpowiedziach HTTP.
-
-22. **📘 Monitoring i obserwabilność** — Micrometer z Spring Boot Actuator, distributed tracing, strukturyzowane logi w formacie JSON.
+| Problem | Impact | Where |
+|---------|--------|-------|
+| user_id nullable (no NOT NULL) | 🔴 High — orphaned records | Migration V4: tables applications, cvs |
+| Inconsistent stage history | 🟡 Medium — no audit trail | updateStage() doesn't record stage_history |
+| Refresh token contract mismatch | 🔴 High — mechanism doesn't work | Backend: "token", frontend: "accessToken" |
 
 ---
 
-## 💬 KOŃCOWA MOTYWACJA
+## 🎯 PART VI: ACTION PLAN
 
-Ten projekt robi naprawdę duże wrażenie jak na osobę na początku drogi programistycznej. Nie jest to kolejna „to-do lista" — to pełnoprawna aplikacja full-stack z OAuth2, JWT, bazą danych, Docker Compose i systemem odznak gamifikacyjnych. Architektura jest przemyślana, podział na warstwy poprawny, a wybór technologii trafiony.
+### To Do Now (Before Merge)
 
-Uwagi w tym review nie są krytyką — to wskazówki na następny poziom. Większość „problemów" to rzeczy, które nawet doświadczeni programiści przeoczają. Fakt, że używasz Flyway zamiast `ddl-auto=update`, React Query zamiast ręcznego zarządzania stanem, httpOnly cookies zamiast localStorage dla refresh tokenów — to pokazuje, że czytasz dobre źródła i podejmujesz świadome decyzje architektoniczne.
+1. **🔴 Secure CV upload against path traversal** — file save path contains original name without sanitization. Add validation: after `resolve()` check `normalize()` + `startsWith(uploadDir)`. Best approach — save files under UUID only, keep original name in database.
 
-Skup się na problemach oznaczonych jako 🔴 — to kwestie bezpieczeństwa i poprawności, które warto naprawić przed udostępnieniem aplikacji. Reszta to kierunki rozwoju, które będziesz naturalnie zgłębiać w miarę nabierania doświadczenia.
+2. **🔴 Add URL validation (backend + frontend)** — CV service accepts any `externalUrl` without checking scheme. Links go to `href` and `window.open()` without filtering on frontend. Add centralized validation allowing only `http:` / `https:` schemes.
 
-Powodzenia na drodze do pierwszej pracy w IT — z takim projektem w portfolio masz solidny argument na rozmowie rekrutacyjnej! 💪
+3. **🔴 Fix refresh token contract** — backend returns `"token"`, frontend expects `"accessToken"`. Align names and consider adding interceptor which tries token refresh on 401 before redirecting to login.
+
+4. **🔴 Move backend URL to environment variable** — `LoginPage.tsx` has hardcoded `http://localhost:8080`. Use `import.meta.env.VITE_API_URL` or dedicated `VITE_BACKEND_URL` variable.
+
+5. **🔴 Add SameSite to refresh_token cookie** — in OAuth2 success handler explicitly set `SameSite=Lax` or `Strict` — don't rely on browser defaults.
+
+6. **🔴 Add Error Boundary and fix CVManager crash** — one error (e.g., `new URL()` on invalid address) causes "white screen". Add global Error Boundary and wrap URL parsing in try/catch with fallback text.
+
+### To Think About and Improve
+
+7. **🟡 Unify stage update flow and history** — stage update method (from Kanban) doesn't create history entries. Stage addition method (with history save) isn't used by UI. Unify into one consistent flow that always updates history.
+
+8. **🟡 Add @NotNull to status in StageUpdateRequest** — missing validation leads to 500 instead of readable 400. Consider also requiring rejectionReason when status is REJECTION.
+
+9. **🟡 Add NOT NULL constraint on user_id** — Migration V4 adds column as nullable but never sets NOT NULL. Create new Flyway migration with backfill and constraint.
+
+10. **🟡 Strengthen CV upload validation** — check magic bytes (PDF signature: `%PDF-`), don't just Content-Type.
+
+11. **🟡 Split KanbanBoard.tsx** — extract KanbanCard, KanbanColumn, modals (StageModal, EndModal, MoveModal) and hook `useKanbanDragDrop` to separate files.
+
+12. **🟡 Unify CVManager data fetching** — replace useState+useEffect with React Query hooks (you already have `useCV()`). Improves consistency and cache handling.
+
+13. **🟡 Add pagination to `/api/applications`** — use Spring Data `Pageable`. Frontend can load page by page, gain performance with large datasets.
+
+14. **🟡 Improve validation error response structure** — instead of concatenating errors into one string, return map `{field: message}` via `ProblemDetail.setProperty()`.
+
+15. **🟡 Clean up @Transactional on private method** — annotation on `markCurrentStageCompleted()` is ignored by Spring AOP. Remove for clarity to show understanding of AOP.
+
+16. **🟡 Extract status color constants** — move `STATUS_COLORS` to shared `constants/` file and import in both components.
+
+### For Future Learning
+
+17. **📘 Web application security** — study OWASP Top 10, Content Security Policy, path traversal, Subresource Integrity. Foundations for commercial work.
+
+18. **📘 State Machine pattern** — for application status transitions. Read about Spring Statemachine or simpler enum implementations.
+
+19. **📘 Testing** — tests of services exist (good foundation!). Check coverage with JaCoCo. Add tests for edge cases (null status, path traversal, invalid URLs). For frontend — use Testing Library.
+
+20. **📘 Performance optimization** — read about React Profiler, memoization (`useMemo`), list virtualization (react-window/react-virtuoso), code splitting with React.lazy().
+
+21. **📘 Backend caching** — Spring Cache with @Cacheable for badge statistics, Cache-Control headers in HTTP responses.
+
+22. **📘 Monitoring and observability** — Micrometer with Spring Boot Actuator, distributed tracing, structured JSON logs.
 
 ---
 
-*Review z dnia: 2026-03-01*
+## 💬 FINAL MOTIVATION
+
+This project makes a real impression for someone at the beginning of programming journey. It's not just another "to-do list" — it's a full-stack application with OAuth2, JWT, database, Docker Compose, and gamification system. Architecture is well-thought-out, layer separation correct, technology choices sound.
+
+Notes in this review aren't criticism — they're signposts for next level. Most "problems" are things even experienced programmers overlook. Fact that you use Flyway instead of `ddl-auto=update`, React Query instead of manual state management, httpOnly cookies instead of localStorage for refresh tokens — this shows you read good sources and make conscious architectural decisions.
+
+Focus on 🔴 red-marked items — these are security and correctness issues worth fixing before sharing app. Rest are growth directions you'll naturally explore as you gain experience.
+
+Good luck on your path to your first job in IT — with such a project in portfolio you have solid argument for job interviews! 💪
+
+---
+
+*Review Date: 2026-03-01*
