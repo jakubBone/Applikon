@@ -12,13 +12,13 @@
 | Area | Planned | Built | Status |
 |------|---------|-------|--------|
 | Application CRUD | Basic REST API | Full CRUD + stage + duplicate check | As planned + more |
-| Kanban view | 5 statuses (WYSŁANE/ROZMOWA/ZADANIE/OFERTA/ODRZUCONE) | 4 DB statuses (SENT/IN_PROGRESS/OFFER/REJECTED), 3 Kanban columns (SENT/IN_PROGRESS/FINISHED) | Different |
-| CV management | PDF upload + LINK + NOTE types, assign to application (ETAP 4) | LINK + NOTE implemented; FILE upload disabled (phase 07) | Modified |
-| Notes | Plaintext with PYTANIA/FEEDBACK/INNE categories (ETAP 5) | Implemented, categories renamed to English | As planned |
+| Kanban view | 5 statuses (SENT/IN_PROGRESS/OFFER/REJECTED and one more) | 4 DB statuses (SENT/IN_PROGRESS/OFFER/REJECTED), 3 Kanban columns (SENT/IN_PROGRESS/FINISHED) | Different |
+| CV management | PDF upload + LINK + NOTE types, assign to application (PHASE 4) | LINK + NOTE implemented; FILE upload disabled (phase 07) | Modified |
+| Notes | Plaintext with QUESTIONS/FEEDBACK/OTHER categories (PHASE 5) | Implemented, categories renamed to English | As planned |
 | Authentication | Not in MVP (planned for future) | Fully implemented: Google OAuth2 + JWT + refresh tokens | Added beyond spec |
 | Stage history (StageHistory entity) | Planned in mvp-implementation-plan.md | Implemented, then removed (V12) — overengineered | Removed |
 | i18n (EN/PL) | Not in brief | Fully implemented: i18next, LanguageDetector, switcher, all strings translated | Added beyond spec |
-| Badges / gamification | In plan (ETAP 7) | StatisticsService + BadgeWidget (rejection/ghosting badges, sweet revenge) | As planned |
+| Badges / gamification | In plan (PHASE 7) | StatisticsService + BadgeWidget (rejection/ghosting badges, sweet revenge) | As planned |
 | Responsiveness / mobile | Implicit in brief (vs Teal: "brak wersji mobilnej") | FAB, MoveModal as mobile bottom sheet, isMobile(), OnboardingOverlay | As planned |
 | Onboarding / Tour | Not in plan | OnboardingOverlay, TourGuide components | Added beyond spec |
 | Enum values | Polish (WYSLANE, BRUTTO, UOP, BRAK_ODPOWIEDZI) | English (SENT, GROSS, EMPLOYMENT, NO_RESPONSE) | Different (renamed) |
@@ -48,8 +48,8 @@ Based on `spec/v1/01-vision/brief.md`:
 |---------|--------|-------|
 | Application registry (CRUD): company, position, link, date, salary, currency, status, source | ✅ Implemented | Plus: salaryMin/salaryMax, contractType, salaryType, salarySource, agency, jobDescription |
 | Kanban view: drag & drop between columns | ✅ Implemented | 3 columns (SENT, IN_PROGRESS, FINISHED) — not 5 as in brief |
-| CV management: PDF upload (max 5MB) + LINK + NOTE types, assign to application | ✅ Implemented | As planned in ETAP 4; categories renamed to English |
-| Notepad: plaintext, multiple per application, with categories (PYTANIA/FEEDBACK/INNE) | ✅ Implemented | As planned in ETAP 5; categories renamed to English (QUESTIONS/FEEDBACK/OTHER) |
+| CV management: PDF upload (max 5MB) + LINK + NOTE types, assign to application | ✅ Implemented | As planned in PHASE 4; categories renamed to English |
+| Notepad: plaintext, multiple per application, with categories (QUESTIONS/FEEDBACK/OTHER) | ✅ Implemented | As planned in PHASE 5; categories renamed to English |
 
 ### Edge Cases (§5)
 
@@ -570,7 +570,7 @@ The method exists and is reachable from the `NoteController` tests, but is never
 
 The following features are implemented but were **not** in `brief.md` or `mvp-implementation-plan.md`.
 
-> Note: Gamification (ETAP 7), CVType FILE/LINK/NOTE (ETAP 4), NoteCategory (ETAP 5), and SalarySource (architecture section) are all in `mvp-implementation-plan.md` and are therefore **not** listed here.
+> Note: Gamification (PHASE 7), CVType FILE/LINK/NOTE (PHASE 4), NoteCategory (PHASE 5), and SalarySource (architecture section) are all in `mvp-implementation-plan.md` and are therefore **not** listed here.
 
 ### 7a. Authentication: Google OAuth2 + JWT
 
@@ -711,7 +711,7 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 | Item | Source | Notes |
 |------|--------|-------|
 | Salary change tracking (auto-note on update) | brief.md §5, i18n plan | `createSalaryChangeNote()` exists in NoteService but is never called from `ApplicationService.update()` — dead code, no user-visible effect |
-| 5-column Kanban (Wysłane / Rozmowa / Zadanie / Oferta / Odrzucone) | brief.md §4 | Already reduced to 3 columns in mvp-implementation-plan.md ETAP 3; as-built matches the implementation plan, not the brief |
+| 5-column Kanban (SENT / IN_PROGRESS / OFFER / REJECTED and one more) | brief.md §4 | Already reduced to 3 columns in mvp-implementation-plan.md PHASE 3; as-built matches the implementation plan, not the brief |
 
 ---
 
@@ -749,6 +749,6 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ### v1 overall assessment
 
-All planned MVP features (ETAP 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
+All planned MVP features (PHASE 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
 
 Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type.

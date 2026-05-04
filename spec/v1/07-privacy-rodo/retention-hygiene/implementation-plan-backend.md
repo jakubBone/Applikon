@@ -1,284 +1,283 @@
-# Plan implementacji retention & hygiene — EasyApply Backend
+# Retention & Hygiene Implementation Plan — EasyApply Backend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `./mvnw test`, musi być zielony
-3. **Weryfikacja manualna** — użytkownik testuje endpoint ręcznie (opcjonalnie)
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(backend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-Domknąć fazę 07 w trzech obszarach higieny danych:
-
-1. **Auto-retencja** — cron usuwa konta nieaktywne > 12 miesięcy
-2. **Audyt logów** — weryfikacja że logi nie zawierają emaili, nazw, tokenów
-3. **Hashowanie refresh tokena** — token w bazie jako hash, nie plaintext
-
-Na końcu: aktualizacja dokumentacji (`README.md`, `spec/README.md`, `as-built.md`)
-zamykająca fazę 07.
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `./mvnw test` must be green
+3. **Manual verification** — user tests endpoint manually (optional)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Stan wyjściowy
+## Goal
 
-- `User.refreshToken` trzymany w bazie jako **plaintext UUID** (patrz `entity/User.java:29`)
-- `MdcUserFilter` loguje tylko UUID usera (`security/MdcUserFilter.java:39`) — już OK
-- `CVService` loguje `fileName` (UUID.pdf) i `userId` — bez PII
-- Brak pola tracking "ostatnia aktywność" — jedyne sygnały: `createdAt` i `refreshTokenExpiry`
-- Brak `@EnableScheduling` / cronów
+Close phase 07 in three data hygiene areas:
+
+1. **Auto-retention** — cron removes inactive accounts > 12 months
+2. **Log audit** — verify logs don't contain emails, names, tokens
+3. **Refresh token hashing** — store token in DB as hash, not plaintext
+
+Finally: update documentation (`README.md`, `spec/README.md`, `as-built.md`)
+closing phase 07.
 
 ---
 
-## Status realizacji
+## Current State
 
-### Etap 1 — Pole `last_login_at` w User
+- `User.refreshToken` stored in DB as **plaintext UUID** (see `entity/User.java:29`)
+- `MdcUserFilter` logs only user UUID (`security/MdcUserFilter.java:39`) — already OK
+- `CVService` logs `fileName` (UUID.pdf) and `userId` — no PII
+- No "last activity" tracking field — only signals: `createdAt` and `refreshTokenExpiry`
+- No `@EnableScheduling` / crons
 
-**Plik:** `entity/User.java`
+---
 
-- [ ] Dodać pole `LocalDateTime lastLoginAt` z `@Column(name = "last_login_at")`
-- [ ] Metoda `recordLogin()` ustawiająca pole na `LocalDateTime.now()`
+## Implementation Status
+
+### Phase 1 — Add `last_login_at` Field to User
+
+**File:** `entity/User.java`
+
+- [ ] Add field `LocalDateTime lastLoginAt` with `@Column(name = "last_login_at")`
+- [ ] Method `recordLogin()` setting field to `LocalDateTime.now()`
 - [ ] Getter `getLastLoginAt()`
 
-**Gdzie wywoływać `recordLogin()`?**
+**Where to call `recordLogin()`?**
 
-- `UserService.findOrCreateUser(...)` — dla istniejącego usera aktualizujemy, dla nowego ustawiamy wraz z `createdAt`
-- `UserService.findByValidRefreshToken(...)` — bump przy odświeżeniu tokenu (user aktywnie korzysta)
+- `UserService.findOrCreateUser(...)` — for existing user update, for new set with `createdAt`
+- `UserService.findByValidRefreshToken(...)` — bump on token refresh (user actively using)
 
-**Interpretacja "nieaktywny":** użytkownik który od ponad 12 miesięcy nie
-zalogował się i nie odświeżył sesji. Wystarczające dla portfolio projektu —
-alternatywa (update na każdym request'cie) dodaje write na każdym API call,
-co jest dużym narzutem.
+**Definition of "inactive":** user who hasn't logged in or refreshed session for > 12 months.
+Sufficient for portfolio project — alternative (update on every request) adds write on every API call,
+which is significant overhead.
 
 ---
 
-### Etap 2 — Scheduled job usuwający nieaktywne konta
+### Phase 2 — Scheduled Job to Delete Inactive Accounts
 
-**Nowy plik:** `service/AccountRetentionService.java`
+**New file:** `service/AccountRetentionService.java`
 
-- [ ] Klasa `@Service` z metodą `@Scheduled(cron = "0 0 3 * * *")` (codziennie o 3:00)
-- [ ] Metoda znajduje userów z `lastLoginAt < now() - 12 months` (lub `createdAt < now() - 12 months AND lastLoginAt IS NULL` dla userów którzy się zarejestrowali ale nigdy nie zaakceptowali polityki)
-- [ ] Dla każdego takiego usera wywołuje `userService.deleteAccount(userId)` (ta sama metoda co z `DELETE /me` — gwarancja identycznego flow kasowania)
-- [ ] Logowanie: tylko liczba usuniętych kont (`log.info("Retention job removed {} inactive accounts", count)`) — **bez** emaili/ID usuniętych userów
+- [ ] Class `@Service` with method `@Scheduled(cron = "0 0 3 * * *")` (daily at 3:00)
+- [ ] Method finds users with `lastLoginAt < now() - 12 months` (or `createdAt < now() - 12 months AND lastLoginAt IS NULL` for users who registered but never accepted policy)
+- [ ] For each such user calls `userService.deleteAccount(userId)` (same method as `DELETE /me` — guarantees identical deletion flow)
+- [ ] Logging: only count of deleted accounts (`log.info("Retention job removed {} inactive accounts", count)`) — **no** emails/IDs of deleted users
 
-**Plik:** `EasyApplyApplication.java`
+**File:** `EasyApplyApplication.java`
 
-- [ ] Dodać annotację `@EnableScheduling` do głównej klasy (jeśli jeszcze nie ma)
+- [ ] Add `@EnableScheduling` annotation to main class (if not already there)
 
 **Repository:**
 
-**Plik:** `repository/UserRepository.java`
+**File:** `repository/UserRepository.java`
 
-- [ ] Dodać metodę `List<User> findByLastLoginAtBefore(LocalDateTime threshold)` (lub z `@Query`)
-- [ ] Wariant: `findInactiveUsers(LocalDateTime threshold)` łapiący oba przypadki (null lastLogin + stary createdAt)
+- [ ] Add method `List<User> findByLastLoginAtBefore(LocalDateTime threshold)` (or with `@Query`)
+- [ ] Variant: `findInactiveUsers(LocalDateTime threshold)` catching both cases (null lastLogin + old createdAt)
 
-**Konfigurowalność progu:**
+**Threshold Configuration:**
 
-- [ ] Próg 12 miesięcy wyciągnąć do `application.properties`: `app.retention.inactive-months=12`
-- [ ] Wstrzyknąć przez `@Value` — łatwiej testować i dostosować
-
----
-
-### Etap 3 — Testy retencji
-
-**Nowy plik:** `test/service/AccountRetentionServiceTest.java`
-
-- [ ] Test: user z `lastLoginAt > threshold` nie jest usuwany
-- [ ] Test: user z `lastLoginAt < threshold` jest usuwany (wraz z CV, aplikacjami, notatkami i plikami z dysku)
-- [ ] Test: user z `lastLoginAt = null` i `createdAt < threshold` jest usuwany
-- [ ] Test: gdy nie ma nieaktywnych userów, job kończy się bez błędu i loguje `count=0`
-- [ ] `./mvnw test` zielony
+- [ ] Extract 12-month threshold to `application.properties`: `app.retention.inactive-months=12`
+- [ ] Inject via `@Value` — easier to test and adjust
 
 ---
 
-### Etap 4 — Hashowanie refresh tokena
+### Phase 3 — Retention Tests
 
-**Obecny stan:**
+**New file:** `test/service/AccountRetentionServiceTest.java`
 
-`User.refreshToken` zawiera plaintext UUID. `User.isRefreshTokenValid(token)`
-wykonuje `refreshToken.equals(token)`. Kradzież bazy = kradzież aktywnych sesji
-wszystkich userów.
-
-**Zmiana:**
-
-Przy zapisie → hashujemy (np. SHA-256) token i zapisujemy hash.
-Przy walidacji → hashujemy przychodzący token i porównujemy hashe.
-Sam token jest wysyłany do klienta raz (w cookie), nigdy go nie odzyskujemy z bazy.
-
-**Plik:** `security/JwtService.java` (lub nowy `security/TokenHasher.java`)
-
-- [ ] Dodać util `TokenHasher.hash(String token)` — SHA-256 → hex
-- [ ] SHA-256 wystarczy (token to UUID o 122 bitach entropii — nie podatny na rainbow tables, bcrypt/argon2 jest overkill i spowalnia)
-
-**Plik:** `service/UserService.java`
-
-- [ ] Metoda generująca refresh token: zapisuj do bazy `TokenHasher.hash(token)`, zwracaj plaintext do klienta (JwtService / Controller)
-- [ ] Metoda `findByValidRefreshToken(String token)`:
-  - Hashuj przychodzący token
-  - Wyszukaj w bazie po hashu (zamiast `refreshToken.equals(...)`)
-  - Sprawdź expiry
-
-**Plik:** `entity/User.java`
-
-- [ ] Metoda `isRefreshTokenValid(String tokenHash)` przyjmuje hash (nie plaintext) i porównuje z `this.refreshToken`
-- [ ] Nazwa kolumny pozostaje `refresh_token` (semantyka się nie zmieniła — dalej "nasz token"), ale zawartość to hash
-
-**Migracja istniejących tokenów:**
-
-Istniejące refresh tokeny w bazie są plaintext. Po wdrożeniu hashowania nie
-zmatchują się z hashowanymi wersjami — wszyscy zalogowani userzy zostaną
-wylogowani. **Akceptowalne** (jednorazowa niedogodność dla < 10 userów w tym momencie).
-
-- [ ] Skrypt jednorazowy (opcjonalny): `UPDATE users SET refresh_token = NULL WHERE refresh_token IS NOT NULL;` — żeby wymusić re-login zamiast pozwolić userom na "broken session" do expiry
+- [ ] Test: user with `lastLoginAt > threshold` is not deleted
+- [ ] Test: user with `lastLoginAt < threshold` is deleted (along with CVs, applications, notes, and disk files)
+- [ ] Test: user with `lastLoginAt = null` and `createdAt < threshold` is deleted
+- [ ] Test: when no inactive users, job ends without error and logs `count=0`
+- [ ] `./mvnw test` green
 
 ---
 
-### Etap 5 — Testy hashowania
+### Phase 4 — Refresh Token Hashing
 
-**Pliki:** `test/security/JwtServiceTest.java` / `test/service/UserServiceTest.java`
+**Current state:**
 
-- [ ] Test: po wygenerowaniu refresh tokena w bazie jest hash (nie plaintext)
-- [ ] Test: `findByValidRefreshToken(plaintext)` znajduje usera (hashuje i matchuje)
-- [ ] Test: `findByValidRefreshToken(wrongToken)` rzuca wyjątek / zwraca pustą
-- [ ] Test: `TokenHasher.hash("abc")` zwraca deterministyczny hex string
-- [ ] `./mvnw test` zielony
+`User.refreshToken` contains plaintext UUID. `User.isRefreshTokenValid(token)`
+performs `refreshToken.equals(token)`. Database leak = leak of all active sessions
+of all users.
 
----
+**Change:**
 
-### Etap 6 — Audyt logów
+On save → hash (e.g., SHA-256) the token and save the hash.
+On validation → hash incoming token and compare hashes.
+Token itself is sent to client once (in cookie), never recovered from DB.
 
-**Cel:** przegląd kodu pod kątem logowania PII (email, nazwa, tokeny).
+**File:** `security/JwtService.java` (or new `security/TokenHasher.java`)
 
-**Znane miejsca — do weryfikacji:**
+- [ ] Add util `TokenHasher.hash(String token)` — SHA-256 → hex
+- [ ] SHA-256 is sufficient (token is UUID with 122 bits of entropy — not vulnerable to rainbow tables, bcrypt/argon2 is overkill and slow)
 
-- [ ] `MdcUserFilter` — loguje tylko `userId` (UUID) ✅ OK (weryfikacja)
-- [ ] `CVService.uploadCV` — `log.info("Uploaded CV file={} for user={}", fileName, userId)` — fileName to generowany UUID, nie original filename; userId to UUID ✅ OK
-- [ ] `OAuth2AuthenticationSuccessHandler` — sprawdzić czy nie loguje emaila ani nazwy po Google loginie
-- [ ] `CustomOAuth2UserService` — sprawdzić czy nie loguje `oAuth2User.getAttribute("email")` ani `name`
-- [ ] `AuthController.refresh` i `logout` — czy nie logują tokena z cookie
-- [ ] `GlobalExceptionHandler` — czy nie loguje pełnego body request lub stacktrace z PII
-- [ ] `JwtService` — czy nie loguje tokena w logach DEBUG
-- [ ] `application.properties` — `spring.jpa.show-sql=true` (SQL w logach ujawnia zapytania, w tym email przy `WHERE email = ?`)
+**File:** `service/UserService.java`
 
-**Zadania:**
+- [ ] Refresh token generating method: save `TokenHasher.hash(token)` to DB, return plaintext to client (JwtService / Controller)
+- [ ] Method `findByValidRefreshToken(String token)`:
+  - Hash incoming token
+  - Look up in DB by hash (instead of `refreshToken.equals(...)`)
+  - Check expiry
 
-- [ ] Przejść przez wszystkie `log.info/warn/error/debug` w `main/java/com/easyapply/**`
-- [ ] Każde logowanie usera identyfikować tylko przez `userId` (UUID)
-- [ ] Żadne logowanie nie zawiera raw tokena (ani access, ani refresh)
-- [ ] Rozważyć `spring.jpa.show-sql=false` dla profilu `prod` (lub filtrowanie SQL przez Logback pattern)
-- [ ] Logowania błędów (`log.error(..., e)`) — zweryfikować że exception message nie zawiera PII z request body
+**File:** `entity/User.java`
 
-**Test manualny:**
+- [ ] Method `isRefreshTokenValid(String tokenHash)` accepts hash (not plaintext) and compares with `this.refreshToken`
+- [ ] Column name stays `refresh_token` (semantics unchanged — still "our token"), but content is now hash
 
-- [ ] Wygenerować kilka requestów (login, logout, consent, delete account, upload próba) i przejrzeć logi — nie ma emaili, nazw, tokenów
+**Migration of existing tokens:**
 
----
+Existing refresh tokens in DB are plaintext. After deploying hashing they
+won't match hashed versions — all logged-in users will be
+logged out. **Acceptable** (one-time inconvenience for < 10 users at this point).
 
-### Etap 7 — Rate limiting na wrażliwe endpointy (opcjonalne)
-
-**Cel:** minimalizacja ryzyka abuse dla `DELETE /me` (żeby zalogowany atakujący nie spamował żądań).
-
-**Decyzja:** dla portfolio projektu z ~10-50 userów to **nadmiarowe**. Spring
-Security + ograniczenie do zalogowanych userów jest wystarczające. Odkładamy.
-
-- [ ] Ten etap oznaczony jako "nie realizowany w fazie 07"
+- [ ] One-time script (optional): `UPDATE users SET refresh_token = NULL WHERE refresh_token IS NOT NULL;` — to force re-login instead of leaving users with "broken session" until expiry
 
 ---
 
-### Etap 8 — Domknięcie fazy 07: dokumentacja
+### Phase 5 — Hashing Tests
 
-**Plik:** `README.md`
+**Files:** `test/security/JwtServiceTest.java` / `test/service/UserServiceTest.java`
 
-- [ ] Dodać sekcję **"Privacy & Data"**:
-  - Jakie dane zbieramy (minimum)
-  - Decyzja: CV tylko przez link (wariant B z brief fazy 07)
-  - Link do `/privacy` w live appce
-  - Link do polityki retencji
-  - Uwaga: "Portfolio project — see `spec/v1/07-privacy-rodo/` for design rationale"
+- [ ] Test: after generating refresh token, DB contains hash (not plaintext)
+- [ ] Test: `findByValidRefreshToken(plaintext)` finds user (hashes and matches)
+- [ ] Test: `findByValidRefreshToken(wrongToken)` throws exception / returns empty
+- [ ] Test: `TokenHasher.hash("abc")` returns deterministic hex string
+- [ ] `./mvnw test` green
 
-**Plik:** `spec/README.md`
+---
 
-- [ ] Dodać w tabeli V1 wiersz:
+### Phase 6 — Log Audit
+
+**Goal:** review code for PII logging (email, name, tokens).
+
+**Known places — to verify:**
+
+- [ ] `MdcUserFilter` — logs only `userId` (UUID) ✅ OK (verification)
+- [ ] `CVService.uploadCV` — `log.info("Uploaded CV file={} for user={}", fileName, userId)` — fileName is generated UUID, not original filename; userId is UUID ✅ OK
+- [ ] `OAuth2AuthenticationSuccessHandler` — check if it logs email or name after Google login
+- [ ] `CustomOAuth2UserService` — check if it logs `oAuth2User.getAttribute("email")` or `name`
+- [ ] `AuthController.refresh` and `logout` — whether they log token from cookie
+- [ ] `GlobalExceptionHandler` — whether it logs full request body or stacktrace with PII
+- [ ] `JwtService` — whether it logs token in DEBUG logs
+- [ ] `application.properties` — `spring.jpa.show-sql=true` (SQL in logs reveals queries, including email in `WHERE email = ?`)
+
+**Tasks:**
+
+- [ ] Review all `log.info/warn/error/debug` in `main/java/com/easyapply/**`
+- [ ] Each user logging should identify only by `userId` (UUID)
+- [ ] No logging contains raw token (neither access nor refresh)
+- [ ] Consider `spring.jpa.show-sql=false` for `prod` profile (or filter SQL via Logback pattern)
+- [ ] Error logs (`log.error(..., e)`) — verify exception message doesn't contain PII from request body
+
+**Manual test:**
+
+- [ ] Generate several requests (login, logout, consent, delete account, upload attempt) and review logs — no emails, names, tokens
+
+---
+
+### Phase 7 — Rate Limiting on Sensitive Endpoints (optional)
+
+**Goal:** minimize abuse risk for `DELETE /me` (so logged-in attacker can't spam requests).
+
+**Decision:** for portfolio project with ~10-50 users this is **excessive**. Spring
+Security + restriction to logged-in users is sufficient. Deferring.
+
+- [ ] This phase marked as "not implemented in phase 07"
+
+---
+
+### Phase 8 — Close Phase 07: Documentation
+
+**File:** `README.md`
+
+- [ ] Add **"Privacy & Data"** section:
+  - What data we collect (minimum)
+  - Decision: CV only via link (variant B from phase 07 brief)
+  - Link to `/privacy` in live app
+  - Link to retention policy
+  - Note: "Portfolio project — see `spec/v1/07-privacy-rodo/` for design rationale"
+
+**File:** `spec/README.md`
+
+- [ ] Add row to V1 table:
   ```
   | Privacy & RODO | `v1/07-privacy-rodo/` | Complete |
   ```
 
-**Plik:** `spec/v1/as-built.md`
+**File:** `spec/v1/as-built.md`
 
-- [ ] Zaktualizować sekcje:
-  - REST endpoints: `POST /api/auth/consent`, `DELETE /api/auth/me` (nowe), `POST /api/cv/upload` zwraca 503
-  - DB schema: nowe kolumny `users.privacy_policy_accepted_at`, `users.last_login_at`; `refresh_token` teraz hash
+- [ ] Update sections:
+  - REST endpoints: `POST /api/auth/consent`, `DELETE /api/auth/me` (new), `POST /api/cv/upload` returns 503
+  - DB schema: new columns `users.privacy_policy_accepted_at`, `users.last_login_at`; `refresh_token` now hashed
   - Frontend: `/privacy`, `/settings`, `ConsentGate`, `Footer`
   - Scheduled jobs: `AccountRetentionService` (cron daily 3:00)
-  - Flow auth: nowy krok "consent check" między loginem a dostępem do appki
+  - Auth flow: new "consent check" step between login and app access
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [ ] Pole `last_login_at` jest ustawiane przy loginie i refresh tokena
-- [ ] Cron `AccountRetentionService` uruchamia się codziennie, usuwa konta z `lastLoginAt < now() - 12 months`
-- [ ] Retencja jest testowana jednostkowo
-- [ ] Refresh token w bazie przechowywany jako hash SHA-256 (nie plaintext)
-- [ ] Walidacja refresh tokena działa (hashuje przychodzący token i porównuje)
-- [ ] Logi nie zawierają emaili, nazw userów, tokenów w plaintext (weryfikacja manualna + przegląd kodu)
+- [ ] Field `last_login_at` is set on login and refresh token
+- [ ] Cron `AccountRetentionService` runs daily, removes accounts with `lastLoginAt < now() - 12 months`
+- [ ] Retention is unit tested
+- [ ] Refresh token stored in DB as SHA-256 hash (not plaintext)
+- [ ] Refresh token validation works (hashes incoming token and compares)
+- [ ] Logs don't contain emails, user names, tokens in plaintext (manual verification + code review)
 - [ ] `./mvnw test` — 0 failed
-- [ ] `README.md` ma sekcję "Privacy & Data"
-- [ ] `spec/README.md` odnotowuje fazę 07 jako "Complete"
-- [ ] `spec/v1/as-built.md` zaktualizowany
+- [ ] `README.md` has "Privacy & Data" section
+- [ ] `spec/README.md` marks phase 07 as "Complete"
+- [ ] `spec/v1/as-built.md` updated
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Rate limiting** — rozważane w Etapie 7, odrzucone dla tej fazy
-- **Audit log tabel (kto kiedy się logował)** — sprzeczne z minimalizacją danych
-- **Szyfrowanie całej tabeli `users` at-rest w aplikacji** — poziom infrastruktury (baza/dysk), nie aplikacji
-- **Powiadomienia email przed usunięciem nieaktywnego konta** — brak systemu mailowego, poza zakresem
-- **Configurable per-user retention** — jedna polityka dla wszystkich
-- **Historia logowań usera** — jedno pole `lastLoginAt`, bez tabeli historii
-- **Rotacja klucza hashującego** — SHA-256 nie używa klucza; gdybyśmy szli na HMAC, rotacja byłaby problemem — stąd wybór prostego SHA-256
+- **Rate limiting** — considered in Phase 7, rejected for this phase
+- **Audit log tables (who logged in when)** — contradicts data minimization
+- **Encryption of entire `users` table at-rest in application** — infrastructure level (DB/disk), not application
+- **Email notifications before deleting inactive account** — no mail system, out of scope
+- **Configurable per-user retention** — one policy for all
+- **User login history** — one `lastLoginAt` field, no history table
+- **Hash key rotation** — SHA-256 doesn't use a key; if we used HMAC, rotation would be a problem — hence simple SHA-256
 
 ---
 
-## Pliki do zmiany / dodania
+## Files to Change / Add
 
-| Plik | Status | Zmiana |
+| File | Status | Change |
 |------|--------|--------|
-| `entity/User.java` | modyfikacja | Pole `lastLoginAt` + `recordLogin()`; `isRefreshTokenValid` na hash |
-| `service/UserService.java` | modyfikacja | `findOrCreateUser` aktualizuje `lastLoginAt`; refresh token hashowany |
-| `service/AccountRetentionService.java` | **nowy** | `@Scheduled` cron usuwający nieaktywne konta |
-| `security/TokenHasher.java` | **nowy** | SHA-256 util (lub metoda w `JwtService`) |
-| `repository/UserRepository.java` | modyfikacja | `findInactiveUsers(threshold)` |
-| `EasyApplyApplication.java` | modyfikacja | `@EnableScheduling` |
-| `application.properties` | modyfikacja | `app.retention.inactive-months=12`, `spring.jpa.show-sql=false` dla prod |
-| `test/service/AccountRetentionServiceTest.java` | **nowy** | Testy retencji |
-| `test/service/UserServiceTest.java` | modyfikacja | Testy hashowania refresh tokena |
-| Przegląd `log.*` w `main/java/com/easyapply/**` | modyfikacja | Usunięcie PII z logów |
-| `README.md` | modyfikacja | Sekcja "Privacy & Data" |
-| `spec/README.md` | modyfikacja | Wiersz fazy 07 |
-| `spec/v1/as-built.md` | modyfikacja | Nowe endpointy, pola DB, frontend, scheduled jobs |
+| `entity/User.java` | modify | Field `lastLoginAt` + `recordLogin()`; `isRefreshTokenValid` to hash |
+| `service/UserService.java` | modify | `findOrCreateUser` updates `lastLoginAt`; refresh token hashed |
+| `service/AccountRetentionService.java` | **new** | `@Scheduled` cron removing inactive accounts |
+| `security/TokenHasher.java` | **new** | SHA-256 util (or method in `JwtService`) |
+| `repository/UserRepository.java` | modify | `findInactiveUsers(threshold)` |
+| `EasyApplyApplication.java` | modify | `@EnableScheduling` |
+| `application.properties` | modify | `app.retention.inactive-months=12`, `spring.jpa.show-sql=false` for prod |
+| `test/service/AccountRetentionServiceTest.java` | **new** | Retention tests |
+| `test/service/UserServiceTest.java` | modify | Refresh token hashing tests |
+| Review `log.*` in `main/java/com/easyapply/**` | modify | Remove PII from logs |
+| `README.md` | modify | "Privacy & Data" section |
+| `spec/README.md` | modify | Phase 07 row |
+| `spec/v1/as-built.md` | modify | New endpoints, DB fields, frontend, scheduled jobs |
 
 ---
 
-## Diagram retencji
+## Retention Diagram
 
 ```
-  Codziennie 3:00 (cron)
+  Daily 3:00 (cron)
          ↓
   AccountRetentionService.cleanupInactive()
          ↓
   UserRepository.findInactiveUsers(now - 12 months)
          ↓
-  Dla każdego znalezionego usera:
+  For each found user:
          ↓
   UserService.deleteAccount(userId)
-    ├── Files.delete(cv.filePath) dla każdego CV typu FILE
+    ├── Files.delete(cv.filePath) for each FILE type CV
     ├── delete notes
     ├── delete applications
     ├── delete cv records
@@ -289,4 +288,4 @@ Security + ograniczenie do zalogowanych userów jest wystarczające. Odkładamy.
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-22*
+*Last updated: 2026-04-22*

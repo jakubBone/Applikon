@@ -1,125 +1,125 @@
-# Plan implementacji i18n — EasyApply Backend
+# i18n Implementation Plan — EasyApply Backend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `mvn test`, musi być zielony
-3. **Weryfikacja manualna** — użytkownik testuje endpoint ręcznie (opcjonalnie)
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(backend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `mvn test` must be green
+3. **Manual verification** — user tests endpoint manually (optional)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Status realizacji
+## Implementation Status
 
-### Etap 0 — Setup
-- [x] Katalog `src/main/resources/i18n/`
+### Phase 0 — Setup
+- [x] Create `src/main/resources/i18n/` directory
 - [x] `i18n/messages.properties` (English — fallback)
 - [x] `i18n/messages_pl.properties` (Polish)
-- [x] Bean `MessageSource` w `I18nConfig.java`
-- [x] Bean `LocaleResolver` (`AcceptHeaderLocaleResolver`, domyślnie `en`)
-- [x] `mvn test` zielony
+- [x] `MessageSource` bean in `I18nConfig.java`
+- [x] `LocaleResolver` bean (`AcceptHeaderLocaleResolver`, default `en`)
+- [x] `mvn test` passing
 
-### Etap 1 — Wiadomości walidacyjne
-- [x] `dto/ApplicationRequest.java` → klucze `{validation.*}`
-- [x] `dto/NoteRequest.java` → klucze `{validation.*}`
-- [x] `dto/StatusUpdateRequest.java` → klucze `{validation.*}`
-- [x] `controller/ApplicationController.java` (inline record) → klucze
-- [x] `controller/CVController.java` (inline params) → klucze
-- [x] `entity/Application.java` → klucze
-- [x] `entity/Note.java` → klucze
-- [x] `mvn test` zielony
+### Phase 1 — Validation Messages
+- [x] `dto/ApplicationRequest.java` → keys `{validation.*}`
+- [x] `dto/NoteRequest.java` → keys `{validation.*}`
+- [x] `dto/StatusUpdateRequest.java` → keys `{validation.*}`
+- [x] `controller/ApplicationController.java` (inline record) → keys
+- [x] `controller/CVController.java` (inline params) → keys
+- [x] `entity/Application.java` → keys
+- [x] `entity/Note.java` → keys
+- [x] `mvn test` passing
 
-### Etap 2 — Wyjątki w serwisach
+### Phase 2 — Service Exceptions
 - [x] `service/ApplicationService.java` — `EntityNotFoundException`
 - [x] `service/CVService.java` — `EntityNotFoundException`, `IllegalArgumentException`
 - [x] `service/NoteService.java` — `EntityNotFoundException`
-- [x] `service/NoteService.java` — auto-nota salary change: `"Stawka zmieniona: X PLN -> Y PLN"` → i18n
+- [x] `service/NoteService.java` — auto-note salary change: `"Salary changed: X PLN -> Y PLN"` → i18n
 - [x] `service/UserService.java` — `EntityNotFoundException`, `IllegalStateException`
-- [x] `mvn test` zielony
+- [x] `mvn test` passing
 
-### Etap 3 — HTTP responses
+### Phase 3 — HTTP Responses
 - [x] `exception/GlobalExceptionHandler.java` — `setTitle(...)`, error messages
 - [x] `controller/AuthController.java` — `Map.of("error", "...")`
-- [x] `mvn test` zielony
+- [x] `mvn test` passing
 
-### Etap 4 — Dane demo i enum labels
-- [x] `service/UserService.java` — demo aplikacja: przetłumaczyć opis oferty pracy na angielski (plain string, nie runtime i18n)
-- [x] `entity/RejectionReason.java` — enum labels usunięte, frontend tłumaczy na podstawie kodu enum (patrz decyzja poniżej)
-- [x] `mvn test` zielony
+### Phase 4 — Demo Data & Enum Labels
+- [x] `service/UserService.java` — demo application: translate job description to English (plain string, not runtime i18n)
+- [x] `entity/RejectionReason.java` — enum labels removed, frontend translates based on enum code (see decision below)
+- [x] `mvn test` passing
 
-### Etap 5 — Komentarze i testy
-- [x] Przetłumaczyć polskie komentarze i Javadoc we wszystkich plikach `.java` na angielski
-- [x] Przetłumaczyć `@DisplayName` (44 metody) i komentarze w testach na angielski
-- [x] `mvn test` zielony
+### Phase 5 — Comments & Tests
+- [x] Translate Polish comments and Javadoc in all `.java` files to English
+- [x] Translate `@DisplayName` (44 methods) and test comments to English
+- [x] `mvn test` passing
 
-### Etap 6 — Rename enum values to English
+### Phase 6 — Rename Enum Values to English
 
-> **Ten etap jest tylko podsumowaniem.** Dokładna instrukcja krok po kroku, pełne mapowania
-> starych→nowych wartości enum, treści SQL oraz historia wykonania (z wynikami testów po każdym kroku)
-> znajdują się w: `spec/i18n/enum-rename-plan.md`
+> **This phase is summary only.** Detailed step-by-step instructions, complete mappings
+> of old→new enum values, SQL contents, and execution history (with test results after each step)
+> are in: `spec/i18n/enum-rename-plan.md`
 
-#### Migracje Flyway
+#### Flyway Migrations
 
 - [x] `V5__rename_rejection_reasons.sql` — DROP CONSTRAINT IF EXISTS + UPDATE rejection_reason
-- [x] `V6__rename_note_categories.sql` — DROP CONSTRAINT IF EXISTS + UPDATE category (incl. legacy PYTANIE, KONTAKT)
+- [x] `V6__rename_note_categories.sql` — DROP CONSTRAINT IF EXISTS + UPDATE category (including legacy PYTANIE, KONTAKT)
 - [x] `V7__rename_salary_types.sql` — DROP CONSTRAINT IF EXISTS + UPDATE salary_type
 - [x] `V8__rename_contract_types.sql` — DROP CONSTRAINT IF EXISTS + UPDATE contract_type
-- [x] `V9__rename_application_statuses.sql` — DROP CONSTRAINT IF EXISTS + UPDATE status (incl. legacy ROZMOWA, ZADANIE, ODRZUCONE)
+- [x] `V9__rename_application_statuses.sql` — DROP CONSTRAINT IF EXISTS + UPDATE status (including legacy ROZMOWA, ZADANIE, ODRZUCONE)
 - [x] `V10__fix_column_defaults.sql` — ALTER DEFAULT `'WYSLANE'`→`'SENT'`, `'INNE'`→`'OTHER'`
 
 #### Entities
 
 - [x] `entity/RejectionReason.java` — `BRAK_ODPOWIEDZI`→`NO_RESPONSE`, `ODMOWA_MAILOWA`→`EMAIL_REJECTION`, `ODRZUCENIE_PO_ROZMOWIE`→`REJECTED_AFTER_INTERVIEW`, `INNE`→`OTHER`
-- [x] `entity/NoteCategory.java` — `PYTANIA`→`QUESTIONS`, `INNE`→`OTHER`, usunięte legacy `PYTANIE` i `KONTAKT`
+- [x] `entity/NoteCategory.java` — `PYTANIA`→`QUESTIONS`, `INNE`→`OTHER`, removed legacy `PYTANIE` and `KONTAKT`
 - [x] `entity/SalaryType.java` — `BRUTTO`→`GROSS`, `NETTO`→`NET`
 - [x] `entity/ContractType.java` — `UOP`→`EMPLOYMENT`, `UZ`→`MANDATE`, `INNA`→`OTHER`
 - [x] `entity/ApplicationStatus.java` — `WYSLANE`→`SENT`, `W_PROCESIE`→`IN_PROGRESS`, `OFERTA`→`OFFER`, `ODMOWA`→`REJECTED`
-- [x] `entity/Note.java` — default `NoteCategory.INNE` → `NoteCategory.OTHER` (3 miejsca)
+- [x] `entity/Note.java` — default `NoteCategory.INNE` → `NoteCategory.OTHER` (3 places)
 - [x] `entity/Application.java` — default `ApplicationStatus.WYSLANE` → `ApplicationStatus.SENT`
 
-#### Serwisy
+#### Services
 
-- [x] `service/ApplicationService.java` — wszystkie referencje do `ApplicationStatus`
+- [x] `service/ApplicationService.java` — all references to `ApplicationStatus`
 - [x] `service/StatisticsService.java` — `ODMOWA`→`REJECTED`, `OFERTA`→`OFFER`, `BRAK_ODPOWIEDZI`→`NO_RESPONSE`
 - [x] `service/UserService.java` — `WYSLANE`→`SENT`, `NETTO`→`NET`, `UOP`→`EMPLOYMENT`
 
-#### Testy
+#### Tests
 
 - [x] `ApplicationControllerTest`, `ApplicationServiceTest`, `StatisticsControllerTest`, `StatisticsServiceTest`, `NoteControllerTest`, `NoteServiceTest`, `CVServiceTest`
 - [x] `mvn test` — 84/84 ✅
 
 ---
 
-## Decyzje architektoniczne
+## Architectural Decisions
 
-### RejectionReason enum labels
-**Decyzja: Opcja A — frontend tłumaczy**
+### RejectionReason Enum Labels
+**Decision: Option A — frontend translates**
 
-Backend zwraca kod: `{ "rejectionReason": "NO_RESPONSE" }`
-Frontend tłumaczy przez `REJECTION_REASONS` w `kanban/types.ts` → `"Brak odpowiedzi"` / `"No response"`
+Backend returns code: `{ "rejectionReason": "NO_RESPONSE" }`
+Frontend translates via `REJECTION_REASONS` in `kanban/types.ts` → `"Brak odpowiedzi"` / `"No response"`
 
-**Dlaczego:** Backend zwraca dane, frontend decyduje jak je wyświetlić. Zero zmian w API kontrakcie.
+**Why:** Backend returns data, frontend decides how to display it. Zero changes to API contract.
 
-> Kody enum przemianowane na angielskie w Etapie 6 (były: `BRAK_ODPOWIEDZI`, `ODMOWA_MAILOWA` itd.)
+> Enum codes renamed to English in Phase 6 (were: `BRAK_ODPOWIEDZI`, `ODMOWA_MAILOWA` etc.)
 
-### Język domyślny
-`AcceptHeaderLocaleResolver` z `defaultLocale: en`.
-- Jeśli frontend wysyła `Accept-Language: pl` → odpowiedzi po polsku
-- Jeśli frontend wysyła `Accept-Language: en` lub brak nagłówka → odpowiedzi po angielsku
-- Frontend wysyła nagłówek automatycznie (patrz `frontend-plan.md` Etap 7)
+### Default Language
+`AcceptHeaderLocaleResolver` with `defaultLocale: en`.
+- If frontend sends `Accept-Language: pl` → responses in Polish
+- If frontend sends `Accept-Language: en` or no header → responses in English
+- Frontend sends header automatically (see `frontend-plan.md` Phase 7)
 
 ---
 
-## Struktura plików po zmianach
+## File Structure After Changes
 
 ```
 src/main/
   java/com/easyapply/
     config/
-      I18nConfig.java          ← nowy: MessageSource + LocaleResolver beans
+      I18nConfig.java          ← new: MessageSource + LocaleResolver beans
   resources/
     i18n/
       messages.properties      ← English (fallback)
@@ -128,7 +128,7 @@ src/main/
 
 ---
 
-## Klucze i18n
+## i18n Keys
 
 ```properties
 # messages.properties (English — fallback)
@@ -192,7 +192,7 @@ error.server=Wystąpił błąd serwera
 
 ---
 
-## Pattern użycia
+## Usage Pattern
 
 ```java
 // I18nConfig.java
@@ -218,20 +218,20 @@ public class I18nConfig {
 ```
 
 ```java
-// Validation (automatyczne przez Spring)
+// Validation (automatic via Spring)
 @NotBlank(message = "{validation.company.required}")
 
-// W serwisach (MessageSource przez konstruktor)
+// In services (MessageSource via constructor)
 throw new EntityNotFoundException(
     messageSource.getMessage("error.application.notFound",
         new Object[]{id}, LocaleContextHolder.getLocale())
 );
 
-// W GlobalExceptionHandler
+// In GlobalExceptionHandler
 problem.setTitle(messageSource.getMessage(
     "error.validation.title", null, LocaleContextHolder.getLocale()));
 
-// NoteService — auto-nota salary change
+// NoteService — auto-note salary change
 String content = messageSource.getMessage(
     "error.salary.changed",
     new Object[]{oldSalary, oldCurrency, newSalary, newCurrency},
@@ -240,12 +240,12 @@ String content = messageSource.getMessage(
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- Nazwy odznak (`"Rękawica"`, `"Widmo"` itp.) — zwracane przez API jako klucze, tłumaczone przez frontend przez `badges.json`
-- Wartości domenowe w DB (`"Wysłane"` jako `StageHistory.stageName`) — migracja danych, osobny task
-- `RejectionReason` enum labels — tłumaczone przez frontend (patrz decyzja powyżej)
+- Badge names (`"Rękawica"`, `"Widmo"` etc.) — returned by API as keys, translated by frontend via `badges.json`
+- Domain values in DB (`"Wysłane"` as `StageHistory.stageName`) — data migration, separate task
+- `RejectionReason` enum labels — translated by frontend (see decision above)
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-29*
+*Last update: 2026-03-29*

@@ -1,52 +1,52 @@
-# Plan implementacji CV link-only — EasyApply Backend
+# CV Link-Only Implementation Plan — EasyApply Backend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `./mvnw test`, musi być zielony
-3. **Weryfikacja manualna** — użytkownik testuje endpoint ręcznie (opcjonalnie)
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(backend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-Zablokować możliwość uploadowania plików PDF jako CV przez REST API.
-Ścieżka `CVType.LINK` (CV jako link zewnętrzny) pozostaje w pełni funkcjonalna.
-Istniejące rekordy `CVType.FILE` w bazie pozostają dostępne (download, delete) —
-nie łamiemy użytkowników którzy już wrzucili pliki.
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `./mvnw test` must be green
+3. **Manual verification** — user tests endpoint manually (optional)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Decyzje projektowe
+## Goal
 
-- **Kod metody `CVService.uploadCV` zostaje** — nie usuwamy logiki biznesowej.
-  Daje to trywialny rollback (odblokować endpoint = jedna linia) i zachowuje
-  kod jako pełnoprawny ficzer w portfolio.
-- **Endpoint `POST /api/cv/upload` zwraca 503 Service Unavailable** — zamiast
-  usuwania mapowania. 503 semantycznie komunikuje "chwilowo nieczynne".
-- **Do zablokowania używamy `ResponseStatusException`** — wbudowane w Spring,
-  bez potrzeby tworzenia nowej klasy wyjątku ani feature flagi.
-- **Pozostałe endpointy CV (`GET`, `POST`, `PUT`, `DELETE`, `GET /{id}/download`)
-  nie są ruszane** — obsługują zarówno LINK, jak i istniejące FILE.
+Block ability to upload PDF files as CV via REST API.
+Path `CVType.LINK` (CV as external link) remains fully functional.
+Existing `CVType.FILE` records in database remain accessible (download, delete) —
+don't break users who already uploaded files.
 
 ---
 
-## Status realizacji
+## Design Decisions
 
-### Etap 1 — Zablokowanie endpointu `POST /api/cv/upload`
+- **Code for `CVService.uploadCV` method stays** — don't remove business logic.
+  Gives trivial rollback (unblock endpoint = one line) and preserves
+  code as valid feature in portfolio.
+- **Endpoint `POST /api/cv/upload` returns 503 Service Unavailable** — instead of
+  removing mapping. 503 semantically communicates "temporarily unavailable".
+- **Use `ResponseStatusException` to block** — built-in to Spring,
+  no need to create new exception class or feature flag.
+- **Other CV endpoints (`GET`, `POST`, `PUT`, `DELETE`, `GET /{id}/download`)
+  unchanged** — handle both LINK and existing FILE.
 
-**Plik:** `easyapply-backend/src/main/java/com/easyapply/controller/CVController.java`
+---
 
-- [x] Dodać rzucenie `ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ...)`
-      jako pierwsza linia w metodzie `uploadCV` (przed `cvService.uploadCV(...)`)
-- [x] Komunikat: klucz i18n `error.cv.uploadDisabled` (resolvowany przez
-      `MessageSource`, żeby obsłużyć PL/EN tak jak reszta errorów)
-- [x] Dodać wstrzyknięcie `MessageSource` do kontrolera (jeśli jeszcze go nie ma)
-- [x] `./mvnw test` — zielony po ukończeniu Etapów 2 i 3 (wykonane razem)
+## Implementation Status
+
+### Phase 1 — Block `POST /api/cv/upload` Endpoint
+
+**File:** `easyapply-backend/src/main/java/com/easyapply/controller/CVController.java`
+
+- [x] Add throw `ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ...)`
+      as first line in `uploadCV` method (before `cvService.uploadCV(...)`)
+- [x] Message: i18n key `error.cv.uploadDisabled` (resolved by
+      `MessageSource` to handle PL/EN like other errors)
+- [x] Add inject `MessageSource` to controller (if not already there)
+- [x] `./mvnw test` — green after completing Phases 2 & 3 (done together)
 
 **Schemat zmiany:**
 
@@ -62,74 +62,73 @@ public ResponseEntity<CVResponse> uploadCV(
 }
 ```
 
-> Metoda `cvService.uploadCV(...)` zostaje nietknięta — nie jest już
-> wywoływana z HTTP, ale tests jednostkowe `CVServiceTest` dalej z niej
-> korzystają i muszą przechodzić.
+> Method `cvService.uploadCV(...)` remains untouched — no longer
+> called from HTTP, but `CVServiceTest` unit tests still use it
+> and must pass.
 
 ---
 
-### Etap 2 — Klucz i18n komunikatu błędu
+### Phase 2 — i18n Key for Error Message
 
-**Pliki:** `easyapply-backend/src/main/resources/messages.properties`,
-`messages_pl.properties` (i ewentualnie `messages_en.properties` — zgodnie z istniejącą konwencją projektu)
+**Files:** `easyapply-backend/src/main/resources/messages.properties`,
+`messages_pl.properties` (and optionally `messages_en.properties` — per project convention)
 
-- [x] Zweryfikować które pliki messages istnieją w projekcie i jaki jest tam
-      wzorzec kluczy `error.cv.*` (znalezione: `i18n/messages.properties` + `messages_pl.properties`)
-- [x] Dodać klucz `error.cv.uploadDisabled`:
+- [x] Verify which message files exist and pattern for `error.cv.*` keys (found: `i18n/messages.properties` + `messages_pl.properties`)
+- [x] Add key `error.cv.uploadDisabled`:
   - PL: `"Upload plików CV jest chwilowo niedostępny. Użyj opcji linku zewnętrznego."`
   - EN: `"CV file upload is temporarily unavailable. Please use the external link option."`
-- [x] `./mvnw test` — zielony po ukończeniu Etapu 3
+- [x] `./mvnw test` — green after completing Phase 3
 
 ---
 
-### Etap 3 — Aktualizacja testów
+### Phase 3 — Update Tests
 
-**Plik:** `easyapply-backend/src/test/java/com/easyapply/controller/CVControllerTest.java`
+**File:** `easyapply-backend/src/test/java/com/easyapply/controller/CVControllerTest.java`
 
-- [x] Zmienić test uploadu (istniejący test `POST /api/cv/upload` happy path):
-  - Oczekiwany status: `503 Service Unavailable` zamiast `201 Created`
-  - ~~Asercja: response body zawiera komunikat z klucza `error.cv.uploadDisabled`~~ (pominięte — Spring MVC nie zawsze zwraca body dla `ResponseStatusException`)
-  - W bazie **nie ma** nowego rekordu CV po wywołaniu — weryfikowane przez `cvRepository.count()` przed/po
-  - Na dysku **nie ma** nowego pliku (endpoint rzuca wcześniej, service nie jest wywołany)
-- [x] Dodać test: `POST /api/cv/upload` z pustym plikiem nadal zwraca 503
-      (walidacja nie jest wykonywana, bo endpoint jest zablokowany wcześniej)
-- [x] Pozostałe testy CVController (CRUD dla LINK, download, delete) **bez zmian**
-- [x] `CVServiceTest` — **bez zmian** (metoda service dalej działa, testy unitowe zostają)
-- [x] `./mvnw test` — 88 testów, 0 failed
+- [x] Change upload test (existing `POST /api/cv/upload` happy path):
+  - Expected status: `503 Service Unavailable` instead of `201 Created`
+  - ~~Assertion: response body contains message from `error.cv.uploadDisabled` key~~ (skipped — Spring MVC doesn't always return body for `ResponseStatusException`)
+  - Database has **no** new CV record after call — verified by `cvRepository.count()` before/after
+  - Disk has **no** new file (endpoint throws before service is called)
+- [x] Add test: `POST /api/cv/upload` with empty file still returns 503
+      (validation not executed, endpoint blocked first)
+- [x] Other CVController tests (CRUD for LINK, download, delete) **unchanged**
+- [x] `CVServiceTest` — **unchanged** (service method still works, unit tests remain)
+- [x] `./mvnw test` — 88 tests, 0 failed
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [x] `POST /api/cv/upload` zwraca `503 Service Unavailable` z komunikatem i18n
-- [x] `POST /api/cv` (create) dla `CVType.LINK` działa jak dotychczas
-- [x] `GET /api/cv`, `GET /api/cv/{id}`, `GET /api/cv/{id}/download`, `DELETE /api/cv/{id}`, `PUT /api/cv/{id}` — bez zmian
-- [x] Istniejące rekordy `CVType.FILE` w bazie nadal dostępne (odczyt, download, delete)
+- [x] `POST /api/cv/upload` returns `503 Service Unavailable` with i18n message
+- [x] `POST /api/cv` (create) for `CVType.LINK` works as before
+- [x] `GET /api/cv`, `GET /api/cv/{id}`, `GET /api/cv/{id}/download`, `DELETE /api/cv/{id}`, `PUT /api/cv/{id}` — unchanged
+- [x] Existing `CVType.FILE` records in DB still accessible (read, download, delete)
 - [x] `./mvnw test` — 0 failed (88/88)
-- [ ] Komunikat błędu wyświetla się w języku ustawionym w `Accept-Language` — do weryfikacji manualnej
+- [ ] Error message displayed in language set by `Accept-Language` — manual verification needed
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Usuwanie kolumn `file_name`, `file_path`, `file_size` z tabeli `cvs`** — zostają
-  jako nullable dla rekordów historycznych i ewentualnego rollbacku
-- **Migracja istniejących plików CV** — pliki w `uploads/cv/` zostają na dysku,
-  są usuwane per user przez normalny flow (`DELETE /api/cv/{id}` lub kasowanie konta)
-- **Feature flag w `application.properties`** — prostsze hardcode; jeśli kiedyś będzie potrzeba dynamicznego przełączania, można dodać później
-- **Usuwanie metody `CVService.uploadCV`** — zostaje dla łatwego rollbacku i jako kod ficzera
-- **Komunikat frontendowy (tooltip "Chwilowo nieczynne")** — obsłużony w planie frontendowym
+- **Removing columns `file_name`, `file_path`, `file_size` from `cvs` table** — kept
+  as nullable for historical records and potential rollback
+- **Migration of existing CV files** — files in `uploads/cv/` remain on disk,
+  removed per-user via normal flow (`DELETE /api/cv/{id}` or account deletion)
+- **Feature flag in `application.properties`** — simpler hardcode; if dynamic toggling needed later, can add then
+- **Removing `CVService.uploadCV` method** — kept for easy rollback and as feature code
+- **Frontend message (tooltip "Temporarily unavailable")** — handled in frontend plan
 
 ---
 
-## Pliki do zmiany
+## Files to Change
 
-| Plik | Zmiana |
+| File | Change |
 |------|--------|
-| `controller/CVController.java` | `uploadCV` rzuca `ResponseStatusException(503)`, wstrzyknięcie `MessageSource` |
-| `resources/messages*.properties` | Nowy klucz `error.cv.uploadDisabled` (PL/EN) |
-| `test/controller/CVControllerTest.java` | Test uploadu oczekuje 503 zamiast 201 |
+| `controller/CVController.java` | `uploadCV` throws `ResponseStatusException(503)`, inject `MessageSource` |
+| `resources/messages*.properties` | New key `error.cv.uploadDisabled` (PL/EN) |
+| `test/controller/CVControllerTest.java` | Upload test expects 503 instead of 201 |
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-22*
+*Last updated: 2026-04-22*

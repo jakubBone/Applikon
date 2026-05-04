@@ -1,79 +1,79 @@
-# Service Notices — Plan implementacji backend
+# Service Notices Implementation Plan — Backend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `./mvnw test`, musi być zielony
-3. **Weryfikacja manualna** — użytkownik testuje endpoint ręcznie (opcjonalnie)
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(backend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-Zbudować system powiadomień serwisowych: admin tworzy komunikat (przez API),
-wszyscy zalogowani userzy widzą go w UI jako banner lub modal.
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `./mvnw test` must be green
+3. **Manual verification** — user tests endpoint manually (optional)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Architektura
+## Goal
+
+Build service notifications system: admin creates message (via API),
+all logged-in users see it in UI as banner or modal.
+
+---
+
+## Architecture
 
 ```
-Admin wywołuje:
-POST /api/admin/notices  (wymaga nagłówka X-Admin-Key)
+Admin calls:
+POST /api/admin/notices  (requires X-Admin-Key header)
         ↓
 ServiceNoticeService.create(request)
         ↓
-Zapisuje do tabeli service_notices
+Saves to service_notices table
 
 ---
 
-Frontend przy każdym wejściu:
-GET /api/system/notices/active  (wymaga JWT)
+Frontend on every page load:
+GET /api/system/notices/active  (requires JWT)
         ↓
 ServiceNoticeService.findActive()
   → WHERE active = true AND (expires_at IS NULL OR expires_at > now())
         ↓
-Lista aktywnych notices → ServiceBanner / ServiceModal
+List of active notices → ServiceBanner / ServiceModal
 ```
 
 ---
 
-## Decyzja: zabezpieczenie endpointu admin
+## Decision: Admin Endpoint Security
 
-Projekt nie ma ról użytkowników (brak `ROLE_ADMIN` w `User`). Dodanie roli
-wymagałoby migracji schematu i zmiany logiki auth. Zamiast tego:
+Project has no user roles (no `ROLE_ADMIN` in `User`). Adding a role
+would require schema migration and auth logic changes. Instead:
 
-**Shared secret w nagłówku** — admin wysyła `X-Admin-Key: <wartość>` w żądaniu.
-Wartość konfigurowana przez zmienną środowiskową `ADMIN_KEY` (trzymana w `.env`,
-nigdy w kodzie). Backend sprawdza nagłówek w dedykowanym filtrze.
+**Shared secret in header** — admin sends `X-Admin-Key: <value>` in request.
+Value configured via `ADMIN_KEY` environment variable (kept in `.env`,
+never in code). Backend checks header in dedicated filter.
 
-Minimalne i wystarczające dla skali projektu.
+Minimal and sufficient for project scale.
 
 ---
 
-## Edge cases — decyzje projektowe
+## Edge Cases — Design Decisions
 
-| # | Scenariusz | Decyzja |
+| # | Scenario | Decision |
 |---|---|---|
-| EC-2 | `/api/admin/**` vs JWT — `anyRequest().authenticated()` odrzuca request bez Bearer tokena zanim `AdminKeyFilter` się uruchomi | `/api/admin/**` dodane do `permitAll()` w SecurityConfig; jedynym zabezpieczeniem jest `AdminKeyFilter` z `X-Admin-Key` |
-| EC-3 | `ServiceNoticeType.valueOf("INVALID")` rzuca `IllegalArgumentException` → 500 | Pole `type` w `ServiceNoticeRequest` dostaje `@Pattern(regexp = "^(BANNER\|MODAL)$")` — Spring walidacja zwraca 400 |
-| EC-4 | `LocalDateTime.parse("abc")` rzuca `DateTimeParseException` → 500 | `GlobalExceptionHandler` dostaje handler dla `DateTimeParseException` → 400 z komunikatem |
-| EC-5 | `X-Admin-Key` nie jest w CORS `allowedHeaders` — preflight odrzuca | Dodać `X-Admin-Key` do `config.setAllowedHeaders()` w `SecurityConfig.corsConfigurationSource()` |
-| EC-6 | `expiresAt` w przeszłości przy tworzeniu notice | Brak walidacji — notice zostanie natychmiast niewidoczny; to błąd admina, nie systemu |
+| EC-2 | `/api/admin/**` vs JWT — `anyRequest().authenticated()` rejects request without Bearer token before `AdminKeyFilter` runs | `/api/admin/**` added to `permitAll()` in SecurityConfig; only protection is `AdminKeyFilter` with `X-Admin-Key` |
+| EC-3 | `ServiceNoticeType.valueOf("INVALID")` throws `IllegalArgumentException` → 500 | Field `type` in `ServiceNoticeRequest` gets `@Pattern(regexp = "^(BANNER\|MODAL)$")` — Spring validation returns 400 |
+| EC-4 | `LocalDateTime.parse("abc")` throws `DateTimeParseException` → 500 | `GlobalExceptionHandler` gets handler for `DateTimeParseException` → 400 with message |
+| EC-5 | `X-Admin-Key` not in CORS `allowedHeaders` — preflight rejects | Add `X-Admin-Key` to `config.setAllowedHeaders()` in `SecurityConfig.corsConfigurationSource()` |
+| EC-6 | `expiresAt` in the past when creating notice | No validation — notice will be immediately invisible; admin error, not system |
 
 ---
 
-## Status realizacji
+## Implementation Status
 
-### Etap 1 — Flyway migracja V14
+### Phase 1 — Flyway migration V14
 
-**Nowy plik:** `resources/db/migration/V14__service_notices.sql`
+**New file:** `resources/db/migration/V14__service_notices.sql`
 
-- [x] Stworzyć migrację:
+- [x] Create migration:
 
 ```sql
 CREATE TABLE service_notices (
@@ -87,13 +87,13 @@ CREATE TABLE service_notices (
 );
 ```
 
-- [x] `./mvnw test` — zielone (Flyway uruchomi migrację na H2 w testach)
+- [x] `./mvnw test` — green (Flyway will run migration on H2 in tests)
 
 ---
 
-### Etap 2 — Encja i enum
+### Phase 2 — Entity and Enum
 
-**Nowy plik:** `entity/ServiceNoticeType.java`
+**New file:** `entity/ServiceNoticeType.java`
 
 ```java
 public enum ServiceNoticeType {
@@ -101,7 +101,7 @@ public enum ServiceNoticeType {
 }
 ```
 
-**Nowy plik:** `entity/ServiceNotice.java`
+**New file:** `entity/ServiceNotice.java`
 
 ```java
 @Entity
@@ -135,13 +135,13 @@ public class ServiceNotice {
 }
 ```
 
-- [x] `./mvnw test` — zielone
+- [x] `./mvnw test` — green
 
 ---
 
-### Etap 3 — Repository i DTO
+### Phase 3 — Repository and DTO
 
-**Nowy plik:** `repository/ServiceNoticeRepository.java`
+**New file:** `repository/ServiceNoticeRepository.java`
 
 ```java
 public interface ServiceNoticeRepository extends JpaRepository<ServiceNotice, Long> {
@@ -154,7 +154,7 @@ public interface ServiceNoticeRepository extends JpaRepository<ServiceNotice, Lo
 
 ---
 
-**Nowy plik:** `dto/ServiceNoticeResponse.java`
+**New file:** `dto/ServiceNoticeResponse.java`
 
 ```java
 public record ServiceNoticeResponse(
@@ -168,7 +168,7 @@ public record ServiceNoticeResponse(
 
 ---
 
-**Nowy plik:** `dto/ServiceNoticeRequest.java`
+**New file:** `dto/ServiceNoticeRequest.java`
 
 ```java
 public record ServiceNoticeRequest(
@@ -177,17 +177,17 @@ public record ServiceNoticeRequest(
     String type,
     @NotBlank String messagePl,
     @NotBlank String messageEn,
-    String expiresAt   // ISO-8601, nullable; brak walidacji czy > now() — błąd admina
+    String expiresAt   // ISO-8601, nullable; no validation if > now() — admin's responsibility
 ) {}
 ```
 
-- [x] `./mvnw test` — zielone
+- [x] `./mvnw test` — green
 
 ---
 
-### Etap 4 — Service
+### Phase 4 — Service
 
-**Nowy plik:** `service/ServiceNoticeService.java`
+**New file:** `service/ServiceNoticeService.java`
 
 ```java
 @Service
@@ -229,15 +229,15 @@ public class ServiceNoticeService {
 }
 ```
 
-- [x] `./mvnw test` — zielone
+- [x] `./mvnw test` — green
 
 ---
 
-### Etap 5 — GlobalExceptionHandler: obsługa `DateTimeParseException`
+### Phase 5 — GlobalExceptionHandler: Handle `DateTimeParseException`
 
-**Plik:** `exception/GlobalExceptionHandler.java`
+**File:** `exception/GlobalExceptionHandler.java`
 
-- [x] Dodać handler (EC-4: nieprawidłowy format `expiresAt` → 400 zamiast 500):
+- [x] Add handler (EC-4: invalid `expiresAt` format → 400 instead of 500):
 
 ```java
 @ExceptionHandler(DateTimeParseException.class)
@@ -247,13 +247,13 @@ public ResponseEntity<Map<String, String>> handleDateTimeParse(DateTimeParseExce
 }
 ```
 
-- [x] `./mvnw test` — zielone
+- [x] `./mvnw test` — green
 
 ---
 
-### Etap 7 — Kontrolery
+### Phase 7 — Controllers
 
-**Nowy plik:** `controller/SystemController.java`
+**New file:** `controller/SystemController.java`
 
 ```java
 @RestController
@@ -273,11 +273,11 @@ public class SystemController {
 }
 ```
 
-Endpoint wymaga JWT (objęty przez istniejący `SecurityConfig`).
+Endpoint requires JWT (covered by existing `SecurityConfig`).
 
 ---
 
-**Nowy plik:** `controller/AdminController.java`
+**New file:** `controller/AdminController.java`
 
 ```java
 @RestController
@@ -299,13 +299,13 @@ public class AdminController {
 }
 ```
 
-- [x] `./mvnw test` — zielone
+- [x] `./mvnw test` — green
 
 ---
 
-### Etap 8 — Zabezpieczenie endpointu admin
+### Phase 8 — Admin Endpoint Security
 
-**Nowy plik:** `security/AdminKeyFilter.java`
+**New file:** `security/AdminKeyFilter.java`
 
 ```java
 @Component
@@ -332,101 +332,101 @@ public class AdminKeyFilter extends OncePerRequestFilter {
 }
 ```
 
-**Plik:** `.env` (lokalny, nie w repo)
+**File:** `.env` (local, not in repo)
 
 ```
-ADMIN_KEY=<losowy-string-min-32-znaki>
+ADMIN_KEY=<random-string-min-32-chars>
 ```
 
-**Plik:** `application.properties`
+**File:** `application.properties`
 
 ```properties
 app.admin-key=${ADMIN_KEY}
 ```
 
-**Plik:** `config/SecurityConfig.java`
+**File:** `config/SecurityConfig.java`
 
-- [x] Dodać `/api/admin/**` do `permitAll()` — JWT nie jest wymagany dla tego
-  endpointu; jedynym zabezpieczeniem jest `AdminKeyFilter` z nagłówkiem
-  `X-Admin-Key` (EC-2: `anyRequest().authenticated()` blokowałoby curl bez JWT)
-- [x] Dodać `X-Admin-Key` do `config.setAllowedHeaders()` w
-  `corsConfigurationSource()` (EC-5: bez tego preflight odrzuca request)
-- [x] Zarejestrować `AdminKeyFilter` w łańcuchu filtrów
+- [x] Add `/api/admin/**` to `permitAll()` — JWT not required for this
+  endpoint; only protection is `AdminKeyFilter` with
+  `X-Admin-Key` header (EC-2: `anyRequest().authenticated()` would block curl without JWT)
+- [x] Add `X-Admin-Key` to `config.setAllowedHeaders()` in
+  `corsConfigurationSource()` (EC-5: without this preflight rejects request)
+- [x] Register `AdminKeyFilter` in filter chain
 
-**Plik:** `test/application.properties` (lub odpowiednik dla testów)
+**File:** `test/application.properties` (or equivalent for tests)
 
-- [x] Dodać `app.admin-key=test-admin-key` — żeby testy się kompilowały
-  bez `.env`
+- [x] Add `app.admin-key=test-admin-key` — so tests compile
+  without `.env`
 
-- [x] `./mvnw test` — zielone
+- [x] `./mvnw test` — green
 
 ---
 
-### Etap 9 — Testy
+### Phase 9 — Tests
 
-**Nowy plik:** `test/controller/SystemControllerTest.java`
+**New file:** `test/controller/SystemControllerTest.java`
 
-- [x] Test `GET /api/system/notices/active` — brak notices w DB:
+- [x] Test `GET /api/system/notices/active` — no notices in DB:
   - Response `200`, body `[]`
-- [x] Test `GET /api/system/notices/active` — 1 aktywny notice:
-  - Response `200`, body zawiera 1 element z poprawnym `type` i `messagePl`
-- [x] Test `GET /api/system/notices/active` — notice wygasły (expiresAt w przeszłości):
-  - Response `200`, body `[]` (wygasły nie wraca)
-- [x] Test `GET /api/system/notices/active` bez JWT:
+- [x] Test `GET /api/system/notices/active` — 1 active notice:
+  - Response `200`, body contains 1 element with correct `type` and `messagePl`
+- [x] Test `GET /api/system/notices/active` — expired notice (expiresAt in past):
+  - Response `200`, body `[]` (expired not returned)
+- [x] Test `GET /api/system/notices/active` without JWT:
   - Response `401`
 
-**Nowy plik:** `test/controller/AdminControllerTest.java`
+**New file:** `test/controller/AdminControllerTest.java`
 
-- [x] Test `POST /api/admin/notices` z poprawnym `X-Admin-Key`:
+- [x] Test `POST /api/admin/notices` with correct `X-Admin-Key`:
   - Response `201`
-  - Notice zapisany w DB
-- [x] Test `POST /api/admin/notices` bez `X-Admin-Key`:
+  - Notice saved in DB
+- [x] Test `POST /api/admin/notices` without `X-Admin-Key`:
   - Response `403`
-- [x] Test `POST /api/admin/notices` z błędnym `X-Admin-Key`:
+- [x] Test `POST /api/admin/notices` with wrong `X-Admin-Key`:
   - Response `403`
-- [x] Test `POST /api/admin/notices` z brakującymi polami (`messagePl` puste):
+- [x] Test `POST /api/admin/notices` with missing fields (`messagePl` empty):
   - Response `400`
-- [ ] `./mvnw test` — wszystkie testy zielone
+- [ ] `./mvnw test` — all tests green
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [x] Flyway V14 tworzy tabelę `service_notices`
-- [x] `POST /api/admin/notices` z `X-Admin-Key` tworzy notice → `201`
-- [x] `POST /api/admin/notices` bez klucza → `403`
-- [x] `GET /api/system/notices/active` zwraca aktywne, nieuwzględnia wygasłych
-- [x] `GET /api/system/notices/active` bez JWT → `401` (egzekwowane przez produkcyjny SecurityConfig; nieprzetestowalne w profilu test z `permitAll()`)
+- [x] Flyway V14 creates `service_notices` table
+- [x] `POST /api/admin/notices` with `X-Admin-Key` creates notice → `201`
+- [x] `POST /api/admin/notices` without key → `403`
+- [x] `GET /api/system/notices/active` returns active notices, excludes expired
+- [x] `GET /api/system/notices/active` without JWT → `401` (enforced by production SecurityConfig; untestable in test profile with `permitAll()`)
 - [x] `./mvnw test` — 0 failed
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Dezaktywacja notice przez API** — admin może ręcznie ustawić `active=false`
-  przez bazę danych; endpoint PATCH/DELETE to nadmiarowy zakres
-- **Limit aktywnych notices** — nie ograniczamy liczby; w praktyce będzie 0-1
-- **Notyfikacje push / email** — tylko in-app
-- **Role ADMIN w User** — zbyt duża zmiana dla tej skali; shared secret wystarczy
+- **Notice deactivation via API** — admin can manually set `active=false`
+  via database; PATCH/DELETE endpoint is excessive scope
+- **Active notices limit** — no count restriction; in practice 0-1
+- **Push / email notifications** — in-app only
+- **ADMIN role in User** — too big a change for this scale; shared secret is sufficient
 
 ---
 
-## Pliki do zmiany
+## Files to Change
 
-| Plik | Zmiana |
+| File | Change |
 |------|--------|
-| `db/migration/V14__service_notices.sql` | **Nowy** — tabela `service_notices` |
-| `entity/ServiceNoticeType.java` | **Nowy** — enum BANNER/MODAL |
-| `entity/ServiceNotice.java` | **Nowy** — encja |
-| `repository/ServiceNoticeRepository.java` | **Nowy** — `findActive` query |
-| `dto/ServiceNoticeResponse.java` | **Nowy** — response DTO |
-| `dto/ServiceNoticeRequest.java` | **Nowy** — request DTO |
-| `service/ServiceNoticeService.java` | **Nowy** — logika |
-| `controller/SystemController.java` | **Nowy** — `GET /api/system/notices/active` |
-| `controller/AdminController.java` | **Nowy** — `POST /api/admin/notices` |
-| `security/AdminKeyFilter.java` | **Nowy** — weryfikacja X-Admin-Key |
-| `config/SecurityConfig.java` | Rejestracja AdminKeyFilter |
+| `db/migration/V14__service_notices.sql` | **New** — `service_notices` table |
+| `entity/ServiceNoticeType.java` | **New** — enum BANNER/MODAL |
+| `entity/ServiceNotice.java` | **New** — entity |
+| `repository/ServiceNoticeRepository.java` | **New** — `findActive` query |
+| `dto/ServiceNoticeResponse.java` | **New** — response DTO |
+| `dto/ServiceNoticeRequest.java` | **New** — request DTO |
+| `service/ServiceNoticeService.java` | **New** — logic |
+| `controller/SystemController.java` | **New** — `GET /api/system/notices/active` |
+| `controller/AdminController.java` | **New** — `POST /api/admin/notices` |
+| `security/AdminKeyFilter.java` | **New** — X-Admin-Key verification |
+| `config/SecurityConfig.java` | Register AdminKeyFilter |
 | `application.properties` | `app.admin-key=${ADMIN_KEY}` |
 | `test/application.properties` | `app.admin-key=test-admin-key` |
-| `test/controller/SystemControllerTest.java` | **Nowy** — 4 testy |
-| `test/controller/AdminControllerTest.java` | **Nowy** — 4 testy |
+| `test/controller/SystemControllerTest.java` | **New** — 4 tests |
+| `test/controller/AdminControllerTest.java` | **New** — 4 tests |

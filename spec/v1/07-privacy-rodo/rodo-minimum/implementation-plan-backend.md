@@ -1,80 +1,80 @@
-# Plan implementacji RODO minimum — EasyApply Backend
+# RODO Minimum Implementation Plan — EasyApply Backend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `./mvnw test`, musi być zielony
-3. **Weryfikacja manualna** — użytkownik testuje endpoint ręcznie (opcjonalnie)
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(backend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-Zrealizować minimum RODO po stronie backendu:
-1. **Zgoda na politykę prywatności** — rejestrowana w bazie, wymagana przed
-   dostępem do appki dla nowych userów
-2. **Prawo do usunięcia danych** — endpoint `DELETE /api/auth/me` kasuje
-   usera i wszystkie jego dane (CV, aplikacje, notatki, pliki z dysku)
-3. **Brak bonusowych rzeczy** — żadnego eksportu danych, żadnych cookies
-   consentów poza minimum
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `./mvnw test` must be green
+3. **Manual verification** — user tests endpoint manually (optional)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Architektura consent flow
+## Goal
+
+Implement RODO minimum on backend:
+1. **Privacy policy consent** — recorded in database, required before
+   access to app for new users
+2. **Right to delete data** — endpoint `DELETE /api/auth/me` deletes
+   user and all their data (CVs, applications, notes, files from disk)
+3. **No bonus features** — no data export, no consent cookies
+   beyond minimum
+
+---
+
+## Consent Flow Architecture
 
 ```
-  Nowy user loguje się przez Google
+  New user logs in via Google
             ↓
   CustomOAuth2UserService.loadUser
             ↓
   UserService.findOrCreateUser
-    → tworzy User z privacy_policy_accepted_at = NULL
+    → creates User with privacy_policy_accepted_at = NULL
             ↓
-  Frontend dostaje JWT
+  Frontend receives JWT
             ↓
-  Frontend woła GET /api/auth/me
-    → Response zawiera privacyPolicyAcceptedAt (null dla nowego)
+  Frontend calls GET /api/auth/me
+    → Response contains privacyPolicyAcceptedAt (null for new user)
             ↓
-  Frontend: jeśli null → pokazuje ekran consent (blokada UI)
+  Frontend: if null → shows consent screen (UI blocked)
             ↓
-  User akceptuje → POST /api/auth/consent
+  User accepts → POST /api/auth/consent
     → Backend: privacy_policy_accepted_at = now()
             ↓
-  Normalny dostęp do appki
+  Normal access to app
 ```
 
-**Ochrona endpointów:** guard (filter lub HandlerInterceptor) sprawdza pole
-`privacyPolicyAcceptedAt` na każdym wywołaniu poza whitelistą
+**Endpoint protection:** guard (filter or HandlerInterceptor) checks
+`privacyPolicyAcceptedAt` field on every call outside whitelist
 (`/api/auth/me`, `/api/auth/consent`, `/api/auth/logout`, `/api/auth/refresh`,
-`DELETE /api/auth/me`). Jeśli pole `null` → `403 Forbidden` z kodem
-`CONSENT_REQUIRED` w body.
+`DELETE /api/auth/me`). If field `null` → `403 Forbidden` with
+`CONSENT_REQUIRED` code in body.
 
-**Dlaczego user istnieje w bazie przed akceptacją zgody?**
-Technicznie musimy zapisać usera żeby wystawić mu JWT (JWT zawiera userId).
-Alternatywa — trzymanie "pending" stanu w sesji — wprowadza znacznie
-więcej kodu. Trade-off: user w bazie jest, ale bez zgody nie może nic zrobić
-(poza zaakceptowaniem lub wylogowaniem). W praktyce kolumna `privacy_policy_accepted_at = NULL`
-oznacza "użytkownik w połowie rejestracji". Przy kasowaniu konta usuwamy tak samo.
+**Why does user exist in database before consent acceptance?**
+Technically we must save user to issue JWT (JWT contains userId).
+Alternative — keeping "pending" state in session — introduces significantly
+more code. Trade-off: user is in DB but cannot do anything without consent
+(except accept or log out). In practice column `privacy_policy_accepted_at = NULL`
+means "user mid-registration". On account deletion we remove the same way.
 
 ---
 
-## Status realizacji
+## Implementation Status
 
-### Etap 1 — Migracja schematu: pole `privacy_policy_accepted_at`
+### Phase 1 — Schema Migration: `privacy_policy_accepted_at` Field
 
-**Plik encji:** `entity/User.java`
+**Entity file:** `entity/User.java`
 
-- [x] Dodać pole `LocalDateTime privacyPolicyAcceptedAt` z `@Column(name = "privacy_policy_accepted_at")` (nullable)
-- [x] Dodać getter `getPrivacyPolicyAcceptedAt()`
-- [x] Dodać metodę domenową `acceptPrivacyPolicy()` ustawiającą pole na `LocalDateTime.now()` (**idempotentna** — jeśli już ustawione, nie nadpisuje; egzekwuje inwariant w domenie)
-- [x] **Flyway migracja V13** `V13__user_privacy_policy_accepted_at.sql` — plan zakładał `ddl-auto=update`, ale projekt używa Flyway (migracje V1–V12 w `db/migration/`), więc zamiast polegać na Hibernate napisałem właściwą migrację
-- [x] `./mvnw test` — 88/88 zielone
+- [x] Add field `LocalDateTime privacyPolicyAcceptedAt` with `@Column(name = "privacy_policy_accepted_at")` (nullable)
+- [x] Add getter `getPrivacyPolicyAcceptedAt()`
+- [x] Add domain method `acceptPrivacyPolicy()` setting field to `LocalDateTime.now()` (**idempotent** — if already set, does not overwrite; enforces domain invariant)
+- [x] **Flyway migration V13** `V13__user_privacy_policy_accepted_at.sql` — plan assumed `ddl-auto=update`, but project uses Flyway (migrations V1–V12 in `db/migration/`), so instead of relying on Hibernate I wrote proper migration
+- [x] `./mvnw test` — 88/88 passing
 
-**Schemat:**
+**Schema:**
 
 ```java
 @Column(name = "privacy_policy_accepted_at")
@@ -89,27 +89,27 @@ public void acceptPrivacyPolicy() {
 
 ---
 
-### Etap 2 — `UserResponse` ujawnia stan zgody
+### Phase 2 — `UserResponse` Exposes Consent Status
 
-**Plik:** `dto/UserResponse.java`
+**File:** `dto/UserResponse.java`
 
-- [x] Dodać pole `privacyPolicyAcceptedAt` jako `String` (ISO-8601 z `LocalDateTime.toString()`, null-safe) — spójne z `CVResponse.uploadedAt`
-- [x] Frontend na podstawie tego pola decyduje czy pokazać ekran consent
-- [x] `./mvnw test` — 88/88 zielone (brak testu `/api/auth/me` w projekcie, nic do zaktualizowania)
+- [x] Add `privacyPolicyAcceptedAt` field as `String` (ISO-8601 from `LocalDateTime.toString()`, null-safe) — consistent with `CVResponse.uploadedAt`
+- [x] Frontend decides whether to show consent screen based on this field
+- [x] `./mvnw test` — 88/88 green (no test for `/api/auth/me` in project, nothing to update)
 
 ---
 
-### Etap 3 — Endpoint `POST /api/auth/consent`
+### Phase 3 — Endpoint `POST /api/auth/consent`
 
-**Plik:** `controller/AuthController.java`
+**File:** `controller/AuthController.java`
 
-- [x] Dodać nowy endpoint `POST /api/auth/consent`
-- [x] Wymaga zalogowanego usera (`@AuthenticationPrincipal`)
-- [x] Idempotentny: jeśli user już zaakceptował, nie nadpisuje daty — zwraca 204
-- [x] Wywołuje nową metodę `userService.acceptPrivacyPolicy(userId)`
+- [x] Add new endpoint `POST /api/auth/consent`
+- [x] Requires logged-in user (`@AuthenticationPrincipal`)
+- [x] Idempotent: if user already accepted, doesn't overwrite date — returns 204
+- [x] Calls new method `userService.acceptPrivacyPolicy(userId)`
 - [x] Response: `204 No Content`
 
-**Schemat:**
+**Schema:**
 
 ```java
 @PostMapping("/consent")
@@ -120,7 +120,7 @@ public ResponseEntity<Void> acceptConsent(
 }
 ```
 
-**W `UserService`:**
+**In `UserService`:**
 
 ```java
 @Transactional
@@ -135,37 +135,37 @@ public void acceptPrivacyPolicy(UUID userId) {
 
 ---
 
-### Etap 4 — Guard wymuszający zgodę
+### Phase 4 — Consent Enforcing Guard
 
-**Nowy plik:** `security/ConsentRequiredFilter.java` (lub `HandlerInterceptor`)
+**New file:** `security/ConsentRequiredFilter.java` (or `HandlerInterceptor`)
 
-- [x] Filter po `JwtAuthenticationConverter` — user jest już zautentykowany
-- [x] Whitelist endpointów (ścieżek bezwzględnych):
+- [x] Filter after `JwtAuthenticationConverter` — user is already authenticated
+- [x] Endpoint whitelist (absolute paths):
   - `GET /api/auth/me`
   - `POST /api/auth/consent`
   - `POST /api/auth/logout`
   - `POST /api/auth/refresh`
   - `DELETE /api/auth/me`
-  - `/actuator/**` (jeśli używany)
-- [x] Dla pozostałych: pobierz usera z bazy, sprawdź `privacyPolicyAcceptedAt`
-- [x] Jeśli `null` → zwróć `403 Forbidden` z body `{"error": "CONSENT_REQUIRED"}`
-- [x] Rejestracja w `SecurityConfig.java` — dodać filter do łańcucha po JWT
-- [x] `./mvnw test` — testy kontrolerów wymagających zgody muszą teraz w setup tworzyć usera z ustawioną datą
+  - `/actuator/**` (if used)
+- [x] For others: fetch user from DB, check `privacyPolicyAcceptedAt`
+- [x] If `null` → return `403 Forbidden` with body `{"error": "CONSENT_REQUIRED"}`
+- [x] Register in `SecurityConfig.java` — add filter to chain after JWT
+- [x] `./mvnw test` — controller tests requiring consent must now create user with date set in setup
 
-**Decyzja do potwierdzenia:** ścieżka `DELETE /api/auth/me` w whitelist — user bez zgody nadal musi móc usunąć swoje konto (to jest prawo RODO, niezależne od consentu na usługę).
+**Decision to confirm:** path `DELETE /api/auth/me` in whitelist — user without consent must still be able to delete their account (this is GDPR right, independent of service consent).
 
 ---
 
-### Etap 5 — Endpoint `DELETE /api/auth/me`
+### Phase 5 — Endpoint `DELETE /api/auth/me`
 
-**Plik:** `controller/AuthController.java`
+**File:** `controller/AuthController.java`
 
-- [x] Dodać endpoint `DELETE /api/auth/me`
-- [x] Wywołuje `userService.deleteAccount(userId)`
-- [x] Czyści cookie `refresh_token` (analogicznie do logout)
+- [x] Add endpoint `DELETE /api/auth/me`
+- [x] Calls `userService.deleteAccount(userId)`
+- [x] Clears `refresh_token` cookie (analogous to logout)
 - [x] Response: `204 No Content`
 
-**Schemat:**
+**Schema:**
 
 ```java
 @DeleteMapping("/me")
@@ -185,14 +185,14 @@ public ResponseEntity<Void> deleteAccount(
 }
 ```
 
-**W `UserService`:**
+**In `UserService`:**
 
 ```java
 @Transactional
 public void deleteAccount(UUID userId) {
     User user = getById(userId);
 
-    // 1. Fizyczne pliki CV z dysku
+    // 1. Physical CV files from disk
     List<CV> cvs = cvRepository.findByUserId(userId);
     for (CV cv : cvs) {
         if (cv.getType() == CVType.FILE && cv.getFilePath() != null) {
@@ -218,82 +218,82 @@ public void deleteAccount(UUID userId) {
 }
 ```
 
-**Decyzja:** **Ręczne usuwanie** — jawność kolejności (notatki → aplikacje → CVy → user),
-łatwiej debugować, gwarancja że pliki z dysku są posprzątane przed usunięciem rekordów.
+**Decision:** **Manual deletion** — explicit ordering (notes → applications → CVs → user),
+easier to debug, guarantees disk files are cleaned up before records are removed.
 
 ---
 
-### Etap 6 — Strona `/privacy` (statyczny content przez backend?)
+### Phase 6 — Page `/privacy` (static content via backend?)
 
-**Decyzja projektowa:** Czy stronę polityki serwujemy z frontendu (React
-route) czy z backendu (REST endpoint zwracający markdown/HTML)?
+**Design decision:** Do we serve the policy page from frontend (React
+route) or from backend (REST endpoint returning markdown/HTML)?
 
-**Rekomendacja:** **Frontend**. Polityka to część UI (styling, i18n,
-nawigacja w appce). Backend nie musi wiedzieć o jej istnieniu.
+**Recommendation:** **Frontend**. Policy is part of UI (styling, i18n,
+navigation in app). Backend doesn't need to know about its existence.
 
-**Zatem w tym planie:** brak zadań backendowych dla `/privacy`. Strona
-obsłużona w pełni we frontend planie.
+**So in this plan:** no backend tasks for `/privacy`. Page
+fully handled in frontend plan.
 
 ---
 
-### Etap 7 — Testy
+### Phase 7 — Tests
 
-**Plik:** `test/controller/AuthControllerTest.java` (i ewentualnie nowe pliki)
+**File:** `test/controller/AuthControllerTest.java` (and possibly new files)
 
-- [x] Test `POST /api/auth/consent` dla nowego usera:
+- [x] Test `POST /api/auth/consent` for new user:
   - Response 204
-  - Pole `privacy_policy_accepted_at` w bazie jest ustawione
-- [x] Test `POST /api/auth/consent` dwa razy:
-  - Drugie wywołanie nie zmienia daty (idempotentność)
-- [x] Test `GET /api/auth/me` zwraca `privacyPolicyAcceptedAt` w response
-- [x] Test guardu: wywołanie `DELETE /api/auth/me` kasuje user + wszystkie dane
-- [x] `./mvnw test` — 92 testy zielone (88 existing + 4 new AuthControllerTest)
+  - Field `privacy_policy_accepted_at` is set in DB
+- [x] Test `POST /api/auth/consent` twice:
+  - Second call doesn't change date (idempotency)
+- [x] Test `GET /api/auth/me` returns `privacyPolicyAcceptedAt` in response
+- [x] Guard test: calling `DELETE /api/auth/me` removes user + all data
+- [x] `./mvnw test` — 92 tests green (88 existing + 4 new AuthControllerTest)
 
-**Pozostałe testy** (CVControllerTest, ApplicationControllerTest, itd.):
-- [x] Setup tworzy usera z ustawionym `privacyPolicyAcceptedAt = LocalDateTime.now()`
-- [x] Zmiana w metodzie `@BeforeEach` we wszystkich 4 test klasach
+**Other tests** (CVControllerTest, ApplicationControllerTest, etc.):
+- [x] Setup creates user with set `privacyPolicyAcceptedAt = LocalDateTime.now()`
+- [x] Change in `@BeforeEach` method across all 4 test classes
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [x] Nowy user po loginie Google ma `privacy_policy_accepted_at = NULL` w bazie
-- [x] `GET /api/auth/me` zwraca pole `privacyPolicyAcceptedAt` (null lub ISO-8601)
-- [x] `POST /api/auth/consent` ustawia pole na `now()`, idempotentny
-- [x] Guard: wszystkie endpointy poza whitelistą zwracają 403 `CONSENT_REQUIRED` dla usera bez zgody
-- [x] `DELETE /api/auth/me` kasuje usera, jego CV (rekordy + pliki), aplikacje, notatki; czyści cookie refresh_token
+- [x] New user after Google login has `privacy_policy_accepted_at = NULL` in DB
+- [x] `GET /api/auth/me` returns `privacyPolicyAcceptedAt` field (null or ISO-8601)
+- [x] `POST /api/auth/consent` sets field to `now()`, idempotent
+- [x] Guard: all endpoints outside whitelist return 403 `CONSENT_REQUIRED` for user without consent
+- [x] `DELETE /api/auth/me` removes user, their CVs (records + files), applications, notes; clears refresh_token cookie
 - [x] `./mvnw test` — 92 passed, 0 failed
-- [x] Manualny test: pełen flow od loginu nowego usera do dostępu do appki ✅
+- [x] Manual test: full flow from new user login to app access ✅
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Endpoint `GET /api/auth/me/export`** — prawo do przenoszenia danych RODO;
-  opcjonalne, rozważane po fazie 07
-- **Versioning polityki prywatności** — pole będzie tylko `privacy_policy_accepted_at` (timestamp),
-  nie `privacy_policy_version`. Jeśli kiedyś zmienimy politykę i trzeba będzie wymusić
-  ponowną akceptację — dopiero wtedy dodamy wersjonowanie
-- **Soft delete** — konto usuwamy twardo (hard delete). Prawo RODO mówi o całkowitym usunięciu
-- **Audyt kto i kiedy usunął konto** — nie logujemy, bo to by oznaczało przechowywanie danych usuniętego usera (sprzeczne z celem)
-- **Email potwierdzający usunięcie** — nie mamy systemu wysyłki maili, poza zakresem
-- **Rate limiting na DELETE /me** — opcjonalne, ale małe ryzyko (user musi być zalogowany); rozważane w `retention-hygiene`
+- **Endpoint `GET /api/auth/me/export`** — GDPR right to data portability;
+  optional, considered after phase 07
+- **Privacy policy versioning** — field will only be `privacy_policy_accepted_at` (timestamp),
+  not `privacy_policy_version`. If we change policy and need to enforce
+  re-acceptance — we'll add versioning then
+- **Soft delete** — account deleted hard (hard delete). GDPR mandates complete removal
+- **Audit log of who and when deleted account** — not logged, as it would mean storing data of deleted user (contradicts goal)
+- **Email confirming deletion** — no email system, out of scope
+- **Rate limiting on DELETE /me** — optional, but low risk (user must be logged in); considered in `retention-hygiene`
 
 ---
 
-## Pliki do zmiany
+## Files to Change
 
-| Plik | Zmiana |
+| File | Change |
 |------|--------|
-| `entity/User.java` | Pole `privacyPolicyAcceptedAt` + metoda `acceptPrivacyPolicy()` |
-| `dto/UserResponse.java` | Ekspozycja pola `privacyPolicyAcceptedAt` |
+| `entity/User.java` | Field `privacyPolicyAcceptedAt` + method `acceptPrivacyPolicy()` |
+| `dto/UserResponse.java` | Expose `privacyPolicyAcceptedAt` field |
 | `controller/AuthController.java` | `POST /api/auth/consent`, `DELETE /api/auth/me` |
 | `service/UserService.java` | `acceptPrivacyPolicy(userId)`, `deleteAccount(userId)` |
-| `security/ConsentRequiredFilter.java` | **Nowy plik** — guard |
-| `config/SecurityConfig.java` | Rejestracja filteru w łańcuchu |
-| `test/controller/AuthControllerTest.java` | Nowe testy + poprawki setupu |
-| `test/controller/*ControllerTest.java` (pozostałe) | Setup tworzy usera ze zgodą |
+| `security/ConsentRequiredFilter.java` | **New file** — guard |
+| `config/SecurityConfig.java` | Register filter in chain |
+| `test/controller/AuthControllerTest.java` | New tests + setup fixes |
+| `test/controller/*ControllerTest.java` (others) | Setup creates user with consent |
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-23 — COMPLETE ✅*
+*Last updated: 2026-04-23 — COMPLETE ✅*

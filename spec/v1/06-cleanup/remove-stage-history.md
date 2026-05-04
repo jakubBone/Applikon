@@ -1,148 +1,148 @@
-# Plan usunięcia stage_history — EasyApply
+# Plan to Remove stage_history — EasyApply
 
 ## Problem
 
-Funkcjonalność `stage_history` jest zaimplementowana w backendzie i frontendzie,
-ale **nigdy nie jest wyświetlana użytkownikowi** — żaden komponent UI jej nie renderuje.
+Feature `stage_history` is implemented in backend and frontend,
+but **is never displayed to the user** — no UI component renders it.
 
-Backend zapisuje historię etapów (kiedy była HR rozmowa, kiedy technical interview itd.),
-frontend otrzymuje te dane w każdej odpowiedzi `/api/applications`, ale je ignoruje.
+Backend saves stage history (when HR call was, when technical interview etc.),
+frontend receives this data in every `/api/applications` response, but ignores it.
 
-**Wniosek:** to overengineering. Dane są zbierane, zajmują miejsce w bazie i komplikują kod,
-ale nie dostarczają żadnej wartości użytkownikowi.
+**Conclusion:** this is overengineering. Data is collected, takes up database space, complicates code,
+but delivers no value to user.
 
 ---
 
-## Analiza użycia — gdzie stage_history istnieje w kodzie
+## Usage Analysis — Where stage_history Exists in Code
 
-### Backend — pliki do zmiany
+### Backend — Files to Change
 
-| Plik | Co jest | Co zrobić |
+| File | What's there | What to do |
 |------|---------|-----------|
-| `entity/StageHistory.java` | Encja JPA — mapuje tabelę `stage_history` | Usunąć plik |
-| `repository/StageHistoryRepository.java` | Repo z `findByApplicationIdOrderByCreatedAtAsc`, `deleteByApplicationId` | Usunąć plik |
-| `dto/StageHistoryResponse.java` | DTO zwracane w `ApplicationResponse` | Usunąć plik |
-| `entity/Application.java` | Pole `List<StageHistory> stageHistory` z `@OneToMany`, getter, `addStageHistory()` | Usunąć pole i metody |
-| `dto/ApplicationResponse.java` | Pole `List<StageHistoryResponse> stageHistory`, mapowanie w `fromEntity()` | Usunąć pole i mapowanie |
-| `service/ApplicationService.java` | `stageHistoryRepository` (wstrzykiwany), `markCurrentStageCompleted()`, wywołania `stageHistoryRepository.save/delete` w `create()`, `addStage()`, `updateStage()` | Usunąć wszystkie użycia i metodę prywatną |
-| `service/UserService.java` | `stageHistoryRepository` (wstrzykiwany), `stageHistoryRepository.save(initialStage)` przy tworzeniu demo aplikacji | Usunąć wszystkie użycia |
-| `repository/ApplicationRepository.java` | `@EntityGraph(attributePaths = {"stageHistory"})` i metoda `findByUserIdWithStageHistory` | Usunąć `@EntityGraph` i zastąpić metodę standardowym `findByUserId` |
-| `db/migration/` | Tabela `stage_history` zdefiniowana w `V1__init_schema.sql` | Dodać nową migrację `V5__drop_stage_history.sql` |
+| `entity/StageHistory.java` | JPA entity — maps `stage_history` table | Delete file |
+| `repository/StageHistoryRepository.java` | Repo with `findByApplicationIdOrderByCreatedAtAsc`, `deleteByApplicationId` | Delete file |
+| `dto/StageHistoryResponse.java` | DTO returned in `ApplicationResponse` | Delete file |
+| `entity/Application.java` | Field `List<StageHistory> stageHistory` with `@OneToMany`, getter, `addStageHistory()` | Delete field and methods |
+| `dto/ApplicationResponse.java` | Field `List<StageHistoryResponse> stageHistory`, mapping in `fromEntity()` | Delete field and mapping |
+| `service/ApplicationService.java` | `stageHistoryRepository` (injected), `markCurrentStageCompleted()`, calls to `stageHistoryRepository.save/delete` in `create()`, `addStage()`, `updateStage()` | Delete all usages and private method |
+| `service/UserService.java` | `stageHistoryRepository` (injected), `stageHistoryRepository.save(initialStage)` when creating demo app | Delete all usages |
+| `repository/ApplicationRepository.java` | `@EntityGraph(attributePaths = {"stageHistory"})` and method `findByUserIdWithStageHistory` | Delete `@EntityGraph` and replace method with standard `findByUserId` |
+| `db/migration/` | Table `stage_history` defined in `V1__init_schema.sql` | Add new migration `V5__drop_stage_history.sql` |
 
-### Backend — pliki do zmiany w testach
+### Backend — Files to Change in Tests
 
-| Plik | Co jest | Co zrobić |
+| File | What's there | What to do |
 |------|---------|-----------|
-| `service/ApplicationServiceTest.java` | Mock `stageHistoryRepository`, test `updateStage_toInProgress_withCurrentStage_savesStageHistory` (dodany w tej sesji), weryfikacje `verify(stageHistoryRepository)` | Usunąć mock i wszystkie weryfikacje |
-| `controller/ApplicationControllerTest.java` | `jsonPath("$.stageHistory").isArray()` i `jsonPath("$.stageHistory[?...]").exists()` | Usunąć asercje |
+| `service/ApplicationServiceTest.java` | Mock `stageHistoryRepository`, test `updateStage_toInProgress_withCurrentStage_savesStageHistory` (added this session), verifications `verify(stageHistoryRepository)` | Delete mock and all verifications |
+| `controller/ApplicationControllerTest.java` | `jsonPath("$.stageHistory").isArray()` and `jsonPath("$.stageHistory[?...]").exists()` | Delete assertions |
 
-### Frontend — pliki do zmiany
+### Frontend — Files to Change
 
-| Plik | Co jest | Co zrobić |
+| File | What's there | What to do |
 |------|---------|-----------|
-| `types/domain.ts` | Interface `StageHistory` (linie 23-27), pole `stageHistory: StageHistory[]` w `ApplicationResponse` (linia 51) | Usunąć interface i pole |
+| `types/domain.ts` | Interface `StageHistory` (lines 23-27), field `stageHistory: StageHistory[]` in `ApplicationResponse` (line 51) | Delete interface and field |
 
-### Frontend — pliki NIE do zmiany (sprawdzone)
+### Frontend — Files NOT to Change (verified)
 
-Następujące pliki mają `stageHistory` lub `currentStage` w nazwie/kodzie — **sprawdzone, nie wymagają zmian:**
+The following files have `stageHistory` or `currentStage` in name/code — **checked, no changes needed:**
 
-| Plik | Dlaczego nie ruszamy |
+| File | Why we don't touch it |
 |------|---------------------|
-| `StageModal.tsx` | Używa `currentStage` (pole na encji Application) — to osobna rzecz, nie historia |
-| `KanbanBoard.tsx` | Używa `currentStage` — nie używa `stageHistory` |
-| `ApplicationCard.tsx` | Używa `currentStage` — nie używa `stageHistory` |
+| `StageModal.tsx` | Uses `currentStage` (field on Application entity) — that's separate, not history |
+| `KanbanBoard.tsx` | Uses `currentStage` — doesn't use `stageHistory` |
+| `ApplicationCard.tsx` | Uses `currentStage` — doesn't use `stageHistory` |
 
 ---
 
-## Co NIE zmienia się dla użytkownika
+## What Does NOT Change for the User
 
-- Kanban board działa tak samo — etapy (drag&drop) opierają się na polu `currentStage` w encji `Application`, nie na historii
-- Zmiana statusów (WYSLANE → W_PROCESIE → OFERTA/ODMOWA) działa tak samo
-- Widok szczegółów aplikacji działa tak samo
-- Żadna widoczna funkcjonalność nie zniknie — bo żadna widoczna funkcjonalność tego nie używa
+- Kanban board works the same — stages (drag&drop) are based on `currentStage` field in `Application` entity, not history
+- Status changes (SENT → IN_PROGRESS → OFFER/REJECTED) work the same
+- Application details view works the same
+- No visible functionality will disappear — because no visible functionality uses it
 
 ---
 
-## Ryzyka
+## Risks
 
-| Ryzyko | Poziom | Mitygacja |
+| Risk | Level | Mitigation |
 |--------|--------|-----------|
-| Migracja DROP TABLE jest nieodwracalna | Średni | Dane i tak są bezużyteczne (frontend nigdy ich nie wyświetlał). Zrób backup bazy przed wykonaniem. |
-| Pominięcie jakiegoś użycia w kodzie → błąd kompilacji | Niski | Kompilacja (`mvn compile`) złapie to przed deploymentem |
-| Test który przestaje kompilować | Niski | `mvn test` łapie wszystkie |
-| `findByUserIdWithStageHistory` jest używana w serwisie — po zmianie na `findByUserId` trzeba sprawdzić czy lazy loading nie psuje serializacji | Średni | Opisane w kroku 6 poniżej |
+| DROP TABLE migration is irreversible | Medium | Data is useless anyway (frontend never displayed it). Make database backup before executing. |
+| Missing some usage in code → compilation error | Low | Compilation (`mvn compile`) will catch it before deployment |
+| Test that stops compiling | Low | `mvn test` catches all |
+| `findByUserIdWithStageHistory` is used in service — after changing to `findByUserId` need to check if lazy loading breaks serialization | Medium | Described in step 6 below |
 
 ---
 
-## Plan wykonania (krok po kroku)
+## Execution Plan (step-by-step)
 
-Każdy krok kończy się `mvn test` — nie przechodzimy dalej jeśli testy są czerwone.
+Each step ends with `mvn test` — we don't move forward if tests are red.
 
-### Krok 1 — Migracja bazy: DROP TABLE
-- [ ] Dodać `V5__drop_stage_history.sql`:
+### Step 1 — Database Migration: DROP TABLE
+- [ ] Add `V5__drop_stage_history.sql`:
   ```sql
   ALTER TABLE applications DROP CONSTRAINT IF EXISTS fk_applications_stage_history;
   ALTER TABLE cvs DROP CONSTRAINT IF EXISTS fk_cvs_stage_history;
   DROP TABLE IF EXISTS stage_history;
   ```
-- [ ] `mvn compile` — sprawdzić czy Flyway nie krzyczy
+- [ ] `mvn compile` — check if Flyway doesn't complain
 
-### Krok 2 — Usunąć pliki
-- [ ] Usunąć `entity/StageHistory.java`
-- [ ] Usunąć `repository/StageHistoryRepository.java`
-- [ ] Usunąć `dto/StageHistoryResponse.java`
-- [ ] `mvn compile` — będą błędy (użycia w innych plikach), to oczekiwane
+### Step 2 — Delete Files
+- [ ] Delete `entity/StageHistory.java`
+- [ ] Delete `repository/StageHistoryRepository.java`
+- [ ] Delete `dto/StageHistoryResponse.java`
+- [ ] `mvn compile` — there will be errors (usages in other files), this is expected
 
-### Krok 3 — Posprzątać `Application.java`
-- [ ] Usunąć `import StageHistory`
-- [ ] Usunąć pole `List<StageHistory> stageHistory`
-- [ ] Usunąć getter `getStageHistory()`
-- [ ] Usunąć metodę `addStageHistory()`
+### Step 3 — Clean Up `Application.java`
+- [ ] Delete `import StageHistory`
+- [ ] Delete field `List<StageHistory> stageHistory`
+- [ ] Delete getter `getStageHistory()`
+- [ ] Delete method `addStageHistory()`
 - [ ] `mvn compile`
 
-### Krok 4 — Posprzątać `ApplicationResponse.java`
-- [ ] Usunąć `import StageHistoryResponse`
-- [ ] Usunąć pole `List<StageHistoryResponse> stageHistory` z rekordu
-- [ ] Usunąć mapowanie `application.getStageHistory()...` w `fromEntity()`
+### Step 4 — Clean Up `ApplicationResponse.java`
+- [ ] Delete `import StageHistoryResponse`
+- [ ] Delete field `List<StageHistoryResponse> stageHistory` from record
+- [ ] Delete mapping `application.getStageHistory()...` in `fromEntity()`
 - [ ] `mvn compile`
 
-### Krok 5 — Posprzątać `ApplicationService.java`
-- [ ] Usunąć `import StageHistoryRepository` i `import StageHistory`
-- [ ] Usunąć pole `stageHistoryRepository` i jego wstrzykiwanie w konstruktorze
-- [ ] Usunąć metodę `markCurrentStageCompleted()`
-- [ ] W `create()`: usunąć `stageHistoryRepository.save(new StageHistory(...))`
-- [ ] W `addStage()`: usunąć wywołanie `markCurrentStageCompleted(application)` i `stageHistoryRepository.save(...)`
-- [ ] W `updateStage()`: usunąć `stageHistoryRepository.deleteByApplicationId(...)` i `stageHistoryRepository.save(...)` (dodane w tej sesji)
+### Step 5 — Clean Up `ApplicationService.java`
+- [ ] Delete `import StageHistoryRepository` and `import StageHistory`
+- [ ] Delete field `stageHistoryRepository` and its injection in constructor
+- [ ] Delete method `markCurrentStageCompleted()`
+- [ ] In `create()`: delete `stageHistoryRepository.save(new StageHistory(...))`
+- [ ] In `addStage()`: delete call to `markCurrentStageCompleted(application)` and `stageHistoryRepository.save(...)`
+- [ ] In `updateStage()`: delete `stageHistoryRepository.deleteByApplicationId(...)` and `stageHistoryRepository.save(...)` (added this session)
 - [ ] `mvn compile`
 
-### Krok 6 — Posprzątać `ApplicationRepository.java` i `UserService.java`
-- [ ] W `ApplicationRepository`: usunąć `@EntityGraph`, usunąć metodę `findByUserIdWithStageHistory`, dodać zwykłe `findByUserId` (lub sprawdzić czy już istnieje)
-- [ ] W `ApplicationService.findAllByUserId()`: zmienić wywołanie na `findByUserId`
-- [ ] W `UserService`: usunąć `import StageHistoryRepository` i `import StageHistory`, usunąć pole i wstrzyknięcie w konstruktorze, usunąć `stageHistoryRepository.save(initialStage)`
+### Step 6 — Clean Up `ApplicationRepository.java` and `UserService.java`
+- [ ] In `ApplicationRepository`: delete `@EntityGraph`, delete method `findByUserIdWithStageHistory`, add standard `findByUserId` (or check if it already exists)
+- [ ] In `ApplicationService.findAllByUserId()`: change call to `findByUserId`
+- [ ] In `UserService`: delete `import StageHistoryRepository` and `import StageHistory`, delete field and injection in constructor, delete `stageHistoryRepository.save(initialStage)`
 - [ ] `mvn compile`
 
-### Krok 7 — Posprzątać testy
-- [ ] W `ApplicationServiceTest`: usunąć mock `stageHistoryRepository`, usunąć test `updateStage_toInProgress_withCurrentStage_savesStageHistory`, usunąć wszystkie `verify(stageHistoryRepository)`
-- [ ] W `ApplicationControllerTest`: usunąć asercje `$.stageHistory`
-- [ ] `mvn test` — musi być zielony
+### Step 7 — Clean Up Tests
+- [ ] In `ApplicationServiceTest`: delete mock `stageHistoryRepository`, delete test `updateStage_toInProgress_withCurrentStage_savesStageHistory`, delete all `verify(stageHistoryRepository)`
+- [ ] In `ApplicationControllerTest`: delete assertions `$.stageHistory`
+- [ ] `mvn test` — must be green
 
-### Krok 8 — Frontend
-- [ ] W `domain.ts`: usunąć interface `StageHistory`, usunąć pole `stageHistory` z `ApplicationResponse`
-- [ ] Sprawdzić czy TypeScript się kompiluje (`npm run build` lub `tsc --noEmit`)
+### Step 8 — Frontend
+- [ ] In `domain.ts`: delete interface `StageHistory`, delete field `stageHistory` from `ApplicationResponse`
+- [ ] Check if TypeScript compiles (`npm run build` or `tsc --noEmit`)
 
 ---
 
-## Weryfikacja końcowa
+## Final Verification
 
-Po wszystkich krokach:
-- [ ] `mvn test` — zielony
-- [ ] `npm run build` — bez błędów TypeScript
-- [ ] Restart aplikacji — brak błędów przy starcie (Flyway, JPA)
-- [ ] Ręcznie: zaloguj się, otwórz aplikację, przeciągnij na Kanbanie — wszystko działa tak jak przed zmianami
+After all steps:
+- [ ] `mvn test` — green
+- [ ] `npm run build` — no TypeScript errors
+- [ ] Restart application — no errors on startup (Flyway, JPA)
+- [ ] Manual: log in, open application, drag on Kanban — everything works as before changes
 
 ---
 
-## Kiedy to robić
+## When to Do This
 
-Ten plan jest gotowy do wykonania w dowolnym momencie jako osobna sesja.
-Nie jest częścią Etapu 4 nauki — to niezależny cleanup.
+This plan is ready to execute at any time as a separate session.
+It's not part of Phase 4 learning — it's independent cleanup.

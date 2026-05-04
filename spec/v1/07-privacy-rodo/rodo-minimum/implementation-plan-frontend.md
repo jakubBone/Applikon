@@ -1,238 +1,238 @@
-# Plan implementacji RODO minimum — EasyApply Frontend
+# RODO Minimum Implementation Plan — EasyApply Frontend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `npm run build` + `npm run test:run`, oba muszą być zielone
-3. **Weryfikacja manualna** — użytkownik odpala `npm run dev` i sprawdza wzrokowo
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(frontend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-Zbudować frontendową warstwę RODO:
-1. **Strona `/privacy`** — publicznie dostępna, zawiera treść polityki (PL/EN)
-2. **Ekran zgody** — blokuje UI appki dla zalogowanego usera bez zaakceptowanej polityki
-3. **Obsługa `403 CONSENT_REQUIRED`** z backendu — przekierowanie na ekran zgody
-4. **Przycisk "Usuń konto"** — w ekranie profilu / ustawień, z confirmem
-5. **Link do `/privacy`** + email kontaktowy w stopce appki
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
+3. **Manual verification** — user runs `npm run dev` and verifies visually
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Status realizacji
+## Goal
 
-### Etap 1 — Route `/privacy` + komponent statyczny
+Build RODO frontend layer:
+1. **Page `/privacy`** — publicly available, contains policy content (PL/EN)
+2. **Consent screen** — blocks app UI for logged-in user without accepted policy
+3. **Handle `403 CONSENT_REQUIRED`** from backend — redirect to consent screen
+4. **Delete account button** — in profile / settings screen with confirmation
+5. **Link to `/privacy`** + contact email in app footer
 
-**Nowy plik:** `src/pages/PrivacyPolicy.tsx`
+---
 
-- [x] Stworzyć komponent renderujący treść polityki z pliku markdown / inline
-- [x] Źródło treści: `src/content/privacyPolicy.ts` (import jako constants)
-- [x] Wybór języka na podstawie aktualnego `i18n.language` (PL/EN)
-- [x] Stylowanie spójne z resztą appki (nagłówki, lista sekcji)
-- [x] Strona publiczna — **dostępna bez logowania**
-- [x] react-markdown do renderowania markdown'u
+## Implementation Status
+
+### Phase 1 — Route `/privacy` + Static Component
+
+**New file:** `src/pages/PrivacyPolicy.tsx`
+
+- [x] Create a component rendering policy content from markdown / inline
+- [x] Content source: `src/content/privacyPolicy.ts` (imported as constants)
+- [x] Language selection based on current `i18n.language` (PL/EN)
+- [x] Styling consistent with rest of app (headings, section list)
+- [x] Public page — **accessible without login**
+- [x] react-markdown for markdown rendering
 
 **Router:**
 
-**Plik:** `src/App.tsx`
+**File:** `src/App.tsx`
 
-- [x] Dodać route `<Route path="/privacy" element={<PrivacyPolicy />} />`
-- [x] Route nie jest opakowany w `ProtectedRoute`
-- [x] `npm run build` zielony ✅
+- [x] Add route `<Route path="/privacy" element={<PrivacyPolicy />} />`
+- [x] Route is not wrapped in `ProtectedRoute`
+- [x] `npm run build` green ✅
 
-**Decyzja o źródle treści:** najprościej trzymać markdown jako **string
-constant w pliku TS** (np. `src/content/privacyPolicy.ts` z exportami
-`privacyPolicyPl` i `privacyPolicyEn`). Renderowanie przez
-`react-markdown` jeśli jest w projekcie, lub ręcznie podzielić na JSX sekcje.
-Do decyzji przy implementacji.
-
----
-
-### Etap 2 — Typ `User` w API client rozszerzony o `privacyPolicyAcceptedAt`
-
-**Plik:** `src/types/domain.ts`
-
-- [x] Dodać pole `privacyPolicyAcceptedAt: string | null` do typu `User`
-- [x] `fetchCurrentUser()` zwraca typ z tym polem
-- [x] `npm run build` zielony ✅
+**Decision on content source:** simplest approach is to keep markdown as **string
+constant in TS file** (e.g., `src/content/privacyPolicy.ts` with exports
+`privacyPolicyPl` and `privacyPolicyEn`). Render via
+`react-markdown` if available in the project, or manually split into JSX sections.
+To be decided during implementation.
 
 ---
 
-### Etap 3 — Ekran zgody `ConsentGate.tsx`
+### Phase 2 — `User` Type in API Client Extended with `privacyPolicyAcceptedAt`
 
-**Nowy plik:** `src/components/auth/ConsentGate.tsx`
+**File:** `src/types/domain.ts`
 
-- [x] Komponent wrappujący aplikację (wewnątrz `ProtectedRoute`)
-- [x] Jeśli `user.privacyPolicyAcceptedAt === null` → render pełnoekranowego ekranu zgody
-- [x] Jeśli zaakceptowane → `{children}` (czyli normalna appka)
+- [x] Add field `privacyPolicyAcceptedAt: string | null` to `User` type
+- [x] `fetchCurrentUser()` returns type with this field
+- [x] `npm run build` green ✅
 
-**Zawartość ekranu zgody:**
-- [x] Nagłówek: "Before you start" / "Zanim zaczniesz"
-- [x] Krótki opis wymogu
-- [x] Link do `/privacy` (otwierany w nowej karcie)
-- [x] Checkbox do akceptacji
-- [x] Przycisk "Accept and continue" (disabled dopóki checkbox nie zaznaczony)
-- [x] Przycisk "Log out" — ucieczka
-- [x] Po kliknięciu: `await api.acceptConsent()` → `window.location.reload()` → user widzi appkę
+---
 
-**Lokalizacja w drzewie komponentów:**
+### Phase 3 — Consent Screen `ConsentGate.tsx`
+
+**New file:** `src/components/auth/ConsentGate.tsx`
+
+- [x] Component wrapping the application (inside `ProtectedRoute`)
+- [x] If `user.privacyPolicyAcceptedAt === null` → render full-screen consent screen
+- [x] If accepted → `{children}` (i.e., normal app)
+
+**Consent screen content:**
+- [x] Heading: "Before you start" / "Zanim zaczniesz"
+- [x] Brief description of acceptance requirement
+- [x] Link to `/privacy` (opens in new tab)
+- [x] Acceptance checkbox
+- [x] "Accept and continue" button (disabled until checkbox checked)
+- [x] "Log out" button — escape hatch
+- [x] On click: `await api.acceptConsent()` → `window.location.reload()` → user sees app
+
+**Location in component tree:**
 
 ```
 <ProtectedRoute>
   <ConsentGate>
-    <AppContent />   {/* normalna appka z Kanbanem, listami, itd. */}
+    <AppContent />   {/* normal app with Kanban, lists, etc. */}
   </ConsentGate>
 </ProtectedRoute>
 ```
 
 ---
 
-### Etap 4 — Funkcje API
+### Phase 4 — API Functions
 
-**Plik:** `src/services/api.ts`
+**File:** `src/services/api.ts`
 
-- [x] Dodać `acceptConsent(): Promise<void>` → `POST /api/auth/consent`
-- [x] Dodać `deleteAccount(): Promise<void>` → `DELETE /api/auth/me`
-- [x] clearToken() na deleteAccount ✅
-
----
-
-### Etap 5 — Obsługa `403 CONSENT_REQUIRED` (opcjonalne)
-
-**Decyzja:** **Pominięte** — polegamy na ConsentGate
-- ConsentGate blokuje UI wcześniej dla userów bez zgody
-- 403 jest edge case'em (race condition) — wystarczy logować do konsoli
+- [x] Add `acceptConsent(): Promise<void>` → `POST /api/auth/consent`
+- [x] Add `deleteAccount(): Promise<void>` → `DELETE /api/auth/me`
+- [x] clearToken() on deleteAccount ✅
 
 ---
 
-### Etap 6 — Settings page `/settings` z przyciskiem "Usuń konto"
+### Phase 5 — Handle `403 CONSENT_REQUIRED` (optional)
 
-**Nowy plik:** `src/pages/Settings.tsx`
-
-- [x] Dodać route `/settings` (protected)
-- [x] Sekcja "Konto" zawiera:
-  - [x] Email usera (read-only)
-  - [x] Data akceptacji polityki (read-only, formatowana)
-  - [x] Przycisk "Usuń konto" (czerwony, danger styling)
-- [x] Link ⚙️ w header AppContent
-- [x] Confirm modal z ostrzeżeniem
-- [x] Pole do wpisania "USUN" (PL) / "DELETE" (EN)
-- [x] Po potwierdzeniu: deleteAccount() → alert → czysz localStorage → redirect /login
-- [x] Czyszczenie EasyApply-specific flags (nie wszystkich cookies) ✅
+**Decision:** **Skipped** — we rely on ConsentGate
+- ConsentGate blocks UI earlier for users without consent
+- 403 is an edge case (race condition) — sufficient to log to console
 
 ---
 
-### Etap 7 — Footer
+### Phase 6 — Settings page `/settings` with "Delete account" button
 
-**Nowy plik:** `src/components/layout/Footer.tsx`
+**New file:** `src/pages/Settings.tsx`
 
-- [x] Komponent `<Footer />` widoczny na AppContent i Settings
+- [x] Add route `/settings` (protected)
+- [x] "Account" section contains:
+  - [x] User email (read-only)
+  - [x] Privacy policy acceptance date (read-only, formatted)
+  - [x] "Delete account" button (red, danger styling)
+- [x] ⚙️ link in AppContent header
+- [x] Confirm modal with warning
+- [x] Field for typing "USUN" (PL) / "DELETE" (EN)
+- [x] On confirm: deleteAccount() → alert → clear localStorage → redirect /login
+- [x] Clear EasyApply-specific flags (not all cookies) ✅
+
+---
+
+### Phase 7 — Footer
+
+**New file:** `src/components/layout/Footer.tsx`
+
+- [x] Component `<Footer />` visible on AppContent and Settings
 - [x] Link "Privacy policy" / "Polityka prywatności" → `/privacy`
-- [x] Email kontaktowy: `mailto:jakub.bone1990@gmail.com`
-- [x] Minimalistyczny styling, spójny z resztą appki ✅
+- [x] Contact email: `mailto:jakub.bone1990@gmail.com`
+- [x] Minimal styling, consistent with rest of app ✅
 
-**Wartość email:** do ustalenia, prawdopodobnie `jakub.bone1990@gmail.com`
-(lub osobny email "kontakt RODO"). Zaszyty w kodzie / przez env var.
+**Email value:** to be determined, probably `jakub.bone1990@gmail.com`
+(or separate "GDPR contact" email). Hardcoded / via env var.
 
 ---
 
-### Etap 8 — Klucze i18n
+### Phase 8 — i18n Keys
 
-**Pliki:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
+**Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
-- [x] Klucze do dodania (grupować semantycznie):
+- [x] Keys to add (group semantically):
   - `consent.title` — "Zanim zaczniesz" / "Before you start"
-  - `consent.description` — krótki opis wymogu akceptacji
-  - `consent.linkToPolicy` — "Przeczytaj politykę prywatności"
-  - `consent.checkbox` — "Zapoznałem/am się z polityką prywatności i akceptuję ją"
-  - `consent.acceptButton` — "Akceptuję i kontynuuję"
-  - `consent.logoutButton` — "Wyloguj"
-  - `settings.title` — "Ustawienia"
-  - `settings.accountSection` — "Konto"
-  - `settings.privacyAcceptedAt` — "Zgoda na politykę: {{date}}"
-  - `settings.deleteAccount.button` — "Usuń konto"
-  - `settings.deleteAccount.confirmTitle` — "Usunąć konto?"
-  - `settings.deleteAccount.warning` — ostrzeżenie o nieodwracalności
-  - `settings.deleteAccount.confirmInputPrompt` — "Wpisz USUN aby potwierdzić"
-  - `settings.deleteAccount.confirmWord` — "USUN" (dla PL) / "DELETE" (dla EN)
-  - `settings.deleteAccount.cancel` — "Anuluj"
-  - `settings.deleteAccount.confirm` — "Usuń moje konto"
-  - `settings.deleteAccount.success` — "Twoje konto zostało usunięte"
-  - `footer.privacyLink` — "Polityka prywatności"
-  - `footer.contact` — "Kontakt"
+  - `consent.description` — brief description of acceptance requirement
+  - `consent.linkToPolicy` — "Przeczytaj politykę prywatności" / "Read privacy policy"
+  - `consent.checkbox` — "Zapoznałem/am się z polityką prywatności i akceptuję ją" / "I have read and accept the privacy policy"
+  - `consent.acceptButton` — "Akceptuję i kontynuuję" / "I accept and continue"
+  - `consent.logoutButton` — "Wyloguj" / "Log out"
+  - `settings.title` — "Ustawienia" / "Settings"
+  - `settings.accountSection` — "Konto" / "Account"
+  - `settings.privacyAcceptedAt` — "Zgoda na politykę: {{date}}" / "Policy consent: {{date}}"
+  - `settings.deleteAccount.button` — "Usuń konto" / "Delete account"
+  - `settings.deleteAccount.confirmTitle` — "Usunąć konto?" / "Delete account?"
+  - `settings.deleteAccount.warning` — irreversibility warning
+  - `settings.deleteAccount.confirmInputPrompt` — "Wpisz USUN aby potwierdzić" / "Type DELETE to confirm"
+  - `settings.deleteAccount.confirmWord` — "USUN" (for PL) / "DELETE" (for EN)
+  - `settings.deleteAccount.cancel` — "Anuluj" / "Cancel"
+  - `settings.deleteAccount.confirm` — "Usuń moje konto" / "Delete my account"
+  - `settings.deleteAccount.success` — "Twoje konto zostało usunięte" / "Your account has been deleted"
+  - `footer.privacyLink` — "Polityka prywatności" / "Privacy policy"
+  - `footer.contact` — "Kontakt" / "Contact"
 
-- [x] `npm run build` zielony ✅
+- [x] `npm run build` green ✅
 
 ---
 
-### Etap 9 — Testy
+### Phase 9 — Tests
 
-**Testy dodane:**
+**Tests added:**
 
-- [x] `PrivacyPolicy.test.tsx` (7 testów) — renders, headings, content, markdown formatting
-- [x] `ConsentGate.test.tsx` (6 testów) — accepts, rejects, checkbox validation, API calls
-- [x] `Settings.test.tsx` (8 testów) — renders, displays, delete flow, confirmation, error handling
+- [x] `PrivacyPolicy.test.tsx` (7 tests) — renders, headings, content, markdown formatting
+- [x] `ConsentGate.test.tsx` (6 tests) — accepts, rejects, checkbox validation, API calls
+- [x] `Settings.test.tsx` (8 tests) — renders, displays, delete flow, confirmation, error handling
 - [x] `npm run test:run` — **89 passed, 0 failed** ✅
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Export danych usera (GET /me/export)** — poza MVP tej fazy
-- **Historia zaakceptowanych wersji polityki** — jedna polityka, bez wersjonowania
-- **Cookie consent banner** — nie używamy trackerów, tylko techniczne cookies sesyjne
-- **Strona regulaminu / ToS** — osobny dokument, poza zakresem fazy 07
-- **Custom modal library** — używamy istniejących komponentów/patternów z projektu
+- **User data export (GET /me/export)** — beyond MVP for this phase
+- **History of accepted policy versions** — single policy, no versioning
+- **Cookie consent banner** — we don't use trackers, only technical session cookies
+- **Terms of Service / ToS page** — separate document, out of scope for phase 07
+- **Custom modal library** — we use existing components/patterns from project
 
 ---
 
-## Pliki do zmiany / dodania
+## Files to Change / Add
 
-| Plik | Status | Zmiana |
+| File | Status | Change |
 |------|--------|--------|
-| `pages/PrivacyPolicy.tsx` | **nowy** | Publiczna strona z treścią polityki |
-| `content/privacyPolicy.ts` | **nowy** | Treść polityki (PL + EN) jako const |
-| `components/auth/ConsentGate.tsx` | **nowy** | Wrapper blokujący UI dla userów bez zgody |
-| `pages/Settings.tsx` | **nowy** | Strona ustawień z sekcją usuwania konta |
-| `components/layout/Footer.tsx` | **nowy** | Stopka z linkiem do polityki + kontaktem |
-| `App.tsx` | modyfikacja | Routy `/privacy`, `/settings`, opakowanie w `ConsentGate` |
-| `services/api.ts` | modyfikacja | `acceptConsent()`, `deleteAccount()`, typ `User` z polem zgody |
-| `i18n/locales/pl/*.json` | modyfikacja | Klucze `consent.*`, `settings.*`, `footer.*` |
-| `i18n/locales/en/*.json` | modyfikacja | Klucze jak wyżej |
-| `test/**` | modyfikacja | Mocki `/me` z polem `privacyPolicyAcceptedAt` |
+| `pages/PrivacyPolicy.tsx` | **new** | Public page with policy content |
+| `content/privacyPolicy.ts` | **new** | Policy content (PL + EN) as const |
+| `components/auth/ConsentGate.tsx` | **new** | Wrapper blocking UI for users without consent |
+| `pages/Settings.tsx` | **new** | Settings page with account deletion section |
+| `components/layout/Footer.tsx` | **new** | Footer with policy link + contact |
+| `App.tsx` | modify | Routes `/privacy`, `/settings`, wrapping in `ConsentGate` |
+| `services/api.ts` | modify | `acceptConsent()`, `deleteAccount()`, `User` type with consent field |
+| `i18n/locales/pl/*.json` | modify | Keys `consent.*`, `settings.*`, `footer.*` |
+| `i18n/locales/en/*.json` | modify | Keys as above |
+| `test/**` | modify | Mocks for `/me` with `privacyPolicyAcceptedAt` field |
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [x] `/privacy` dostępne publicznie, wyświetla politykę w języku użytkownika (markdown rendering)
-- [x] Nowy user po loginie widzi ekran zgody, nie dostaje się do głównej appki
-- [x] Po kliknięciu "Akceptuję" user od razu widzi normalną appkę
-- [x] Istnieje ekran ustawień z sekcją "Konto" i przyciskiem "Usuń konto"
-- [x] Usunięcie konta wymaga wpisania słowa potwierdzającego, działa end-to-end
-- [x] Stopka widoczna na wszystkich stronach, zawiera link do polityki i email kontaktowy
-- [x] `npm run build` zielony ✅
+- [x] `/privacy` publicly available, displays policy in user's language (markdown rendering)
+- [x] New user after login sees consent screen, doesn't reach main app
+- [x] After clicking "Accept" user immediately sees normal app
+- [x] Settings screen exists with "Account" section and "Delete account" button
+- [x] Account deletion requires typing confirmation word, works end-to-end
+- [x] Footer visible on all pages, contains policy link and contact email
+- [x] `npm run build` green ✅
 - [x] `npm run test:run` — 89 passed, 0 failed ✅
-- [x] Weryfikacja manualna: nowy user → login → consent screen → akceptacja → appka → ustawienia → usuń konto → re-login → tour pojawia się ✅
+- [x] Manual verification: new user → login → consent screen → accept → app → settings → delete account → re-login → tour appears ✅
 
 ---
 
-## Diagram flow consent
+## Consent Flow Diagram
 
 ```
-User loguje się Google
+User logs in via Google
        ↓
-Frontend dostaje JWT
+Frontend receives JWT
        ↓
 GET /api/auth/me → user.privacyPolicyAcceptedAt === null
        ↓
-<ConsentGate> renderuje ekran zgody (blokada UI)
+<ConsentGate> renders consent screen (UI blocked)
        ↓
-User zaznacza checkbox + klika "Akceptuję"
+User checks checkbox + clicks "Accept"
        ↓
 POST /api/auth/consent → 204
        ↓
@@ -240,9 +240,9 @@ Invalidate queries /me → refetch
        ↓
 user.privacyPolicyAcceptedAt = "2026-04-22T10:30:00Z"
        ↓
-<ConsentGate> renderuje children (normalna appka)
+<ConsentGate> renders children (normal app)
 ```
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-23 — COMPLETE ✅*
+*Last updated: 2026-04-23 — COMPLETE ✅*

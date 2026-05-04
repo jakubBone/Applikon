@@ -1,39 +1,39 @@
-# Plan implementacji i18n — EasyApply Frontend
+# i18n Implementation Plan — EasyApply Frontend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `npm run build` + `npm run test:run`, oba muszą być zielone
-3. **Weryfikacja manualna** — użytkownik odpala `npm run dev` i sprawdza wzrokowo
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(frontend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
+3. **Manual verification** — user runs `npm run dev` and verifies visually
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Status realizacji
+## Implementation Status
 
-### Etap 0 — Przygotowanie
-- [x] Inwentaryzacja string literals w komponentach
-- [x] Instalacja pakietów: `i18next react-i18next`
-- [x] Stworzenie struktury katalogów `src/i18n/`
-- [x] Konfiguracja `src/i18n/index.ts`
-- [x] Import `i18n` w `main.tsx` (przed React)
-- [x] Weryfikacja: aplikacja działa identycznie jak przed
-- [x] Wypełnienie wszystkich plików JSON (pl + en): `common`, `errors`, `badges`, `tour`
+### Phase 0 — Preparation
+- [x] Inventory string literals in components
+- [x] Install packages: `i18next react-i18next`
+- [x] Create directory structure `src/i18n/`
+- [x] Configure `src/i18n/index.ts`
+- [x] Import `i18n` in `main.tsx` (before React)
+- [x] Verification: application works identically as before
+- [x] Fill all JSON files (pl + en): `common`, `errors`, `badges`, `tour`
 
-### Etap 1 — Namespace `errors`
-- [x] `throw new Error(...)` z `api.ts` → klucze i18n
-- [x] `alert(...)` z `CVManager.tsx` → klucze i18n
-- [x] `throw new Error` z `AuthProvider.tsx` → klucze i18n
-- [x] `en/errors.json` przetłumaczone
-- [x] `api.test.ts` — asercje zaktualizowane na klucze
+### Phase 1 — `errors` Namespace
+- [x] `throw new Error(...)` from `api.ts` → i18n keys
+- [x] `alert(...)` from `CVManager.tsx` → i18n keys
+- [x] `throw new Error` from `AuthProvider.tsx` → i18n keys
+- [x] `en/errors.json` translated
+- [x] `api.test.ts` — assertions updated to keys
 
-### Etap 2 — Namespace `common` (główny UI)
+### Phase 2 — `common` Namespace (main UI)
 - [x] `LoginPage.tsx`
 - [x] `AppContent.tsx`
-- [x] `NotesList.tsx` (częściowo — patrz Etap 2a)
+- [x] `NotesList.tsx` (partially — see Phase 2a)
 - [x] `SalaryFormSection.tsx`
 - [x] `EndModal.tsx`
 - [x] `MoveModal.tsx`
@@ -44,84 +44,84 @@
 - [x] `ApplicationTable.tsx`
 - [x] `CVManager.tsx`
 
-### Etap 2a — Pominięte podczas migracji (BUGFIX)
-- [x] `ErrorBoundary.tsx` — hardcoded `"Coś poszło nie tak"`, `"Przepraszamy"`, `"Odśwież stronę"` → i18n
-- [x] `NotesList.tsx` — hardcoded `"Przed chwilą"` i pozostałe czasy relatywne → i18n
+### Phase 2a — Skipped Files (BUGFIX)
+- [x] `ErrorBoundary.tsx` — hardcoded `"Something went wrong"`, `"Sorry"`, `"Refresh page"` → i18n
+- [x] `NotesList.tsx` — hardcoded `"Just now"` and relative times → i18n
 
-### Etap 3 — Namespace `badges`
+### Phase 3 — `badges` Namespace
 - [x] `BadgeWidget.tsx` + `constants/` → `badges.json`
-- [x] `BadgeWidget.test.tsx` zaktualizowany
-- [x] `badges.cy.ts` zaktualizowany
+- [x] `BadgeWidget.test.tsx` updated
+- [x] `badges.cy.ts` updated
 
-### Etap 4 — Namespace `tour`
+### Phase 4 — `tour` Namespace
 - [x] `TourGuide.tsx` → `tour.json`
-- [x] Weryfikacja tour mobile i desktop
+- [x] Verify tour mobile and desktop
 
-### Etap 5 — Cypress `data-cy`
-- [x] Identyfikacja wszystkich `cy.contains(...)` na interaktywnych elementach
-- [x] Dodanie `data-cy` do komponentów React
-- [x] Migracja selektorów w plikach Cypress
-- [x] Pełny suite E2E zielony
+### Phase 5 — Cypress `data-cy`
+- [x] Identify all `cy.contains(...)` on interactive elements
+- [x] Add `data-cy` to React components
+- [x] Migrate selectors in Cypress files
+- [x] Full E2E suite passing
 
-### Etap 6 — TypeScript typowanie kluczy
-- [x] `src/i18n/types.ts` z deklaracją modułu
-- [x] `tsc --noEmit` bez błędów
+### Phase 6 — TypeScript Type Keys
+- [x] `src/i18n/types.ts` with module declaration
+- [x] `tsc --noEmit` without errors
 
-### Etap 7 — Language Detector + Switcher
-- [x] Instalacja: `npm install i18next-browser-languagedetector`
-- [x] Aktualizacja `src/i18n/index.ts`:
-  - Usunięcie hardcoded `lng: 'pl'`
-  - Dodanie `LanguageDetector` plugin
+### Phase 7 — Language Detector + Switcher
+- [x] Install: `npm install i18next-browser-languagedetector`
+- [x] Update `src/i18n/index.ts`:
+  - Remove hardcoded `lng: 'pl'`
+  - Add `LanguageDetector` plugin
   - `fallbackLng: 'en'`
   - `supportedLngs: ['pl', 'en']`
   - `detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] }`
-- [x] Nowy komponent `src/components/LanguageSwitcher.tsx` (przyciski PL / EN)
-- [x] `AppContent.tsx` — LanguageSwitcher w headerze (obok BadgeWidget)
-- [x] `LoginPage.tsx` — LanguageSwitcher widoczny przed zalogowaniem
-- [x] `api.ts` — dodanie nagłówka `Accept-Language: i18n.language` w `getHeaders()`
-- [x] CSS dla przełącznika
-- [x] `src/test/setup.ts` — `i18n.changeLanguage('pl')` dla środowiska testowego
-- [x] `npm run build` zielony
-- [x] `npm run test:run` zielony
-- [x] Weryfikacja manualna: zmiana języka działa natychmiast, zapisuje się po odświeżeniu
+- [x] New component `src/components/LanguageSwitcher.tsx` (PL / EN buttons)
+- [x] `AppContent.tsx` — LanguageSwitcher in header (next to BadgeWidget)
+- [x] `LoginPage.tsx` — LanguageSwitcher visible before login
+- [x] `api.ts` — add `Accept-Language: i18n.language` header in `getHeaders()`
+- [x] CSS for switcher
+- [x] `src/test/setup.ts` — `i18n.changeLanguage('pl')` for test environment
+- [x] `npm run build` passing
+- [x] `npm run test:run` passing
+- [x] Manual verification: language change works immediately, persists after refresh
 
-### Etap 7a — Stage Names i18n (nazwy etapów rekrutacji)
+### Phase 7a — Stage Names i18n (recruitment stage names)
 
-> Odkryty podczas weryfikacji manualnej Etapu 7. Etapy w kolumnie "W procesie"
-> nie tłumaczyły się po zmianie języka, bo były przechowywane jako polskie stringi w DB.
+> Discovered during manual verification of Phase 7. Stages in the "In Progress" column
+> did not translate on language change because they were stored as Polish strings in DB.
 
-#### Architektura
-- Predefiniowane etapy: w DB przechowywany **klucz** (`"stage.hrInterview"`), nie nazwa wyświetlana
-- Stare dane legacy (polskie stringi w DB): obsługiwane przez mapę `LEGACY_STAGE_MAP` — tłumaczone poprawnie bez migracji DB
-- Etapy custom (wpisane ręcznie przez usera): przechowywane as-is, wyświetlane as-is — to jest user data, nie podlega tłumaczeniu
+#### Architecture
+- Predefined stages: DB stores **key** (`"stage.hrInterview"`), not display name
+- Legacy data (Polish strings in DB): handled by `LEGACY_STAGE_MAP` — translated correctly without DB migration
+- Custom stages (entered manually by user): stored as-is, displayed as-is — this is user data, not subject to translation
 
-#### Pliki do zmiany
+#### Files to Change
 
-- [x] `src/i18n/locales/pl/common.json` — dodać sekcję `stage.*`
-- [x] `src/i18n/locales/en/common.json` — dodać sekcję `stage.*`
+- [x] `src/i18n/locales/pl/common.json` — add `stage.*` section
+- [x] `src/i18n/locales/en/common.json` — add `stage.*` section
 - [x] `src/components/kanban/types.ts`:
-  - Zmienić `PREDEFINED_STAGES: string[]` → `PREDEFINED_STAGES: { key: string; labelKey: ParseKeys<'common'> }[]`
-  - Dodać `LEGACY_STAGE_MAP: Record<string, string>` (mapa stara nazwa → klucz)
-  - Dodać helper `translateStageName(name, t)` — tłumaczy klucz lub legacy string, custom zwraca as-is
-  - Dodać helper `normalizeStageKey(name)` — zwraca klucz niezależnie od formatu (do porównań)
-- [x] `src/components/kanban/StageModal.tsx` — pełna migracja do i18n + wysyłanie `stage.key` zamiast display name
+  - Change `PREDEFINED_STAGES: string[]` → `PREDEFINED_STAGES: { key: string; labelKey: ParseKeys<'common'> }[]`
+  - Add `LEGACY_STAGE_MAP: Record<string, string>` (map old name → key)
+  - Add helper `translateStageName(name, t)` — translates key or legacy string, custom returns as-is
+  - Add helper `normalizeStageKey(name)` — returns key regardless of format (for comparisons)
+- [x] `src/components/kanban/StageModal.tsx` — full i18n migration + send `stage.key` instead of display name
 - [x] `src/components/kanban/ApplicationCard.tsx`:
-  - Wyświetlanie: `translateStageName(application.currentStage, t)`
+  - Display: `translateStageName(application.currentStage, t)`
   - Dropdown active check: `normalizeStageKey(application.currentStage) === stage.key`
-  - Wysyłanie: `stage.key` (nie display name)
-  - Data aplikacji: `i18n.language` zamiast hardcoded `'pl-PL'`
+  - Send: `stage.key` (not display name)
+  - Application date: `i18n.language` instead of hardcoded `'pl-PL'`
 - [x] `src/components/applications/ApplicationDetails.tsx`:
-  - Wyświetlanie: `translateStageName(application.currentStage, t)`
-  - `formatDate` i `formatSalary`: `i18n.language` zamiast hardcoded `'pl-PL'`
-- [x] `npm run build` zielony
-- [x] `npm run test:run` zielony
-- [x] Weryfikacja manualna:
-  - Predefiniowane etapy tłumaczą się po zmianie języka
-  - Stare etapy w DB (polskie stringi) wyświetlają się poprawnie
-  - Custom etapy wyświetlają się as-is niezależnie od języka
-  - Zaznaczony (active) etap działa poprawnie w dropdownie
+  - Display: `translateStageName(application.currentStage, t)`
+  - `formatDate` and `formatSalary`: `i18n.language` instead of hardcoded `'pl-PL'`
+- [x] `npm run build` passing
+- [x] `npm run test:run` passing
+- [x] Manual verification:
+  - Predefined stages translate on language change
+  - Old stages in DB (Polish strings) display correctly
+  - Custom stages display as-is regardless of language
+  - Selected (active) stage works correctly in dropdown
 
-#### Klucze i18n
+#### i18n Keys
 ```json
 // pl/common.json
 "stage": {
@@ -178,20 +178,20 @@ export const normalizeStageKey = (name: string | null | undefined): string => {
 }
 ```
 
-### Etap 8 — Komentarze i testy EN
-- [x] Komentarze w kodzie źródłowym → angielski (`KanbanBoard.tsx`, `LoginPage.tsx`, `AuthCallbackPage.tsx`, `ProtectedRoute.tsx`)
-- [x] `it()` w testach Vitest → angielski (`App.test.tsx`, `BadgeWidget.test.tsx`)
-- [x] Komentarz w `cypress/support/e2e.ts` → angielski
-- [x] `it()` w `cypress/e2e/application-crud.cy.ts` → angielski
-- [x] `npm run test:run` zielony
+### Phase 8 — Comments & Tests EN
+- [x] Source code comments → English (`KanbanBoard.tsx`, `LoginPage.tsx`, `AuthCallbackPage.tsx`, `ProtectedRoute.tsx`)
+- [x] `it()` in Vitest tests → English (`App.test.tsx`, `BadgeWidget.test.tsx`)
+- [x] Comment in `cypress/support/e2e.ts` → English
+- [x] `it()` in `cypress/e2e/application-crud.cy.ts` → English
+- [x] `npm run test:run` passing
 
-### Etap 9 — Rename enum values to English + i18n key cleanup
+### Phase 9 — Rename Enum Values to English + i18n Key Cleanup
 
-> **Ten etap jest tylko podsumowaniem.** Dokładna instrukcja krok po kroku, pełne mapowania
-> starych→nowych wartości enum, lista zmienionych plików per-etap oraz historia wykonania
-> (z wynikami testów po każdym kroku) znajdują się w: `spec/i18n/enum-rename-plan.md`
+> **This phase is summary only.** Detailed step-by-step instructions, complete mappings
+> of old→new enum values, list of changed files per-step, and execution history
+> (with test results after each step) are in: `spec/i18n/enum-rename-plan.md`
 
-#### Typy domenowe (`types/domain.ts`)
+#### Domain Types (`types/domain.ts`)
 - [x] `ApplicationStatus` — `'SENT' | 'IN_PROGRESS' | 'OFFER' | 'REJECTED'`
 - [x] `ContractType` — `'B2B' | 'EMPLOYMENT' | 'MANDATE' | 'OTHER'`
 - [x] `SalaryType` — `'GROSS' | 'NET'`
@@ -200,47 +200,47 @@ export const normalizeStageKey = (name: string | null | undefined): string => {
 
 #### Kanban
 
-- [x] `kanban/types.ts` — `STATUSES` ids (`SENT`, `IN_PROGRESS`, `FINISHED`) i labelKeys (`kanban.statusSENT` itd.)
-- [x] `kanban/types.ts` — `REJECTION_REASONS` ids i labelKeys (`kanban.rejectionNoResponse` itd.)
-- [x] `kanban/KanbanBoard.tsx` — wszystkie literały statusów i rejection reasons
-- [x] `kanban/ApplicationCard.tsx` — literały `W_PROCESIE`/`OFFER`/`ODMOWA`
+- [x] `kanban/types.ts` — `STATUSES` ids (`SENT`, `IN_PROGRESS`, `FINISHED`) and labelKeys (`kanban.statusSENT` etc.)
+- [x] `kanban/types.ts` — `REJECTION_REASONS` ids and labelKeys (`kanban.rejectionNoResponse` etc.)
+- [x] `kanban/KanbanBoard.tsx` — all status and rejection reason literals
+- [x] `kanban/ApplicationCard.tsx` — literals `W_PROCESIE`/`OFFER`/`ODMOWA`
 - [x] `kanban/EndModal.tsx` — `'OFERTA'`/`'ODMOWA'`/`'INNE'`
 - [x] `kanban/MoveModal.tsx` — `'OFERTA'`/`'ODMOWA'`/`'ZAKONCZONE'`
 
-#### Aplikacje
+#### Applications
 
-- [x] `constants/applicationStatus.ts` — `STATUS_CONFIG` klucze (`SENT`, `IN_PROGRESS`, `OFFER`, `REJECTED`), labelKeys (`statusConfig.SENT` itd.), usunięte legacy entries
-- [x] `components/applications/ApplicationTable.tsx` — inline `contractKeys` map, `t()` dla contractType; usunięte legacy statusConfig entries
-- [x] `components/applications/ApplicationDetails.tsx` — `CONTRACT_TYPE_KEYS` map, `formatSalary` przyjmuje `t: TFunction`
-- [x] `components/applications/SalaryFormSection.tsx` — `value="GROSS/NET"`, `value="EMPLOYMENT/MANDATE/OTHER"`, etykiety przez `t()`
+- [x] `constants/applicationStatus.ts` — `STATUS_CONFIG` keys (`SENT`, `IN_PROGRESS`, `OFFER`, `REJECTED`), labelKeys (`statusConfig.SENT` etc.), removed legacy entries
+- [x] `components/applications/ApplicationTable.tsx` — inline `contractKeys` map, `t()` for contractType; removed legacy statusConfig entries
+- [x] `components/applications/ApplicationDetails.tsx` — `CONTRACT_TYPE_KEYS` map, `formatSalary` takes `t: TFunction`
+- [x] `components/applications/SalaryFormSection.tsx` — `value="GROSS/NET"`, `value="EMPLOYMENT/MANDATE/OTHER"`, labels via `t()`
 - [x] `components/applications/ApplicationForm.tsx` — default `'BRUTTO'` → `'GROSS'`
 
 #### Notes
 
-- [x] `components/notes/NotesList.tsx` — `CATEGORIES` values i labelKeys, `LEGACY_CATEGORY_MAP`, default `useState` `'PYTANIA'` → `'QUESTIONS'`, reset po zapisie `'PYTANIA'` → `'QUESTIONS'`
+- [x] `components/notes/NotesList.tsx` — `CATEGORIES` values and labelKeys, `LEGACY_CATEGORY_MAP`, default `useState` `'PYTANIA'` → `'QUESTIONS'`, reset after save `'PYTANIA'` → `'QUESTIONS'`
 
-#### i18n JSON (cleanup kluczy + nowe klucze)
+#### i18n JSON (key cleanup + new keys)
 
 - [x] `en/common.json` + `pl/common.json` — rename: `salary.brutto/netto` → `salary.gross/net`
 - [x] `en/common.json` + `pl/common.json` — rename: `notes.catPytania/catInne` → `notes.catQuestions/catOther`
-- [x] `en/common.json` + `pl/common.json` — rename: `kanban.rejectionBrak*` → `kanban.rejectionNoResponse` itd.
-- [x] `en/common.json` + `pl/common.json` — dodano: `salary.contractB2B`, `contractEmployment`, `contractMandate`, `contractOther`
-- [x] `en/common.json` + `pl/common.json` — usunięte: legacy `statusConfig.ROZMOWA/ZADANIE/ODRZUCONE`
+- [x] `en/common.json` + `pl/common.json` — rename: `kanban.rejectionBrak*` → `kanban.rejectionNoResponse` etc.
+- [x] `en/common.json` + `pl/common.json` — added: `salary.contractB2B`, `contractEmployment`, `contractMandate`, `contractOther`
+- [x] `en/common.json` + `pl/common.json` — removed: legacy `statusConfig.ROZMOWA/ZADANIE/ODRZUCONE`
 
-#### Testy
+#### Tests
 
-- [x] `App.test.tsx`, `useApplications.test.tsx` — zaktualizowane asercje statusów
+- [x] `App.test.tsx`, `useApplications.test.tsx` — updated status assertions
 - [x] `npm run test:run` — 67/67 ✅
 
 ---
 
-## Struktura plików
+## File Structure
 
 ```
 src/
   i18n/
-    index.ts                  ← konfiguracja i18next + LanguageDetector
-    types.ts                  ← TypeScript typowanie kluczy
+    index.ts                  ← i18next configuration + LanguageDetector
+    types.ts                  ← TypeScript key typing
     locales/
       pl/
         common.json
@@ -253,12 +253,12 @@ src/
         badges.json
         tour.json
   components/
-    LanguageSwitcher.tsx      ← nowy komponent (Etap 7)
+    LanguageSwitcher.tsx      ← new component (Phase 7)
 ```
 
 ---
 
-## Konfiguracja docelowa `src/i18n/index.ts`
+## Target Configuration `src/i18n/index.ts`
 
 ```ts
 import i18n from 'i18next'
@@ -302,30 +302,30 @@ export default i18n
 
 ---
 
-## Kolejność etapów do wykonania
+## Phase Execution Order
 
 ```
-Etap 2a (bugfix — pominięte pliki)
+Phase 2a (bugfix — skipped files)
     ↓
-Etap 7 (language detector + switcher)
+Phase 7 (language detector + switcher)
     ↓
-Etap 8 (komentarze EN)
+Phase 8 (comments EN)
     ↓
-Etap 5 (pełny E2E — do zweryfikowania)
+Phase 5 (full E2E — to verify)
 ```
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [x] Zero hardcoded polskich stringów w komponentach React
-- [x] Zero hardcoded polskich stringów w plikach `*.ts` poza `locales/`
-- [x] Wszystkie klucze z `pl/*.json` mają odpowiednik w `en/*.json`
-- [x] `npm run build` bez błędów TypeScript
+- [x] Zero hardcoded Polish strings in React components
+- [x] Zero hardcoded Polish strings in `*.ts` files outside `locales/`
+- [x] All keys from `pl/*.json` have counterparts in `en/*.json`
+- [x] `npm run build` without TypeScript errors
 - [x] `npm run test:run` — 0 failed tests
-- [x] Zmiana języka w UI działa natychmiast i zapisuje się po odświeżeniu
-- [x] Backend otrzymuje `Accept-Language` header z każdym requestem
+- [x] Language change in UI works immediately and persists after refresh
+- [x] Backend receives `Accept-Language` header with every request
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-29*
+*Last update: 2026-03-29*

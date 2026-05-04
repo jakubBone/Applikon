@@ -1,25 +1,25 @@
-# Polityka prywatności EasyApply / Privacy Policy
+# EasyApply Privacy Policy
 
-Ten plik zawiera treść polityki prywatności w dwóch wersjach językowych.
-Treść jest źródłem dla frontendu (`src/content/privacyPolicy.ts`) — przy
-zmianie aktualizujemy oba miejsca.
+This file contains the privacy policy content in two language versions.
+The content is the source for the frontend (`src/content/privacyPolicy.ts`) — when
+updating, we update both places.
 
-Placeholdery `{{...}}` należy zastąpić konkretnymi wartościami przed publikacją.
-
----
-
-## Placeholdery do wypełnienia
-
-| Klucz | Opis | Sugestia |
-|-------|------|----------|
-| `{{CONTACT_EMAIL}}` | Email kontaktowy do spraw danych | `jakub.bone1990@gmail.com` |
-| `{{HOSTING_PROVIDER}}` | Nazwa hostingu serwera (gdzie działa backend + DB) | do ustalenia na etapie deploy |
-| `{{HOSTING_LOCATION}}` | Lokalizacja serwera (kraj / region UE) | do ustalenia |
-| `{{EFFECTIVE_DATE}}` | Data obowiązywania polityki | data pierwszej publikacji appki |
+Placeholders `{{...}}` should be replaced with concrete values before publication.
 
 ---
 
-## Wersja polska
+## Placeholders to Fill
+
+| Key | Description | Suggestion |
+|-----|-------------|-----------|
+| `{{CONTACT_EMAIL}}` | Contact email for data matters | `jakub.bone1990@gmail.com` |
+| `{{HOSTING_PROVIDER}}` | Name of server hosting (where backend + DB run) | to be determined at deploy stage |
+| `{{HOSTING_LOCATION}}` | Server location (country / EU region) | to be determined |
+| `{{EFFECTIVE_DATE}}` | Policy effective date | date of first app publication |
+
+---
+
+## Polish Version
 
 ---
 
@@ -253,4 +253,4 @@ may be a few days.
 
 ---
 
-*Ostatnia aktualizacja tego pliku: 2026-04-22*
+*Last update of this file: 2026-04-22*

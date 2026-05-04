@@ -1,60 +1,57 @@
-# Plan implementacji CV link-only — EasyApply Frontend
+# CV Link-Only Implementation Plan — EasyApply Frontend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `npm run build` + `npm run test:run`, oba muszą być zielone
-3. **Weryfikacja manualna** — użytkownik odpala `npm run dev` i sprawdza wzrokowo
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(frontend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-W modalu "Dodaj CV" opcja **"Upload PDF" ma pozostać widoczna**, ale oznaczona
-jako chwilowo nieczynna: karta zdisabled, cursor `not-allowed`, tooltip po
-najechaniu "Chwilowo nieczynne". Kliknięcie nie prowadzi do ekranu uploadu.
-
-Opcja **"Link do CV"** działa bez zmian. Istniejące CV typu FILE (jeśli
-są w bazie) nadal wyświetlają się w liście, można je pobierać i usuwać.
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
+3. **Manual verification** — user runs `npm run dev` and verifies visually
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Decyzje projektowe
+## Goal
 
-- **Kod kroku `addStep === 'file'` zostaje** — nie usuwamy logiki ani JSX
-  uploadu. Jedyna zmiana: blokujemy wejście w ten krok z ekranu wyboru.
-- **Disabled karta opcji, nie hidden** — ficzer jest widoczny w portfolio
-  (pokazuje zaimplementowany upload), ale nieklikalny.
-- **Tooltip przez natywny atrybut `title`** — bez biblioteki tooltipów, żeby
-  nie wprowadzać nowej zależności dla drobiazgu.
-- **Mutacja `useUploadCV` zostaje w kodzie** — nie usuwamy, bo backend jej
-  nie wywoła (endpoint 503). Unused import zostałby flaggowany, więc trzeba
-  zdecydować per-przypadek (patrz Etap 3).
+In "Add CV" modal the **"Upload PDF" option must remain visible**, but marked
+as temporarily unavailable: card disabled, cursor `not-allowed`, tooltip on hover
+"Temporarily unavailable". Click does not lead to upload screen.
+
+Option **"CV Link"** works without changes. Existing CV files (if
+in database) still display in the list, can be downloaded and deleted.
 
 ---
 
-## Status realizacji
+## Architectural Decisions
+- **Code for step `addStep === 'file'` remains** — we don't remove upload logic or JSX.
+  Only change: block entry to this step from selection screen.
+- **Disabled card option, not hidden** — feature is visible in portfolio
+  (shows implemented upload), but not clickable.
+- **Tooltip via native `title` attribute** — no tooltip library to avoid
+  introducing new dependency for this detail.
+- **Mutation `useUploadCV` stays in code** — we don't remove it because backend won't call it (endpoint 503). Unused import would be flagged, so decision needed per-case (see Phase 3).
 
-### Etap 1 — Disabled karty "Upload PDF" w modalu dodawania
+---
 
-**Plik:** `easyapply-frontend/src/components/cv/CVManager.tsx`
+## Implementation Status
 
-Obecnie karta (linia 406):
+### Phase 1 — Disable "Upload PDF" Card in Add CV Modal
+
+**File:** `easyapply-frontend/src/components/cv/CVManager.tsx`
+
+Currently card (line 406):
 ```tsx
 <div className="add-cv-option" onClick={() => setAddStep('file')}>
 ```
 
-- [x] Dodać atrybut `aria-disabled="true"` oraz klasę CSS `add-cv-option--disabled` (pominięto `data-disabled` — `aria-disabled` wystarcza semantycznie i jest czytane przez screen readery)
-- [x] Usunąć `onClick` (usunięte, brak no-op)
-- [x] Dodać `title={t('cv.uploadDisabledTooltip')}` — natywny tooltip HTML
-- [x] Pokazać ikonkę 🔒 zamiast 📁 dla jasnego sygnału wizualnego
-- [x] `npm run build` zielony
+- [x] Add `aria-disabled="true"` attribute and CSS class `add-cv-option--disabled` (skipped `data-disabled` — `aria-disabled` sufficient semantically and read by screen readers)
+- [x] Remove `onClick` (removed, no no-op)
+- [x] Add `title={t('cv.uploadDisabledTooltip')}` — native HTML tooltip
+- [x] Show 🔒 icon instead of 📁 for clear visual signal
+- [x] `npm run build` green
 
-**Schemat po zmianie:**
+**Schema after change:**
 
 ```tsx
 <div
@@ -67,22 +64,22 @@ Obecnie karta (linia 406):
   <div className="option-content">
     <h4>{t('cv.uploadOptionTitle')}</h4>
     <p>{t('cv.uploadOptionDesc')}</p>
-    {/* features list bez zmian */}
+    {/* features list unchanged */}
   </div>
 </div>
 ```
 
 ---
 
-### Etap 2 — Style CSS dla stanu disabled
+### Phase 2 — CSS Styles for Disabled State
 
-**Plik:** `easyapply-frontend/src/components/cv/CVManager.css` (lub odpowiedni plik stylu — do zweryfikowania)
+**File:** `easyapply-frontend/src/components/cv/CVManager.css` (or appropriate style file — to verify)
 
-- [x] Zlokalizować plik stylu dla `.add-cv-option` (znaleziony: `components/cv/CVManager.css`)
-- [x] Dodać regułę `.add-cv-option--disabled`:
+- [x] Locate style file for `.add-cv-option` (found: `components/cv/CVManager.css`)
+- [x] Add `.add-cv-option--disabled` rule:
   - `opacity: 0.5`
   - `cursor: not-allowed`
-  - `:hover` wyzerowany (border i background bez zmian)
+  - `:hover` reset (border and background unchanged)
 
 **Schemat:**
 
@@ -93,7 +90,7 @@ Obecnie karta (linia 406):
 }
 
 .add-cv-option--disabled:hover {
-  /* wyzerować efekty hover ze zwykłej karty */
+  /* reset hover effects from regular card */
   transform: none;
   background: inherit;
 }
@@ -101,113 +98,112 @@ Obecnie karta (linia 406):
 
 ---
 
-### Etap 3 — Klucze i18n dla tooltipa
+### Phase 3 — i18n Keys for Tooltip
 
-**Pliki:** `src/i18n/locales/pl/*.json`, `src/i18n/locales/en/*.json`
+**Files:** `src/i18n/locales/pl/*.json`, `src/i18n/locales/en/*.json`
 
-- [x] Zlokalizować plik gdzie są klucze `cv.*` (`i18n/locales/{pl,en}/common.json`)
-- [x] Dodać klucz `cv.uploadDisabledTooltip`:
-  - PL: `"Chwilowo niedostępne"` (edytowane przez użytkownika)
+- [x] Locate file with `cv.*` keys (`i18n/locales/{pl,en}/common.json`)
+- [x] Add key `cv.uploadDisabledTooltip`:
+  - PL: `"Chwilowo niedostępne"` (editable by user)
   - EN: `"Temporarily unavailable"`
-- [x] `npm run build` zielony
+- [x] `npm run build` green
 
 ---
 
-### Etap 4 — Obsługa błędu 503 z backendu (defensywna) — POMINIĘTE
+### Phase 4 — Handle 503 Error from Backend (Defensive) — SKIPPED
 
-Zgodnie z decyzją w planie: polegamy na `ConsentGate` / disabled UI. Endpoint
-503 nie jest osiągalny przez normalny flow userski, więc dedykowana obsługa
-nie jest potrzebna. Istniejący `onError: alert(tErrors('cv.uploadError'))`
-w `CVManager.tsx:87` pokryje każde teoretyczne wywołanie spoza UI.
+Per plan decision: we rely on `ConsentGate` / disabled UI. Endpoint
+503 is unreachable through normal user flow, so dedicated handling
+not needed. Existing `onError: alert(tErrors('cv.uploadError'))`
+in `CVManager.tsx:87` covers any theoretical out-of-UI call.
 
 
 
-**Plik:** `easyapply-frontend/src/hooks/useCV.ts` lub `src/services/api.ts`
+**File:** `easyapply-frontend/src/hooks/useCV.ts` or `src/services/api.ts`
 
-Scenariusz: ktoś obejdzie UI (np. DevTools) i wywoła `uploadCV` ręcznie →
-backend zwróci 503. Mimo że nasz UI już tego nie inicjuje, mutacja jest
-nadal dostępna w kodzie.
+Scenario: someone bypasses UI (e.g., DevTools) and calls `uploadCV` manually →
+backend returns 503. Even though our UI doesn't initiate it, mutation
+still available in code.
 
-- [ ] Zweryfikować jak obecnie `useUploadCV` obsługuje błędy (istniejący `onError` w `CVManager.tsx` linia 87: `alert(tErrors('cv.uploadError'))`)
-- [ ] Dodać klucz błędu `errors.cv.uploadDisabled` w obu plikach i18n (PL/EN) —
-      taki sam komunikat co backend zwraca
-- [ ] **Decyzja do ustalenia w trakcie**: czy rozpoznawać 503 specjalnie
-      (np. inny alert), czy zostawić generyczny `cv.uploadError`. Rekomendacja:
-      zostawić generyczny — jest to ścieżka edge case'owa, nie warto
-      komplikować kodu.
-
----
-
-### Etap 5 — Aktualizacja testów — N/A
-
-**Brak pliku `CVManager.test.tsx`** w projekcie (weryfikacja: `src/test/components/`
-zawiera tylko `App.test.tsx` i `BadgeWidget.test.tsx`). `api.test.ts` testuje
-funkcję `uploadCV` (mock fetch) — nie zmienia się, bo sygnatura funkcji jest
-ta sama, a backend behavior jest mockowany.
-
-- [x] Wynik `npm run test:run`: **68/68 zielone** (bez regresji)
+- [ ] Verify how `useUploadCV` currently handles errors (existing `onError` in `CVManager.tsx` line 87: `alert(tErrors('cv.uploadError'))`)
+- [ ] Add error key `errors.cv.uploadDisabled` in both i18n files (PL/EN) —
+      same message as backend returns
+- [ ] **Decision to confirm during implementation**: whether to recognize 503 specially
+      (e.g., different alert) or leave generic `cv.uploadError`. Recommendation:
+      leave generic — this is edge case path, not worth complicating code.
 
 ---
 
-## Definicja ukończenia (DoD)
+### Phase 5 — Test Updates — N/A
 
-- [x] Karta "Upload PDF" widoczna w modalu, ale wizualnie zdisabled (opacity, not-allowed cursor)
-- [x] Najechanie myszą pokazuje tooltip "Chwilowo niedostępne" / "Temporarily unavailable"
-- [x] Kliknięcie karty nie otwiera ekranu uploadu (brak `onClick`)
-- [x] Dodawanie CV jako LINK działa jak dotychczas (brak zmian w tej ścieżce)
-- [x] Istniejące CV typu FILE są widoczne w liście i można je pobrać / usunąć (brak zmian)
-- [x] `npm run build` bez błędów TypeScript
+**No `CVManager.test.tsx` file** in project (verified: `src/test/components/`
+contains only `App.test.tsx` and `BadgeWidget.test.tsx`). `api.test.ts` tests
+`uploadCV` function (mock fetch) — no changes needed, function signature is
+the same, backend behavior is mocked.
+
+- [x] Result `npm run test:run`: **68/68 green** (no regressions)
+
+---
+
+## Definition of Done (DoD)
+
+- [x] "Upload PDF" card visible in modal but visually disabled (opacity, not-allowed cursor)
+- [x] Mouse hover shows tooltip "Chwilowo niedostępne" / "Temporarily unavailable"
+- [x] Clicking card doesn't open upload screen (no `onClick`)
+- [x] Adding CV as LINK works as before (no changes in that path)
+- [x] Existing FILE type CVs visible in list and can be downloaded / deleted (no changes)
+- [x] `npm run build` without TypeScript errors
 - [x] `npm run test:run` — 68/68, 0 failed
-- [ ] Weryfikacja manualna: full flow dodawania CV przez link działa end-to-end z backendem
+- [ ] Manual verification: full flow of adding CV via link works end-to-end with backend
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Usuwanie JSX kroku `addStep === 'file'` (dropzone, upload area)** — zostaje
-  na wypadek przywrócenia ficzera
-- **Usuwanie `useUploadCV` hooka i funkcji `uploadCV` z `api.ts`** — zostaje
-  jako martwy kod ficzera
-- **Custom tooltip component** — używamy natywnego `title`, wystarczy
-- **Ukrywanie istniejących CV typu FILE z listy** — zostają widoczne
-- **Informacja "przenieś swoje CV na Drive"** — opcjonalne, do rozważenia
-  w fazie `rodo-minimum/` (komunikat w polityce prywatności)
+- **Removing JSX for `addStep === 'file'` (dropzone, upload area)** — kept
+  in case feature is restored
+- **Removing `useUploadCV` hook and `uploadCV` function from `api.ts`** — kept
+  as dead feature code
+- **Custom tooltip component** — using native `title`, sufficient
+- **Hiding existing FILE type CVs from list** — they remain visible
+- **"Migrate your CV to Drive" info message** — optional, to be considered
+  in `rodo-minimum/` phase (message in privacy policy)
 
 ---
 
-## Pliki do zmiany
+## Files to Change
 
-| Plik | Zmiana |
+| File | Change |
 |------|--------|
-| `components/cv/CVManager.tsx` | Karta upload disabled + tooltip, usunięcie `onClick` |
-| `components/cv/CVManager.css` (lub odpowiedni) | Reguła `.add-cv-option--disabled` |
-| `i18n/locales/pl/*.json` | Klucz `cv.uploadDisabledTooltip` |
-| `i18n/locales/en/*.json` | Klucz `cv.uploadDisabledTooltip` |
-| `test/**/CVManager.test.tsx` | Asercja na `aria-disabled` i brak navigacji do kroku file |
+| `components/cv/CVManager.tsx` | Card upload disabled + tooltip, removed `onClick` |
+| `components/cv/CVManager.css` (or appropriate) | Rule `.add-cv-option--disabled` |
+| `i18n/locales/pl/*.json` | Key `cv.uploadDisabledTooltip` |
+| `i18n/locales/en/*.json` | Key `cv.uploadDisabledTooltip` |
+| `test/**/CVManager.test.tsx` | Assertion on `aria-disabled` and no navigation to file step |
 
 ---
 
-## Diagram przepływu po zmianach
+## Flow Diagram After Changes
 
 ```
-User klika "Dodaj CV"
+User clicks "Add CV"
        ↓
-Modal z dwoma opcjami:
+Modal with two options:
   ┌─────────────────┐   ┌─────────────────┐
-  │ Upload PDF      │   │ Dodaj link      │
-  │ (disabled)      │   │ (aktywne)       │
+  │ Upload PDF      │   │ Add Link        │
+  │ (disabled)      │   │ (active)        │
   │ tooltip:        │   │                 │
-  │ "Chwilowo..."   │   │                 │
+  │ "Temporarily.." │   │                 │
   └────┬────────────┘   └────┬────────────┘
        │ click: no-op        │ click: setAddStep('link')
        ↓                     ↓
-  (nic się nie dzieje)     Ekran wklejenia linku
+  (nothing happens)        Link paste screen
                               ↓
                            POST /api/cv (type: LINK)
                               ↓
-                           CV dodane, modal zamknięty
+                           CV added, modal closed
 ```
 
 ---
 
-*Ostatnia aktualizacja: 2026-04-22*
+*Last updated: 2026-04-22*

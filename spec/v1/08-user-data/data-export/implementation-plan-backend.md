@@ -1,26 +1,26 @@
-# Data Export — Plan implementacji backend
+# Data Export Implementation Plan — Backend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `./mvnw test`, musi być zielony
-3. **Weryfikacja manualna** — użytkownik testuje endpoint ręcznie (opcjonalnie)
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(backend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-Dodać endpoint `GET /api/auth/me/export` zwracający wszystkie dane zalogowanego
-usera jako plik JSON do pobrania. Realizuje wymóg RODO Art. 20 (prawo do
-przenoszalności danych).
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `./mvnw test` must be green
+3. **Manual verification** — user tests endpoint manually (optional)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Architektura
+## Goal
+
+Add endpoint `GET /api/auth/me/export` returning all logged-in user data
+as JSON file for download. Fulfills RODO Art. 20 requirement (right to
+data portability).
+
+---
+
+## Architecture
 
 ```
 GET /api/auth/me/export
@@ -30,21 +30,21 @@ AuthController.exportMyData(@AuthenticationPrincipal)
 UserExportService.buildExport(userId)
   → UserRepository.findById
   → ApplicationRepository.findByUserId
-  → dla każdej aplikacji: NoteRepository.findByApplicationId
+  → for each application: NoteRepository.findByApplicationId
         ↓
-ResponseEntity z nagłówkiem Content-Disposition: attachment
+ResponseEntity with Content-Disposition: attachment header
 filename: easyapply-export.json
 ```
 
 ---
 
-## Status realizacji
+## Implementation Status
 
-### Etap 1 — DTO `UserExportResponse`
+### Phase 1 — DTO `UserExportResponse`
 
-**Nowy plik:** `dto/UserExportResponse.java`
+**New file:** `dto/UserExportResponse.java`
 
-- [x] Stworzyć record `UserExportResponse` z zagnieżdżonymi recordami:
+- [x] Create record `UserExportResponse` with nested records:
 
 ```java
 public record UserExportResponse(
@@ -95,20 +95,20 @@ public record UserExportResponse(
 }
 ```
 
-Daty jako `String` (ISO-8601) — spójne z resztą DTO w projekcie.
+Dates as `String` (ISO-8601) — consistent with rest of DTOs in project.
 
-**Czego nie eksportujemy:** `id` usera, `google_id`, `refresh_token`,
-wewnętrzne ID CV i notatek, `user_id` w aplikacjach — to dane systemowe.
+**What we don't export:** user `id`, `google_id`, `refresh_token`,
+internal CV and note IDs, `user_id` in applications — these are system data.
 
-- [x] `./mvnw test` — zielone (DTO samo w sobie nic nie psuje)
+- [x] `./mvnw test` — green (DTO by itself doesn't break anything)
 
 ---
 
-### Etap 2 — `UserExportService`
+### Phase 2 — `UserExportService`
 
-**Nowy plik:** `service/UserExportService.java`
+**New file:** `service/UserExportService.java`
 
-- [x] Stworzyć serwis z metodą `buildExport(UUID userId)`:
+- [x] Create service with method `buildExport(UUID userId)`:
 
 ```java
 @Service
@@ -197,18 +197,18 @@ public class UserExportService {
 }
 ```
 
-- [x] Sprawdzić czy `NoteRepository` ma metodę `findByApplicationId(Long id)`.
-  Użyto istniejącej `findByApplicationIdOrderByCreatedAtDesc`.
-- [x] `./mvnw test` — zielone
+- [x] Check if `NoteRepository` has method `findByApplicationId(Long id)`.
+  Used existing `findByApplicationIdOrderByCreatedAtDesc`.
+- [x] `./mvnw test` — green
 
 ---
 
-### Etap 3 — Endpoint w `AuthController`
+### Phase 3 — Endpoint w `AuthController`
 
-**Plik:** `controller/AuthController.java`
+**File:** `controller/AuthController.java`
 
-- [x] Dodać zależność `UserExportService` do konstruktora kontrolera
-- [x] Dodać metodę `exportMyData`:
+- [x] Add `UserExportService` dependency to controller constructor
+- [x] Add `exportMyData` method:
 
 ```java
 @GetMapping("/me/export")
@@ -224,66 +224,66 @@ public ResponseEntity<UserExportResponse> exportMyData(
 }
 ```
 
-Nagłówek `Content-Disposition: attachment` powoduje że przeglądarka pobiera
-plik zamiast go wyświetlać w zakładce.
+Header `Content-Disposition: attachment` causes browser to download
+file instead of displaying it in a tab.
 
-- [x] `./mvnw test` — zielone
-
----
-
-### Etap 4 — Testy
-
-**Plik:** `test/controller/AuthControllerTest.java`
-
-- [x] Test `GET /api/auth/me/export` — user z 1 aplikacją i 1 notatką:
-  - Response `200 OK`
-  - Nagłówek `Content-Disposition` zawiera `attachment`
-  - Body zawiera `profile.email` usera testowego
-  - Body zawiera listę `applications` z 1 elementem
-  - Aplikacja ma listę `notes` z 1 elementem
-- [x] Test `GET /api/auth/me/export` — user bez aplikacji:
-  - Response `200 OK`
-  - `applications` to pusta lista `[]`
-- [x] Test bez JWT: TestSecurityConfig używa `permitAll()` — 401 nie można przetestować
-  w warstwie kontrolera; egzekwowane przez produkcyjny `SecurityConfig`
-- [x] `./mvnw test` — wszystkie testy zielone
+- [x] `./mvnw test` — green
 
 ---
 
-## Definicja ukończenia (DoD)
+### Phase 4 — Tests
 
-- [x] `GET /api/auth/me/export` zwraca `200` z `Content-Disposition: attachment; filename="easyapply-export.json"`
-- [x] JSON zawiera profil + aplikacje + notatki + CV usera
-- [x] JSON nie zawiera `google_id`, `refresh_token`, danych innych userów
-- [x] Endpoint bez JWT zwraca `401` (egzekwowane przez produkcyjny `SecurityConfig`; nieprzetestowalne w profilu test z `permitAll()`)
-- [x] Brak zmian w schemacie DB (brak nowej migracji Flyway)
+**File:** `test/controller/AuthControllerTest.java`
+
+- [x] Test `GET /api/auth/me/export` — user with 1 application and 1 note:
+  - Response `200 OK`
+  - Header `Content-Disposition` contains `attachment`
+  - Body contains test user's `profile.email`
+  - Body contains `applications` list with 1 element
+  - Application has `notes` list with 1 element
+- [x] Test `GET /api/auth/me/export` — user with no applications:
+  - Response `200 OK`
+  - `applications` is empty list `[]`
+- [x] Test without JWT: TestSecurityConfig uses `permitAll()` — can't test 401
+  at controller layer; enforced by production `SecurityConfig`
+- [x] `./mvnw test` — all tests green
+
+---
+
+## Definition of Done (DoD)
+
+- [x] `GET /api/auth/me/export` returns `200` with `Content-Disposition: attachment; filename="easyapply-export.json"`
+- [x] JSON contains user's profile + applications + notes + CV
+- [x] JSON doesn't contain `google_id`, `refresh_token`, other users' data
+- [x] Endpoint without JWT returns `401` (enforced by production `SecurityConfig`; untestable in test profile with `permitAll()`)
+- [x] No DB schema changes (no new Flyway migration)
 - [x] `./mvnw test` — 0 failed
 
 ---
 
-## Edge cases — decyzje projektowe
+## Edge Cases — Design Decisions
 
-| # | Scenariusz | Decyzja |
+| # | Scenario | Decision |
 |---|---|---|
-| EC-1 | CV typu `FILE` — `externalUrl` może być null (upload wyłączony od fazy 07) | Eksportujemy metadane jakie są; `externalUrl: null` w JSON to poprawne zachowanie |
+| EC-1 | CV type `FILE` — `externalUrl` may be null (upload disabled since phase 07) | Export metadata as-is; `externalUrl: null` in JSON is correct behavior |
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Eksport CSV** — tylko JSON; wystarczy na potrzeby RODO
-- **Szyfrowanie pliku** — user pobiera przez HTTPS, odpowiada za przechowanie
-- **Eksport plików CV (FILE type)** — eksportujemy tylko metadane (nazwa, URL);
-  pliki PDF nie są w zakresie (CV file upload jest zresztą wyłączony od fazy 07)
+- **CSV export** — JSON only; sufficient for GDPR requirements
+- **File encryption** — user downloads via HTTPS, responsible for storage
+- **CV file export (FILE type)** — export metadata only (name, URL);
+  PDF files out of scope (CV file upload disabled since phase 07 anyway)
 
 ---
 
-## Pliki do zmiany
+## Files to Change
 
-| Plik | Zmiana |
+| File | Change |
 |------|--------|
-| `dto/UserExportResponse.java` | **Nowy plik** — record z zagnieżdżonymi recordami |
-| `service/UserExportService.java` | **Nowy plik** — logika budowania eksportu |
-| `controller/AuthController.java` | Nowy endpoint `GET /me/export` |
-| `repository/NoteRepository.java` | Dodać `findByApplicationId` jeśli brak |
-| `test/controller/AuthControllerTest.java` | 3 nowe testy |
+| `dto/UserExportResponse.java` | **New file** — record with nested records |
+| `service/UserExportService.java` | **New file** — export building logic |
+| `controller/AuthController.java` | New endpoint `GET /me/export` |
+| `repository/NoteRepository.java` | Add `findByApplicationId` if missing |
+| `test/controller/AuthControllerTest.java` | 3 new tests |

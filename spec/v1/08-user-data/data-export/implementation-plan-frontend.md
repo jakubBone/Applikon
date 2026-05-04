@@ -1,37 +1,37 @@
-# Data Export — Plan implementacji frontend
+# Data Export Implementation Plan — Frontend
 
-## Proces pracy (obowiązujący dla każdego etapu)
+## Work Process (applicable to each phase)
 
-1. **Implementacja** — Claude robi zmiany w kodzie
-2. **Weryfikacja automatyczna** — `npm run build` + `npm run test:run`, oba muszą być zielone
-3. **Weryfikacja manualna** — użytkownik odpala `npm run dev` i sprawdza wzrokowo
-4. **Aktualizacja planów** — Claude aktualizuje checkboxy w tym pliku
-5. **Sugestia commita** — Claude proponuje wiadomość commita (format: `type(frontend): opis`)
-6. **Commit** — użytkownik sam robi `git add` + `git commit`
-7. **Pytanie o kontynuację** — Claude pyta czy idziemy dalej do następnego etapu
-
----
-
-## Cel
-
-Dodać przycisk "Pobierz moje dane" w `/settings`, który pobiera plik
-`easyapply-export.json` z backendu. Realizuje wymóg RODO Art. 20.
+1. **Implementation** — Claude makes code changes
+2. **Automatic verification** — `npm run build` + `npm run test:run`, both must be green
+3. **Manual verification** — user runs `npm run dev` and verifies visually
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `type(frontend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next phase
 
 ---
 
-## Status realizacji
+## Goal
 
-### Etap 1 — Funkcja API `exportMyData`
+Add "Download my data" button in `/settings` that downloads
+`easyapply-export.json` file from backend. Fulfills RODO Art. 20 requirement.
 
-**Plik:** `src/services/api.ts` (lub plik z wywołaniami auth API w projekcie)
+---
 
-- [x] Sprawdzić jak w projekcie przekazywany jest token autoryzacyjny do `fetch`
-  (interceptor, wrapper, headers wprost) — dostosować do istniejącego wzorca
-- [x] Dodać funkcję `exportMyData`:
+## Implementation Status
+
+### Phase 1 — API Function `exportMyData`
+
+**File:** `src/services/api.ts` (or file with auth API calls in project)
+
+- [x] Check how project passes auth token to `fetch`
+  (interceptor, wrapper, headers directly) — adapt to existing pattern
+- [x] Add `exportMyData` function:
 
 ```ts
 export async function exportMyData(): Promise<void> {
-  const response = await apiFetch('/api/auth/me/export'); // apiFetch = istniejący wrapper z tokenem
+  const response = await apiFetch('/api/auth/me/export'); // apiFetch = existing wrapper with token
 
   if (!response.ok) {
     throw new Error(`Export failed: ${response.status}`);
@@ -49,22 +49,22 @@ export async function exportMyData(): Promise<void> {
 }
 ```
 
-- [x] `npm run build` zielony
+- [x] `npm run build` green
 
 ---
 
-### Etap 2 — Sekcja eksportu w `Settings.tsx`
+### Phase 2 — Export Section in `Settings.tsx`
 
-**Plik:** `src/pages/Settings.tsx`
+**File:** `src/pages/Settings.tsx`
 
-- [x] Dodać stan lokalny:
+- [x] Add local state:
 
 ```ts
 const [exporting, setExporting] = useState(false);
 const [exportError, setExportError] = useState(false);
 ```
 
-- [x] Dodać handler:
+- [x] Add handler:
 
 ```ts
 async function handleExport() {
@@ -80,7 +80,7 @@ async function handleExport() {
 }
 ```
 
-- [x] Dodać sekcję w JSX (przed sekcją "Usuń konto"):
+- [x] Add section in JSX (before "Delete account" section):
 
 ```tsx
 <section>
@@ -93,18 +93,18 @@ async function handleExport() {
 </section>
 ```
 
-Użyć istniejących klas CSS / komponentów Button z projektu.
+Use existing CSS classes / Button components from project.
 
-- [x] `npm run build` zielony
+- [x] `npm run build` green
 
 ---
 
-### Etap 3 — Klucze i18n
+### Phase 3 — i18n Keys
 
-**Pliki:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
+**Files:** `src/i18n/locales/pl/common.json`, `src/i18n/locales/en/common.json`
 
-- [x] Sprawdzić strukturę istniejących kluczy `settings.*` i dopasować poziom zagnieżdżenia
-- [x] Dodać klucze (PL):
+- [x] Check structure of existing `settings.*` keys and match nesting level
+- [x] Add keys (PL):
 
 ```json
 "settings": {
@@ -116,7 +116,7 @@ Użyć istniejących klas CSS / komponentów Button z projektu.
 }
 ```
 
-- [x] Dodać klucze (EN):
+- [x] Add keys (EN):
 
 ```json
 "settings": {
@@ -128,64 +128,64 @@ Użyć istniejących klas CSS / komponentów Button z projektu.
 }
 ```
 
-- [x] `npm run build` zielony
+- [x] `npm run build` green
 
 ---
 
-### Etap 4 — Testy
+### Phase 4 — Tests
 
-**Plik:** `src/test/pages/Settings.test.tsx` (lub odpowiednik w projekcie)
+**File:** `src/test/pages/Settings.test.tsx` (or equivalent in project)
 
-- [x] Test: sekcja eksportu renderuje się w `/settings`
-- [x] Test: kliknięcie przycisku wywołuje `exportMyData()`
-- [x] Test: podczas pobierania przycisk jest `disabled` z tekstem "Przygotowuję..."
-- [x] Test: gdy `exportMyData()` rzuca błąd — widoczny komunikat błędu
-- [x] Test: gdy `exportMyData()` się powiedzie — brak komunikatu błędu
-- [x] `npm run test:run` — wszystkie testy zielone
+- [x] Test: export section renders in `/settings`
+- [x] Test: clicking button calls `exportMyData()`
+- [x] Test: during download button is `disabled` with text "Przygotowuję..." / "Preparing..."
+- [x] Test: when `exportMyData()` throws error — error message visible
+- [x] Test: when `exportMyData()` succeeds — no error message
+- [x] `npm run test:run` — all tests green
 
 ---
 
-### Etap 5 — Weryfikacja manualna
+### Phase 5 — Manual Verification
 
 ```
 1. npm run dev
-2. Zaloguj się
-3. Przejdź do /settings
-4. Sprawdź czy sekcja "Twoje dane" / "Your data" jest widoczna
-5. Kliknij "Pobierz moje dane"
-6. Sprawdź czy plik easyapply-export.json pojawił się w folderze Downloads
-7. Otwórz plik — sprawdź czy zawiera twoje aplikacje i notatki
-8. Sprawdź czy przycisk był disabled podczas pobierania (trudne do zauważenia
-   przy szybkim połączeniu — można sprawdzić w DevTools → Network → Throttle)
+2. Log in
+3. Go to /settings
+4. Check that "Twoje dane" / "Your data" section is visible
+5. Click "Download my data"
+6. Check that easyapply-export.json file appears in Downloads folder
+7. Open file — check it contains your applications and notes
+8. Check that button was disabled during download (hard to notice
+   on fast connection — can verify in DevTools → Network → Throttle)
 ```
 
 ---
 
-## Definicja ukończenia (DoD)
+## Definition of Done (DoD)
 
-- [x] Przycisk "Pobierz moje dane" widoczny w `/settings`
-- [x] Kliknięcie pobiera plik `easyapply-export.json`
-- [x] Podczas pobierania przycisk jest `disabled`
-- [x] Przy błędzie pojawia się komunikat
-- [x] Tłumaczenia działają w PL i EN
-- [x] `npm run build` zielony
+- [x] "Download my data" button visible in `/settings`
+- [x] Clicking downloads `easyapply-export.json` file
+- [x] During download button is `disabled`
+- [x] Error message appears on error
+- [x] Translations work in PL and EN
+- [x] `npm run build` green
 - [x] `npm run test:run` — 0 failed
 
 ---
 
-## Poza zakresem
+## Out of Scope
 
-- **Podgląd danych w UI** — tylko pobranie pliku, bez wyświetlania danych w appce
-- **Eksport do CSV** — tylko JSON
+- **Preview of data in UI** — only file download, no displaying data in app
+- **CSV export** — JSON only
 
 ---
 
-## Pliki do zmiany
+## Files to Change
 
-| Plik | Zmiana |
+| File | Change |
 |------|--------|
-| `services/api.ts` | Nowa funkcja `exportMyData()` |
-| `pages/Settings.tsx` | Nowa sekcja z przyciskiem eksportu |
-| `i18n/locales/pl/common.json` | Klucze `settings.export*` |
-| `i18n/locales/en/common.json` | Klucze `settings.export*` |
-| `test/pages/Settings.test.tsx` | 5 nowych testów |
+| `services/api.ts` | New function `exportMyData()` |
+| `pages/Settings.tsx` | New section with export button |
+| `i18n/locales/pl/common.json` | Keys `settings.export*` |
+| `i18n/locales/en/common.json` | Keys `settings.export*` |
+| `test/pages/Settings.test.tsx` | 5 new tests |
