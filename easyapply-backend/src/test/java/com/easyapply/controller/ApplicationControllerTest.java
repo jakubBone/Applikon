@@ -66,7 +66,7 @@ class ApplicationControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    // ==================== ETAP 1: CRUD Tests ====================
+    // ==================== STEP 1: CRUD Tests ====================
 
     @Test
     @Order(1)
@@ -203,7 +203,7 @@ class ApplicationControllerTest {
         assertFalse(applicationRepository.findById(id).isPresent());
     }
 
-    // ==================== ETAP 2: Duplikaty ====================
+    // ==================== Step 2: Duplicates ====================
 
     @Test
     @Order(9)
@@ -232,7 +232,7 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)));
     }
 
-    // ==================== ETAP 3: Kanban - zmiana statusow ====================
+    // ==================== STEP 3: Kanban - status change ====================
 
     @Test
     @Order(11)
@@ -394,7 +394,7 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.errors.status").exists());
     }
 
-    // ==================== ETAP 4: CV Assignment ====================
+    // ==================== STEP 4: CV Assignment ====================
 
     @Test
     @Order(19)

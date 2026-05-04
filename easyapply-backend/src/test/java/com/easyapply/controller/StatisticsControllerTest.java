@@ -60,7 +60,7 @@ class StatisticsControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    // ==================== ETAP 7: Gamifikacja Tests ====================
+    // ==================== STEP 7: Gamification Tests ====================
 
     @Test
     @Order(1)

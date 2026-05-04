@@ -66,7 +66,7 @@ class CVControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    // ==================== ETAP 4: CV CRUD Tests ====================
+    // ==================== Step 4: CV CRUD Tests ====================
 
     @Test
     @Order(1)

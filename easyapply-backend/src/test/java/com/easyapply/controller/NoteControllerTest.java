@@ -70,7 +70,7 @@ class NoteControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    // ==================== ETAP 5: Notatki Tests ====================
+    // ==================== STEP 5: Notes Tests ====================
 
     @Test
     @Order(1)
