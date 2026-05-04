@@ -50,5 +50,5 @@ Example: `refactor(backend): extract validation into ApplicationValidator`
 | Original vision / problem / MVP scope | `spec/v1/01-vision/brief.md` |
 | Spec phases index | `spec/README.md` |
 | v2 microservices vision | `spec/v2/vision.md` |
-| Deploy instructions | `spec/deployment/deployment-guide.md` |
+| Deploy instructions | `spec/deployment/deployment-intro.md` (concepts) + `deployment-hetzner.md` (step-by-step) |
 | User-facing project overview | `README.md` |

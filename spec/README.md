@@ -31,10 +31,10 @@ were written before code, not after.
 
 ## Deployment
 
-| Document | Directory |
-|----------|-----------|
-| Deployment guide | `deployment/deployment-guide.md` |
-| Beginner-friendly guide | `deployment/deployment-dla-poczatkujacych.md` |
+| Document | Purpose |
+|----------|---------|
+| `deployment/deployment-intro.md` | Background — what deployment is, terminology, hosting options compared, why Hetzner |
+| `deployment/deployment-hetzner.md` | Step-by-step production deployment on a Hetzner VPS (Docker Compose + Caddy) |
 
 ## AI-Assisted Development
 
