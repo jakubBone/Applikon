@@ -44,3 +44,6 @@ plan.txt
 
 # Local-only specs (not for public repo)
 spec/post/
+
+# Backups (local only, not for public repo)
+spec/deployment/backup-before-fixes/

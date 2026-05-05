@@ -12,9 +12,12 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build argument for API URL
+# Build arguments baked into the JS bundle at compile time
 ARG VITE_API_URL=http://localhost:8080/api
 ENV VITE_API_URL=$VITE_API_URL
+
+ARG VITE_USE_BACKEND=true
+ENV VITE_USE_BACKEND=$VITE_USE_BACKEND
 
 # Build the application
 RUN npm run build
