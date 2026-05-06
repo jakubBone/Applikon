@@ -64,13 +64,13 @@ Based on `code-review-security.md` findings.
 - [x] Update redirect in `OAuth2AuthenticationSuccessHandler.java` (`?token=` → `#token=`)
 - [x] Update frontend to read token from URL fragment (`AuthCallbackPage.tsx`)
 - [x] `mvn test` green
-- [ ] `npm run build` passing
-- [ ] Manual: verify in browser that redirect URL uses `#token=` not `?token=`
+- [x] `npm run build` passing
+- [x] Manual: verify in browser that redirect URL uses `#token=` not `?token=`
 
 ### Stage 3 — Add HTTP security headers
 - [x] Add CSP, X-Frame-Options, HSTS to `SecurityConfig.java`
 - [x] `mvn test` green
-- [ ] Manual: `curl -I http://localhost:8080/api/health` — confirm headers present in response
+- [x] Manual: `curl -I http://localhost:8080/api/health` — confirm headers present in response
 
 ### Stage 4 — Sanitize filename in Content-Disposition *(do before re-enabling CV upload)*
 - [x] Add filename sanitization in `CVController.java`
