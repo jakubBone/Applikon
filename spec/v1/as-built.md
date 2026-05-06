@@ -800,6 +800,21 @@ springdoc.swagger-ui.tags-sorter=alpha
 
 ---
 
+## 12. Phase 12 — GitHub Actions CI (2026-05-06)
+
+Two parallel jobs triggered on every push to `master`.
+
+| Job | Steps |
+|-----|-------|
+| Backend | `actions/setup-java@v4` (Java 21 Temurin) → `./mvnw test` |
+| Frontend | `actions/setup-node@v4` (Node 22) → `npm ci` → `npm run test:run` → `npm run build` |
+
+CI badge added to `README.md`. No caching, no artifact publishing — tests are the only signal.
+
+Note: `easyapply-backend/mvnw` required `chmod +x` in the git index (`100644` → `100755`) to run on Linux runners.
+
+---
+
 ## 13. Not Implemented (from spec)
 
 | Item | Source | Notes |
@@ -833,6 +848,7 @@ springdoc.swagger-ui.tags-sorter=alpha
 - Swagger UI at `/swagger-ui.html` with JWT Bearer auth scheme and all controllers tagged (phase 11)
 - Vitest unit tests (backend + frontend, including Phase 08 SystemController and AdminController tests)
 - Cypress E2E tests
+- GitHub Actions CI (two parallel jobs: Maven tests + Vitest/build; badge in README)
 
 ### What is incomplete or pending
 
@@ -846,4 +862,4 @@ springdoc.swagger-ui.tags-sorter=alpha
 
 All planned MVP features (PHASE 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). Phase 10 added WARN logging for admin denials, failed token refreshes, and 404s. Phase 11 added Swagger UI at `/swagger-ui.html` with JWT Bearer auth and all controllers tagged. retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
 
-Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type.
+Authentication, i18n, onboarding, Cypress E2E, React Query, and GitHub Actions CI were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type.
