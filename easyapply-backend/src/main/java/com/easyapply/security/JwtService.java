@@ -2,8 +2,6 @@ package com.easyapply.security;
 
 import com.easyapply.entity.User;
 import com.nimbusds.jose.jwk.RSAKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
@@ -24,8 +22,6 @@ import java.util.UUID;
  */
 @Service
 public class JwtService {
-
-    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
     @Value("${app.jwt.access-token-expiry-minutes:15}")
     private long accessTokenExpiryMinutes;

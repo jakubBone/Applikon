@@ -10,6 +10,8 @@ import com.easyapply.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +34,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final UserService userService;
     private final JwtService jwtService;
@@ -86,6 +90,7 @@ public class AuthController {
             String newAccessToken = jwtService.generateAccessToken(user);
             return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
         } catch (Exception e) {
+            log.warn("Token refresh failed: {}", e.getMessage());
             return ResponseEntity.status(401).body(Map.of("error",
                     messageSource.getMessage("error.token.invalid", null, LocaleContextHolder.getLocale())));
         }

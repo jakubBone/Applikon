@@ -7,8 +7,6 @@ import com.easyapply.entity.Note;
 import com.easyapply.repository.ApplicationRepository;
 import com.easyapply.repository.NoteRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,8 +17,6 @@ import java.util.UUID;
 
 @Service
 public class NoteService {
-
-    private static final Logger log = LoggerFactory.getLogger(NoteService.class);
 
     private final NoteRepository noteRepository;
     private final ApplicationRepository applicationRepository;

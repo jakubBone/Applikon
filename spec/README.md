@@ -17,6 +17,8 @@ were written before code, not after.
 | Cleanup | `v1/06-cleanup/` | Complete |
 | Privacy & RODO (phase 07) | `v1/07-privacy-rodo/` | Complete |
 | User Data & Service Notifications (phase 08) | `v1/08-user-data/` | In progress |
+| Security refactoring (phase 09) | `v1/09-security-refactoring/` | Complete |
+| Logging — production observability (phase 10) | `v1/10-logging/` | In progress |
 | **As-built** | **`v1/as-built.md`** | **Authoritative — what is actually built** |
 
 > `v1/as-built.md` is the primary reference for the current codebase state:
