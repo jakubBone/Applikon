@@ -110,7 +110,7 @@ com.easyapply/
     SalarySource.java              — enum: FROM_POSTING, MY_PROPOSAL
     SalaryType.java                — enum: GROSS, NET
   exception/
-    GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException / DateTimeParseException (phase 08) / fallback
+    GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException (WARN log, phase 10) / DateTimeParseException (phase 08) / fallback (ERROR log)
   repository/
     ApplicationRepository.java     — JpaRepository; custom queries: findByUserId, findByIdAndUserId, existsByIdAndUserId, findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase, getApplicationStats, clearCVReferences
     CVRepository.java              — JpaRepository
@@ -118,7 +118,7 @@ com.easyapply/
     ServiceNoticeRepository.java   — JpaRepository; JPQL findActive(@Param("now") LocalDateTime now) — WHERE active=true AND (expiresAt IS NULL OR expiresAt > :now) (phase 08)
     UserRepository.java            — JpaRepository; findByGoogleId, findByRefreshToken, findInactiveUsers(threshold) (phase 07)
   security/
-    AdminKeyFilter.java            — OncePerRequestFilter; checks X-Admin-Key header against app.admin-key; returns 403 if missing/wrong (phase 08)
+    AdminKeyFilter.java            — OncePerRequestFilter; checks X-Admin-Key header against app.admin-key; returns 403 if missing/wrong (phase 08); logs WARN with URI + IP on every denial (phase 10)
     AuthenticatedUser.java         — record (id: UUID) — principal injected by JwtAuthenticationConverter
     CustomOAuth2UserService.java   — loads/creates user from Google OAuth2 attributes
     JwtAuthenticationConverter.java — extracts AuthenticatedUser from JWT sub claim
@@ -706,7 +706,40 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ---
 
-## 10. Not Implemented (from spec)
+## 10. Phase 10 — Logging (2026-05-06)
+
+**Status:** complete.
+
+Added targeted `WARN`-level logging to three previously invisible failure paths; removed two unused `Logger` field declarations.
+
+### What changed
+
+**`AdminKeyFilter`** — logs every blocked admin request before returning 403:
+```
+WARN  [anonymous] c.e.s.AdminKeyFilter - Admin access denied: uri=/api/admin/users, ip=1.2.3.4
+```
+
+**`AuthController.refresh()`** — logs failed token refresh inside the existing catch block:
+```
+WARN  [anonymous] c.e.c.AuthController - Token refresh failed: Refresh token not found or expired
+```
+
+**`GlobalExceptionHandler.handleEntityNotFoundException()`** — logs every 404 before returning ProblemDetail:
+```
+WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Application with id=999 not found
+```
+
+**`NoteService`**, **`JwtService`** — removed unused `Logger` field + `slf4j` imports (dead code).
+
+### Design notes
+
+- All new logs are `WARN` — security denials and token failures are unexpected in normal operation; 404 is visible in production without being an error.
+- IP address logged in `AdminKeyFilter` (remote IP is security-relevant); elsewhere MDC already carries `userId` via `MdcUserFilter`.
+- Logger style kept consistent: explicit `LoggerFactory.getLogger` (no `@Slf4j`), matching `UserService`, `ApplicationService` etc.
+
+---
+
+## 11. Not Implemented (from spec)
 
 | Item | Source | Notes |
 |------|--------|-------|
@@ -715,7 +748,7 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ---
 
-## 11. v1 Completion Status
+## 12. v1 Completion Status
 
 ### What is done and working
 
@@ -749,6 +782,6 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 ### v1 overall assessment
 
-All planned MVP features (PHASE 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
+All planned MVP features (PHASE 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). Phase 10 added WARN logging for admin denials, failed token refreshes, and 404s. retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
 
 Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type.
