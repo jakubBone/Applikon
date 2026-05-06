@@ -3,7 +3,7 @@
 ## Work Process
 
 1. **Implementation** — Claude creates `.github/workflows/ci.yml` and updates `README.md`
-2. **Verification** — user pushes to `main`, opens GitHub → Actions tab, confirms green
+2. **Verification** — user pushes to `master`, opens GitHub → Actions tab, confirms green
 3. **Commit suggestion** — Claude proposes commit message
 4. **Commit** — user runs `git add` + `git commit`
 
@@ -11,7 +11,7 @@
 
 ## Goal
 
-Two parallel CI jobs (backend + frontend) triggered on every push and PR to `main`.
+Two parallel CI jobs (backend + frontend) triggered on every push and PR to `master`.
 A green badge in `README.md` visible to anyone browsing the repository.
 
 ---
@@ -98,20 +98,20 @@ Add below the project title (first line after `# EasyApply` or equivalent):
 
 ## Verification
 
-- [ ] Push commit to `main`
-- [ ] GitHub → Actions tab → workflow run appears
-- [ ] Both jobs green (backend + frontend)
-- [ ] Badge in README shows green on github.com
+- [x] Push commit to `master`
+- [x] GitHub → Actions tab → workflow run appears
+- [x] Both jobs green (backend + frontend)
+- [x] Badge in README shows green on github.com
 
 ---
 
 ## Definition of Done (DoD)
 
-- [ ] `.github/workflows/ci.yml` exists and triggers on push to `main`
-- [ ] Backend job: `./mvnw test` passes on GitHub runner
-- [ ] Frontend job: `npm run test:run && npm run build` pass on GitHub runner
-- [ ] CI badge visible and green in `README.md`
-- [ ] `spec/README.md` updated with phase 12 row
+- [x] `.github/workflows/ci.yml` exists and triggers on push to `master`
+- [x] Backend job: `./mvnw test` passes on GitHub runner
+- [x] Frontend job: `npm run test:run && npm run build` pass on GitHub runner
+- [x] CI badge visible and green in `README.md`
+- [x] `spec/README.md` updated with phase 12 row
 
 ---
 
