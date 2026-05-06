@@ -20,6 +20,7 @@ were written before code, not after.
 | Security refactoring (phase 09) | `v1/09-security-refactoring/` | Complete |
 | Logging — production observability (phase 10) | `v1/10-logging/` | Complete |
 | Swagger / OpenAPI (phase 11) | `v1/11-swagger/` | Complete |
+| GitHub Actions CI (phase 12) | `v1/12-ci/` | Complete |
 | **As-built** | **`v1/as-built.md`** | **Authoritative — what is actually built** |
 
 > `v1/as-built.md` is the primary reference for the current codebase state:

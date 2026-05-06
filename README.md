@@ -1,5 +1,7 @@
 <img src="easyapply-frontend/public/logo_white.png" alt="EasyApply" width="100%">
 
+[![CI](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml)
+
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)
 ![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
