@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -65,10 +67,13 @@ public class CVController {
             @PathVariable Long id) throws MalformedURLException {
         CV cv = cvService.findById(id, user.id());
         Resource resource = cvService.downloadCV(id, user.id());
+        String disposition = ContentDisposition.attachment()
+                .filename(cv.getOriginalFileName(), StandardCharsets.UTF_8)
+                .build()
+                .toString();
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + cv.getOriginalFileName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
                 .body(resource);
     }
 

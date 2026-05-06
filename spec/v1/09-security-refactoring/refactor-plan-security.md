@@ -2,6 +2,18 @@
 
 Based on `code-review-security.md` findings.
 
+## Work Process (applicable to each stage)
+
+1. **Implementation** — Claude makes code changes (backend and/or frontend depending on stage)
+2. **Automatic verification** — `mvn test` must be green; stage 2 also requires `npm run build`
+3. **Manual verification** — confirm fix in browser DevTools or via `curl -I` (see per-stage notes)
+4. **Update plans** — Claude updates checkboxes in this file
+5. **Commit suggestion** — Claude proposes commit message (format: `fix(backend): description`)
+6. **Commit** — user runs `git add` + `git commit`
+7. **Continue question** — Claude asks if we proceed to the next stage
+
+---
+
 ## HIGH Priority (fix immediately)
 
 1. **Timing Attack on Admin Key** — AdminKeyFilter.java:27
@@ -44,9 +56,32 @@ Based on `code-review-security.md` findings.
 
 ## Implementation Progress
 
-- [ ] Timing attack fix
-- [ ] Token URL fragment migration
-- [ ] Security headers
-- [ ] Filename sanitization
-- [ ] TokenHasher HMAC
-- [ ] Audit logging
+### Stage 1 — Timing attack on admin key
+- [x] Replace `String.equals()` with `MessageDigest.isEqual()` in `AdminKeyFilter.java`
+- [x] `mvn test` green
+
+### Stage 2 — Move access token from URL query to fragment
+- [x] Update redirect in `OAuth2AuthenticationSuccessHandler.java` (`?token=` → `#token=`)
+- [x] Update frontend to read token from URL fragment (`AuthCallbackPage.tsx`)
+- [x] `mvn test` green
+- [ ] `npm run build` passing
+- [ ] Manual: verify in browser that redirect URL uses `#token=` not `?token=`
+
+### Stage 3 — Add HTTP security headers
+- [x] Add CSP, X-Frame-Options, HSTS to `SecurityConfig.java`
+- [x] `mvn test` green
+- [ ] Manual: `curl -I http://localhost:8080/api/health` — confirm headers present in response
+
+### Stage 4 — Sanitize filename in Content-Disposition *(do before re-enabling CV upload)*
+- [x] Add filename sanitization in `CVController.java`
+- [x] `mvn test` green
+
+### Stage 5 — Add HMAC to TokenHasher
+- [x] Implement HmacSHA256 in `TokenHasher.java`
+- [x] Update all call sites (`UserService.java` and others)
+- [x] Add `APP_TOKEN_HMAC_SECRET` to `.env.example` and `application.properties`
+- [x] `mvn test` green
+
+### Stage 6 — Audit log for retention deletions
+- [x] Log individual user UUIDs before deletion in `AccountRetentionService.java`
+- [x] `mvn test` green

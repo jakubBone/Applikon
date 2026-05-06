@@ -133,6 +133,15 @@ public class SecurityConfig {
                 // CSRF disabled — we use JWT (stateless), not session/form cookies
                 .csrf(AbstractHttpConfigurer::disable)
 
+                // HTTP security headers
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                        .frameOptions(frame -> frame.deny())
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000))
+                )
+
                 // CORS — Spring Security must know CORS rules before checking authentication
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 

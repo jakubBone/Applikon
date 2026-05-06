@@ -35,6 +35,7 @@ public class AccountRetentionService {
         List<User> inactive = userRepository.findInactiveUsers(threshold);
 
         for (User user : inactive) {
+            log.info("Retention job deleting inactive account: userId={}", user.getId());
             userService.deleteAccount(user.getId());
         }
 

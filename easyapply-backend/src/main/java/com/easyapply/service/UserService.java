@@ -9,6 +9,7 @@ import com.easyapply.security.TokenHasher;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ import java.util.UUID;
 public class UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    @Value("${app.token.hmac-secret}")
+    private String tokenHmacSecret;
 
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
@@ -86,7 +90,7 @@ public class UserService {
 
     @Transactional
     public void saveRefreshToken(User user, String refreshToken, LocalDateTime expiry) {
-        user.setRefreshToken(TokenHasher.hash(refreshToken), expiry);
+        user.setRefreshToken(TokenHasher.hash(refreshToken, tokenHmacSecret), expiry);
         userRepository.save(user);
     }
 
@@ -98,7 +102,7 @@ public class UserService {
 
     @Transactional
     public User findByValidRefreshToken(String refreshToken) {
-        String tokenHash = TokenHasher.hash(refreshToken);
+        String tokenHash = TokenHasher.hash(refreshToken, tokenHmacSecret);
         User user = userRepository.findByRefreshToken(tokenHash)
                 .orElseThrow(() -> new EntityNotFoundException(messageSource.getMessage("error.token.invalid", null, LocaleContextHolder.getLocale())));
 

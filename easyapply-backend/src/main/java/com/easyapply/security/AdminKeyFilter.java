@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 @Component
 public class AdminKeyFilter extends OncePerRequestFilter {
@@ -24,7 +26,9 @@ public class AdminKeyFilter extends OncePerRequestFilter {
 
         if (request.getRequestURI().startsWith("/api/admin")) {
             String key = request.getHeader("X-Admin-Key");
-            if (key == null || !key.equals(adminKey)) {
+            if (key == null || !MessageDigest.isEqual(
+                    key.getBytes(StandardCharsets.UTF_8),
+                    adminKey.getBytes(StandardCharsets.UTF_8))) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }

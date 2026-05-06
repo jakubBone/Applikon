@@ -5,9 +5,10 @@ import { setToken } from '../services/api'
 /**
  * Page called after a successful Google login.
  *
- * Backend redirects to: /auth/callback?token=<JWT>
+ * Backend redirects to: /auth/callback#token=<JWT>
+ * Token is in the URL fragment — never sent to the server by the browser.
  * This page:
- * 1. Extracts the token from the URL parameter
+ * 1. Extracts the token from the URL fragment
  * 2. Saves it in localStorage
  * 3. Redirects to the dashboard
  */
@@ -15,7 +16,7 @@ export function AuthCallbackPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(window.location.hash.slice(1))
     const token = params.get('token')
 
     if (token) {

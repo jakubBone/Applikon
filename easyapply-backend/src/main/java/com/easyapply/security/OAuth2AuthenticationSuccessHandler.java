@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
  * 3. Generate a refresh token (opaque UUID)
  * 4. Persist the refresh token in the database (attached to the user)
  * 5. Set the refresh token as an httpOnly cookie
- * 6. Redirect the frontend to /auth/callback?token=<JWT>
+ * 6. Redirect the frontend to /auth/callback#token=<JWT>
  *
  * Why redirect with the token in the URL?
  * OAuth2 is a redirect-based flow. Spring cannot "return" JSON to the frontend
@@ -83,8 +83,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         log.info("User {} logged in via Google", user.getId());
 
-        // Redirect frontend with the access token in the URL
-        String redirectUrl = frontendUrl + "/auth/callback?token=" + accessToken;
+        // Token in fragment — not sent to the server in subsequent requests (stays client-side only)
+        String redirectUrl = frontendUrl + "/auth/callback#token=" + accessToken;
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
