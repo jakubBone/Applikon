@@ -235,7 +235,7 @@ your-domain.com {
     }
 
     handle {
-        reverse_proxy localhost:80
+        reverse_proxy localhost:3000
     }
 }
 ```

@@ -7,6 +7,7 @@ import com.easyapply.dto.StatusUpdateRequest;
 import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.ApplicationService;
 import com.easyapply.service.CVService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Applications", description = "CRUD and duplicate detection for job applications")
 @RestController
 @RequestMapping("/api/applications")
 public class ApplicationController {

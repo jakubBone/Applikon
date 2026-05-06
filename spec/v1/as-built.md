@@ -3,7 +3,7 @@
 > Generated: 2026-04-23. Describes the actual implemented state of EasyApply v1.
 > Source of truth: the code. This document reflects what exists, not what was planned.
 > 
-> **Latest update:** Phase 07 retention-hygiene completed: `last_login_at` tracking, daily retention cron (`AccountRetentionService`), SHA-256 hashing of refresh tokens, PII removed from logs.
+> **Latest update:** Phase 11 Swagger/OpenAPI complete: `springdoc-openapi-starter-webmvc-ui` added, Swagger UI at `/swagger-ui.html`, JWT Bearer auth scheme, all controllers tagged.
 
 ---
 
@@ -35,6 +35,7 @@
 | Retention & hygiene (phase 07) | Not in MVP | last_login_at tracking; daily cron removes inactive accounts >12 months; refresh_token stored as SHA-256 hash; PII removed from logs | Added (phase 07) |
 | Data export (phase 08) | Not in MVP | GET /api/auth/me/export returns JSON blob with all user data (RODO Art. 20) | Added (phase 08) |
 | Service notices (phase 08) | Not in MVP | BANNER/MODAL notices via DB; admin POST endpoint secured by X-Admin-Key header; countdown timer | Added (phase 08) |
+| API documentation (phase 11) | Not in MVP | Swagger UI at /swagger-ui.html; OpenAPI 3 spec auto-generated; JWT Bearer auth scheme; all controllers tagged | Added (phase 11) |
 
 ---
 
@@ -73,6 +74,7 @@ com.easyapply/
   EasyApplyApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing, @EnableScheduling
   config/
     I18nConfig.java                — MessageSource (i18n/messages), AcceptHeaderLocaleResolver (default: en)
+    OpenApiConfig.java             — @OpenAPIDefinition (title/description/version/contact) + @SecurityScheme (JWT Bearer) (phase 11)
     SecurityConfig.java            — Spring Security, OAuth2, JWT encoder/decoder, CORS
   controller/
     ApplicationController.java     — /api/applications
@@ -226,6 +228,7 @@ com.easyapply/
 | `h2` | In-memory DB for tests |
 | `flyway-core` + `flyway-database-postgresql` | DB migrations |
 | `spring-dotenv` | `.env` file support |
+| `springdoc-openapi-starter-webmvc-ui 2.8.8` | Swagger UI + OpenAPI 3 spec generation (phase 11) |
 | No Lombok | All getters/setters written manually |
 
 ---
@@ -739,7 +742,65 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 
 ---
 
-## 11. Not Implemented (from spec)
+## 11. Phase 11 — Swagger / OpenAPI (2026-05-06)
+
+**Status:** complete.
+
+Added `springdoc-openapi-starter-webmvc-ui 2.8.8`. OpenAPI 3 spec is auto-generated from existing annotations; no manual spec files.
+
+### What changed
+
+**`pom.xml`** — added `springdoc-openapi-starter-webmvc-ui 2.8.8` dependency.
+
+**`application.properties`** — added springdoc config:
+```properties
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.operations-sorter=alpha
+springdoc.swagger-ui.tags-sorter=alpha
+```
+
+**`SecurityConfig.java`:**
+- `/swagger-ui/**`, `/swagger-ui.html`, `/v3/api-docs/**` added to `permitAll()` block
+- CSP relaxed from `default-src 'self'` to `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:` — required for Swagger UI inline scripts/styles
+
+**`config/OpenApiConfig.java`** (new file):
+- `@OpenAPIDefinition` — title "EasyApply API", description, version 1.0.0, contact (Jakub Bone)
+- `@SecurityRequirement(name = "bearerAuth")` — global: all endpoints show padlock in Swagger UI
+- `@SecurityScheme` — HTTP Bearer JWT; adds "Authorize" button to the UI
+
+**Controllers — `@Tag` added to all:**
+
+| Controller | Tag name | Description |
+|-----------|----------|-------------|
+| `ApplicationController` | Applications | CRUD and duplicate detection for job applications |
+| `AuthController` | Auth | Google OAuth2 login, JWT refresh, consent, account management |
+| `AdminController` | Admin | Service notices management — requires X-Admin-Key header |
+| `CVController` | CV | CV versions — link and note types |
+| `NoteController` | Notes | Notes per application — Questions, Feedback, Other |
+| `StatisticsController` | Statistics | Badge stats and application metrics |
+| `SystemController` | System | Active service notices shown to logged-in users |
+
+**`@Operation` added to non-obvious endpoints:**
+
+| Endpoint | Summary |
+|----------|---------|
+| `POST /api/auth/refresh` | Refresh access token using a valid refresh token |
+| `POST /api/auth/consent` | Record user consent (required once after first login) |
+| `DELETE /api/auth/me` | Permanently delete the authenticated user's account and all their data |
+| `GET /api/auth/me/export` | Export all user data as JSON (RODO Art. 20) |
+| `POST /api/admin/notices` | Create a service notice (BANNER or MODAL) |
+
+### Accessible at
+
+| URL | Content |
+|-----|---------|
+| `/swagger-ui.html` | Swagger UI (browser) |
+| `/v3/api-docs` | Raw OpenAPI 3 JSON spec |
+
+---
+
+## 13. Not Implemented (from spec)
 
 | Item | Source | Notes |
 |------|--------|-------|
@@ -748,7 +809,7 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 
 ---
 
-## 12. v1 Completion Status
+## 14. v1 Completion Status
 
 ### What is done and working
 
@@ -769,6 +830,7 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 - Settings page with account management and data export
 - Data export (GET /api/auth/me/export, RODO Art. 20 compliance)
 - Service notices system (BANNER/MODAL with countdown; admin POST endpoint; public GET endpoint)
+- Swagger UI at `/swagger-ui.html` with JWT Bearer auth scheme and all controllers tagged (phase 11)
 - Vitest unit tests (backend + frontend, including Phase 08 SystemController and AdminController tests)
 - Cypress E2E tests
 
@@ -782,6 +844,6 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 
 ### v1 overall assessment
 
-All planned MVP features (PHASE 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). Phase 10 added WARN logging for admin denials, failed token refreshes, and 404s. retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
+All planned MVP features (PHASE 1–7) are implemented. Phase 07 (Privacy & RODO) completed rodo-minimum (consent flow, account deletion) and cv-link-only (file upload disabled). Phase 08 completed data export (RODO Art. 20) and service notices (BANNER/MODAL with countdown). Phase 10 added WARN logging for admin denials, failed token refreshes, and 404s. Phase 11 added Swagger UI at `/swagger-ui.html` with JWT Bearer auth and all controllers tagged. retention-hygiene (auto-delete inactive accounts, token hashing, log audit) is planned but deferred to post-publication.
 
 Authentication, i18n, onboarding, Cypress E2E, and React Query were added beyond the spec. The two concrete gaps are: (1) salary change auto-note — the NoteService method exists but is not wired into `ApplicationService.update()`; (2) `rejectionDetails` missing from the frontend `Application` type.

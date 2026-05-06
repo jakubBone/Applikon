@@ -3,6 +3,8 @@ package com.easyapply.controller;
 import com.easyapply.dto.ServiceNoticeRequest;
 import com.easyapply.dto.ServiceNoticeResponse;
 import com.easyapply.service.ServiceNoticeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Admin", description = "Service notices management — requires X-Admin-Key header")
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -21,6 +24,8 @@ public class AdminController {
         this.service = service;
     }
 
+    @Operation(summary = "Create a service notice (BANNER or MODAL)",
+               description = "Requires X-Admin-Key header. Active notices are shown to all logged-in users.")
     @PostMapping("/notices")
     public ResponseEntity<ServiceNoticeResponse> createNotice(
             @Valid @RequestBody ServiceNoticeRequest request) {

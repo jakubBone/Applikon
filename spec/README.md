@@ -16,9 +16,10 @@ were written before code, not after.
 | Additional features (i18n, logout) | `v1/05-additional-features/` | Complete |
 | Cleanup | `v1/06-cleanup/` | Complete |
 | Privacy & RODO (phase 07) | `v1/07-privacy-rodo/` | Complete |
-| User Data & Service Notifications (phase 08) | `v1/08-user-data/` | In progress |
+| User Data & Service Notifications (phase 08) | `v1/08-user-data/` | Complete |
 | Security refactoring (phase 09) | `v1/09-security-refactoring/` | Complete |
-| Logging — production observability (phase 10) | `v1/10-logging/` | In progress |
+| Logging — production observability (phase 10) | `v1/10-logging/` | Complete |
+| Swagger / OpenAPI (phase 11) | `v1/11-swagger/` | Complete |
 | **As-built** | **`v1/as-built.md`** | **Authoritative — what is actually built** |
 
 > `v1/as-built.md` is the primary reference for the current codebase state:
@@ -46,8 +47,14 @@ additional pattern: **Claude as mentor**. After the code review, Claude created 
 learning plans paired with refactoring implementation — teaching concepts while improving code. The notes
 files record what was understood at each stage.
 
-## Code Review Note
+## Code Reviews
 
-`v1/03-review/` contains a **code quality review** (best practices, security vulnerabilities,
-design patterns) — not a verification that the implementation plan was completed.
-Completion verification is tracked within each plan's own Definition of Done.
+The project has two separate code reviews, each with a different scope:
+
+**`v1/03-review/`** — general code quality review: best practices, design patterns,
+naming, architecture. Not a completion check — completion is tracked in each phase's own Definition of Done.
+
+**`v1/09-security-refactoring/code-review-security.md`** — dedicated security audit:
+OWASP-focused review of the full security-critical surface (JWT handling, OAuth2 flow, admin key filter,
+token storage, CORS, CSP, input validation). Found and fixed: timing attack on admin key comparison,
+refresh token stored in plaintext → SHA-256 hash, PII in logs. Corresponding fixes in `refactor-plan-security.md`.

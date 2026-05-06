@@ -7,6 +7,8 @@ import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.security.JwtService;
 import com.easyapply.service.UserExportService;
 import com.easyapply.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,15 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.Map;
 
-/**
- * Authentication endpoints.
- *
- * /api/auth/me      — returns the currently authenticated user's profile (requires JWT)
- * /api/auth/refresh — issues a new access token based on the refresh token cookie
- * /api/auth/logout  — invalidates the refresh token
- *
- * The login endpoint (/oauth2/authorization/google) is handled automatically by Spring Security.
- */
+@Tag(name = "Auth", description = "Google OAuth2 login, JWT refresh, consent, account management")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -60,6 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(UserResponse.fromEntity(user));
     }
 
+    @Operation(summary = "Export all user data as JSON (RODO Art. 20)")
     @GetMapping("/me/export")
     public ResponseEntity<UserExportResponse> exportMyData(
             @AuthenticationPrincipal AuthenticatedUser principal) {
@@ -69,13 +64,7 @@ public class AuthController {
                 .body(export);
     }
 
-    /**
-     * Issues a new access token based on the refresh token sent in an httpOnly cookie.
-     *
-     * Why a cookie and not the request body?
-     * An httpOnly cookie is not accessible to JavaScript (protection against XSS).
-     * The browser sends it automatically with every request to /api/auth.
-     */
+    @Operation(summary = "Refresh access token using a valid refresh token")
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request) {
         String refreshToken = extractRefreshTokenFromCookie(request);
@@ -96,10 +85,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * Accepts the privacy policy for the authenticated user.
-     * Idempotent: if already accepted, does not overwrite the timestamp.
-     */
+    @Operation(summary = "Record user consent (required once after first login)")
     @PostMapping("/consent")
     public ResponseEntity<Void> acceptConsent(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
@@ -107,11 +93,7 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Deletes the authenticated user's account and all related data.
-     * This is a RODO right: complete account deletion (user, applications, CVs, notes, files).
-     * Clears the refresh token cookie on the client side.
-     */
+    @Operation(summary = "Permanently delete the authenticated user's account and all their data")
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteAccount(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,

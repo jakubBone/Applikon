@@ -4,6 +4,7 @@ import com.easyapply.entity.CV;
 import com.easyapply.entity.CVType;
 import com.easyapply.security.AuthenticatedUser;
 import com.easyapply.service.CVService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.context.MessageSource;
@@ -24,6 +25,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+@Tag(name = "CV", description = "CV versions — link and note types")
 @RestController
 @RequestMapping("/api/cv")
 public class CVController {

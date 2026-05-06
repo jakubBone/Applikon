@@ -123,12 +123,12 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 
 ## Definition of Done (DoD)
 
-- [ ] `AdminKeyFilter` produces `WARN` log with URI and IP on every blocked admin request
-- [ ] `AuthController.refresh()` produces `WARN` log with exception message on failure
-- [ ] `GlobalExceptionHandler.handleEntityNotFoundException` produces `WARN` log before returning 404
-- [ ] No unused `Logger` fields in `NoteService` or `JwtService`
-- [ ] `./mvnw test` — 0 failed
-- [ ] `as-built.md` updated: logging coverage section reflects changes
+- [x] `AdminKeyFilter` produces `WARN` log with URI and IP on every blocked admin request
+- [x] `AuthController.refresh()` produces `WARN` log with exception message on failure
+- [x] `GlobalExceptionHandler.handleEntityNotFoundException` produces `WARN` log before returning 404
+- [x] No unused `Logger` fields in `NoteService` or `JwtService`
+- [x] `./mvnw test` — 0 failed
+- [x] `as-built.md` updated: logging coverage section reflects changes
 
 ---
 

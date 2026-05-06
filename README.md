@@ -16,6 +16,7 @@
 ![React Query](https://img.shields.io/badge/React_Query-FF4154?style=flat&logo=reactquery&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)
 ![Cypress](https://img.shields.io/badge/Cypress-69D3A7?style=flat&logo=cypress&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
 
@@ -89,6 +90,8 @@ Specification and architecture artifacts live in [`spec/`](spec/README.md):
 - **As-built (actual architecture)** — `spec/v1/as-built.md`
 - **v2 microservices vision** — `spec/v2/vision.md`
 
+The full REST API is documented with **Swagger UI**, available at `/swagger-ui.html` on the running backend. All endpoints are grouped by domain, and authenticated endpoints can be called directly from the UI after pasting a JWT Bearer token.
+
 
 ## 🔒 Privacy & Data
 
@@ -108,6 +111,6 @@ See [`spec/v1/07-privacy-rodo/`](spec/v1/07-privacy-rodo/) for the full design r
 
 ## ✅ Status
 
-v1 complete. All planned MVP features implemented, plus: Google OAuth2 authentication, i18n (EN/PL), onboarding tour, gamification badges, Cypress E2E tests, RODO compliance (privacy policy, consent flow, account deletion, data retention).
+v1 complete. All planned MVP features implemented, plus: Google OAuth2 authentication, i18n (EN/PL), onboarding tour, gamification badges, Cypress E2E tests, RODO compliance (privacy policy, consent flow, account deletion, data retention), Swagger UI API documentation with JWT auth.
 
 v2 (microservices + AI features) — vision defined, implementation not started.

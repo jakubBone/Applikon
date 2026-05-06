@@ -135,7 +135,9 @@ public class SecurityConfig {
 
                 // HTTP security headers
                 .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                        // 'unsafe-inline' required by Swagger UI (inline scripts/styles)
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
                         .frameOptions(frame -> frame.deny())
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
@@ -157,6 +159,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         // Admin endpoint — secured by AdminKeyFilter, not JWT
                         .requestMatchers("/api/admin/**").permitAll()
+                        // Swagger UI
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
