@@ -88,11 +88,9 @@ describe('Settings', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Settings')).toBeInTheDocument()
-      expect(screen.getByText('Account')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /👤/ })).toBeInTheDocument()
     })
-
-    expect(screen.getByDisplayValue('test@example.com')).toBeInTheDocument()
   })
 
   it('displays privacy policy acceptance date', async () => {
@@ -101,6 +99,9 @@ describe('Settings', () => {
         <Settings />
       </TestWrapper>
     )
+
+    const accountBtn = await screen.findByRole('button', { name: /👤/ })
+    await userEvent.click(accountBtn)
 
     await waitFor(() => {
       expect(screen.getByText(/Privacy policy accepted:/)).toBeInTheDocument()
@@ -127,7 +128,7 @@ describe('Settings', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Settings')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
     const deleteButton = screen.getByRole('button', { name: /Delete account/i })
@@ -147,7 +148,7 @@ describe('Settings', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Settings')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
     const deleteButton = screen.getByRole('button', { name: /Delete account/i })
@@ -181,7 +182,7 @@ describe('Settings', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Settings')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
     const deleteButton = screen.getByRole('button', { name: /Delete account/i })
@@ -210,7 +211,7 @@ describe('Settings', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Settings')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
     const deleteButton = screen.getByRole('button', { name: /Delete account/i })
@@ -235,8 +236,10 @@ describe('Settings', () => {
       </TestWrapper>
     )
 
+    const archiveBtn = await screen.findByRole('button', { name: /🗄️/ })
+    await userEvent.click(archiveBtn)
+
     await waitFor(() => {
-      expect(screen.getByText('Your data')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
     })
   })
@@ -249,6 +252,8 @@ describe('Settings', () => {
         <Settings />
       </TestWrapper>
     )
+
+    await userEvent.click(await screen.findByRole('button', { name: /🗄️/ }))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
@@ -273,6 +278,8 @@ describe('Settings', () => {
       </TestWrapper>
     )
 
+    await userEvent.click(await screen.findByRole('button', { name: /🗄️/ }))
+
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
     })
@@ -295,6 +302,8 @@ describe('Settings', () => {
       </TestWrapper>
     )
 
+    await userEvent.click(await screen.findByRole('button', { name: /🗄️/ }))
+
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
     })
@@ -316,6 +325,8 @@ describe('Settings', () => {
         <Settings />
       </TestWrapper>
     )
+
+    await userEvent.click(await screen.findByRole('button', { name: /🗄️/ }))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Download my data/i })).toBeInTheDocument()
@@ -342,7 +353,7 @@ describe('Settings', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('Settings')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
     const deleteButton = screen.getByRole('button', { name: /Delete account/i })

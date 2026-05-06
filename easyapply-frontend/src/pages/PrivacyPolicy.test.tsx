@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { PrivacyPolicy } from './PrivacyPolicy'
 
 // Mock translation
@@ -56,20 +57,20 @@ describe('PrivacyPolicy', () => {
   })
 
   it('renders privacy policy page', () => {
-    render(<PrivacyPolicy />)
+    render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
     expect(screen.getByText(/EasyApply Privacy Policy/)).toBeInTheDocument()
   })
 
   it('displays main headings', () => {
-    render(<PrivacyPolicy />)
+    render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
     expect(screen.getByText(/Who am I/)).toBeInTheDocument()
     expect(screen.getByText(/What data do I collect/)).toBeInTheDocument()
   })
 
   it('displays content with proper formatting', () => {
-    render(<PrivacyPolicy />)
+    render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
     // Check for content
     expect(screen.getByText(/Jakub Boniecki/)).toBeInTheDocument()
@@ -77,14 +78,14 @@ describe('PrivacyPolicy', () => {
   })
 
   it('renders lists', () => {
-    render(<PrivacyPolicy />)
+    render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
     const listItems = screen.getAllByRole('listitem')
     expect(listItems.length).toBeGreaterThan(0)
   })
 
   it('applies proper CSS classes', () => {
-    const { container } = render(<PrivacyPolicy />)
+    const { container } = render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
     expect(container.querySelector('.privacy-policy-page')).toBeInTheDocument()
     expect(container.querySelector('.privacy-container')).toBeInTheDocument()
@@ -92,7 +93,7 @@ describe('PrivacyPolicy', () => {
   })
 
   it('renders with markdown formatting (headings)', () => {
-    render(<PrivacyPolicy />)
+    render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
     // Check for markdown-rendered headings
     const h1 = screen.getByRole('heading', { level: 1 })
@@ -103,7 +104,7 @@ describe('PrivacyPolicy', () => {
   })
 
   it('does NOT display raw markdown syntax', () => {
-    render(<PrivacyPolicy />)
+    render(<MemoryRouter><PrivacyPolicy /></MemoryRouter>)
 
     // Should NOT contain raw markdown
     expect(screen.queryByText(/^#/)).not.toBeInTheDocument()

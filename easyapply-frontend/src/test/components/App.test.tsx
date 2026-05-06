@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import AppContent from '../../AppContent'
 import { AuthProvider } from '../../auth/AuthProvider'
@@ -8,9 +9,11 @@ import { QueryWrapper } from '../test-utils'
 
 const renderApp = () =>
   render(
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>,
+    <MemoryRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </MemoryRouter>,
     { wrapper: QueryWrapper }
   )
 
@@ -31,6 +34,7 @@ vi.mock('../../services/api', () => ({
   getToken: vi.fn(() => null),
   fetchCurrentUser: vi.fn(),
   logout: vi.fn(),
+  fetchActiveNotices: vi.fn(),
 }))
 
 describe('App Component', () => {
@@ -49,6 +53,7 @@ describe('App Component', () => {
     } as never)
     vi.mocked(api.checkDuplicate).mockResolvedValue([])
     vi.mocked(api.fetchCVs).mockResolvedValue([])
+    vi.mocked(api.fetchActiveNotices).mockResolvedValue([])
   })
 
   // ==================== INITIAL RENDERING Tests ====================
