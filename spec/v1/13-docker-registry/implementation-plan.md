@@ -166,19 +166,19 @@ Add `image:` field to `backend` and `frontend` — keep all existing `build:` se
 
 ## Verification
 
-- [ ] Push to `master` — all three jobs appear in GitHub → Actions (`backend`, `frontend`, `docker`)
-- [ ] `docker` job is green
-- [ ] GitHub → Packages shows `easyapply-backend` and `easyapply-frontend`
-- [ ] Each package has tags `:latest` and `:<sha>`
+- [x] Push to `master` — all three jobs appear in GitHub → Actions (`backend`, `frontend`, `docker`)
+- [x] `docker` job is green
+- [x] GitHub → Packages shows `easyapply-backend` and `easyapply-frontend`
+- [x] Each package has tags `:latest` and `:<sha>`
 
 ---
 
 ## Definition of Done
 
-- [ ] `docker` CI job builds and pushes after every successful `backend` + `frontend` run
-- [ ] Both images present in GHCR with `:latest` and `:<sha>` tags
-- [ ] `docker-compose.yml` has `image:` fields pointing to GHCR
-- [ ] `spec/README.md` updated with phase 13 row
+- [x] `docker` CI job builds and pushes after every successful `backend` + `frontend` run
+- [x] Both images present in GHCR with `:latest` and `:<sha>` tags
+- [x] `docker-compose.yml` has `image:` fields pointing to GHCR
+- [x] `spec/README.md` updated with phase 13 row
 
 ---
 
