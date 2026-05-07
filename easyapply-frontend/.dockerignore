@@ -1,10 +1,27 @@
+# Dependencies — installed inside Docker
 node_modules/
+
+# Build output — built inside Docker
 dist/
-.git
+
+# Git history
+.git/
 .gitignore
-*.md
+
+# Test artifacts
 coverage/
-cypress/videos/
-cypress/screenshots/
+cypress/
+
+# Environment files
+.env
 .env.local
 .env.*.local
+.env.test
+.env.example
+
+# Documentation
+*.md
+
+# Docker config
+Dockerfile
+.dockerignore

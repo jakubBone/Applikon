@@ -1,9 +1,30 @@
+# Build output — JAR is built inside Docker
 target/
-!target/*.jar
-.git
+
+# Git history
+.git/
 .gitignore
-*.md
+
+# IDE
 .idea/
 *.iml
-logs/
+
+# User-uploaded data (CVs — sensitive)
 uploads/
+
+# Logs
+logs/
+
+# Environment files
+.env
+.env.*
+
+# Windows Maven wrapper (not used in Alpine)
+mvnw.cmd
+
+# Documentation
+*.md
+
+# Docker config
+Dockerfile
+.dockerignore
