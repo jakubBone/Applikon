@@ -89,6 +89,12 @@ docker compose up --build
 
 **4.** Open `http://localhost:3000`
 
+Production images are published to GitHub Container Registry after every successful CI run on `master`:
+```
+ghcr.io/jakubbone/easyapply-backend:latest
+ghcr.io/jakubbone/easyapply-frontend:latest
+```
+
 ## 📚 Documentation
 
 Specification and architecture artifacts live in [`spec/`](spec/README.md):
