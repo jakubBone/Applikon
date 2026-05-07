@@ -15,6 +15,8 @@
 ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)
 ![Cypress](https://img.shields.io/badge/Cypress-69D3A7?style=flat&logo=cypress&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
+[![CI](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml)
+
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)
@@ -67,13 +69,17 @@ spec/
 - **Application registry** - company, position, salary (range, currency, gross/net, contract type), job source, link to posting
 - **Kanban board** - visual overview of recruitment status: Sent → In progress → Completed, with drag & drop
 - **Recruitment stages** - tracking current stage: HR interview, technical interview, manager interview, recruitment task, final interview, or custom stage
-- **CV archive** - storing different CV versions (file upload, link, or note) and assigning them to specific applications
+- **CV archive** - storing different CV versions (link or note — file upload temporarily disabled) and assigning them to specific applications
 - **Notes** - saving interview questions, feedback, and personal thoughts for each application (categories: Questions / Feedback / Other)
 - **Job posting archive** - copy of the job description in case the link expires
 - **Duplicate detection** - warning when reapplying to the same company and position
 - **Badge system** - achievements for rejections and ghosting (gamification)
 - **Authentication** - Google OAuth2 login, JWT access token + refresh token
 - **i18n** - Polish and English interface with a language switcher
+- **Settings** - account management: change display name, delete account
+- **Data export** - download all personal data as JSON (RODO Art. 20)
+- **Service notices** - system announcements displayed on login (maintenance, updates)
+- **API documentation** - Swagger UI with all endpoints, request/response schemas, and authorization
 
 
 ## 🐳 Running with Docker
