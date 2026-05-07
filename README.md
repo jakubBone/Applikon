@@ -33,11 +33,32 @@ EasyApply is a job application tracker for IT candidates in Poland. One place fo
 <br>
 </div>
 
-## 🤖 Built with AI
+## 🧠 Spec-Driven Development with AI
 
-Spec-driven development end-to-end with **Claude Code** and **Gemini**. The [`spec/`](spec/README.md) directory holds the planning, implementation, and review documentation that drove every phase — written **before** any code, then handed to AI for execution.
+Built with **Claude Code** and **Gemini** using a strict spec-first approach: every phase starts with a written specification, gets reviewed, then moves to implementation. No code was written without a plan first.
 
-![Vision](https://img.shields.io/badge/Vision-1F2937?style=flat) → ![Spec](https://img.shields.io/badge/Spec-1F2937?style=flat) → ![Code](https://img.shields.io/badge/Code-1F2937?style=flat) → ![Review](https://img.shields.io/badge/Review-1F2937?style=flat) → ![Refactor](https://img.shields.io/badge/Refactor-1F2937?style=flat)
+![](https://img.shields.io/badge/Vision-3B82F6?style=flat-square) → ![](https://img.shields.io/badge/Spec-8B5CF6?style=flat-square) → ![](https://img.shields.io/badge/Code-F97316?style=flat-square) → ![](https://img.shields.io/badge/Review-EAB308?style=flat-square) → ![](https://img.shields.io/badge/Refactor-22C55E?style=flat-square)
+
+```
+spec/
+├── v1/                         
+│   ├── 01-vision/              ← MVP scope
+│   ├── 02-implementation/      ← implementation plan
+│   ├── 03-review/              ← code review
+│   ├── 04-mvp-refactoring/     ← refactoring & learning (Claude as mentor)
+│   ├── 05-additional-features/ ← i18n, onboarding, gamification
+│   ├── 06-cleanup/             ← technical cleanup
+│   ├── 07-privacy-rodo/        ← RODO & privacy policy
+│   ├── 08-user-data/           ← account management
+│   ├── 09-security-refactoring/ ← OWASP audit, timing attack fix, HMAC-SHA256 tokens
+│   ├── 10-logging/             ← production observability
+│   ├── 11-swagger/             ← API documentation
+│   ├── 12-ci/                  ← GitHub Actions CI
+│   ├── 13-docker-registry/     ← Docker & GHCR
+│   └── as-built.md             ← authoritative architecture reference
+└── v2/                         
+    └── vision.md               ← microservices + AI features (CV analysis, job matching)
+```
 
 
 ## ✨ Features
@@ -54,73 +75,29 @@ Spec-driven development end-to-end with **Claude Code** and **Gemini**. The [`sp
 - **i18n** - Polish and English interface with a language switcher
 
 
-## 📁 Project Structure
-
-```
-easyapply-backend/    - Spring Boot application (com.easyapply)
-easyapply-frontend/   - React + Vite application (src/)
-spec/                 - Spec-driven documentation (vision, plans, review, as-built)
-docker-compose.yml    - Local development setup
-```
-
-
-
 ## 🐳 Running with Docker
 
-**1.** Clone the repo and create `.env`:
 ```bash
-cp .env.example .env
-```
-
-**2.** Fill in `.env`:
-
-| Variable | What to put |
-|---|---|
-| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | anything you like, e.g. `easyapply` / `easyapply` / `secret` |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | create OAuth credentials at [console.cloud.google.com](https://console.cloud.google.com) — add `http://localhost:3000` as an authorised redirect URI |
-| `ADMIN_KEY` / `APP_TOKEN_HMAC_SECRET` | any random string, e.g. output of `openssl rand -base64 32` |
-
-Leave the rest as defaults from `.env.example`.
-
-**3.** Build and start:
-```bash
+cp .env.example .env        # fill in Postgres credentials + Google OAuth client ID/secret
 docker compose up --build
 ```
 
-**4.** Open `http://localhost:3000`
+Open `http://localhost:3000`. All required variables are documented in `.env.example`.
 
-Production images are published to GitHub Container Registry after every successful CI run on `master`:
+Production images (published to GHCR on every `master` build):
 ```
 ghcr.io/jakubbone/easyapply-backend:latest
 ghcr.io/jakubbone/easyapply-frontend:latest
 ```
 
-## 📚 Documentation
-
-Specification and architecture artifacts live in [`spec/`](spec/README.md):
-
-- **Vision & MVP brief** - `spec/v1/01-vision/brief.md`
-- **Implementation plan** - `spec/v1/02-implementation/mvp-implementation-plan.md`
-- **As-built (actual architecture)** - `spec/v1/as-built.md`
-- **v2 microservices vision** - `spec/v2/vision.md`
-
-The full REST API is documented with **Swagger UI**, available at `/swagger-ui.html` on the running backend. All endpoints are grouped by domain, and authenticated endpoints can be called directly from the UI after pasting a JWT Bearer token.
-
 
 ## 🔒 Privacy & Data
 
-EasyApply collects the minimum data needed to operate:
+- **Refresh tokens** stored as HMAC-SHA256 hashes - a stolen database cannot be used to hijack sessions
+- **Logs** contain UUIDs only - no emails, names, or tokens in plaintext
+- **Account deletion** permanently removes all data; inactive accounts purged after 12 months
 
-- **What we store:** email, display name, Google ID, and an optional link to your CV hosted externally (Google Drive, Dropbox, etc.). No CV files are uploaded to our servers.
-- **CV files:** deliberately excluded - the upload endpoint is disabled. Users paste a link to their own hosted CV and retain full control over access.
-- **Account deletion:** available at any time via Settings → Delete account. All data (applications, notes, CV records) is permanently removed with no trace left in the database.
-- **Inactive accounts:** automatically deleted after 12 months of inactivity.
-- **Refresh tokens:** stored as SHA-256 hashes - a stolen database cannot be used to hijack sessions.
-- **Logs:** user identifiers in logs are UUIDs only — no emails, names, or tokens in plaintext.
-- **Privacy policy:** available at `/privacy` in the live app (PL/EN).
-- **Contact:** jakub.bone1990@gmail.com
-
-See [`spec/v1/07-privacy-rodo/`](spec/v1/07-privacy-rodo/) for the full design rationale behind these decisions.
+Full design rationale: [`spec/v1/07-privacy-rodo/`](spec/v1/07-privacy-rodo/)
 
 
 ## ✅ Status
