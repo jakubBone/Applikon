@@ -23,6 +23,11 @@
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 
+## Live demo
+
+**[https://easyapply.super.pl](https://easyapply.super.pl)** — log in with Google, no registration needed.
+
+
 ## 🎯 About
 
 **EasyApply is a job application tracker for IT candidates in Poland** — one place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Built primarily for juniors actively applying to many positions and needing control over the entire process.
@@ -59,29 +64,30 @@ docker-compose.yml    — Local development setup
 ```
 
 
-## 🚀 Running Locally
 
-You need: Java 21, Node.js 20+, PostgreSQL 16 (or run via Docker), Google OAuth2 credentials.
+## 🐳 Running with Docker
 
-**1. Database** — start Postgres (e.g. via Docker):
+**1.** Clone the repo and create `.env`:
 ```bash
-docker run --name easyapply-db -e POSTGRES_DB=easyapply -e POSTGRES_USER=easyapply \
-  -e POSTGRES_PASSWORD=easyapply -p 5432:5432 -d postgres:16-alpine
+cp .env.example .env
 ```
 
-**2. Backend** (`easyapply-backend/`):
+**2.** Fill in `.env`:
+
+| Variable | What to put |
+|---|---|
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | anything you like, e.g. `easyapply` / `easyapply` / `secret` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | create OAuth credentials at [console.cloud.google.com](https://console.cloud.google.com) — add `http://localhost:3000` as an authorised redirect URI |
+| `ADMIN_KEY` / `APP_TOKEN_HMAC_SECRET` | any random string, e.g. output of `openssl rand -base64 32` |
+
+Leave the rest as defaults from `.env.example`.
+
+**3.** Build and start:
 ```bash
-cp .env.example .env       # fill in DATABASE_*, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-./mvnw spring-boot:run     # starts on :8080
+docker compose up --build
 ```
 
-**3. Frontend** (`easyapply-frontend/`):
-```bash
-cp .env.example .env       # fill in VITE_API_URL, VITE_GOOGLE_CLIENT_ID
-npm install
-npm run dev                # starts on :5173
-```
-
+**4.** Open `http://localhost:3000`
 
 ## 📚 Documentation
 

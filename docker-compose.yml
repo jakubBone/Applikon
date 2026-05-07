@@ -6,6 +6,11 @@ services:
     image: postgres:16-alpine
     container_name: easyapply-db
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -27,6 +32,11 @@ services:
       dockerfile: Dockerfile
     container_name: easyapply-backend
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
@@ -64,6 +74,11 @@ services:
         VITE_USE_BACKEND: ${VITE_USE_BACKEND:-true}
     container_name: easyapply-frontend
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "127.0.0.1:3000:80"
     depends_on:
