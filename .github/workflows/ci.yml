@@ -56,6 +56,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set lowercase owner
+        run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -69,8 +72,8 @@ jobs:
           context: ./easyapply-backend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/easyapply-backend:latest
-            ghcr.io/${{ github.repository_owner }}/easyapply-backend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER }}/easyapply-backend:latest
+            ghcr.io/${{ env.OWNER }}/easyapply-backend:${{ github.sha }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
@@ -81,5 +84,5 @@ jobs:
             VITE_API_URL=${{ secrets.VITE_API_URL }}
             VITE_USE_BACKEND=true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/easyapply-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/easyapply-frontend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER }}/easyapply-frontend:latest
+            ghcr.io/${{ env.OWNER }}/easyapply-frontend:${{ github.sha }}
