@@ -43,3 +43,43 @@ jobs:
       - name: Build
         working-directory: easyapply-frontend
         run: npm run build
+
+  docker:
+    name: Docker — build and push to GHCR
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./easyapply-backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/easyapply-backend:latest
+            ghcr.io/${{ github.repository_owner }}/easyapply-backend:${{ github.sha }}
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./easyapply-frontend
+          push: true
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_USE_BACKEND=true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/easyapply-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/easyapply-frontend:${{ github.sha }}

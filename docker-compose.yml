@@ -27,6 +27,7 @@ services:
 
   # Spring Boot Backend
   backend:
+    image: ghcr.io/jakubbone/easyapply-backend:latest
     build:
       context: ./easyapply-backend
       dockerfile: Dockerfile
@@ -66,6 +67,7 @@ services:
 
   # React Frontend
   frontend:
+    image: ghcr.io/jakubbone/easyapply-frontend:latest
     build:
       context: ./easyapply-frontend
       dockerfile: Dockerfile

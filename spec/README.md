@@ -21,6 +21,7 @@ were written before code, not after.
 | Logging — production observability (phase 10) | `v1/10-logging/` | Complete |
 | Swagger / OpenAPI (phase 11) | `v1/11-swagger/` | Complete |
 | GitHub Actions CI (phase 12) | `v1/12-ci/` | Complete |
+| Docker Registry — GHCR (phase 13) | `v1/13-docker-registry/` | Pending |
 | **As-built** | **`v1/as-built.md`** | **Authoritative — what is actually built** |
 
 > `v1/as-built.md` is the primary reference for the current codebase state:
