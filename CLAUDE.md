@@ -46,9 +46,10 @@ Example: `refactor(backend): extract validation into ApplicationValidator`
 
 | Need | Read |
 |------|------|
-| Full architecture / DB schema / REST endpoints / FE components | `spec/v1/as-built.md` |
+| User-facing project overview | `README.md` |
+| Architecture / DB schema / REST endpoints / FE components | `spec/v1/architecture.md` |
 | Original vision / problem / MVP scope | `spec/v1/01-vision/brief.md` |
+| Plan vs reality / phase history | `spec/v1/as-built.md` |
 | Spec phases index | `spec/README.md` |
 | v2 microservices vision | `spec/v2/vision.md` |
 | Deploy instructions | `spec/deployment/deployment-intro.md` (concepts) + `deployment-hetzner.md` (step-by-step) |
-| User-facing project overview | `README.md` |

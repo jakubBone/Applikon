@@ -55,7 +55,8 @@ spec/
 │   ├── 11-swagger/             ← API documentation
 │   ├── 12-ci/                  ← GitHub Actions CI
 │   ├── 13-docker-registry/     ← Docker & GHCR
-│   └── as-built.md             ← authoritative architecture reference
+│   ├── architecture.md         ← package structure, REST endpoints, DB schema, FE components
+│   └── as-built.md             ← plan vs reality, deviations, phase history
 └── v2/                         
     └── vision.md               ← microservices + AI features (CV analysis, job matching)
 ```

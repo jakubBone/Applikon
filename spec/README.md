@@ -22,10 +22,11 @@ were written before code, not after.
 | Swagger / OpenAPI (phase 11) | `v1/11-swagger/` | Complete |
 | GitHub Actions CI (phase 12) | `v1/12-ci/` | Complete |
 | Docker Registry — GHCR (phase 13) | `v1/13-docker-registry/` | Complete |
-| **As-built** | **`v1/as-built.md`** | **Authoritative — what is actually built** |
+| **Architecture reference** | **`v1/architecture.md`** | **Package structure, REST endpoints, DB schema, FE components** |
+| As-built history | `v1/as-built.md` | Plan vs reality, deviations, phase-by-phase notes |
 
-> `v1/as-built.md` is the primary reference for the current codebase state:
-> full package structure, all REST endpoints, DB schema, frontend components, hooks, API calls.
+> `v1/architecture.md` is the primary coding reference: package structure, all REST endpoints, DB schema, frontend components, hooks, API calls.
+> `v1/as-built.md` is the history document: what was planned vs built, deviations, and per-phase implementation notes.
 
 ## V2 — Microservices (not started)
 
