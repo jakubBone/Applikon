@@ -99,22 +99,3 @@ ghcr.io/jakubbone/easyapply-frontend:latest
 
 Full design rationale: [`spec/v1/07-privacy-rodo/`](spec/v1/07-privacy-rodo/)
 
-
-## ✅ Status
-
-### v1 - Complete
-
-All planned MVP features implemented, plus:
-
-- **Auth** - Google OAuth2 login, JWT access + refresh tokens
-- **i18n** - Polish / English with language switcher
-- **Onboarding** - guided tour for new users
-- **Gamification** - badge system for rejections and ghosting
-- **RODO compliance** - privacy policy, consent flow, account deletion, 12-month data retention
-- **API docs** - Swagger UI with JWT auth at `/swagger-ui.html`
-- **Tests** - Cypress E2E + Vitest unit tests
-- **CI/CD** - GitHub Actions pipeline, Docker images published to GHCR on every `master` build
-
-### v2 - Planned
-
-Microservices architecture + AI features - vision defined, implementation not started. See [`spec/v2/vision.md`](spec/v2/vision.md).
