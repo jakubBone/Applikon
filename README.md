@@ -23,9 +23,18 @@
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 
-## Live demo
+## 🚀 Live demo
 
-**[https://easyapply.super.pl](https://easyapply.super.pl)** — log in with Google, no registration needed.
+<div align="center">
+
+[![EasyApply screenshot](.github/assets/app-preview.png)](https://aplikujbezspiny.pl)
+
+<br>
+
+[![OPEN LIVE DEMO](https://img.shields.io/badge/▶%20%20OPEN%20LIVE%20DEMO-22C55E?style=for-the-badge)](https://aplikujbezspiny.pl)
+
+<br>
+</div>
 
 
 ## 🎯 About
