@@ -5,9 +5,8 @@
 1. **Secret** — user adds `VITE_API_URL` in GitHub repo Settings → Secrets → Actions
 2. **Implementation** — Claude extends `.github/workflows/ci.yml` and updates `docker-compose.yml`
 3. **Verification** — user pushes to `master`, checks GitHub → Actions and GitHub → Packages
-4. **Server deploy** — user SSHes to Hetzner, runs `docker-compose pull && docker-compose up -d`
-5. **Commit suggestion** — Claude proposes commit message
-6. **Commit** — user runs `git add` + `git commit`
+4. **Commit suggestion** — Claude proposes commit message
+5. **Commit** — user runs `git add` + `git commit`
 
 ---
 
@@ -165,26 +164,12 @@ Add `image:` field to `backend` and `frontend` — keep all existing `build:` se
 
 ---
 
-### Step 4 — Server deploy commands
-
-```bash
-# SSH onto Hetzner, then:
-docker-compose pull          # pulls :latest from GHCR
-docker-compose up -d         # restarts containers with new images
-docker image prune -f        # removes old dangling images (optional cleanup)
-```
-
----
-
 ## Verification
 
 - [ ] Push to `master` — all three jobs appear in GitHub → Actions (`backend`, `frontend`, `docker`)
 - [ ] `docker` job is green
 - [ ] GitHub → Packages shows `easyapply-backend` and `easyapply-frontend`
 - [ ] Each package has tags `:latest` and `:<sha>`
-- [ ] `docker-compose pull` on server completes without auth error
-- [ ] `docker-compose up -d` starts all three containers (db, backend, frontend)
-- [ ] Application responds on the server
 
 ---
 
@@ -193,7 +178,6 @@ docker image prune -f        # removes old dangling images (optional cleanup)
 - [ ] `docker` CI job builds and pushes after every successful `backend` + `frontend` run
 - [ ] Both images present in GHCR with `:latest` and `:<sha>` tags
 - [ ] `docker-compose.yml` has `image:` fields pointing to GHCR
-- [ ] Server runs application from pulled GHCR images (not a local build)
 - [ ] `spec/README.md` updated with phase 13 row
 
 ---
