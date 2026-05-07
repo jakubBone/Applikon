@@ -1,10 +1,4 @@
-<img src="easyapply-frontend/public/logo_white.png" alt="EasyApply" width="100%">
-
-[![CI](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml)
-
-![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)
-![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
+# 💼 EasyApply
 
 ![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
@@ -22,8 +16,11 @@
 ![Cypress](https://img.shields.io/badge/Cypress-69D3A7?style=flat&logo=cypress&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
 
+![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)
+![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
 
-## 🚀 Live demo
+EasyApply is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
 
 <div align="center">
 
@@ -36,12 +33,6 @@
 <br>
 </div>
 
-
-## 🎯 About
-
-**EasyApply is a job application tracker for IT candidates in Poland** — one place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Built primarily for juniors actively applying to many positions and needing control over the entire process.
-
-
 ## 🤖 Built with AI
 
 Spec-driven development end-to-end with **Claude Code** and **Gemini**. The [`spec/`](spec/README.md) directory holds the planning, implementation, and review documentation that drove every phase — written **before** any code, then handed to AI for execution.
@@ -51,25 +42,25 @@ Spec-driven development end-to-end with **Claude Code** and **Gemini**. The [`sp
 
 ## ✨ Features
 
-- **Application registry** — company, position, salary (range, currency, gross/net, contract type), job source, link to posting
-- **Kanban board** — visual overview of recruitment status: Sent → In progress → Completed, with drag & drop
-- **Recruitment stages** — tracking current stage: HR interview, technical interview, manager interview, recruitment task, final interview, or custom stage
-- **CV archive** — storing different CV versions (file upload, link, or note) and assigning them to specific applications
-- **Notes** — saving interview questions, feedback, and personal thoughts for each application (categories: Questions / Feedback / Other)
-- **Job posting archive** — copy of the job description in case the link expires
-- **Duplicate detection** — warning when reapplying to the same company and position
-- **Badge system** — achievements for rejections and ghosting (gamification)
-- **Authentication** — Google OAuth2 login, JWT access token + refresh token
-- **i18n** — Polish and English interface with a language switcher
+- **Application registry** - company, position, salary (range, currency, gross/net, contract type), job source, link to posting
+- **Kanban board** - visual overview of recruitment status: Sent → In progress → Completed, with drag & drop
+- **Recruitment stages** - tracking current stage: HR interview, technical interview, manager interview, recruitment task, final interview, or custom stage
+- **CV archive** - storing different CV versions (file upload, link, or note) and assigning them to specific applications
+- **Notes** - saving interview questions, feedback, and personal thoughts for each application (categories: Questions / Feedback / Other)
+- **Job posting archive** - copy of the job description in case the link expires
+- **Duplicate detection** - warning when reapplying to the same company and position
+- **Badge system** - achievements for rejections and ghosting (gamification)
+- **Authentication** - Google OAuth2 login, JWT access token + refresh token
+- **i18n** - Polish and English interface with a language switcher
 
 
 ## 📁 Project Structure
 
 ```
-easyapply-backend/    — Spring Boot application (com.easyapply)
-easyapply-frontend/   — React + Vite application (src/)
-spec/                 — Spec-driven documentation (vision, plans, review, as-built)
-docker-compose.yml    — Local development setup
+easyapply-backend/    - Spring Boot application (com.easyapply)
+easyapply-frontend/   - React + Vite application (src/)
+spec/                 - Spec-driven documentation (vision, plans, review, as-built)
+docker-compose.yml    - Local development setup
 ```
 
 
@@ -108,10 +99,10 @@ ghcr.io/jakubbone/easyapply-frontend:latest
 
 Specification and architecture artifacts live in [`spec/`](spec/README.md):
 
-- **Vision & MVP brief** — `spec/v1/01-vision/brief.md`
-- **Implementation plan** — `spec/v1/02-implementation/mvp-implementation-plan.md`
-- **As-built (actual architecture)** — `spec/v1/as-built.md`
-- **v2 microservices vision** — `spec/v2/vision.md`
+- **Vision & MVP brief** - `spec/v1/01-vision/brief.md`
+- **Implementation plan** - `spec/v1/02-implementation/mvp-implementation-plan.md`
+- **As-built (actual architecture)** - `spec/v1/as-built.md`
+- **v2 microservices vision** - `spec/v2/vision.md`
 
 The full REST API is documented with **Swagger UI**, available at `/swagger-ui.html` on the running backend. All endpoints are grouped by domain, and authenticated endpoints can be called directly from the UI after pasting a JWT Bearer token.
 
@@ -121,10 +112,10 @@ The full REST API is documented with **Swagger UI**, available at `/swagger-ui.h
 EasyApply collects the minimum data needed to operate:
 
 - **What we store:** email, display name, Google ID, and an optional link to your CV hosted externally (Google Drive, Dropbox, etc.). No CV files are uploaded to our servers.
-- **CV files:** deliberately excluded — the upload endpoint is disabled. Users paste a link to their own hosted CV and retain full control over access.
+- **CV files:** deliberately excluded - the upload endpoint is disabled. Users paste a link to their own hosted CV and retain full control over access.
 - **Account deletion:** available at any time via Settings → Delete account. All data (applications, notes, CV records) is permanently removed with no trace left in the database.
 - **Inactive accounts:** automatically deleted after 12 months of inactivity.
-- **Refresh tokens:** stored as SHA-256 hashes — a stolen database cannot be used to hijack sessions.
+- **Refresh tokens:** stored as SHA-256 hashes - a stolen database cannot be used to hijack sessions.
 - **Logs:** user identifiers in logs are UUIDs only — no emails, names, or tokens in plaintext.
 - **Privacy policy:** available at `/privacy` in the live app (PL/EN).
 - **Contact:** jakub.bone1990@gmail.com
@@ -134,6 +125,19 @@ See [`spec/v1/07-privacy-rodo/`](spec/v1/07-privacy-rodo/) for the full design r
 
 ## ✅ Status
 
-v1 complete. All planned MVP features implemented, plus: Google OAuth2 authentication, i18n (EN/PL), onboarding tour, gamification badges, Cypress E2E tests, RODO compliance (privacy policy, consent flow, account deletion, data retention), Swagger UI API documentation with JWT auth.
+### v1 - Complete
 
-v2 (microservices + AI features) — vision defined, implementation not started.
+All planned MVP features implemented, plus:
+
+- **Auth** - Google OAuth2 login, JWT access + refresh tokens
+- **i18n** - Polish / English with language switcher
+- **Onboarding** - guided tour for new users
+- **Gamification** - badge system for rejections and ghosting
+- **RODO compliance** - privacy policy, consent flow, account deletion, 12-month data retention
+- **API docs** - Swagger UI with JWT auth at `/swagger-ui.html`
+- **Tests** - Cypress E2E + Vitest unit tests
+- **CI/CD** - GitHub Actions pipeline, Docker images published to GHCR on every `master` build
+
+### v2 - Planned
+
+Microservices architecture + AI features - vision defined, implementation not started. See [`spec/v2/vision.md`](spec/v2/vision.md).
