@@ -12,7 +12,7 @@ were written before code, not after.
 | Vision & brief | `v1/01-vision/` | Complete |
 | Implementation plan | `v1/02-implementation/` | Complete |
 | Code review | `v1/03-review/` | Complete (2026-03-01) |
-| Refactoring & learning | `v1/04-refactoring-learning/` | Frontend: done / Backend: in progress |
+| Refactoring & learning | `v1/04-mvp-refactoring/` | Frontend: done / Backend: in progress |
 | Additional features (i18n, logout) | `v1/05-additional-features/` | Complete |
 | Cleanup | `v1/06-cleanup/` | Complete |
 | Privacy & RODO (phase 07) | `v1/07-privacy-rodo/` | Complete |
@@ -47,7 +47,7 @@ were written before code, not after.
 ## AI-Assisted Development
 
 All implementation used Claude Code, but the approach was spec-first — Claude received
-specifications and built to them. The refactoring plans in `v1/04-refactoring-learning/` document an
+specifications and built to them. The refactoring plans in `v1/04-mvp-refactoring/` document an
 additional pattern: **Claude as mentor**. After the code review, Claude created structured
 learning plans paired with refactoring implementation — teaching concepts while improving code. The notes
 files record what was understood at each stage.

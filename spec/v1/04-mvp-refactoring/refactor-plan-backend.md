@@ -8,18 +8,7 @@ Backend was written with AI help — Jakub understands general architecture but 
 
 **Goal:** Better understand backend flow, fix code review problems, fill security gaps. Not learning from zero — explaining what needs clarification.
 
-**Source Documents:**
-- `spec/v1/04-refactoring-learning/refactor-plan-backend.md` — this file (plan, rules, progress)
-- `spec/v1/03-review/code-review-2026-03-01.md` — code review from mentor (DR & AI, 2026-03-01) — source of fixes
-- `spec/v1/04-refactoring-learning/learning-notes-backend.md` — notes from learning
-
-**How to Use This Plan:**
-Paste it into new Claude Code session and write: _"We're continuing backend learning. We're at Phase X."_
-
-**Claude reads at start of each session:**
-1. `spec/v1/04-refactoring-learning/refactor-plan-backend.md` — this file (plan, rules, progress)
-2. `spec/v1/03-review/code-review-2026-03-01.md` — code review from mentor
-3. `spec/v1/04-refactoring-learning/learning-notes-backend.md` — what Jakub already worked through and understood
+**How sessions resume:** the `/mentor-refactor-backend` slash command loads this file plus `spec/v1/03-review/code-review-mvp.md` and `spec/v1/04-mvp-refactoring/learning/learning-notes-backend.md`, then continues from the current phase.
 
 ---
 
@@ -136,7 +125,7 @@ service/
 3. **Control Questions:** After each phase 2-3 specific questions.
    Concrete, referencing the project.
 
-4. **Notes After Each Phase:** Save summary to `spec/v1/04-refactoring-learning/learning-notes-backend.md`.
+4. **Notes After Each Phase:** Save summary to `spec/v1/04-mvp-refactoring/learning/learning-notes-backend.md`.
    Format: phase heading, key concepts, important files, what was fixed.
 
 5. **Always Show Code:** Discuss specific project files. Point to line.
@@ -158,24 +147,25 @@ Same as frontend. Each change goes through:
 1. EXPLAIN   — explain mechanism (why it's error / how it works)
 2. READ      — read current file before change (Read tool)
 3. FIX       — make change (Edit tool)
-4. TESTS     — check if change touches existing tests:
-                  a) run: mvn test in easyapply-backend
-                  b) if test breaks — update test, run again
-                  c) if new logic — propose and write new test
-5. BUILD     — check compilation: mvn compile
-6. RESTART   — remind Jakub to restart backend and test manually
+4. TEST PLAN — note which tests will need updating or adding
+                  (existing test broken? new logic = new test?)
+5. RESTART   — remind Jakub to restart backend and test manually
                   (give specific: which endpoint, which request)
-7. QUESTION  — ask: "Mark CR-X as fixed in progress table?"
-8. UPDATE    — if Jakub confirms: update status in tables (⬜ → ✅)
+6. QUESTION  — ask: "Mark CR-X as fixed in progress table?"
+7. UPDATE    — if Jakub confirms: update status in tables (⬜ → ✅)
                   and add entry to "Session Notes"
 ```
 
+**End of phase (not after every fix):**
+- Run `mvn test` in `easyapply-backend`. If broken — update tests, re-run until green.
+- Run `mvn compile` to confirm compilation.
+- Only then mark the phase complete.
+
 **Important Rules:**
-- Step 4 (tests) is **mandatory** — even for small changes
-- Step 4c — new tests only when new logic appears (e.g., magic bytes validation)
-  or existing tests don't cover scenario (e.g., path traversal)
-- Step 6 (restart) is Jakub's task, not Claude's
-- If tests don't pass — **don't move forward** until green
+- Don't run `mvn test` / `mvn compile` after each CR fix — batch them at the end of the phase.
+- New tests only when new logic appears (e.g., magic bytes validation) or existing tests don't cover the scenario (e.g., path traversal).
+- Step 5 (restart) is Jakub's task, not Claude's.
+- If end-of-phase tests don't pass — **don't close the phase** until green.
 
 ---
 
@@ -196,7 +186,7 @@ After each phase Claude asks:
 
 ## List of Fixes from CR (Progress Tracking)
 
-Source: `spec/v1/03-review/code-review-2026-03-01.md` (review 2026-03-01, reviewer: DR & AI)
+Source: `spec/v1/03-review/code-review-mvp.md` (reviewer: DR & AI)
 
 ### 🔴 Critical (security / correctness)
 

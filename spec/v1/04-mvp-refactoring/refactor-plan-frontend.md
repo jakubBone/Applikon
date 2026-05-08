@@ -6,19 +6,7 @@ This document is a learning guide for Jakub — author of EasyApply.
 Jakub is a backend developer (Java/Spring) who wrote this application with Claude Code help.
 He wants to understand how frontend works at basic level.
 
-**Source Documents:**
-- `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — this file (plan, rules, progress)
-- `spec/v1/03-review/code-review-2026-03-01.md` — code review from mentor — source of all fixes
-
-**How to Use This Plan:**
-Paste it into new Claude Code session and write: _"We're continuing frontend learning. We're at Phase X."_
-
-**Claude reads at start of each session:**
-1. `spec/v1/04-refactoring-learning/refactor-plan-frontend.md` — this file (plan, rules, progress)
-2. `spec/v1/03-review/code-review-2026-03-01.md` — code review
-3. `spec/v1/04-refactoring-learning/learning-notes-frontend.md` — what Jakub already worked through and understood
-
-`learning-notes-frontend.md` is key context — shows which language and analogies work best for Jakub, what he already knows, what he can reference.
+**How sessions resume:** the `/mentor-refactor-frontend` slash command loads this file plus `spec/v1/03-review/code-review-mvp.md` and `spec/v1/04-mvp-refactoring/learning/learning-notes-frontend.md`, then continues from the current phase. The notes file is key context — it shows which analogies (usually Java/Spring) work best for Jakub.
 
 ---
 
@@ -94,7 +82,7 @@ types/
    Wait for answers, fix mistakes before moving.
 
 4. **Notes After Each Large Phase:** After completing entire phase (1–10) save summary
-   to `spec/v1/04-refactoring-learning/learning-notes-frontend.md`. Format: phase heading, key concepts with explanations,
+   to `spec/v1/04-mvp-refactoring/learning/learning-notes-frontend.md`. Format: phase heading, key concepts with explanations,
    Java analogies, most important project files that apply to phase.
    File serves as Jakub's cheat sheet.
 
@@ -118,23 +106,25 @@ Each code change must go through this process. Don't skip steps.
 1. EXPLAIN   — explain mechanism (why it's error / how it works)
 2. READ      — read current file before change (Read tool)
 3. FIX       — make change (Edit tool)
-4. TESTS     — check if change touches existing tests:
-                  a) run: npm test (Vitest) in easyapply-frontend
-                  b) if test breaks — update test, run again
-                  c) if new logic — propose new test
-5. BUILD     — check TypeScript compiles: npm run build
-6. BROWSER   — remind Jakub to manually test in browser
+4. TEST PLAN — note which tests will need updating or adding
+                  (existing test broken? new logic = new test?)
+5. BROWSER   — remind Jakub to manually test in browser
                   (give specifics: what to click / what to check)
-7. QUESTION  — ask: "Should we mark CR-X as fixed in progress table?"
-8. UPDATE    — if Jakub confirms: update status in tables (⬜ → ✅)
+6. QUESTION  — ask: "Should we mark CR-X as fixed in progress table?"
+7. UPDATE    — if Jakub confirms: update status in tables (⬜ → ✅)
                   and add entry to "Session Notes"
 ```
 
+**End of phase (not after every fix):**
+- Run `npm test` (Vitest) in `easyapply-frontend`. If broken — update tests, re-run until green.
+- Run `npm run build` to confirm TypeScript compiles.
+- Only then mark the phase complete.
+
 **Important Rules:**
-- Step 4 (tests) is **mandatory** — even for small changes
-- Step 6 (browser) is always Jakub's task, not Claude's
-- Step 7 (question) — Claude asks, Jakub decides
-- If tests don't pass — **don't move forward** until green
+- Don't run `npm test` / `npm run build` after each CR fix — batch them at the end of the phase.
+- Step 5 (browser) is always Jakub's task, not Claude's.
+- Step 6 (question) — Claude asks, Jakub decides.
+- If end-of-phase tests don't pass — **don't close the phase** until green.
 
 ---
 
@@ -160,7 +150,7 @@ After each phase Claude asks:
 
 ## List of Fixes from CR (Progress Tracking)
 
-Source: `spec/v1/03-review/code-review-2026-03-01.md` (review 2026-03-01, reviewer: DR & AI)
+Source: `spec/v1/03-review/code-review-mvp.md` (reviewer: DR & AI)
 
 ### 🔴 Critical (security / correctness)
 
@@ -497,7 +487,7 @@ what needs repeat, which CR fixed, next step.
 - Established starting level: Jakub doesn't know frontend from scratch
 - Reviewed learning plan and approved
 - Established work flow for CR fixes (tests → build → browser → question about marking done)
-- Added reference to `spec/v1/03-review/code-review-2026-03-01.md` as source
+- Added reference to `spec/v1/03-review/code-review-mvp.md` as source
 - Completed Phase 1 — tools ecosystem, Vite flow, files package.json / index.html / main.tsx / App.tsx
 - To remember: ports (5432/5173/8080), JSX ≠ HTML, browser understands only JS not JSX
 
