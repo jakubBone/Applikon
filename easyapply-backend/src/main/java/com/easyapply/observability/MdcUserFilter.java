@@ -1,5 +1,6 @@
-package com.easyapply.security;
+package com.easyapply.observability;
 
+import com.easyapply.security.AuthenticatedUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,14 +14,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * HTTP filter that adds the userId to the MDC (Mapped Diagnostic Context) for the duration of the request.
+ * Adds the authenticated userId to the MDC (Mapped Diagnostic Context) for the duration of the request.
  *
  * MDC is an SLF4J/Logback mechanism that attaches contextual data (e.g. userId) to every log line
  * without passing it explicitly through every method call.
  * MDC values are printed automatically in each log line when the Logback pattern contains %X{userId}.
  *
- * This filter runs after Spring Security (SecurityContextHolder is already populated),
- * so it can safely read the authenticated user's data.
+ * Must run AFTER Spring Security so that SecurityContextHolder is already populated —
+ * Spring Boot auto-registers @Component filters after the Spring Security chain by default.
  */
 @Component
 public class MdcUserFilter extends OncePerRequestFilter {
