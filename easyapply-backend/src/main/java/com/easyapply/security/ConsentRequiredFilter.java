@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.UUID;
  *
  * For all other requests: if user.privacyPolicyAcceptedAt == null → 403 CONSENT_REQUIRED
  */
+@Component
 public class ConsentRequiredFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
@@ -86,14 +88,12 @@ public class ConsentRequiredFilter extends OncePerRequestFilter {
 
     private boolean isWhitelisted(HttpServletRequest request) {
         String path = request.getRequestURI();
-        String method = request.getMethod();
 
         return path.startsWith("/api/auth/") && (
                 path.equals("/api/auth/me") ||
                 path.equals("/api/auth/consent") ||
                 path.equals("/api/auth/logout") ||
-                path.equals("/api/auth/refresh") ||
-                (path.equals("/api/auth/me") && method.equals("DELETE"))
+                path.equals("/api/auth/refresh")
         ) ||
         path.startsWith("/oauth2/") ||
         path.startsWith("/login/") ||

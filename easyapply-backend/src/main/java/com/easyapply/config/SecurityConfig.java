@@ -5,8 +5,6 @@ import com.easyapply.security.JwtAuthenticationConverter;
 import com.easyapply.security.OAuth2AuthenticationSuccessHandler;
 import com.easyapply.security.CustomOAuth2UserService;
 import com.easyapply.security.ConsentRequiredFilter;
-import com.easyapply.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
@@ -52,15 +50,12 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
-    private final UserRepository userRepository;
 
     public SecurityConfig(
             CustomOAuth2UserService customOAuth2UserService,
-            JwtAuthenticationConverter jwtAuthenticationConverter,
-            UserRepository userRepository) {
+            JwtAuthenticationConverter jwtAuthenticationConverter) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.jwtAuthenticationConverter = jwtAuthenticationConverter;
-        this.userRepository = userRepository;
     }
 
     // =====================================================================
@@ -104,14 +99,6 @@ public class SecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder(RSAKey rsaKey) throws Exception {
         return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
-    }
-
-    /**
-     * ConsentRequiredFilter — guard ensuring user has accepted privacy policy.
-     */
-    @Bean
-    public ConsentRequiredFilter consentRequiredFilter(ObjectMapper objectMapper) {
-        return new ConsentRequiredFilter(userRepository, objectMapper);
     }
 
     // =====================================================================
