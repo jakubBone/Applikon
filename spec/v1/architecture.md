@@ -1,6 +1,6 @@
 # EasyApply v1 — Architecture Reference
 
-> Source of truth: the code. This document reflects the actual implemented state./
+> Source of truth: the code. This document reflects the actual implemented state.
 
 ---
 
@@ -52,6 +52,8 @@ com.easyapply/
     SalaryType.java                — enum: GROSS, NET
   exception/
     GlobalExceptionHandler.java    — @RestControllerAdvice, handles validation / EntityNotFoundException (WARN log, phase 10) / DateTimeParseException (phase 08) / fallback (ERROR log)
+  observability/
+    MdcUserFilter.java             — OncePerRequestFilter; puts authenticated userId (UUID) into SLF4J MDC under key `userId` for log correlation; runs after Spring Security chain via Spring Boot auto-registration
   repository/
     ApplicationRepository.java     — JpaRepository; custom queries: findByUserId, findByIdAndUserId, existsByIdAndUserId, findByUserIdAndCompanyIgnoreCaseAndPositionIgnoreCase, getApplicationStats, clearCVReferences
     CVRepository.java              — JpaRepository
@@ -64,9 +66,8 @@ com.easyapply/
     CustomOAuth2UserService.java   — loads/creates user from Google OAuth2 attributes
     JwtAuthenticationConverter.java — extracts AuthenticatedUser from JWT sub claim
     JwtService.java                — generates access token (RS256, 15 min) and refresh token (UUID)
-    MdcUserFilter.java             — adds user email to MDC for logging
     OAuth2AuthenticationSuccessHandler.java — on OAuth2 success: issues JWT + refresh token, redirects to frontend
-    TokenHasher.java               — SHA-256 util; used to hash refresh tokens before storing in DB (phase 07)
+    TokenHasher.java               — HMAC-SHA256 util (server-side secret via `app.token.hmac-secret` / `APP_TOKEN_HMAC_SECRET`); used to hash refresh tokens before storing in DB (phase 07, hardened to HMAC in phase 09)
   service/
     AccountRetentionService.java   — @Scheduled(cron daily 3:00): deletes accounts inactive > 12 months via UserService.deleteAccount; threshold from app.retention.inactive-months (phase 07)
     ApplicationService.java        — create, findAllByUserId, findById, updateStatus, updateStage, addStage, findDuplicates, delete, update
@@ -204,7 +205,7 @@ com.easyapply/
 | email | VARCHAR(255) | NOT NULL, UNIQUE |
 | name | VARCHAR(255) | NOT NULL |
 | google_id | VARCHAR(255) | NOT NULL, UNIQUE |
-| refresh_token | VARCHAR(255) | nullable — stores SHA-256 hash of the token, not plaintext (phase 07) |
+| refresh_token | VARCHAR(255) | nullable — stores HMAC-SHA256 hash of the token (server-side secret, phase 09), not plaintext |
 | refresh_token_expiry | TIMESTAMP | nullable |
 | created_at | TIMESTAMP | NOT NULL |
 | privacy_policy_accepted_at | TIMESTAMP | nullable (phase 07) |

@@ -23,9 +23,11 @@ were written before code, not after.
 | GitHub Actions CI (phase 12) | `v1/12-ci/` | Complete |
 | Docker Registry — GHCR (phase 13) | `v1/13-docker-registry/` | Complete |
 | **Architecture reference** | **`v1/architecture.md`** | **Package structure, REST endpoints, DB schema, FE components** |
+| **Security reference** | **`v1/security.md`** | **OAuth2 + JWT flow diagrams, filter chain, headers, CORS** |
 | As-built history | `v1/as-built.md` | Plan vs reality, deviations, phase-by-phase notes |
 
 > `v1/architecture.md` is the primary coding reference: package structure, all REST endpoints, DB schema, frontend components, hooks, API calls.
+> `v1/security.md` is the security reference: OAuth2/JWT login flow, per-request filter chain, file inventory, endpoint access rules, headers, CORS.
 > `v1/as-built.md` is the history document: what was planned vs built, deviations, and per-phase implementation notes.
 
 ## V2 — Microservices (not started)
@@ -60,4 +62,4 @@ naming, architecture. Not a completion check — completion is tracked in each p
 **`v1/09-security-refactoring/code-review-security.md`** — dedicated security audit:
 OWASP-focused review of the full security-critical surface (JWT handling, OAuth2 flow, admin key filter,
 token storage, CORS, CSP, input validation). Found and fixed: timing attack on admin key comparison,
-refresh token stored in plaintext → SHA-256 hash, PII in logs. Corresponding fixes in `refactor-plan-security.md`.
+refresh token stored in plaintext → HMAC-SHA256 hash (with server-side secret), PII in logs. Corresponding fixes in `refactor-plan-security.md`.
