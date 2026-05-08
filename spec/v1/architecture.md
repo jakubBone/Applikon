@@ -1,7 +1,6 @@
 # EasyApply v1 — Architecture Reference
 
-> Source of truth: the code. This document reflects the actual implemented state.
-> For plan vs reality, deviations, and phase history see `as-built.md`.
+> Source of truth: the code. This document reflects the actual implemented state./
 
 ---
 
