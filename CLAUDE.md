@@ -53,4 +53,4 @@ Example: `refactor(backend): extract validation into ApplicationValidator`
 | Plan vs reality / phase history | `spec/v1/as-built.md` |
 | Spec phases index | `spec/README.md` |
 | v2 microservices vision | `spec/v2/vision.md` |
-| Deploy instructions | `spec/deployment/deployment-intro.md` (concepts) + `deployment-hetzner.md` (step-by-step) |
+| Deploy instructions | `deployment-hetzner.md` (step-by-step) |
