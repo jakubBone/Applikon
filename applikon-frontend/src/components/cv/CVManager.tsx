@@ -6,7 +6,7 @@ import {
   downloadCV
 } from '../../services/api'
 import { isSafeUrl } from '../../utils/urlValidator'
-import { useCVs, useUploadCV, useCreateCV, useUpdateCV, useDeleteCV } from '../../hooks/useCV'
+import { useCVs, useCreateCV, useUpdateCV, useDeleteCV } from '../../hooks/useCV'
 import type { Application, CV, CVType } from '../../types/domain'
 
 interface Props {
@@ -18,14 +18,12 @@ function CVManager({ applications, onCVAssigned }: Props) {
   const { t } = useTranslation()
   const { t: tErrors } = useTranslation('errors')
   const { data: cvList = [] } = useCVs()
-  const uploadCVMutation = useUploadCV()
   const createCVMutation = useCreateCV()
   const updateCVMutation = useUpdateCV()
   const deleteCVMutation = useDeleteCV()
 
   const [selectedCv, setSelectedCv] = useState<CV | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [addStep, setAddStep] = useState<'choose' | 'file' | 'link'>('choose')
   const [linkFormData, setLinkFormData] = useState<{ name: string; externalUrl: string; type: CVType }>({ name: '', externalUrl: '', type: 'LINK' })
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedAppForAssign, setSelectedAppForAssign] = useState<Application | null>(null)
@@ -74,33 +72,6 @@ function CVManager({ applications, onCVAssigned }: Props) {
     return applications.filter(app => app.cvId === cvId)
   }
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (file.type !== 'application/pdf') {
-      alert(tErrors('cv.pdfOnly'))
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert(tErrors('cv.fileTooLarge'))
-      return
-    }
-
-    uploadCVMutation.mutate(file, {
-      onSuccess: (newCv) => {
-        setSelectedCv(newCv)
-        setShowAddModal(false)
-        setAddStep('choose')
-        e.target.value = ''
-      },
-      onError: () => {
-        alert(tErrors('cv.uploadError'))
-      },
-    })
-  }
-
   const handleCreateLinkOrNote = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -122,7 +93,6 @@ function CVManager({ applications, onCVAssigned }: Props) {
       onSuccess: (newCv) => {
         setSelectedCv(newCv)
         setShowAddModal(false)
-        setAddStep('choose')
         setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
       },
       onError: () => {
@@ -237,7 +207,6 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
   const closeAddModal = () => {
     setShowAddModal(false)
-    setAddStep('choose')
     setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
   }
 
@@ -410,164 +379,90 @@ function CVManager({ applications, onCVAssigned }: Props) {
       {showAddModal && (
         <div className="modal-overlay" onClick={closeAddModal}>
           <div className="modal-content add-cv-modal" onClick={e => e.stopPropagation()}>
+            <h3>{t('cv.addModalTitle')}</h3>
 
-            {addStep === 'choose' && (
-              <>
-                <h3>{t('cv.addModalTitle')}</h3>
-                <div className="add-cv-options">
-                  <div
-                    className="add-cv-option add-cv-option--disabled"
-                    aria-disabled="true"
-                    title={t('cv.uploadDisabledTooltip')}
-                  >
-                    <div className="option-icon">🔒</div>
-                    <div className="option-content">
-                      <h4>{t('cv.uploadOptionTitle')}</h4>
-                      <p>{t('cv.uploadOptionDesc')}</p>
-                      <ul className="option-features">
-                        <li>{t('cv.uploadFeature1')}</li>
-                        <li>{t('cv.uploadFeature2')}</li>
-                        <li>{t('cv.uploadFeature3')}</li>
-                      </ul>
-                    </div>
-                  </div>
+            <div className="add-cv-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                className="add-cv-tab add-cv-tab--disabled"
+                aria-disabled="true"
+                title={t('cv.uploadDisabledTooltip')}
+              >
+                <span className="add-cv-tab__icon">📄</span>
+                <span className="add-cv-tab__label">{t('cv.tabFile')}</span>
+                <span className="add-cv-tab__badge">{t('cv.tabFileBadge')}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={linkFormData.type === 'LINK'}
+                className={`add-cv-tab ${linkFormData.type === 'LINK' ? 'add-cv-tab--active' : ''}`}
+                onClick={() => setLinkFormData(prev => ({ ...prev, type: 'LINK' }))}
+              >
+                <span className="add-cv-tab__icon">🔗</span>
+                <span className="add-cv-tab__label">{t('cv.tabLink')}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={linkFormData.type === 'NOTE'}
+                className={`add-cv-tab ${linkFormData.type === 'NOTE' ? 'add-cv-tab--active' : ''}`}
+                onClick={() => setLinkFormData(prev => ({ ...prev, type: 'NOTE' }))}
+              >
+                <span className="add-cv-tab__icon">💻</span>
+                <span className="add-cv-tab__label">{t('cv.tabName')}</span>
+              </button>
+            </div>
 
-                  <div className="add-cv-option" onClick={() => setAddStep('link')}>
-                    <div className="option-icon">📝</div>
-                    <div className="option-content">
-                      <h4>{t('cv.noteOptionTitle')}</h4>
-                      <p>{t('cv.noteOptionDesc')}</p>
-                      <ul className="option-features">
-                        <li>{t('cv.noteFeature1')}</li>
-                        <li>{t('cv.noteFeature2')}</li>
-                        <li>{t('cv.noteFeature3')}</li>
-                      </ul>
-                    </div>
-                  </div>
+            <form onSubmit={handleCreateLinkOrNote} className="link-form">
+              <div className="form-group">
+                <label>{t('cv.nameLabel')}</label>
+                <input
+                  type="text"
+                  value={linkFormData.name}
+                  onChange={(e) => setLinkFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder={t('cv.namePlaceholder')}
+                  required
+                />
+                <span className="form-hint">{t('cv.nameHint')}</span>
+              </div>
+
+              {linkFormData.type === 'LINK' && (
+                <div className="form-group">
+                  <label>{t('cv.linkLabel')}</label>
+                  <input
+                    type="url"
+                    value={linkFormData.externalUrl}
+                    onChange={(e) => setLinkFormData(prev => ({ ...prev, externalUrl: e.target.value }))}
+                    placeholder={t('cv.linkPlaceholder')}
+                  />
+                  <span className="form-hint">{t('cv.linkHint')}</span>
                 </div>
-                <div className="modal-actions">
-                  <button onClick={closeAddModal}>{t('cv.cancel')}</button>
-                </div>
-              </>
-            )}
+              )}
 
-            {addStep === 'file' && (
-              <>
-                <button className="back-link" onClick={() => setAddStep('choose')}>
-                  {t('cv.uploadModalBack')}
-                </button>
-                <h3>{t('cv.uploadModalTitle')}</h3>
-
-                <div className="upload-area">
-                  <label className="upload-dropzone">
-                    <div className="dropzone-content">
-                      <span className="dropzone-icon">📄</span>
-                      <span className="dropzone-text">
-                        {uploadCVMutation.isPending ? t('cv.uploading') : t('cv.dropHint')}
-                      </span>
-                      <span className="dropzone-hint">{t('cv.maxSize')}</span>
-                    </div>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      onChange={handleUpload}
-                      disabled={uploadCVMutation.isPending}
-                      hidden
-                    />
-                  </label>
-                </div>
-
-                <div className="privacy-info">
-                  <span className="privacy-icon">🔒</span>
-                  <div>
-                    <strong>{t('cv.secureTitle')}</strong>
-                    <p>{t('cv.secureDesc')}</p>
-                  </div>
-                </div>
-
-                <div className="modal-actions">
-                  <button onClick={closeAddModal}>{t('cv.cancel')}</button>
-                </div>
-              </>
-            )}
-
-            {addStep === 'link' && (
-              <>
-                <button className="back-link" onClick={() => setAddStep('choose')}>
-                  {t('cv.noteModalBack')}
-                </button>
-                <h3>{t('cv.noteModalTitle')}</h3>
-
-                <form onSubmit={handleCreateLinkOrNote} className="link-form">
-                  <div className="form-group">
-                    <label>{t('cv.nameLabel')}</label>
-                    <input
-                      type="text"
-                      value={linkFormData.name}
-                      onChange={(e) => setLinkFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder={t('cv.namePlaceholder')}
-                      required
-                    />
-                    <span className="form-hint">{t('cv.nameHint')}</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label>{t('cv.locationLabel')}</label>
-                    <div className="type-toggle">
-                      <button
-                        type="button"
-                        className={linkFormData.type === 'LINK' ? 'active' : ''}
-                        onClick={() => setLinkFormData(prev => ({ ...prev, type: 'LINK' }))}
-                      >
-                        {t('cv.cloudBtn')}
-                      </button>
-                      <button
-                        type="button"
-                        className={linkFormData.type === 'NOTE' ? 'active' : ''}
-                        onClick={() => setLinkFormData(prev => ({ ...prev, type: 'NOTE' }))}
-                      >
-                        {t('cv.localBtn')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {linkFormData.type === 'LINK' && (
-                    <div className="form-group">
-                      <label>{t('cv.linkLabel')}</label>
-                      <input
-                        type="url"
-                        value={linkFormData.externalUrl}
-                        onChange={(e) => setLinkFormData(prev => ({ ...prev, externalUrl: e.target.value }))}
-                        placeholder={t('cv.linkPlaceholder')}
-                      />
-                      <span className="form-hint">{t('cv.linkHint')}</span>
-                    </div>
+              <div className="privacy-info">
+                <span className="privacy-icon">💡</span>
+                <div>
+                  {linkFormData.type === 'LINK' ? (
+                    <>
+                      <strong>{t('cv.cloudInfoTitle')}</strong>
+                      <p>{t('cv.cloudInfoDesc')}</p>
+                    </>
+                  ) : (
+                    <>
+                      <strong>{t('cv.localInfoTitle')}</strong>
+                      <p>{t('cv.localInfoDesc')}</p>
+                    </>
                   )}
+                </div>
+              </div>
 
-                  <div className="privacy-info">
-                    <span className="privacy-icon">💡</span>
-                    <div>
-                      {linkFormData.type === 'LINK' ? (
-                        <>
-                          <strong>{t('cv.cloudInfoTitle')}</strong>
-                          <p>{t('cv.cloudInfoDesc')}</p>
-                        </>
-                      ) : (
-                        <>
-                          <strong>{t('cv.localInfoTitle')}</strong>
-                          <p>{t('cv.localInfoDesc')}</p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="modal-actions">
-                    <button type="button" onClick={closeAddModal}>{t('cv.cancel')}</button>
-                    <button type="submit" className="primary">{t('cv.save')}</button>
-                  </div>
-                </form>
-              </>
-            )}
+              <div className="modal-actions">
+                <button type="button" onClick={closeAddModal}>{t('cv.cancel')}</button>
+                <button type="submit" className="primary">{t('cv.save')}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
