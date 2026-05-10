@@ -19,7 +19,6 @@
 
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)
 ![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
 
 EasyApply is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
@@ -27,17 +26,16 @@ EasyApply is a job application tracker for IT candidates in Poland. One place fo
 <div align="center">
 
 [![EasyApply screenshot](.github/assets/app-preview.png)](https://aplikujbezspiny.pl)
-
 <br>
 
-[![OPEN LIVE DEMO](https://img.shields.io/badge/▶%20%20OPEN%20LIVE%20DEMO-22C55E?style=for-the-badge)](https://aplikujbezspiny.pl)
-
+[![WATCH VIDEO DEMO](https://img.shields.io/badge/%20WATCH%20VIDEO%20DEMO%20(PL)-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=sqIwGYWYn_E)
+[![Full App](https://img.shields.io/badge/▶%20%20OPEN%20FULL%20APPLICATION-22C55E?style=for-the-badge)](https://aplikujbezspiny.pl)
 <br>
 </div>
 
 ## 🧠 Spec-Driven Development with AI
 
-Built with **Claude Code** and **Gemini** using a strict spec-first approach: every phase starts with a written specification, gets reviewed, then moves to implementation. No code was written without a plan first.
+Built with **Claude Code** using a strict spec-first approach: every phase starts with a written specification, gets reviewed, then moves to implementation. No code was written without a plan first.
 
 ![](https://img.shields.io/badge/Vision-3B82F6?style=flat-square) → ![](https://img.shields.io/badge/Spec-8B5CF6?style=flat-square) → ![](https://img.shields.io/badge/Code-F97316?style=flat-square) → ![](https://img.shields.io/badge/Review-EAB308?style=flat-square) → ![](https://img.shields.io/badge/Refactor-22C55E?style=flat-square)
 
