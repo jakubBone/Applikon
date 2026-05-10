@@ -1,4 +1,4 @@
-# EasyApply — Deployment Introduction
+# Applikon — Deployment Introduction
 
 > Background reading for the actual deployment guide.
 > Covers: what deployment is, key terminology, how the options compare,
@@ -51,12 +51,12 @@ A server is just a regular computer. It differs from your laptop in that:
 
 ### How a request to the app travels through the internet
 
-The journey of a request when someone types `easyapply.pl`:
+The journey of a request when someone types `applikon.pl`:
 
 ```
-1. User types "easyapply.pl" in the browser
+1. User types "applikon.pl" in the browser
         ↓
-2. The browser asks DNS: "what IP does easyapply.pl have?"
+2. The browser asks DNS: "what IP does applikon.pl have?"
    DNS answers: "157.90.11.22"
         ↓
 3. The browser connects to IP 157.90.11.22 (your server)
@@ -81,7 +81,7 @@ Every internet-connected computer has one. The problem: IP addresses are hard to
 remember, which is why we have domains.
 
 **Domain**
-A human-readable name instead of an IP. `easyapply.pl` instead of `157.90.11.22`.
+A human-readable name instead of an IP. `applikon.pl` instead of `157.90.11.22`.
 You buy a domain from a registrar (e.g., nazwa.pl, OVH, Namecheap) for ~50 PLN/year.
 
 **DNS (Domain Name System)**
@@ -156,7 +156,7 @@ A number representing a "door" on a computer. Each service listens on a differen
 - Port 8080 = the Spring Boot backend
 - Port 5432 = PostgreSQL database
 
-When you type `easyapply.pl`, the browser connects to port 443 by default.
+When you type `applikon.pl`, the browser connects to port 443 by default.
 
 **Firewall**
 A "port guard" on the server. Blocks connections to ports that should not be
@@ -181,8 +181,8 @@ Example: the database password. Stored in a `.env` file (never committed to git)
 ## 3. What this project already has (deployment-relevant)
 
 ```
-easyapply-backend/Dockerfile    ← how to package the backend
-easyapply-frontend/Dockerfile   ← how to package the frontend
+applikon-backend/Dockerfile    ← how to package the backend
+applikon-frontend/Dockerfile   ← how to package the frontend
 docker-compose.yml              ← recipe: "run db + backend + frontend"
 .env.example                    ← template for environment variables
 ```
@@ -216,7 +216,7 @@ to pick a place to run them and provide the production environment variables.
 | Works with `docker-compose.yml` | Yes, directly |
 | Learning value | High — real Linux + Docker + Caddy on a server |
 
-**Why this fits EasyApply:** the existing `docker-compose.yml` runs unchanged on
+**Why this fits Applikon:** the existing `docker-compose.yml` runs unchanged on
 a Hetzner VPS. There's nothing to rewrite, no PaaS abstraction to fight with, and
 the cost stays predictable as the project grows.
 
@@ -266,7 +266,7 @@ the EU. For a hobby/portfolio project:
 
 **AWS / GCP / Azure** are overkill at this scale and have surprise-bill risk
 (forgotten resources keep charging). They're great when you actually need their
-managed services. EasyApply doesn't.
+managed services. Applikon doesn't.
 
 ---
 

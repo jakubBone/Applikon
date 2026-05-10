@@ -5,7 +5,7 @@
 - **Classes**: PascalCase — `UserService`, `ApplicationRepository`, `PaymentProcessor`
 - **Methods/fields**: camelCase, verb-first for methods — `getUserById()`, `applicationStatus`, `isActive`
 - **Constants**: UPPER_SNAKE_CASE — `MAX_RETRIES`, `DEFAULT_TIMEOUT`, `API_BASE_URL`
-- **Packages**: lowercase, reverse domain — `com.easyapply.service`, `com.easyapply.repository`
+- **Packages**: lowercase, reverse domain — `com.applikon.service`, `com.applikon.repository`
 - **Test classes**: *Test suffix — `UserServiceTest`, `ApplicationRepositoryTest`
 - **Boolean variables**: prefix with `is`, `has`, `should` — `isActive`, `hasPermission`, `shouldRetry`
 

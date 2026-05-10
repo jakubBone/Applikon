@@ -1,4 +1,4 @@
-# i18n Implementation Plan — EasyApply Backend
+# i18n Implementation Plan — Applikon Backend
 
 ## Work Process (applicable to each phase)
 
@@ -117,7 +117,7 @@ Frontend translates via `REJECTION_REASONS` in `kanban/types.ts` → `"Brak odpo
 
 ```
 src/main/
-  java/com/easyapply/
+  java/com/applikon/
     config/
       I18nConfig.java          ← new: MessageSource + LocaleResolver beans
   resources/

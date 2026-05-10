@@ -1,4 +1,4 @@
-# EasyApply — Phase 12: GitHub Actions CI
+# Applikon — Phase 12: GitHub Actions CI
 
 ## 1. Context
 

@@ -1,4 +1,4 @@
-# Internationalization (i18n) Learning Notes — EasyApply
+# Internationalization (i18n) Learning Notes — Applikon
 
 Reference file. Explains i18n idea from scratch — what it is, how it works on backend (Spring Boot), how on frontend (React + i18next), and how both layers cooperate.
 
@@ -33,7 +33,7 @@ throw new EntityNotFoundException(
 
 Now text lives in `.properties` files (backend) and `.json` files (frontend). Change language → load different file. Fix typo → edit file, not code.
 
-### Two i18n Layers in EasyApply
+### Two i18n Layers in Applikon
 
 ```
 User's Browser
@@ -58,7 +58,7 @@ User's Browser
 
 `MessageSource` is Spring bean that reads `.properties` files and returns text in correct language. Central point of backend i18n.
 
-**How you configured it:** `src/main/java/com/easyapply/config/I18nConfig.java`
+**How you configured it:** `src/main/java/com/applikon/config/I18nConfig.java`
 
 ```java
 @Bean

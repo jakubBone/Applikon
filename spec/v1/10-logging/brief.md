@@ -1,4 +1,4 @@
-# EasyApply — Phase 10: Logging (production observability)
+# Applikon — Phase 10: Logging (production observability)
 
 ## 1. Context
 

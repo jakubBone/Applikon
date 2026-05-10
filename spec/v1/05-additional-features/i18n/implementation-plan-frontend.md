@@ -1,4 +1,4 @@
-# i18n Implementation Plan — EasyApply Frontend
+# i18n Implementation Plan — Applikon Frontend
 
 ## Work Process (applicable to each phase)
 

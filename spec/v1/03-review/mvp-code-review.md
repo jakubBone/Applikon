@@ -1,8 +1,8 @@
-# Code Review: EasyApply Project (2026-03-01)
+# Code Review: Applikon Project (2026-03-01)
 
 ### 👤 Basic Information
 **Author:** Jakub  
-**Project:** EasyApply — job application tracker for junior IT candidates  
+**Project:** Applikon — job application tracker for junior IT candidates  
 **Review Date:** 2026-03-01  
 **Reviewers:** DR & AI  
 **Skill Level:** Beginner/Intermediate — solid foundations and ambition in architecture visible, but typical gaps for someone without commercial experience  
@@ -194,7 +194,7 @@ Overall logic is correct — CRUD applications, CV management, notes, badge syst
 ```
 ⚠️ Problem: Statistical query returns Object[] — loss of type safety and readability
 📍 Location: Application repository and statistics service (backend)
-💡 Hint: Read about JPQL constructor expressions (SELECT new com.easyapply.dto.StatsDto(...) FROM ...) or interface-based projections in Spring Data. They return typed result instead of raw object array.
+💡 Hint: Read about JPQL constructor expressions (SELECT new com.applikon.dto.StatsDto(...) FROM ...) or interface-based projections in Spring Data. They return typed result instead of raw object array.
 ```
 
 ```

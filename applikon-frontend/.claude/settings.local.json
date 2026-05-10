@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(test:*)",
+      "Bash(where:*)",
+      "Bash(python:*)",
+      "Read(//c/Pulpitowe pliki/Z2J/projects/Easy/applikon-backend/**)",
+      "Bash(mvn test:*)"
+    ]
+  }
+}

@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   db:
     image: postgres:16-alpine
-    container_name: easyapply-db
+    container_name: applikon-db
     restart: unless-stopped
     logging:
       driver: json-file
@@ -21,15 +21,15 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - easyapply-network
+      - applikon-network
 
   # Spring Boot Backend
   backend:
-    image: ghcr.io/jakubbone/easyapply-backend:latest
+    image: ghcr.io/jakubbone/applikon-backend:latest
     build:
-      context: ./easyapply-backend
+      context: ./applikon-backend
       dockerfile: Dockerfile
-    container_name: easyapply-backend
+    container_name: applikon-backend
     restart: unless-stopped
     logging:
       driver: json-file
@@ -62,18 +62,18 @@ services:
       retries: 3
       start_period: 60s
     networks:
-      - easyapply-network
+      - applikon-network
 
   # React Frontend
   frontend:
-    image: ghcr.io/jakubbone/easyapply-frontend:latest
+    image: ghcr.io/jakubbone/applikon-frontend:latest
     build:
-      context: ./easyapply-frontend
+      context: ./applikon-frontend
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_USE_BACKEND: ${VITE_USE_BACKEND:-true}
-    container_name: easyapply-frontend
+    container_name: applikon-frontend
     restart: unless-stopped
     logging:
       driver: json-file
@@ -85,12 +85,12 @@ services:
     depends_on:
       - backend
     networks:
-      - easyapply-network
+      - applikon-network
 
 volumes:
   postgres_data:
   uploads_data:
 
 networks:
-  easyapply-network:
+  applikon-network:
     driver: bridge

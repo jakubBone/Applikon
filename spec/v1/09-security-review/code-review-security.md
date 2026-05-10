@@ -1,4 +1,4 @@
-# Security Audit Report — EasyApply (v09)
+# Security Audit Report — Applikon (v09)
 
 **Auditor:** Claude Security Auditor  
 **Scope:** Last 5 commits + full security-critical surface  
@@ -10,7 +10,7 @@
 
 ### 1. Timing Attack on Admin Key Comparison
 
-- **File:** `easyapply-backend/src/main/java/com/easyapply/security/AdminKeyFilter.java:27`
+- **File:** `applikon-backend/src/main/java/com/applikon/security/AdminKeyFilter.java:27`
 - **Evidence:**
   ```java
   if (key == null || !key.equals(adminKey)) {
@@ -23,7 +23,7 @@
 
 ### 2. Access Token Exposed in URL Query Parameter
 
-- **File:** `easyapply-backend/src/main/java/com/easyapply/security/OAuth2AuthenticationSuccessHandler.java:88`
+- **File:** `applikon-backend/src/main/java/com/applikon/security/OAuth2AuthenticationSuccessHandler.java:88`
 - **Evidence:**
   ```java
   String redirectUrl = frontendUrl + "/auth/callback?token=" + accessToken;
@@ -42,7 +42,7 @@
 
 ### 3. HTTP Security Headers Not Configured
 
-- **File:** `easyapply-backend/src/main/java/com/easyapply/config/SecurityConfig.java` (no `headers()` configuration present)
+- **File:** `applikon-backend/src/main/java/com/applikon/config/SecurityConfig.java` (no `headers()` configuration present)
 - **Risk:** By default Spring Security adds some headers, but the following are missing or unverified:
   - No `Content-Security-Policy` — makes stored-XSS attacks easier to exploit
   - No explicit `X-Frame-Options: DENY` — clickjacking risk (though OAuth2 flows already block framing in some browsers)
@@ -62,7 +62,7 @@
 
 ### 4. Content-Disposition Header Injection (Latent)
 
-- **File:** `easyapply-backend/src/main/java/com/easyapply/controller/CVController.java:70-72`
+- **File:** `applikon-backend/src/main/java/com/applikon/controller/CVController.java:70-72`
 - **Evidence:**
   ```java
   .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -87,7 +87,7 @@
 
 ### 5. TokenHasher Uses Plain SHA-256 Without HMAC
 
-- **File:** `easyapply-backend/src/main/java/com/easyapply/security/TokenHasher.java:11-23`
+- **File:** `applikon-backend/src/main/java/com/applikon/security/TokenHasher.java:11-23`
 - **Evidence:**
   ```java
   public static String hash(String token) {
@@ -128,7 +128,7 @@
 
 ### 6. No Audit Log for Retention Deletions
 
-- **File:** `easyapply-backend/src/main/java/com/easyapply/service/AccountRetentionService.java:38-42`
+- **File:** `applikon-backend/src/main/java/com/applikon/service/AccountRetentionService.java:38-42`
 - **Evidence:**
   ```java
   for (User user : inactive) {

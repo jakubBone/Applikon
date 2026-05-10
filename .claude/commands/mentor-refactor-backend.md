@@ -1,9 +1,9 @@
 ---
-description: Resume the EasyApply backend refactor + learning session
+description: Resume the Applikon backend refactor + learning session
 argument-hint: "[optional: phase number or topic to focus on]"
 ---
 
-Resume the paused mentor-mode session on the EasyApply **backend** (Java 21 / Spring Boot 3.4).
+Resume the paused mentor-mode session on the Applikon **backend** (Java 21 / Spring Boot 3.4).
 
 ## Load context (in this order)
 

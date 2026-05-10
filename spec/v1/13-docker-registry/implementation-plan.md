@@ -1,4 +1,4 @@
-# Docker Registry Implementation Plan — EasyApply
+# Docker Registry Implementation Plan — Applikon
 
 ## Work Process
 
@@ -13,8 +13,8 @@
 ## Goal
 
 After every successful CI run on `master`, two Docker images are pushed to GHCR:
-- `ghcr.io/jakubbone/easyapply-backend`
-- `ghcr.io/jakubbone/easyapply-frontend`
+- `ghcr.io/jakubbone/applikon-backend`
+- `ghcr.io/jakubbone/applikon-frontend`
 
 Each push produces two tags: `:latest` (moving) and `:<short-sha>` (immutable).
 The server pulls `:latest` and runs the application without building anything locally.
@@ -70,7 +70,7 @@ jobs:
           distribution: temurin
 
       - name: Run tests
-        working-directory: easyapply-backend
+        working-directory: applikon-backend
         run: ./mvnw test
 
   frontend:
@@ -85,15 +85,15 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm ci
 
       - name: Run unit tests
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm run test:run
 
       - name: Build
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm run build
 
   docker:
@@ -118,23 +118,23 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
-          context: ./easyapply-backend
+          context: ./applikon-backend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/easyapply-backend:latest
-            ghcr.io/${{ github.repository_owner }}/easyapply-backend:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/applikon-backend:latest
+            ghcr.io/${{ github.repository_owner }}/applikon-backend:${{ github.sha }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./easyapply-frontend
+          context: ./applikon-frontend
           push: true
           build-args: |
             VITE_API_URL=${{ secrets.VITE_API_URL }}
             VITE_USE_BACKEND=true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/easyapply-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/easyapply-frontend:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/applikon-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/applikon-frontend:${{ github.sha }}
 ```
 
 ---
@@ -145,16 +145,16 @@ Add `image:` field to `backend` and `frontend` — keep all existing `build:` se
 
 ```yaml
   backend:
-    image: ghcr.io/jakubbone/easyapply-backend:latest
+    image: ghcr.io/jakubbone/applikon-backend:latest
     build:
-      context: ./easyapply-backend
+      context: ./applikon-backend
       dockerfile: Dockerfile
     # ... rest unchanged
 
   frontend:
-    image: ghcr.io/jakubbone/easyapply-frontend:latest
+    image: ghcr.io/jakubbone/applikon-frontend:latest
     build:
-      context: ./easyapply-frontend
+      context: ./applikon-frontend
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
@@ -168,7 +168,7 @@ Add `image:` field to `backend` and `frontend` — keep all existing `build:` se
 
 - [x] Push to `master` — all three jobs appear in GitHub → Actions (`backend`, `frontend`, `docker`)
 - [x] `docker` job is green
-- [x] GitHub → Packages shows `easyapply-backend` and `easyapply-frontend`
+- [x] GitHub → Packages shows `applikon-backend` and `applikon-frontend`
 - [x] Each package has tags `:latest` and `:<sha>`
 
 ---

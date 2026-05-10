@@ -1,4 +1,4 @@
-# Logout Implementation Plan — EasyApply Frontend
+# Logout Implementation Plan — Applikon Frontend
 
 ## Work Process (applicable to each stage)
 

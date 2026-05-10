@@ -1,4 +1,4 @@
-# EasyApply — Hetzner Deployment (Step-by-Step)
+# Applikon — Hetzner Deployment (Step-by-Step)
 
 > Production deployment guide. Pure how-to — concepts, terminology, and the
 > rationale for choosing Hetzner are in [`deployment-intro.md`](deployment-intro.md).
@@ -12,7 +12,7 @@
 
 ### Accounts and tools to have ready
 - [ ] Hetzner Cloud account ([hetzner.com](https://hetzner.com)) — credit card required
-- [ ] A domain (e.g., `easyapply.pl`) — or a free subdomain via DuckDNS
+- [ ] A domain (e.g., `applikon.pl`) — or a free subdomain via DuckDNS
 - [ ] Google Cloud Console project (for OAuth2 credentials)
 - [ ] Git installed locally
 - [ ] SSH installed locally (Windows 10+ has it built-in)
@@ -83,7 +83,7 @@ TTL:   3600
 DNS propagation takes anywhere from a few minutes to 24 hours. You can verify
 with:
 ```bash
-nslookup easyapply.pl
+nslookup applikon.pl
 ```
 
 ---
@@ -159,14 +159,14 @@ ufw enable
 
 On the server:
 ```bash
-mkdir -p /opt/easyapply
-cd /opt/easyapply
-git clone https://github.com/YourAccount/EasyApply.git .
+mkdir -p /opt/applikon
+cd /opt/applikon
+git clone https://github.com/YourAccount/Applikon.git .
 ```
 
 For a private repo, use `scp` from your local machine instead:
 ```bash
-scp -r /path/to/local/project root@SERVER_IP:/opt/easyapply
+scp -r /path/to/local/project root@SERVER_IP:/opt/applikon
 ```
 
 ---
@@ -174,7 +174,7 @@ scp -r /path/to/local/project root@SERVER_IP:/opt/easyapply
 ## Step 10 — Create the production `.env`
 
 ```bash
-cd /opt/easyapply
+cd /opt/applikon
 cp .env.example .env
 nano .env
 ```
@@ -182,8 +182,8 @@ nano .env
 Fill in:
 ```env
 # Database
-POSTGRES_DB=easyapply_db
-POSTGRES_USER=easyapply_user
+POSTGRES_DB=applikon_db
+POSTGRES_USER=applikon_user
 POSTGRES_PASSWORD=<generate with: openssl rand -base64 32>
 
 # Backend
@@ -253,7 +253,7 @@ to your domain.
 ## Step 12 — Start the application
 
 ```bash
-cd /opt/easyapply
+cd /opt/applikon
 docker compose up -d --build
 ```
 
@@ -267,7 +267,7 @@ docker compose logs -f backend
 
 Backend is ready when you see:
 ```
-Started EasyApplyApplication in 45.3 seconds
+Started ApplikonApplication in 45.3 seconds
 ```
 
 Press `Ctrl+C` to stop tailing the logs (the app keeps running).
@@ -327,7 +327,7 @@ systemctl restart sshd
 
 ### Deploy a code update
 ```bash
-cd /opt/easyapply
+cd /opt/applikon
 git pull
 docker compose build
 docker compose up -d
@@ -353,12 +353,12 @@ docker compose start
 
 ### Database backup (run weekly)
 ```bash
-docker exec easyapply-db pg_dump -U easyapply_user easyapply_db > backup_$(date +%Y%m%d).sql
+docker exec applikon-db pg_dump -U applikon_user applikon_db > backup_$(date +%Y%m%d).sql
 ```
 
 Copy the backup off the server (run from your **local** machine):
 ```bash
-scp root@SERVER_IP:/opt/easyapply/backup_*.sql C:\Users\YourName\Desktop\
+scp root@SERVER_IP:/opt/applikon/backup_*.sql C:\Users\YourName\Desktop\
 ```
 
 ### Auto-restart after server reboot

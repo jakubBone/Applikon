@@ -33,7 +33,7 @@ UserExportService.buildExport(userId)
   → for each application: NoteRepository.findByApplicationId
         ↓
 ResponseEntity with Content-Disposition: attachment header
-filename: easyapply-export.json
+filename: applikon-export.json
 ```
 
 ---
@@ -219,7 +219,7 @@ public ResponseEntity<UserExportResponse> exportMyData(
 
     return ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"easyapply-export.json\"")
+                "attachment; filename=\"applikon-export.json\"")
         .body(export);
 }
 ```
@@ -252,7 +252,7 @@ file instead of displaying it in a tab.
 
 ## Definition of Done (DoD)
 
-- [x] `GET /api/auth/me/export` returns `200` with `Content-Disposition: attachment; filename="easyapply-export.json"`
+- [x] `GET /api/auth/me/export` returns `200` with `Content-Disposition: attachment; filename="applikon-export.json"`
 - [x] JSON contains user's profile + applications + notes + CV
 - [x] JSON doesn't contain `google_id`, `refresh_token`, other users' data
 - [x] Endpoint without JWT returns `401` (enforced by production `SecurityConfig`; untestable in test profile with `permitAll()`)

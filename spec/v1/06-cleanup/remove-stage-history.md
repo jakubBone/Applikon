@@ -1,4 +1,4 @@
-# Plan to Remove stage_history — EasyApply
+# Plan to Remove stage_history — Applikon
 
 ## Problem
 

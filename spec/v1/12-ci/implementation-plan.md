@@ -1,4 +1,4 @@
-# CI Implementation Plan — EasyApply
+# CI Implementation Plan — Applikon
 
 ## Work Process
 
@@ -55,7 +55,7 @@ jobs:
           distribution: temurin
 
       - name: Run tests
-        working-directory: easyapply-backend
+        working-directory: applikon-backend
         run: ./mvnw test
 
   frontend:
@@ -70,15 +70,15 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm ci
 
       - name: Run unit tests
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm run test:run
 
       - name: Build
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm run build
 ```
 
@@ -86,13 +86,13 @@ jobs:
 
 ### File: `README.md` — badge
 
-Add below the project title (first line after `# EasyApply` or equivalent):
+Add below the project title (first line after `# Applikon` or equivalent):
 
 ```markdown
-[![CI](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml)
+[![CI](https://github.com/jakubBone/applikon/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/applikon/actions/workflows/ci.yml)
 ```
 
-> Replace `jakubBone/EasyApply` with the actual GitHub org/repo slug if different.
+> Replace `jakubBone/applikon` with the actual GitHub org/repo slug if different.
 
 ---
 

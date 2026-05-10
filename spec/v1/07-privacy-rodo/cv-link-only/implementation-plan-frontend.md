@@ -1,4 +1,4 @@
-# CV Link-Only Implementation Plan — EasyApply Frontend
+# CV Link-Only Implementation Plan — Applikon Frontend
 
 ## Work Process (applicable to each phase)
 
@@ -38,7 +38,7 @@ in database) still display in the list, can be downloaded and deleted.
 
 ### Phase 1 — Disable "Upload PDF" Card in Add CV Modal
 
-**File:** `easyapply-frontend/src/components/cv/CVManager.tsx`
+**File:** `applikon-frontend/src/components/cv/CVManager.tsx`
 
 Currently card (line 406):
 ```tsx
@@ -73,7 +73,7 @@ Currently card (line 406):
 
 ### Phase 2 — CSS Styles for Disabled State
 
-**File:** `easyapply-frontend/src/components/cv/CVManager.css` (or appropriate style file — to verify)
+**File:** `applikon-frontend/src/components/cv/CVManager.css` (or appropriate style file — to verify)
 
 - [x] Locate style file for `.add-cv-option` (found: `components/cv/CVManager.css`)
 - [x] Add `.add-cv-option--disabled` rule:
@@ -119,7 +119,7 @@ in `CVManager.tsx:87` covers any theoretical out-of-UI call.
 
 
 
-**File:** `easyapply-frontend/src/hooks/useCV.ts` or `src/services/api.ts`
+**File:** `applikon-frontend/src/hooks/useCV.ts` or `src/services/api.ts`
 
 Scenario: someone bypasses UI (e.g., DevTools) and calls `uploadCV` manually →
 backend returns 503. Even though our UI doesn't initiate it, mutation

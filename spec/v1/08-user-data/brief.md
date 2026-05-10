@@ -1,4 +1,4 @@
-# EasyApply — Phase 08: User Data & Service Notifications
+# Applikon — Phase 08: User Data & Service Notifications
 
 ## 1. Context
 
@@ -49,7 +49,7 @@ Notification types:
 
 ### 4.1. `data-export/` — user data export
 - Backend: `GET /api/auth/me/export` → JSON with profile, applications, notes, CV
-- Frontend: "Download my data" button in `/settings`, downloads `easyapply-export.json`
+- Frontend: "Download my data" button in `/settings`, downloads `applikon-export.json`
 - Flyway: no schema changes
 
 ### 4.2. `service-notices/` — service notification system
@@ -73,7 +73,7 @@ Notification types:
 
 Phase 08 is closed when:
 
-1. ✅ Logged-in user can download `easyapply-export.json` from `/settings`;
+1. ✅ Logged-in user can download `applikon-export.json` from `/settings`;
    file contains profile, all applications with notes and CV links
 2. ✅ Export doesn't leak data from other users
 3. ✅ Admin can create active notice via `POST /api/admin/notices`

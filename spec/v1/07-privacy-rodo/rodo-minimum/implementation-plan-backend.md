@@ -1,4 +1,4 @@
-# RODO Minimum Implementation Plan — EasyApply Backend
+# RODO Minimum Implementation Plan — Applikon Backend
 
 ## Work Process (applicable to each phase)
 

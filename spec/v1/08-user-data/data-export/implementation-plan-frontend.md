@@ -15,7 +15,7 @@
 ## Goal
 
 Add "Download my data" button in `/settings` that downloads
-`easyapply-export.json` file from backend. Fulfills RODO Art. 20 requirement.
+`applikon-export.json` file from backend. Fulfills RODO Art. 20 requirement.
 
 ---
 
@@ -41,7 +41,7 @@ export async function exportMyData(): Promise<void> {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'easyapply-export.json';
+  a.download = 'applikon-export.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -109,7 +109,7 @@ Use existing CSS classes / Button components from project.
 ```json
 "settings": {
   "exportTitle": "Twoje dane",
-  "exportDescription": "Pobierz wszystkie swoje dane zapisane w EasyApply.",
+  "exportDescription": "Pobierz wszystkie swoje dane zapisane w Applikon.",
   "exportButton": "Pobierz moje dane",
   "exporting": "Przygotowuję...",
   "exportError": "Coś poszło nie tak. Spróbuj ponownie."
@@ -121,7 +121,7 @@ Use existing CSS classes / Button components from project.
 ```json
 "settings": {
   "exportTitle": "Your data",
-  "exportDescription": "Download all your data stored in EasyApply.",
+  "exportDescription": "Download all your data stored in Applikon.",
   "exportButton": "Download my data",
   "exporting": "Preparing...",
   "exportError": "Something went wrong. Try again."
@@ -153,7 +153,7 @@ Use existing CSS classes / Button components from project.
 3. Go to /settings
 4. Check that "Twoje dane" / "Your data" section is visible
 5. Click "Download my data"
-6. Check that easyapply-export.json file appears in Downloads folder
+6. Check that applikon-export.json file appears in Downloads folder
 7. Open file — check it contains your applications and notes
 8. Check that button was disabled during download (hard to notice
    on fast connection — can verify in DevTools → Network → Throttle)
@@ -164,7 +164,7 @@ Use existing CSS classes / Button components from project.
 ## Definition of Done (DoD)
 
 - [x] "Download my data" button visible in `/settings`
-- [x] Clicking downloads `easyapply-export.json` file
+- [x] Clicking downloads `applikon-export.json` file
 - [x] During download button is `disabled`
 - [x] Error message appears on error
 - [x] Translations work in PL and EN

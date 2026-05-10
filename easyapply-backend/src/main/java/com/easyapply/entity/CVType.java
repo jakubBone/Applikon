@@ -1,7 +1,0 @@
-package com.easyapply.entity;
-
-public enum CVType {
-    FILE,   // PDF file uploaded to the application
-    LINK,   // Link to an external service (Google Drive, Dropbox)
-    NOTE    // Name/label only — file stored locally by the user
-}

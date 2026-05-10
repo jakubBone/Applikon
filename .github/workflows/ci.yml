@@ -18,7 +18,7 @@ jobs:
           distribution: temurin
 
       - name: Run tests
-        working-directory: easyapply-backend
+        working-directory: applikon-backend
         run: ./mvnw test
 
   frontend:
@@ -33,15 +33,15 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm ci
 
       - name: Run unit tests
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm run test:run
 
       - name: Build
-        working-directory: easyapply-frontend
+        working-directory: applikon-frontend
         run: npm run build
 
   docker:
@@ -69,20 +69,20 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
-          context: ./easyapply-backend
+          context: ./applikon-backend
           push: true
           tags: |
-            ghcr.io/${{ env.OWNER }}/easyapply-backend:latest
-            ghcr.io/${{ env.OWNER }}/easyapply-backend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER }}/applikon-backend:latest
+            ghcr.io/${{ env.OWNER }}/applikon-backend:${{ github.sha }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./easyapply-frontend
+          context: ./applikon-frontend
           push: true
           build-args: |
             VITE_API_URL=${{ secrets.VITE_API_URL }}
             VITE_USE_BACKEND=true
           tags: |
-            ghcr.io/${{ env.OWNER }}/easyapply-frontend:latest
-            ghcr.io/${{ env.OWNER }}/easyapply-frontend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER }}/applikon-frontend:latest
+            ghcr.io/${{ env.OWNER }}/applikon-frontend:${{ github.sha }}

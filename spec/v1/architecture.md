@@ -1,4 +1,4 @@
-# EasyApply v1 — Architecture Reference
+# Applikon v1 — Architecture Reference
 
 > Source of truth: the code. This document reflects the actual implemented state.
 
@@ -9,8 +9,8 @@
 ### Package structure
 
 ```
-com.easyapply/
-  EasyApplyApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing, @EnableScheduling
+com.applikon/
+  ApplikonApplication.java        — main class, @SpringBootApplication, @EnableJpaAuditing, @EnableScheduling
   config/
     I18nConfig.java                — MessageSource (i18n/messages), AcceptHeaderLocaleResolver (default: en)
     OpenApiConfig.java             — @OpenAPIDefinition (title/description/version/contact) + @SecurityScheme (JWT Bearer) (phase 11)
@@ -409,7 +409,7 @@ App.tsx
 | `deleteNote` | DELETE | `/api/notes/{id}` |
 | `fetchBadgeStats` | GET | `/api/statistics/badges` |
 | `fetchActiveNotices` | GET | `/api/system/notices/active` — returns `[]` on error, never breaks app (phase 08) |
-| `exportMyData` | GET | `/api/auth/me/export` — triggers blob download as `easyapply-export.json` (phase 08) |
+| `exportMyData` | GET | `/api/auth/me/export` — triggers blob download as `applikon-export.json` (phase 08) |
 
 ### i18n
 

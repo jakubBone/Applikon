@@ -1,4 +1,4 @@
-# EasyApply – Job Application Tracker
+# Applikon – Job Application Tracker
 
 # 1. Problem
 IT candidates apply to a large number of job offers on various job boards and LinkedIn. 
@@ -66,7 +66,7 @@ Job candidates actively seeking work, applying to 10-20 offers per month, primar
 |--------|------|
 | **Goal** | REST API to save and retrieve applications from PostgreSQL database |
 | **Why** | Foundation of the app – frontend has nothing to communicate with without a backend |
-| **Conditions** | PostgreSQL running (easyapply_db), API returns JSON, validation works, CORS configured for localhost:5173 |
+| **Conditions** | PostgreSQL running (applikon_db), API returns JSON, validation works, CORS configured for localhost:5173 |
 | **Success when** | I can add an application via curl/Postman, API returns JSON, data is saved in database and survives server restart |
 
 ## Step 2: Frontend List
@@ -147,7 +147,7 @@ Job candidates actively seeking work, applying to 10-20 offers per month, primar
 
 # File Structure (minimal, for MVP)
 
-## Backend (`src/main/java/com/easyapply/`)
+## Backend (`src/main/java/com/applikon/`)
 
 ```
 ├── controller/

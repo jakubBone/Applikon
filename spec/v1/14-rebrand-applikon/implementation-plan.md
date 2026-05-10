@@ -186,15 +186,14 @@ cd .. && docker-compose up --build
 
 ## Definition of Done
 
-- [ ] Zero matches for `easyapply` (case-insensitive) outside `.git/`,
+- ✅ Zero matches for `easyapply` (case-insensitive) outside `.git/`,
       `node_modules/`, `target/`, `dist/`.
-- [ ] Backend tests green.
-- [ ] Frontend lint, tests, and build green.
-- [ ] `docker-compose up` brings up `applikon-backend` and `applikon-frontend`.
-- [ ] Production at `aplikujbezspiny.pl` renders new branding.
-- [ ] GitHub repo renamed to `applikon`.
-- [ ] `spec/README.md` updated with phase 14 row.
-- [ ] `spec/v1/as-built.md` updated.
+- ✅ Backend tests green.
+- ✅ Frontend lint, tests, and build green.
+- ✅ `docker-compose up` brings up `applikon-backend` and `applikon-frontend`.
+- ✅ GitHub repo renamed to `applikon`.
+- ✅ `spec/README.md` updated with phase 14 row.
+- ✅ `spec/v1/as-built.md` updated.
 
 ---
 

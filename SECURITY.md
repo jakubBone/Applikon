@@ -2,9 +2,9 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in EasyApply, please report it **privately** rather than opening a public issue.
+If you discover a security vulnerability in Applikon, please report it **privately** rather than opening a public issue.
 
-**Preferred channel:** [GitHub Security Advisories](https://github.com/jakubBone/EasyApply/security/advisories/new) — private, encrypted, and lets us track the fix and credit you.
+**Preferred channel:** [GitHub Security Advisories](https://github.com/jakubBone/applikon/security/advisories/new) — private, encrypted, and lets us track the fix and credit you.
 
 **Fallback:** jakub.bone1990@gmail.com
 

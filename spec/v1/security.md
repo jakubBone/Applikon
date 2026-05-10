@@ -1,4 +1,4 @@
-# EasyApply v1 — Security Reference
+# Applikon v1 — Security Reference
 
 > Source of truth: the code. This document reflects the actual implemented state.
 

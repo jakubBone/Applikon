@@ -1,4 +1,4 @@
-# Backend Learning Notes — EasyApply
+# Backend Learning Notes — Applikon
 
 Reference file for learning progress. Each phase = key concepts, important files, fixed code reviews.
 
@@ -116,7 +116,7 @@ Each part is Base64 — anyone can decode it. JWT is not encrypted, just signed.
 
 **HEADER:**
 ```json
-{ "alg": "RS256", "kid": "easyapply-key" }
+{ "alg": "RS256", "kid": "applikon-key" }
 ```
 
 **PAYLOAD (claims):**
@@ -266,7 +266,7 @@ MdcUserFilter.doFilterInternal()               [Your code]
 
 | Term | What It Is |
 |--------|-------|
-| Client | Your application (EasyApply) |
+| Client | Your application (Applikon) |
 | Resource Owner | User (Google account owner) |
 | Authorization Server | Google — issues tokens |
 | Resource Server | Your backend — protects API |
@@ -483,7 +483,7 @@ After: map `field → message` in `errors`, `detail` = fixed string.
 
 ### CR-B4 — Object[] → Projection
 
-JPQL constructor expression: `SELECT new com.easyapply.dto.ApplicationStats(SUM(...), ...)` returns typed record instead of `Object[]`.
+JPQL constructor expression: `SELECT new com.applikon.dto.ApplicationStats(SUM(...), ...)` returns typed record instead of `Object[]`.
 
 ### CR-B5 — Parallel Arrays → BadgeDefinition Record
 

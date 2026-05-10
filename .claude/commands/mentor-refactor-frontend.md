@@ -1,9 +1,9 @@
 ---
-description: Resume the EasyApply frontend refactor + learning session
+description: Resume the Applikon frontend refactor + learning session
 argument-hint: "[optional: phase number or topic to focus on]"
 ---
 
-Resume the paused mentor-mode session on the EasyApply **frontend** (React 19 / TypeScript / Vite).
+Resume the paused mentor-mode session on the Applikon **frontend** (React 19 / TypeScript / Vite).
 
 ## Load context (in this order)
 

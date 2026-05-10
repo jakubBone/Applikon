@@ -1,4 +1,4 @@
-# EasyApply — Phase 11: Swagger / OpenAPI
+# Applikon — Phase 11: Swagger / OpenAPI
 
 ## 1. Context
 

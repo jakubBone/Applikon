@@ -1,4 +1,4 @@
-# Swagger Implementation Plan — EasyApply Backend
+# Swagger Implementation Plan — Applikon Backend
 
 ## Work Process (applicable to each phase)
 
@@ -39,7 +39,7 @@ shapes, and call authenticated endpoints directly from the UI using a JWT token.
 
 ### Phase 1 — Dependency + properties + security permit
 
-**File 1:** `easyapply-backend/pom.xml`
+**File 1:** `applikon-backend/pom.xml`
 
 - [x] Add dependency inside `<dependencies>`:
   ```xml
@@ -50,7 +50,7 @@ shapes, and call authenticated endpoints directly from the UI using a JWT token.
   </dependency>
   ```
 
-**File 2:** `easyapply-backend/src/main/resources/application.properties`
+**File 2:** `applikon-backend/src/main/resources/application.properties`
 
 - [x] Add at the end:
   ```properties
@@ -61,7 +61,7 @@ shapes, and call authenticated endpoints directly from the UI using a JWT token.
   springdoc.swagger-ui.tags-sorter=alpha
   ```
 
-**File 3:** `easyapply-backend/src/main/java/com/easyapply/config/SecurityConfig.java`
+**File 3:** `applikon-backend/src/main/java/com/applikon/config/SecurityConfig.java`
 
 - [x] Add Swagger paths to the public `requestMatchers` block (alongside `/privacy`, `/api/auth/**` etc.):
   ```java
@@ -77,14 +77,14 @@ shapes, and call authenticated endpoints directly from the UI using a JWT token.
 
 ### Phase 2 — Global API info + JWT security scheme
 
-**File:** `easyapply-backend/src/main/java/com/easyapply/config/OpenApiConfig.java` *(new file)*
+**File:** `applikon-backend/src/main/java/com/applikon/config/OpenApiConfig.java` *(new file)*
 
 - [x] Create the config class:
   ```java
   @Configuration
   @OpenAPIDefinition(
       info = @Info(
-          title = "EasyApply API",
+          title = "Applikon API",
           description = "Job application tracker for IT candidates in Poland.",
           version = "1.0.0",
           contact = @Contact(name = "Jakub Bone", email = "jakub.bone1990@gmail.com")

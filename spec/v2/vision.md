@@ -1,4 +1,4 @@
-# EasyApply v2 – Event-Driven Architecture
+# Applikon v2 – Event-Driven Architecture
 
 > **Status:** Architectural vision document. This is a speculative design artifact,
 > not an implementation plan. Detailed specifications (brief.md, implementation-plan.md)
@@ -71,7 +71,7 @@ Four components communicating through Kafka:
 
 ## 1. Monolith (Core Service)
 
-**Current EasyApply application extended with event publishing.**
+**Current Applikon application extended with event publishing.**
 
 Responsibilities:
 - User management and authentication (JWT)
@@ -410,7 +410,7 @@ easy-apply-v2/
 ├── docker-compose.yml               # Everything in one: Kafka, PostgreSQL, services
 │
 ├── core-service/                    # Monolith (extended)
-│   ├── src/main/java/com/easyapply/
+│   ├── src/main/java/com/applikon/
 │   │   ├── controller/
 │   │   │   ├── ApplicationController.java
 │   │   │   ├── AuthController.java
@@ -440,7 +440,7 @@ easy-apply-v2/
 │   └── Dockerfile
 │
 ├── notification-service/             # New service
-│   ├── src/main/java/com/easyapply/
+│   ├── src/main/java/com/applikon/
 │   │   ├── listener/
 │   │   │   ├── ApplicationEventListener.java # Listens for events from Kafka
 │   │   │   └── ReportGeneratedListener.java  # Listens for report event
@@ -472,7 +472,7 @@ easy-apply-v2/
 │   └── Dockerfile
 │
 ├── analytics-service/                # New service: weekly reports
-│   ├── src/main/java/com/easyapply/
+│   ├── src/main/java/com/applikon/
 │   │   ├── listener/
 │   │   │   └── ApplicationEventListener.java # Listens for events (application.added, status.changed)
 │   │   ├── service/
@@ -494,7 +494,7 @@ easy-apply-v2/
 │   └── Dockerfile
 │
 ├── shared-libs/                      # Shared classes (optional)
-│   ├── src/main/java/com/easyapply/
+│   ├── src/main/java/com/applikon/
 │   │   ├── event/
 │   │   │   ├── ApplicationAddedEvent.java
 │   │   │   ├── ApplicationStatusChangedEvent.java

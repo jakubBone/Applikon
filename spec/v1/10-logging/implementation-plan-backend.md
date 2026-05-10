@@ -1,4 +1,4 @@
-# Logging Implementation Plan — EasyApply Backend
+# Logging Implementation Plan — Applikon Backend
 
 ## Work Process (applicable to each phase)
 
@@ -43,7 +43,7 @@ adds `userId` to every log line.
 
 ### Phase 1 — `AdminKeyFilter`: warn on blocked admin access
 
-**File:** `easyapply-backend/src/main/java/com/easyapply/security/AdminKeyFilter.java`
+**File:** `applikon-backend/src/main/java/com/applikon/security/AdminKeyFilter.java`
 
 - [x] Add import: `org.slf4j.Logger`, `org.slf4j.LoggerFactory`
 - [x] Add field: `private static final Logger log = LoggerFactory.getLogger(AdminKeyFilter.class);`
@@ -61,7 +61,7 @@ WARN  [anonymous] c.e.s.AdminKeyFilter - Admin access denied: uri=/api/admin/use
 
 ### Phase 2 — `AuthController`: warn on failed token refresh
 
-**File:** `easyapply-backend/src/main/java/com/easyapply/controller/AuthController.java`
+**File:** `applikon-backend/src/main/java/com/applikon/controller/AuthController.java`
 
 - [x] Add import: `org.slf4j.Logger`, `org.slf4j.LoggerFactory`
 - [x] Add field: `private static final Logger log = LoggerFactory.getLogger(AuthController.class);`
@@ -82,7 +82,7 @@ WARN  [anonymous] c.e.c.AuthController - Token refresh failed: Refresh token not
 
 ### Phase 3 — `GlobalExceptionHandler`: warn on 404
 
-**File:** `easyapply-backend/src/main/java/com/easyapply/exception/GlobalExceptionHandler.java`
+**File:** `applikon-backend/src/main/java/com/applikon/exception/GlobalExceptionHandler.java`
 
 - [x] Add `log.warn` as first line inside `handleEntityNotFoundException`:
   ```java
@@ -103,12 +103,12 @@ WARN  [userId=abc123] c.e.e.GlobalExceptionHandler - Entity not found: Applicati
 
 ### Phase 4 — Dead code cleanup: remove unused Logger fields
 
-**File 1:** `easyapply-backend/src/main/java/com/easyapply/service/NoteService.java`
+**File 1:** `applikon-backend/src/main/java/com/applikon/service/NoteService.java`
 
 - [x] Remove line 23: `private static final Logger log = LoggerFactory.getLogger(NoteService.class);`
 - [x] Remove imports: `org.slf4j.Logger`, `org.slf4j.LoggerFactory` (if no longer used)
 
-**File 2:** `easyapply-backend/src/main/java/com/easyapply/security/JwtService.java`
+**File 2:** `applikon-backend/src/main/java/com/applikon/security/JwtService.java`
 
 - [x] Remove line 28: `private static final Logger log = LoggerFactory.getLogger(JwtService.class);`
 - [x] Remove imports: `org.slf4j.Logger`, `org.slf4j.LoggerFactory`

@@ -1,18 +1,18 @@
-# EasyApply — CLAUDE.md
+# Applikon — CLAUDE.md
 
 Job application tracker for Polish IT candidates.
 Stack: Java 21 / Spring Boot 3.4 (backend) · React 19 / TypeScript / Vite (frontend) · PostgreSQL · Docker Compose.
 
 ## Commands
 
-**Backend** (`easyapply-backend/`):
+**Backend** (`applikon-backend/`):
 ```bash
 ./mvnw test           # run all tests
 ./mvnw spring-boot:run  # run app locally (needs Postgres + .env)
 ./mvnw package        # build jar
 ```
 
-**Frontend** (`easyapply-frontend/`):
+**Frontend** (`applikon-frontend/`):
 ```bash
 npm run dev           # dev server on :5173
 npm test              # vitest watch

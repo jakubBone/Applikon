@@ -1,4 +1,4 @@
-# RODO Minimum Implementation Plan — EasyApply Frontend
+# RODO Minimum Implementation Plan — Applikon Frontend
 
 ## Work Process (applicable to each phase)
 
@@ -122,7 +122,7 @@ To be decided during implementation.
 - [x] Confirm modal with warning
 - [x] Field for typing "USUN" (PL) / "DELETE" (EN)
 - [x] On confirm: deleteAccount() → alert → clear localStorage → redirect /login
-- [x] Clear EasyApply-specific flags (not all cookies) ✅
+- [x] Clear Applikon-specific flags (not all cookies) ✅
 
 ---
 

@@ -1,8 +1,8 @@
-# Backend Learning Plan — EasyApply
+# Backend Learning Plan — Applikon
 
 ## Document Context
 
-This document is a learning guide for Jakub — author of EasyApply.
+This document is a learning guide for Jakub — author of Applikon.
 Jakub is a junior Java developer. He knows Spring Boot at basic/intermediate level.
 Backend was written with AI help — Jakub understands general architecture but doesn't want to dig deep into all implementation details. Main gaps: security, validation, design patterns.
 
@@ -12,14 +12,14 @@ Backend was written with AI help — Jakub understands general architecture but 
 
 ---
 
-## Project: EasyApply — backend
+## Project: Applikon — backend
 
 **Stack:** Java 21, Spring Boot 3.4.1, Spring Security, OAuth2 + JWT (RS256),  
 PostgreSQL, Flyway, Docker, Maven
 
-**Package Structure (`com.easyapply`):**
+**Package Structure (`com.applikon`):**
 ```
-EasyApplyApplication.java              — entry point (@SpringBootApplication)
+ApplikonApplication.java              — entry point (@SpringBootApplication)
 
 config/
   SecurityConfig.java                  — Spring Security, CORS, OAuth2, JWT config
@@ -157,7 +157,7 @@ Same as frontend. Each change goes through:
 ```
 
 **End of phase (not after every fix):**
-- Run `mvn test` in `easyapply-backend`. If broken — update tests, re-run until green.
+- Run `mvn test` in `applikon-backend`. If broken — update tests, re-run until green.
 - Run `mvn compile` to confirm compilation.
 - Only then mark the phase complete.
 
@@ -469,9 +469,9 @@ some nice-to-have (Object[] → projection).
    - magic bytes, path traversal, URL validation, null status, stage history
 
 **Files to Open:**
-- `src/test/java/com/easyapply/service/CVServiceTest.java` — CV tests
-- `src/test/java/com/easyapply/service/ApplicationServiceTest.java` — app tests
-- `src/test/java/com/easyapply/controller/ApplicationControllerTest.java` — controller tests
+- `src/test/java/com/applikon/service/CVServiceTest.java` — CV tests
+- `src/test/java/com/applikon/service/ApplicationServiceTest.java` — app tests
+- `src/test/java/com/applikon/controller/ApplicationControllerTest.java` — controller tests
 - `src/test/resources/application-test.properties` — test config
 
 **CR Related:** none new, add tests for fixes from phases 2-4.

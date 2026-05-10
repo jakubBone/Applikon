@@ -1,4 +1,4 @@
-# Retention & Hygiene Implementation Plan — EasyApply Backend
+# Retention & Hygiene Implementation Plan — Applikon Backend
 
 ## Work Process (applicable to each phase)
 
@@ -65,7 +65,7 @@ which is significant overhead.
 - [ ] For each such user calls `userService.deleteAccount(userId)` (same method as `DELETE /me` — guarantees identical deletion flow)
 - [ ] Logging: only count of deleted accounts (`log.info("Retention job removed {} inactive accounts", count)`) — **no** emails/IDs of deleted users
 
-**File:** `EasyApplyApplication.java`
+**File:** `ApplikonApplication.java`
 
 - [ ] Add `@EnableScheduling` annotation to main class (if not already there)
 
@@ -166,7 +166,7 @@ logged out. **Acceptable** (one-time inconvenience for < 10 users at this point)
 
 **Tasks:**
 
-- [ ] Review all `log.info/warn/error/debug` in `main/java/com/easyapply/**`
+- [ ] Review all `log.info/warn/error/debug` in `main/java/com/applikon/**`
 - [ ] Each user logging should identify only by `userId` (UUID)
 - [ ] No logging contains raw token (neither access nor refresh)
 - [ ] Consider `spring.jpa.show-sql=false` for `prod` profile (or filter SQL via Logback pattern)
@@ -254,11 +254,11 @@ Security + restriction to logged-in users is sufficient. Deferring.
 | `service/AccountRetentionService.java` | **new** | `@Scheduled` cron removing inactive accounts |
 | `security/TokenHasher.java` | **new** | SHA-256 util (or method in `JwtService`) |
 | `repository/UserRepository.java` | modify | `findInactiveUsers(threshold)` |
-| `EasyApplyApplication.java` | modify | `@EnableScheduling` |
+| `ApplikonApplication.java` | modify | `@EnableScheduling` |
 | `application.properties` | modify | `app.retention.inactive-months=12`, `spring.jpa.show-sql=false` for prod |
 | `test/service/AccountRetentionServiceTest.java` | **new** | Retention tests |
 | `test/service/UserServiceTest.java` | modify | Refresh token hashing tests |
-| Review `log.*` in `main/java/com/easyapply/**` | modify | Remove PII from logs |
+| Review `log.*` in `main/java/com/applikon/**` | modify | Remove PII from logs |
 | `README.md` | modify | "Privacy & Data" section |
 | `spec/README.md` | modify | Phase 07 row |
 | `spec/v1/as-built.md` | modify | New endpoints, DB fields, frontend, scheduled jobs |

@@ -1,8 +1,8 @@
-# Frontend Learning Plan — EasyApply
+# Frontend Learning Plan — Applikon
 
 ## Document Context
 
-This document is a learning guide for Jakub — author of EasyApply.
+This document is a learning guide for Jakub — author of Applikon.
 Jakub is a backend developer (Java/Spring) who wrote this application with Claude Code help.
 He wants to understand how frontend works at basic level.
 
@@ -10,7 +10,7 @@ He wants to understand how frontend works at basic level.
 
 ---
 
-## Project: EasyApply
+## Project: Applikon
 
 **What It Does:** Job application tracker for job seekers.
 User logs in via Google, adds job applications, tracks recruitment stages
@@ -20,7 +20,7 @@ on Kanban board, manages CVs and notes. Badge system gamifies job search.
 - **Backend:** Java 21, Spring Boot, Spring Security, OAuth2 + JWT (RS256), PostgreSQL, Flyway, Docker
 - **Frontend:** React 18, TypeScript (strict), Vite, React Query (TanStack), React Router, Cypress
 
-**Frontend Directory Structure (`easyapply-frontend/src/`):**
+**Frontend Directory Structure (`applikon-frontend/src/`):**
 ```
 App.tsx                          — app root, routing, providers
 AppContent.tsx                   — main dashboard layout (per CR: consider renaming to DashboardLayout)
@@ -116,7 +116,7 @@ Each code change must go through this process. Don't skip steps.
 ```
 
 **End of phase (not after every fix):**
-- Run `npm test` (Vitest) in `easyapply-frontend`. If broken — update tests, re-run until green.
+- Run `npm test` (Vitest) in `applikon-frontend`. If broken — update tests, re-run until green.
 - Run `npm run build` to confirm TypeScript compiles.
 - Only then mark the phase complete.
 
@@ -202,10 +202,10 @@ Source: `spec/v1/03-review/code-review-mvp.md` (reviewer: DR & AI)
 - Overview of `src/` directory structure
 
 **Files to Open:**
-- `easyapply-frontend/package.json` — dependencies (like pom.xml)
-- `easyapply-frontend/vite.config.ts` — build config
-- `easyapply-frontend/src/main.tsx` — entry point
-- `easyapply-frontend/src/App.tsx` — app root
+- `applikon-frontend/package.json` — dependencies (like pom.xml)
+- `applikon-frontend/vite.config.ts` — build config
+- `applikon-frontend/src/main.tsx` — entry point
+- `applikon-frontend/src/App.tsx` — app root
 
 **CR Related:** none on this phase.
 
@@ -364,7 +364,7 @@ Source: `spec/v1/03-review/code-review-mvp.md` (reviewer: DR & AI)
 
 **Files to Open:**
 - `src/services/api.ts` — entire API layer
-- (backend) `easyapply-backend/.../controller/` — compare with Spring endpoints
+- (backend) `applikon-backend/.../controller/` — compare with Spring endpoints
 
 **CR Related (to fix in this phase):**
 - **CR-3:** Token contract — backend returns `"token"`, frontend expects `"accessToken"`
@@ -436,7 +436,7 @@ and how `domain.ts` mirrors backend.
 **Files to Open:**
 - `src/types/domain.ts` — all project types
 - `src/services/api.ts` — how types used in fetch
-- `easyapply-frontend/tsconfig.json` — strict mode config
+- `applikon-frontend/tsconfig.json` — strict mode config
 
 **CR Related (to fix in this phase):**
 - **CR-2:** URL validation — `javascript:` XSS through href.

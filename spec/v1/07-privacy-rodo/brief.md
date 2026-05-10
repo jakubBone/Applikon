@@ -1,4 +1,4 @@
-# EasyApply — Phase 07: Privacy & RODO (preparation for publication)
+# Applikon — Phase 07: Privacy & RODO (preparation for publication)
 
 ## 1. Context
 

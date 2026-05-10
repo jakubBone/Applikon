@@ -1,4 +1,6 @@
-# 💼 EasyApply
+# 💼 Applikon
+
+> Aplikuj bez spiny — [aplikujbezspiny.pl](https://aplikujbezspiny.pl)
 
 ![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
@@ -15,17 +17,17 @@
 ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)
 ![Cypress](https://img.shields.io/badge/Cypress-69D3A7?style=flat&logo=cypress&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
-[![CI](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/EasyApply/actions/workflows/ci.yml)
+[![CI](https://github.com/jakubBone/applikon/actions/workflows/ci.yml/badge.svg)](https://github.com/jakubBone/applikon/actions/workflows/ci.yml)
 
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
 ![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
 
-EasyApply is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
+Applikon is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
 
 <div align="center">
 
-[![EasyApply screenshot](.github/assets/app-preview.png)](https://aplikujbezspiny.pl)
+[![Applikon screenshot](.github/assets/app-preview.png)](https://aplikujbezspiny.pl)
 <br>
 
 [![WATCH VIDEO DEMO](https://img.shields.io/badge/%20WATCH%20VIDEO%20DEMO%20(PL)-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=sqIwGYWYn_E)
@@ -91,8 +93,8 @@ Open `http://localhost:3000`. All required variables are documented in `.env.exa
 
 Production images (published to GHCR on every `master` build):
 ```
-ghcr.io/jakubbone/easyapply-backend:latest
-ghcr.io/jakubbone/easyapply-frontend:latest
+ghcr.io/jakubbone/applikon-backend:latest
+ghcr.io/jakubbone/applikon-frontend:latest
 ```
 
 

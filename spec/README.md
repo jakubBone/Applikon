@@ -1,6 +1,6 @@
-# EasyApply — Spec Documentation
+# Applikon — Spec Documentation
 
-This directory contains all specification artifacts for the EasyApply project,
+This directory contains all specification artifacts for the Applikon project,
 organized chronologically by development phase. All implementation was done using
 **Claude Code** (Anthropic's AI CLI) with a spec-first approach: specifications
 were written before code, not after.
@@ -22,6 +22,7 @@ were written before code, not after.
 | Swagger / OpenAPI (phase 11) | `v1/11-swagger/` | Complete |
 | GitHub Actions CI (phase 12) | `v1/12-ci/` | Complete |
 | Docker Registry — GHCR (phase 13) | `v1/13-docker-registry/` | Complete |
+| Brand rename to Applikon (phase 14) | `v1/14-rebrand-applikon/` | Complete |
 | **Architecture reference** | **`v1/architecture.md`** | **Package structure, REST endpoints, DB schema, FE components** |
 | **Security reference** | **`v1/security.md`** | **OAuth2 + JWT flow diagrams, filter chain, headers, CORS** |
 | As-built history | `v1/as-built.md` | Plan vs reality, deviations, phase-by-phase notes |

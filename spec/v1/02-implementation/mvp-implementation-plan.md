@@ -1,4 +1,4 @@
-# EasyApply — MVP Implementation Plan (Updated)
+# Applikon — MVP Implementation Plan (Updated)
 
 ---
 
@@ -12,7 +12,7 @@
    - Generate project: Spring Initializr (Java 21, Spring Boot 3.4, dependencies: Web, Data JPA, PostgreSQL, Validation)
    - Configure `application.properties`:
      ```properties
-     spring.datasource.url=jdbc:postgresql://localhost:5432/easyapply_db
+     spring.datasource.url=jdbc:postgresql://localhost:5432/applikon_db
      spring.datasource.username=postgres
      spring.datasource.password=postgres
      spring.jpa.hibernate.ddl-auto=update
@@ -20,7 +20,7 @@
      spring.servlet.multipart.max-file-size=5MB
      spring.servlet.multipart.max-request-size=5MB
      ```
-   - Create PostgreSQL database: `CREATE DATABASE easyapply_db;`
+   - Create PostgreSQL database: `CREATE DATABASE applikon_db;`
 
 2. **Define Application entity**
    - Create `Application.java` with fields:
@@ -160,7 +160,7 @@ curl "http://localhost:8080/api/applications/check-duplicate?company=Google&posi
 ### Steps:
 
 1. **Create React project with JavaScript**
-   - `npm create vite@latest easyapply-frontend -- --template react`
+   - `npm create vite@latest applikon-frontend -- --template react`
    - Install @dnd-kit: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities`
    - Create `src/services/api.js` with API functions
 
@@ -738,11 +738,11 @@ curl http://localhost:8080/api/statistics/badges
 
 ```bash
 # Terminal 1: Backend
-cd easyapply-backend
+cd applikon-backend
 ./mvnw spring-boot:run
 
 # Terminal 2: Frontend
-cd easyapply-frontend
+cd applikon-frontend
 npm run dev
 
 # Browser: http://localhost:5173
@@ -772,8 +772,8 @@ npm run dev
 ### Backend (Spring Boot 3.4, Java 21)
 
 ```
-easyapply-backend/
-├── src/main/java/com/easyapply/
+applikon-backend/
+├── src/main/java/com/applikon/
 │   ├── controller/
 │   │   ├── ApplicationController.java
 │   │   ├── CVController.java
@@ -814,14 +814,14 @@ easyapply-backend/
 │   │   └── CorsConfig.java
 │   ├── exception/
 │   │   └── GlobalExceptionHandler.java
-│   └── EasyApplyApplication.java
+│   └── ApplikonApplication.java
 └── uploads/cv/  (CV file storage)
 ```
 
 ### Frontend (React 18, Vite)
 
 ```
-easyapply-frontend/
+applikon-frontend/
 ├── src/
 │   ├── App.jsx              (main component, routing, state)
 │   ├── KanbanBoard.jsx      (Kanban board with drag & drop)

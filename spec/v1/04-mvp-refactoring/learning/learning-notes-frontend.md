@@ -1,4 +1,4 @@
-# Frontend Learning Notes — EasyApply
+# Frontend Learning Notes — Applikon
 
 Reference file for learning progress. Each phase = key concepts, Java analogies, important files.
 
@@ -88,16 +88,16 @@ Analogy: single `JFrame` (index.html) with swapped `JPanel`s inside.
 
 ### Key Project Files
 
-**`easyapply-frontend/package.json`**
+**`applikon-frontend/package.json`**
 Equivalent of `pom.xml`. `scripts` section = commands (dev, build, test). `dependencies` = production libraries. `devDependencies` = only during development (Vite, TypeScript, tests).
 
-**`easyapply-frontend/index.html`**
+**`applikon-frontend/index.html`**
 The ONLY HTML file in entire app. Contains empty `<div id="root">` — React injects whole app here. Contains `<script src="main.tsx">` — startup point.
 
-**`easyapply-frontend/src/main.tsx`**
+**`applikon-frontend/src/main.tsx`**
 Equivalent of `public static void main()`. Finds `<div id="root">` and runs React (`createRoot().render()`). `StrictMode` = debug mode (double-calls in dev, no effect on production).
 
-**`easyapply-frontend/src/App.tsx`**
+**`applikon-frontend/src/App.tsx`**
 App root — only routing and Providers, zero business logic. Provider pattern = wrapping components to make something globally available (like `@Bean` in Spring). Routing details in Phase 6, Providers in Phases 5 and 6.
 
 ### Provider Pattern (Preview)
@@ -998,7 +998,7 @@ Suggested question about contradiction (CSRF disable vs SameSite cookie) — fou
     • Generates refresh token (httpOnly cookie, 7 days)
     ↓ Redirects: /auth/callback?token=<JWT>
 6️⃣  AuthCallbackPage.tsx — extracts token from URL
-    • setToken(token) → localStorage.setItem('easyapply_token', token)
+    • setToken(token) → localStorage.setItem('applikon_token', token)
     • navigate('/dashboard')
     ↓
 7️⃣  AuthProvider useEffect — check session on startup
@@ -1039,7 +1039,7 @@ Suggested question about contradiction (CSRF disable vs SameSite cookie) — fou
 | **Sends automatically** | ✅ YES (every request) | ❌ NO (manual `getToken()`) |
 | **JavaScript can read** | ⚠️ Only if not httpOnly | ✅ YES (getItem) |
 | **Security** | httpOnly = unreachable by JS | Vulnerable to XSS (readable by JS) |
-| **EasyApply Usage** | refresh_token (httpOnly ⚠️) | access_token (localStorage) |
+| **Applikon Usage** | refresh_token (httpOnly ⚠️) | access_token (localStorage) |
 
 **Cookie = file stored in browser, sent automatically**
 Browser **itself** sends cookie with every request (unlike `getToken()` which you call manually).
@@ -1106,7 +1106,7 @@ This is **traditional** protection for **server-rendered** apps:
 </form>
 ```
 
-EasyApply is **SPA (React)**, sends **JSON**, not HTML forms:
+Applikon is **SPA (React)**, sends **JSON**, not HTML forms:
 ```typescript
 // React — JSON, not form
 await fetch('/api/applications', {
@@ -1130,12 +1130,12 @@ Works **independently** from CSRF token. Protects refresh_token cookie.
 
 ```
 Without SameSite:
-  evil.com sends request to easyapply.com
+  evil.com sends request to applikon.com
   Browser: "I have refresh_token, sending!"
   Backend: "OK, new access token" 💥 HACKER GETS ACCESS
 
 With SameSite=Strict:
-  evil.com sends request to easyapply.com
+  evil.com sends request to applikon.com
   Browser: "This is from different domain, won't send cookie!"
   Backend: "No cookie, I don't know you" 🚫
 ```
@@ -1356,7 +1356,7 @@ Extracted duplicates to `src/constants/applicationStatus.ts`:
 
 - `src/types/domain.ts` — all project types (interfaces, union types)
 - `src/constants/applicationStatus.ts` — extracted status constants (CR-8)
-- `easyapply-frontend/tsconfig.json` — strict mode
+- `applikon-frontend/tsconfig.json` — strict mode
 
 ---
 

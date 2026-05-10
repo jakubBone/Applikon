@@ -1,6 +1,6 @@
-# EasyApply v1 — As-Built Documentation
+# Applikon v1 — As-Built Documentation
 
-> Generated: 2026-04-23. Describes the actual implemented state of EasyApply v1.
+> Generated: 2026-04-23. Describes the actual implemented state of Applikon v1 (ex. EasyApply)
 > Source of truth: the code. This document reflects what exists, not what was planned.
 >
 > **Architecture reference** (package structure, REST endpoints, DB schema, FE components) moved to `spec/v1/architecture.md`.
@@ -241,7 +241,7 @@ Documented as a separate additional feature (`spec/v1/05-additional-features/log
 
 **Backend:**
 - `GET /api/auth/me/export` in `AuthController` — returns JSON with all user data: profile, all applications (with notes and CV info)
-- Response sent as `Content-Disposition: attachment; filename="easyapply-export.json"` with `Content-Type: application/json`
+- Response sent as `Content-Disposition: attachment; filename="applikon-export.json"` with `Content-Type: application/json`
 
 **Frontend:**
 - Settings page: export section above danger zone — title, description, "Export data" button
@@ -330,7 +330,7 @@ springdoc.swagger-ui.tags-sorter=alpha
 - CSP relaxed from `default-src 'self'` to `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:` — required for Swagger UI inline scripts/styles
 
 **`config/OpenApiConfig.java`** (new file):
-- `@OpenAPIDefinition` — title "EasyApply API", description, version 1.0.0, contact (Jakub Bone)
+- `@OpenAPIDefinition` — title "Applikon API", description, version 1.0.0, contact (Jakub Bone)
 - `@SecurityRequirement(name = "bearerAuth")` — global: all endpoints show padlock in Swagger UI
 - `@SecurityScheme` — HTTP Bearer JWT; adds "Authorize" button to the UI
 
@@ -376,7 +376,7 @@ Two parallel jobs triggered on every push to `master`.
 
 CI badge added to `README.md`. No caching, no artifact publishing — tests are the only signal.
 
-Note: `easyapply-backend/mvnw` required `chmod +x` in the git index (`100644` → `100755`) to run on Linux runners.
+Note: `applikon-backend/mvnw` required `chmod +x` in the git index (`100644` → `100755`) to run on Linux runners.
 
 ---
 
@@ -405,7 +405,68 @@ Follow-up to `spec/post/security-review.md`. Cleanup-only — no behaviour chang
 
 ---
 
-## 11. Not Implemented (from spec)
+## 11. Phase 14 — Brand Rename to Applikon (2026-05-10)
+
+**Status:** complete.
+
+The project was renamed from `EasyApply` to `Applikon` to avoid conflict with
+LinkedIn's "Easy Apply" feature and `applicotrack.com`. Polish identity
+"Aplikuj bez spiny" stays on the `aplikujbezspiny.pl` domain.
+
+### What changed
+
+- **Backend:** module folder `easyapply-backend` → `applikon-backend`; Java
+  package `com.easyapply.*` → `com.applikon.*`; main class
+  `EasyApplyApplication` → `ApplikonApplication`; `pom.xml` (artifactId, name,
+  description); `application.properties` (`spring.application.name`);
+  OpenAPI title; JWT issuer (`easyapply` → `applikon`); JWK keyID;
+  download filename in `AuthController` (`applikon-export.json`).
+  **Note:** `V1__init_schema.sql` was deliberately left untouched — Flyway
+  checksums the full file content (including comments), so editing an
+  already-applied migration breaks startup with a checksum mismatch.
+- **Frontend:** module folder `easyapply-frontend` → `applikon-frontend`;
+  `package.json` and `package-lock.json` (`name`); `index.html` (title, OG
+  meta, description); logo `alt` attributes; localStorage token key
+  (`easyapply_token` → `applikon_token`); export download filename;
+  i18n bundles (`pl/en common.json`, `pl/en tour.json`); privacy policy
+  (PL + EN); test assertions; Cypress support.
+- **Infra:** `docker-compose.yml` services and network; `.env.example`;
+  `.github/workflows/ci.yml` (working-dirs, GHCR image tags);
+  `.claude/commands/mentor-refactor-{backend,frontend}.md`;
+  `.claude/skills/code-review-backend/references/java-conventions.md`.
+- **Docs:** `README.md` (title, tagline, screenshot alt, GHCR refs);
+  `CLAUDE.md`; `SECURITY.md`; full sweep across `spec/v1/**`, `spec/v2/**`,
+  `spec/deployment/**`. The rebrand spec at
+  `spec/v1/14-rebrand-applikon/` is intentionally left with its
+  before/after references for historical context.
+
+### What did NOT change
+
+- Database schema, table, column names — no migration needed.
+- API contract — endpoints, request/response shapes unchanged.
+- Production domain `aplikujbezspiny.pl`.
+- Logo image asset — same briefcase graphic, colours, font, layout. Only
+  the wordmark text in `logo-trim.png` and `logo_white.png` is regenerated
+  separately (filenames preserved so no import paths change).
+- Favicon (`favicon.svg`) — untouched.
+
+### Operational notes
+
+- **JWT issuer change** invalidates all in-flight access tokens on first
+  deploy after rebrand. Acceptable for a portfolio project (15-minute
+  access token expiry).
+- **localStorage key change** (`easyapply_token` → `applikon_token`) means
+  existing browsers will trigger a fresh login after the deploy. Same
+  rationale.
+- **GitHub repo rename** `EasyApply` → `applikon` is performed manually
+  outside the commit; GitHub auto-redirects old URLs.
+- **Docker images** under `ghcr.io/jakubbone/easyapply-{backend,frontend}`
+  remain reachable until next CI build; new pushes go to
+  `ghcr.io/jakubbone/applikon-{backend,frontend}`.
+
+---
+
+## 12. Not Implemented (from spec)
 
 | Item | Source | Notes |
 |------|--------|-------|
@@ -414,7 +475,7 @@ Follow-up to `spec/post/security-review.md`. Cleanup-only — no behaviour chang
 
 ---
 
-## 12. v1 Completion Status
+## 13. v1 Completion Status
 
 ### What is done and working
 

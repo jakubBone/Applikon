@@ -1,4 +1,4 @@
-# EasyApply Privacy Policy
+# Applikon Privacy Policy
 
 This file contains the privacy policy content in two language versions.
 The content is the source for the frontend (`src/content/privacyPolicy.ts`) — when
@@ -23,17 +23,17 @@ Placeholders `{{...}}` should be replaced with concrete values before publicatio
 
 ---
 
-# Polityka prywatności EasyApply
+# Polityka prywatności Applikon
 
 **Obowiązuje od: {{EFFECTIVE_DATE}}**
 
 ## 1. Kim jestem?
 
-Administratorem Twoich danych osobowych w aplikacji **EasyApply** jest
+Administratorem Twoich danych osobowych w aplikacji **Applikon** jest
 Jakub Boniecki, twórca projektu, dostępny pod adresem
 **{{CONTACT_EMAIL}}**.
 
-EasyApply jest darmowym projektem portfolio prezentującym moje umiejętności
+Applikon jest darmowym projektem portfolio prezentującym moje umiejętności
 programistyczne. Nie prowadzę działalności zarobkowej w oparciu o tę
 aplikację ani nie sprzedaję danych.
 
@@ -142,16 +142,16 @@ czas odpowiedzi może wynosić kilka dni.
 
 ---
 
-# EasyApply Privacy Policy
+# Applikon Privacy Policy
 
 **Effective date: {{EFFECTIVE_DATE}}**
 
 ## 1. Who am I?
 
-The data controller for your personal data in the **EasyApply** application
+The data controller for your personal data in the **Applikon** application
 is Jakub Boniecki, the project creator, reachable at **{{CONTACT_EMAIL}}**.
 
-EasyApply is a free portfolio project showcasing my programming skills.
+Applikon is a free portfolio project showcasing my programming skills.
 I do not run a commercial business based on this application, nor do I
 sell any data.
 

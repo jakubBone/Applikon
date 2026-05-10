@@ -1,4 +1,4 @@
-# CV Link-Only Implementation Plan — EasyApply Backend
+# CV Link-Only Implementation Plan — Applikon Backend
 
 ## Work Process (applicable to each phase)
 
@@ -39,7 +39,7 @@ don't break users who already uploaded files.
 
 ### Phase 1 — Block `POST /api/cv/upload` Endpoint
 
-**File:** `easyapply-backend/src/main/java/com/easyapply/controller/CVController.java`
+**File:** `applikon-backend/src/main/java/com/applikon/controller/CVController.java`
 
 - [x] Add throw `ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ...)`
       as first line in `uploadCV` method (before `cvService.uploadCV(...)`)
@@ -70,7 +70,7 @@ public ResponseEntity<CVResponse> uploadCV(
 
 ### Phase 2 — i18n Key for Error Message
 
-**Files:** `easyapply-backend/src/main/resources/messages.properties`,
+**Files:** `applikon-backend/src/main/resources/messages.properties`,
 `messages_pl.properties` (and optionally `messages_en.properties` — per project convention)
 
 - [x] Verify which message files exist and pattern for `error.cv.*` keys (found: `i18n/messages.properties` + `messages_pl.properties`)
@@ -83,7 +83,7 @@ public ResponseEntity<CVResponse> uploadCV(
 
 ### Phase 3 — Update Tests
 
-**File:** `easyapply-backend/src/test/java/com/easyapply/controller/CVControllerTest.java`
+**File:** `applikon-backend/src/test/java/com/applikon/controller/CVControllerTest.java`
 
 - [x] Change upload test (existing `POST /api/cv/upload` happy path):
   - Expected status: `503 Service Unavailable` instead of `201 Created`

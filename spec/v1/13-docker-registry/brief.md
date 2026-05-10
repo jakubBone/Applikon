@@ -1,4 +1,4 @@
-# EasyApply — Phase 13: Docker Registry (GHCR)
+# Applikon — Phase 13: Docker Registry (GHCR)
 
 ## 1. Context
 
@@ -69,7 +69,7 @@ No backend or frontend source code changes.
 Phase 13 is closed when:
 
 1. [ ] Push to `master` triggers the `docker` CI job after `backend` and `frontend` jobs pass
-2. [ ] Two packages appear in GitHub → Packages: `easyapply-backend` and `easyapply-frontend`
+2. [ ] Two packages appear in GitHub → Packages: `applikon-backend` and `applikon-frontend`
 3. [ ] Each image has both `:latest` and `:<short-sha>` tags
 4. [ ] `docker-compose pull` on the server downloads the new images without error
 5. [ ] `docker-compose up -d` starts the application from the pulled images
