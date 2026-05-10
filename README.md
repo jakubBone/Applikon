@@ -37,13 +37,24 @@
 
 ## 🧠 Spec-Driven Development with AI
 
-Built with **Claude Code** using a strict spec-first approach: every phase starts with a written specification, gets reviewed, then moves to implementation. No code was written without a plan first.
+Built with **Claude Code** using a strict spec-first approach. No code was written
+without a plan first; no plan was written without knowing what *not* to do.
 
-![](https://img.shields.io/badge/Vision-3B82F6?style=flat-square) → ![](https://img.shields.io/badge/Spec-8B5CF6?style=flat-square) → ![](https://img.shields.io/badge/Code-F97316?style=flat-square) → ![](https://img.shields.io/badge/Review-EAB308?style=flat-square) → ![](https://img.shields.io/badge/Refactor-22C55E?style=flat-square)
+🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟨 **Review** → 🟩 **Refactor** ↺
+
+*Each phase folder under `spec/v1/` is one full pass of this cycle. The output of Refactor (lessons, deviations) feeds the next phase's Specify.*
+
+|     | Stage          | What it produces                                                                                                              |
+|-----|----------------|-------------------------------------------------------------------------------------------------------------------------------|
+| 🟦  | **Specify**    | Sets up the phase before any code: context, scope, **out of scope**, numbered Definition of Done.                             |
+| 🟪  | **Plan**       | Implementation steps with tests batched at the end of each stage.                                                             |
+| 🟧  | **Implement**  | Code against the plan — each step with tests, DoD, and a Conventional Commit (`feat(backend)`, `refactor(frontend)`).         |
+| 🟨  | **Review**     | Findings classified **Critical / Important / Nice-to-have**, with **Status** and **Tested** columns until each one is closed. |
+| 🟩  | **Refactor**   | Fixes applied alongside learning: explain → fix → control questions → notes (the AI runs in *mentor mode*).                   |
 
 ```
 spec/
-├── v1/                         
+├── v1/
 │   ├── 01-vision/              ← MVP scope
 │   ├── 02-implementation/      ← implementation plan
 │   ├── 03-review/              ← code review
@@ -59,10 +70,32 @@ spec/
 │   ├── 13-docker-registry/     ← Docker & GHCR
 │   ├── 14-rebrand-applikon     ← rebranding EasyApply -> Applikon
 │   ├── architecture.md         ← package structure, REST endpoints, DB schema, FE components
-│   └── as-built.md             ← plan vs reality, deviations, phase history
+│   ├── as-built.md             ← plan vs reality, deviations, phase history
 │   └── security.md             ← security rules, flow
-└── v2/                         
+└── v2/
     └── vision.md               ← microservices + AI features (CV analysis, job matching)
+```
+
+> **`spec/v1/as-built.md`** — plan vs reality: feat deviations, removed entities, etc. The spec never pretends reality matched the plan.
+
+`.claude/` is the Claude Code config directory:
+
+```
+.claude/
+├── commands/
+│   ├── commit-assistant.md                ← propose Conventional Commit
+│   ├── changelog-manager.md               ← automated CHANGELOG.md
+│   ├── mentor-refactor-backend.md         ← backend refactor + learning (**AI mentor mode**)
+│   └── mentor-refactor-frontend.md        ← frontend refactor + learning (**AI mentor mode**)
+└── skills/
+    ├── code-review-backend/               ← Java 21 / Spring Boot 3.4 reviewer
+    │   ├── SKILL.md
+    │   └── references/
+    ├── code-review-frontend/              ← React 19 / TypeScript reviewer
+    │   ├── SKILL.md
+    │   └── references/
+    └── security-auditor/                  ← OWASP Top 10 read-only auditor (no code modifications)
+        └── SKILL.md
 ```
 
 
