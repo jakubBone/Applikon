@@ -42,8 +42,6 @@ without a plan first; no plan was written without knowing what *not* to do.
 
 🟦 **Specify** → 🟪 **Plan** → 🟧 **Implement** → 🟨 **Review** → 🟩 **Refactor** ↺
 
-*Each phase folder under `spec/v1/` is one full pass of this cycle. The output of Refactor (lessons, deviations) feeds the next phase's Specify.*
-
 |     | Stage          | What it produces                                                                                                              |
 |-----|----------------|-------------------------------------------------------------------------------------------------------------------------------|
 | 🟦  | **Specify**    | Sets up the phase before any code: context, scope, **out of scope**, numbered Definition of Done.                             |
@@ -75,8 +73,6 @@ spec/
 └── v2/
     └── vision.md               ← microservices + AI features (CV analysis, job matching)
 ```
-
-> **`spec/v1/as-built.md`** — plan vs reality: feat deviations, removed entities, etc. The spec never pretends reality matched the plan.
 
 `.claude/` is the Claude Code config directory:
 
