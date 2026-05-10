@@ -5,6 +5,11 @@ organized chronologically by development phase. All implementation was done usin
 **Claude Code** (Anthropic's AI CLI) with a spec-first approach: specifications
 were written before code, not after.
 
+> **Naming history:** the project was originally named **EasyApply**. It was
+> renamed to **Applikon** in [Phase 14](v1/14-rebrand-applikon/brief.md) (May 2026) 
+. Earlier spec documents have been updated to use the new brand name for consistency;
+> the rebrand decision and full diff are preserved in Phase 14.
+
 ## V1 — MVP (complete)
 
 | Phase | Directory | Status |

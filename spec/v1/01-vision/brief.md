@@ -1,5 +1,12 @@
 # Applikon – Job Application Tracker
 
+> *Note: this is the **original product vision**, written at the start of the
+> project when it was named **EasyApply**. The product was renamed to
+> **Applikon** in [Phase 14](../14-rebrand-applikon/brief.md) (May 2026) — see
+> that brief for the rationale. The brand name in this document has been
+> updated for consistency, but the vision, problem statement, MVP scope, and
+> tech choices remain as originally written.*
+
 # 1. Problem
 IT candidates apply to a large number of job offers on various job boards and LinkedIn. 
 This process quickly becomes chaotic and difficult to control.
