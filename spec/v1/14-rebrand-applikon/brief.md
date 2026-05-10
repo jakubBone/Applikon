@@ -35,8 +35,15 @@ Full rename split into 4 commit-sized phases plus 1 external step.
   shape, all visual details). The **only** change is the wordmark text:
   `EasyApply` → `Applikon`. Regenerate `logo-trim.png` and `logo_white.png`
   with the new text but identical layout and styling.
-- Tagline placement: "Aplikuj bez spiny" lives on landing / README / OG meta
-  only, **not** inside the authenticated app UI.
+- Tagline placement: lives on landing / README / OG meta, **plus** under
+  the logo on the login page only — **not** in the authenticated app UI
+  (decision revised 2026-05-10). The login page uses two stacked elements:
+  a small uppercase kicker `— APLIKUJ BEZ SPINY! —` with side dashes
+  (gradient brand colors) keyed by `tagline`, then a gray gradient headline
+  `Zarządzaj swoją rekrutacją` (#666 → #555) keyed by `login.headline`.
+  Both keys translate normally between PL and EN — PL: *"Aplikuj bez
+  spiny!"* / *"Zarządzaj swoją rekrutacją"*; EN: *"Apply, no stress!"* /
+  *"Manage your recruitment"*.
 - Database: no schema or table rename.
 - GitHub: rename repo `EasyApply` → `applikon` (auto-redirect handles old links).
 

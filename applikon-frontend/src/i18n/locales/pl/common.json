@@ -50,8 +50,9 @@
       "error": "Nie udało się usunąć konta"
     }
   },
+  "tagline": "Aplikuj bez spiny!",
   "login": {
-    "subtitle": "Zarządzaj swoimi aplikacjami o pracę",
+    "headline": "Zarządzaj swoją rekrutacją",
     "googleBtn": "Zaloguj się przez Google"
   },
   "form": {

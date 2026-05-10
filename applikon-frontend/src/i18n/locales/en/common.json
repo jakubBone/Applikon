@@ -50,8 +50,9 @@
       "error": "Failed to delete account"
     }
   },
+  "tagline": "Apply, no stress!",
   "login": {
-    "subtitle": "Manage your job applications",
+    "headline": "Manage your recruitment",
     "googleBtn": "Sign in with Google"
   },
   "form": {
