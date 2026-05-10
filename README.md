@@ -1,7 +1,5 @@
 # 💼 Applikon
 
-> Aplikuj bez spiny — [aplikujbezspiny.pl](https://aplikujbezspiny.pl)
-
 ![Java](https://img.shields.io/badge/Java-21-007396?style=flat&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4-6DB33F?style=flat&logo=springboot&logoColor=white)
 ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat&logo=springsecurity&logoColor=white)
@@ -23,7 +21,7 @@
 ![Claude Code](https://img.shields.io/badge/Claude_Code-D97706?style=flat&logo=anthropic&logoColor=white)
 ![Spec-Driven](https://img.shields.io/badge/Spec--Driven-1F2937?style=flat)
 
-Applikon is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
+**Applikon** is a job application tracker for IT candidates in Poland. One place for applications, CVs, and interview notes, instead of scattered spreadsheets and expired links. Designed for anyone actively applying to multiple positions at once.
 
 <div align="center">
 
@@ -33,6 +31,8 @@ Applikon is a job application tracker for IT candidates in Poland. One place for
 [![WATCH VIDEO DEMO](https://img.shields.io/badge/%20WATCH%20VIDEO%20DEMO%20(PL)-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=sqIwGYWYn_E)
 [![Full App](https://img.shields.io/badge/▶%20%20OPEN%20FULL%20APPLICATION-22C55E?style=for-the-badge)](https://aplikujbezspiny.pl)
 <br>
+
+> 📌 **Quick note**: This video uses the former name **EasyApply**, now rebranded to **💼 Applikon**.
 </div>
 
 ## 🧠 Spec-Driven Development with AI
@@ -57,8 +57,10 @@ spec/
 │   ├── 11-swagger/             ← API documentation
 │   ├── 12-ci/                  ← GitHub Actions CI
 │   ├── 13-docker-registry/     ← Docker & GHCR
+│   ├── 14-rebrand-applikon     ← rebranding EasyApply -> Applikon
 │   ├── architecture.md         ← package structure, REST endpoints, DB schema, FE components
 │   └── as-built.md             ← plan vs reality, deviations, phase history
+│   └── security.md             ← security rules, flow
 └── v2/                         
     └── vision.md               ← microservices + AI features (CV analysis, job matching)
 ```
