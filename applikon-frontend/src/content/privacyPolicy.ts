@@ -8,7 +8,7 @@ export const privacyPolicyPl = `
 
 ## 1. Kim jestem?
 
-Administratorem Twoich danych osobowych w aplikacji **Applikon** jest Jakub Boniecki, twórca projektu, dostępny pod adresem **${CONTACT_EMAIL}**.
+Administratorem Twoich danych osobowych w aplikacji **Applikon** jest Jakub Bone, twórca projektu, dostępny pod adresem **${CONTACT_EMAIL}**.
 
 Applikon jest darmowym projektem portfolio prezentującym moje umiejętności programistyczne. Nie prowadzę działalności zarobkowej w oparciu o tę aplikację ani nie sprzedaję danych.
 
@@ -96,7 +96,7 @@ export const privacyPolicyEn = `
 
 ## 1. Who am I?
 
-The data controller for your personal data in the **Applikon** application is Jakub Boniecki, the project creator, reachable at **${CONTACT_EMAIL}**.
+The data controller for your personal data in the **Applikon** application is Jakub Bone, the project creator, reachable at **${CONTACT_EMAIL}**.
 
 Applikon is a free portfolio project showcasing my programming skills. I do not run a commercial business based on this application, nor do I sell any data.
 
