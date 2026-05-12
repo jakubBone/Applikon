@@ -197,6 +197,22 @@ public class UserService {
 
         applicationRepository.save(demo);
 
+        noteRepository.save(new Note(
+                """
+                Recruiter: Sarah Mitchell
+                Email: s.mitchell@google.com
+                LinkedIn: https://linkedin.com/in/sarah-mitchell-recruiter
+                """.strip(),
+                demo,
+                NoteCategory.OTHER
+        ));
+
+        noteRepository.save(new Note(
+                "First interview scheduled for next Thursday, 10:00 AM",
+                demo,
+                NoteCategory.OTHER
+        ));
+
         log.info("Demo application created for user {}", user.getId());
     }
 }
