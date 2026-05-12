@@ -756,6 +756,9 @@
     padding: 0.5rem 0.5rem 0.75rem;
     background: #f5f7fa;
     flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
   }
 
   .scroll-indicator span {
