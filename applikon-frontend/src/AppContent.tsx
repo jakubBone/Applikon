@@ -204,16 +204,20 @@ export default function AppContent() {
               {t('nav.cv')}
             </button>
           </div>
-          <button data-cy="add-application-btn" className="add-btn" onClick={() => setShowForm(!showForm)}>
-            {showForm ? t('app.close') : t('app.addApplication')}
-          </button>
+          {view !== 'cv' && (
+            <button data-cy="add-application-btn" className="add-btn" onClick={() => setShowForm(!showForm)}>
+              {showForm ? t('app.close') : t('app.addApplication')}
+            </button>
+          )}
         </div>
       )}
 
       {/* Floating Action Button (Mobile only) */}
-      <button className="fab" onClick={() => setShowForm(!showForm)}>
-        {showForm ? '✕' : '+'}
-      </button>
+      {view !== 'cv' && (
+        <button className="fab" onClick={() => setShowForm(!showForm)}>
+          <span aria-hidden="true">{showForm ? '✕' : '+'}</span>
+        </button>
+      )}
 
       {showForm && (
         <ApplicationForm mode="create" onClose={() => setShowForm(false)} />
