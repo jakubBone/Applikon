@@ -588,6 +588,7 @@ html, body {
 
 @media (max-width: 768px) {
   .app {
+    min-height: unset;
     height: 100vh;
     height: 100svh;
     overflow: hidden;
