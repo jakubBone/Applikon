@@ -42,6 +42,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (cvSheetOpen) { setCvSheetOpen(false); return }
         if (showAddModal) setShowAddModal(false)
         if (showAssignModal) setShowAssignModal(false)
         if (showEditModal) setShowEditModal(false)
@@ -49,7 +50,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
     }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
-  }, [showAddModal, showAssignModal, showEditModal])
+  }, [cvSheetOpen, showAddModal, showAssignModal, showEditModal])
 
   const groupedCVs = {
     FILE: cvList.filter(cv => cv.type === 'FILE' || !cv.type),
@@ -214,7 +215,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
 
   const handleSelectCv = (cv: CV) => {
     setSelectedCv(cv)
-    if (isMobile()) setCvSheetOpen(true)
+    setCvSheetOpen(true)
   }
 
   const renderCVItem = (cv: CV) => {
@@ -374,9 +375,6 @@ function CVManager({ applications, onCVAssigned }: Props) {
             {renderGroup(t('cv.groupLocal'), '💻', groupedCVs.NOTE, 'NOTE')}
           </div>
 
-          <div className="cv-details-panel cv-details-panel--desktop">
-            {selectedCv ? renderCVDetails(selectedCv) : null}
-          </div>
         </div>
       )}
 
@@ -455,23 +453,6 @@ function CVManager({ applications, onCVAssigned }: Props) {
                   <span className="form-hint">{t('cv.linkHint')}</span>
                 </div>
               )}
-
-              <div className="privacy-info">
-                <span className="privacy-icon">💡</span>
-                <div>
-                  {linkFormData.type === 'LINK' ? (
-                    <>
-                      <strong>{t('cv.cloudInfoTitle')}</strong>
-                      <p>{t('cv.cloudInfoDesc')}</p>
-                    </>
-                  ) : (
-                    <>
-                      <strong>{t('cv.localInfoTitle')}</strong>
-                      <p>{t('cv.localInfoDesc')}</p>
-                    </>
-                  )}
-                </div>
-              </div>
 
               <div className="modal-actions">
                 <button type="button" onClick={closeAddModal}>{t('cv.cancel')}</button>
