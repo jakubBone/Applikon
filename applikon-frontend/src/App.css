@@ -594,10 +594,16 @@ html, body {
   }
 
   .main-content {
+    flex: 1;
+    min-height: 0; /* allows flex child to shrink so footer stays visible */
     padding: 0;
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .footer {
+    flex-shrink: 0;
   }
 }
 
@@ -764,6 +770,13 @@ html, body {
   }
 }
 
+.details-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
 .back-btn {
   display: inline-flex;
   align-items: center;
@@ -776,7 +789,6 @@ html, body {
   cursor: pointer;
   padding: 0.45rem 0.9rem 0.45rem 0.75rem;
   border-radius: 20px;
-  margin-bottom: 1.25rem;
   transition: background 0.2s, border-color 0.2s;
 }
 
@@ -786,6 +798,31 @@ html, body {
 }
 
 .back-btn:hover {
+  background: #e4eaff;
+  border-color: #667eea;
+}
+
+.change-status-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f0f4ff;
+  border: 1px solid #d0d8ff;
+  color: #667eea;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.45rem 0.75rem 0.45rem 0.9rem;
+  border-radius: 20px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.change-status-btn::after {
+  content: '→';
+  font-size: 0.85rem;
+}
+
+.change-status-btn:hover {
   background: #e4eaff;
   border-color: #667eea;
 }

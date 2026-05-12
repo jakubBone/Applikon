@@ -26,11 +26,9 @@ interface KanbanBoardProps {
   onStatusChange: (id: number, status: string) => void
   onStageChange: (id: number, data: StageUpdateRequest) => void
   onCardClick: (app: Application) => void
-  onCardEdit: (app: Application) => void
-  onCardDelete: (id: number) => void
 }
 
-function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageChange, onCardClick, onCardEdit, onCardDelete }: KanbanBoardProps) {
+function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageChange, onCardClick }: KanbanBoardProps) {
   const { t } = useTranslation()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [stageModalOpen, setStageModalOpen] = useState(false)
@@ -269,22 +267,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
 
   return (
     <>
-      {/* Mobile: Navigation buttons */}
-      {isMobile() && (
-        <div className="kanban-nav">
-          {STATUSES.map((status, idx) => (
-            <button
-              key={status.id}
-              className={`kanban-nav-btn ${activeColumn === idx ? 'active' : ''}`}
-              onClick={() => scrollToColumn(idx)}
-            >
-              <span className="count">{getApplicationsByStatus(status.id).length}</span>
-              {t(status.labelKey)}
-            </button>
-          ))}
-        </div>
-      )}
-
       <div className="kanban-board-container">
         <DndContext
           sensors={sensors}
@@ -307,8 +289,6 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
                     onClick={onCardClick}
                     onStageChange={onStageChange}
                     onLongPress={handleLongPress}
-                    onEdit={onCardEdit}
-                    onDelete={onCardDelete}
                   />
                 ))}
               </KanbanColumn>
@@ -322,15 +302,16 @@ function KanbanBoard({ applications, onStatusChange: _onStatusChange, onStageCha
           </DragOverlay>
         </DndContext>
 
-        {/* Mobile: Scroll indicators */}
-        {isMobile() && (
-          <div className="scroll-indicator">
-            {STATUSES.map((_, idx) => (
-              <span key={idx} className={activeColumn === idx ? 'active' : ''}></span>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Mobile: Scroll indicators — outside container so overflow-x:hidden doesn't hide it */}
+      {isMobile() && (
+        <div className="scroll-indicator">
+          {STATUSES.map((_, idx) => (
+            <span key={idx} className={activeColumn === idx ? 'active' : ''}></span>
+          ))}
+        </div>
+      )}
 
       {/* Mobile: Swipe hint */}
       {showSwipeHint && (

@@ -11,18 +11,14 @@ export interface ApplicationCardProps {
   onClick: (app: Application) => void
   onStageChange: (id: number, data: StageUpdateRequest) => void
   onLongPress: (app: Application) => void
-  onEdit: (app: Application) => void
-  onDelete: (id: number) => void
 }
 
-export function ApplicationCard({ application, isDragging, onClick, onStageChange, onLongPress, onEdit, onDelete }: ApplicationCardProps) {
+export function ApplicationCard({ application, isDragging, onClick, onStageChange, onLongPress }: ApplicationCardProps) {
   const { t, i18n } = useTranslation()
   const [showStageDropdown, setShowStageDropdown] = useState(false)
   const [customStageInput, setCustomStageInput] = useState('')
   const [isLifting, setIsLifting] = useState(false)
   const [showHint, setShowHint] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const pressTimerRef = useRef<number | null>(null)
   const touchMovedRef = useRef<boolean>(false)
@@ -41,14 +37,6 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showStageDropdown])
-
-  // Close context menu on outside click
-  useEffect(() => {
-    if (!showMenu) return
-    const close = () => setShowMenu(false)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [showMenu])
 
   const {
     attributes,
@@ -157,31 +145,6 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
             {isRejected && <span className="card-icon rejected">✗</span>}
             <h4>{application.company}</h4>
           </div>
-          <div
-            className="card-menu-wrapper"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span
-              className="card-menu-icon"
-              onClick={(e) => { e.stopPropagation(); setShowMenu(m => !m) }}
-            >⋮</span>
-            {showMenu && (
-              <div className="context-menu">
-                <button
-                  className="context-menu-item"
-                  onClick={() => { setShowMenu(false); onEdit(application) }}
-                >
-                  {t('details.edit')}
-                </button>
-                <button
-                  className="context-menu-item danger"
-                  onClick={() => { setShowMenu(false); setShowDeleteConfirm(true) }}
-                >
-                  {t('table.delete')}
-                </button>
-              </div>
-            )}
-          </div>
         </div>
         <p className="card-position">{application.position}</p>
 
@@ -262,23 +225,6 @@ export function ApplicationCard({ application, isDragging, onClick, onStageChang
         </div>
       </div>
 
-      {showDeleteConfirm && (
-        <div className="confirm-modal-overlay">
-          <div className="confirm-modal">
-            <h3>{t('table.confirmDeleteTitle')}</h3>
-            <p>{t('table.confirmDeleteMsg', { count: 1 })}</p>
-            <p className="confirm-warning">{t('table.confirmDeleteWarning')}</p>
-            <div className="confirm-actions">
-              <button className="confirm-btn cancel" onClick={() => setShowDeleteConfirm(false)}>
-                {t('table.cancel')}
-              </button>
-              <button className="confirm-btn delete" onClick={() => { setShowDeleteConfirm(false); onDelete(application.id) }}>
-                {t('table.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }

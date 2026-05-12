@@ -44,7 +44,7 @@
     min-height: unset;
   }
 
-  /* Hide scrollbar but keep functionality */
+  /* Hide browser scrollbar — navigation via dots below */
   .kanban-board::-webkit-scrollbar {
     display: none;
   }
@@ -54,11 +54,11 @@
     scrollbar-width: none;
   }
 
-  /* Peek preview - show 15% of next column */
+  /* Peek preview - show ~18% of next column */
   .kanban-column {
-    min-width: 85vw;
-    max-width: 85vw;
-    scroll-snap-align: center;
+    min-width: 82vw;
+    max-width: 82vw;
+    scroll-snap-align: start;
     flex-shrink: 0;
   }
 
@@ -754,10 +754,8 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.5rem 0.5rem 0.75rem;
-    position: sticky;
-    bottom: 0;
     background: #f5f7fa;
-    z-index: 10;
+    flex-shrink: 0;
   }
 
   .scroll-indicator span {

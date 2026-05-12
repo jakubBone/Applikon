@@ -227,15 +227,19 @@ export default function AppContent() {
         {isLoading ? (
           <p className="loading">{t('app.loading')}</p>
         ) : view === 'details' && selectedApp ? (
-          <ApplicationDetails application={selectedApp} onBack={handleBackToList} onDelete={handleDeleteSingle} />
+          <ApplicationDetails
+            application={selectedApp}
+            onBack={handleBackToList}
+            onDelete={handleDeleteSingle}
+            onStageChange={handleStageChange}
+            applications={applications}
+          />
         ) : view === 'kanban' ? (
           <KanbanBoard
             applications={applications}
             onStatusChange={handleStatusChange}
             onStageChange={handleStageChange}
             onCardClick={handleViewDetails}
-            onCardEdit={handleEditApplication}
-            onCardDelete={handleDeleteSingle}
           />
         ) : view === 'cv' ? (
           <CVManager
@@ -248,7 +252,6 @@ export default function AppContent() {
             onRowClick={handleViewDetails}
             onStatusChange={handleStatusChange}
             onDelete={handleDeleteApplications}
-            onEdit={handleEditApplication}
           />
         )}
       </main>

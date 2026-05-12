@@ -6,6 +6,7 @@ import {
   downloadCV
 } from '../../services/api'
 import { isSafeUrl } from '../../utils/urlValidator'
+import { isMobile } from '../kanban/types'
 import { useCVs, useCreateCV, useUpdateCV, useDeleteCV } from '../../hooks/useCV'
 import type { Application, CV, CVType } from '../../types/domain'
 
@@ -23,6 +24,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
   const deleteCVMutation = useDeleteCV()
 
   const [selectedCv, setSelectedCv] = useState<CV | null>(null)
+  const [cvSheetOpen, setCvSheetOpen] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [linkFormData, setLinkFormData] = useState<{ name: string; externalUrl: string; type: CVType }>({ name: '', externalUrl: '', type: 'LINK' })
   const [showAssignModal, setShowAssignModal] = useState(false)
@@ -210,6 +212,11 @@ function CVManager({ applications, onCVAssigned }: Props) {
     setLinkFormData({ name: '', externalUrl: '', type: 'LINK' })
   }
 
+  const handleSelectCv = (cv: CV) => {
+    setSelectedCv(cv)
+    if (isMobile()) setCvSheetOpen(true)
+  }
+
   const renderCVItem = (cv: CV) => {
     const usageCount = getUsageCount(cv.id)
     const typeClass = cv.type === 'LINK' ? 'type-link' : cv.type === 'NOTE' ? 'type-note' : 'type-file'
@@ -218,7 +225,7 @@ function CVManager({ applications, onCVAssigned }: Props) {
       <div
         key={cv.id}
         className={`cv-item ${typeClass} ${selectedCv?.id === cv.id ? 'selected' : ''}`}
-        onClick={() => setSelectedCv(cv)}
+        onClick={() => handleSelectCv(cv)}
       >
         <div className="cv-item-content">
           <div className="cv-item-name">{cv.originalFileName}</div>
@@ -233,6 +240,99 @@ function CVManager({ applications, onCVAssigned }: Props) {
       </div>
     )
   }
+
+  const renderCVDetails = (cv: CV) => (
+    <>
+      <div className="cv-details-header">
+        <h3>{cv.originalFileName}</h3>
+      </div>
+
+      <div className="cv-details-info">
+        <div className="cv-detail-row">
+          <span className="cv-detail-label">{t('cv.detailType')}</span>
+          <span className="cv-detail-value">
+            {cv.type === 'FILE' || !cv.type ? t('cv.detailTypePdf') :
+             cv.type === 'LINK' ? t('cv.detailTypeLink') : t('cv.detailTypeLocal')}
+          </span>
+        </div>
+        {(cv.type === 'FILE' || !cv.type) && cv.fileSize && (
+          <div className="cv-detail-row">
+            <span className="cv-detail-label">{t('cv.detailSize')}</span>
+            <span className="cv-detail-value">{formatSize(cv.fileSize)}</span>
+          </div>
+        )}
+        {cv.type === 'LINK' && cv.externalUrl && (
+          <div className="cv-detail-row">
+            <span className="cv-detail-label">{t('cv.detailLink')}</span>
+            <span className="cv-detail-value cv-link">{cv.externalUrl}</span>
+          </div>
+        )}
+        <div className="cv-detail-row">
+          <span className="cv-detail-label">{t('cv.detailAdded')}</span>
+          <span className="cv-detail-value">{formatDate(cv.uploadedAt)}</span>
+        </div>
+      </div>
+
+      <div className="cv-details-actions">
+        {(cv.type === 'FILE' || !cv.type) && (
+          <button className="cv-action-btn primary" onClick={() => handleOpen(cv)}>
+            {t('cv.download')}
+          </button>
+        )}
+        {cv.type === 'LINK' && cv.externalUrl && (
+          <button className="cv-action-btn primary" onClick={() => handleOpen(cv)}>
+            {t('cv.openLink')}
+          </button>
+        )}
+        {cv.type !== 'FILE' && cv.type && (
+          <button className="cv-action-btn secondary" onClick={handleEditClick}>
+            {t('notes.edit')}
+          </button>
+        )}
+        <button className="cv-action-btn danger" onClick={() => handleDelete(cv.id)}>
+          {t('cv.delete')}
+        </button>
+      </div>
+
+      <div className="cv-assignments-section">
+        <div className="cv-assignments-header">
+          <h4>{t('cv.assignHeader', { count: getAssignedApps(cv.id).length })}</h4>
+          <button
+            className="assign-btn"
+            onClick={() => {
+              setSelectedAppForAssign(null)
+              setShowAssignModal(true)
+              setCvSheetOpen(false)
+            }}
+          >
+            {t('cv.assign')}
+          </button>
+        </div>
+
+        {getAssignedApps(cv.id).length === 0 ? (
+          <p className="no-assignments">{t('cv.unassigned')}</p>
+        ) : (
+          <div className="cv-assignments-list">
+            {getAssignedApps(cv.id).map(app => (
+              <div key={app.id} className="cv-assignment-item">
+                <div className="assignment-info">
+                  <div className="assignment-company">{app.company}</div>
+                  <div className="assignment-position">{app.position}</div>
+                </div>
+                <button
+                  className="remove-btn"
+                  onClick={() => handleRemoveAssignment(app.id)}
+                  title={t('cv.removeAssignment')}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  )
 
   const renderGroup = (title: string, icon: string, items: CV[], type: string) => {
     if (items.length === 0) return null
@@ -274,103 +374,18 @@ function CVManager({ applications, onCVAssigned }: Props) {
             {renderGroup(t('cv.groupLocal'), '💻', groupedCVs.NOTE, 'NOTE')}
           </div>
 
-          <div className="cv-details-panel">
-            {selectedCv ? (
-              <>
-                <div className="cv-details-header">
-                  <h3>{selectedCv.originalFileName}</h3>
-                </div>
+          <div className="cv-details-panel cv-details-panel--desktop">
+            {selectedCv ? renderCVDetails(selectedCv) : null}
+          </div>
+        </div>
+      )}
 
-                <div className="cv-details-info">
-                  <div className="cv-detail-row">
-                    <span className="cv-detail-label">{t('cv.detailType')}</span>
-                    <span className="cv-detail-value">
-                      {selectedCv.type === 'FILE' || !selectedCv.type ? t('cv.detailTypePdf') :
-                       selectedCv.type === 'LINK' ? t('cv.detailTypeLink') : t('cv.detailTypeLocal')}
-                    </span>
-                  </div>
-                  {(selectedCv.type === 'FILE' || !selectedCv.type) && selectedCv.fileSize && (
-                    <div className="cv-detail-row">
-                      <span className="cv-detail-label">{t('cv.detailSize')}</span>
-                      <span className="cv-detail-value">{formatSize(selectedCv.fileSize)}</span>
-                    </div>
-                  )}
-                  {selectedCv.type === 'LINK' && selectedCv.externalUrl && (
-                    <div className="cv-detail-row">
-                      <span className="cv-detail-label">{t('cv.detailLink')}</span>
-                      <span className="cv-detail-value cv-link">{selectedCv.externalUrl}</span>
-                    </div>
-                  )}
-                  <div className="cv-detail-row">
-                    <span className="cv-detail-label">{t('cv.detailAdded')}</span>
-                    <span className="cv-detail-value">{formatDate(selectedCv.uploadedAt)}</span>
-                  </div>
-                </div>
-
-                <div className="cv-details-actions">
-                  {(selectedCv.type === 'FILE' || !selectedCv.type) && (
-                    <button className="cv-action-btn primary" onClick={() => handleOpen(selectedCv)}>
-                      {t('cv.download')}
-                    </button>
-                  )}
-                  {selectedCv.type === 'LINK' && selectedCv.externalUrl && (
-                    <button className="cv-action-btn primary" onClick={() => handleOpen(selectedCv)}>
-                      {t('cv.openLink')}
-                    </button>
-                  )}
-                  {selectedCv.type !== 'FILE' && selectedCv.type && (
-                    <button className="cv-action-btn secondary" onClick={handleEditClick}>
-                      {t('notes.edit')}
-                    </button>
-                  )}
-                  <button className="cv-action-btn danger" onClick={() => handleDelete(selectedCv.id)}>
-                    {t('cv.delete')}
-                  </button>
-                </div>
-
-                <div className="cv-assignments-section">
-                  <div className="cv-assignments-header">
-                    <h4>{t('cv.assignHeader', { count: getAssignedApps(selectedCv.id).length })}</h4>
-                    <button
-                      className="assign-btn"
-                      onClick={() => {
-                        setSelectedAppForAssign(null)
-                        setShowAssignModal(true)
-                      }}
-                    >
-                      {t('cv.assign')}
-                    </button>
-                  </div>
-
-                  {getAssignedApps(selectedCv.id).length === 0 ? (
-                    <p className="no-assignments">{t('cv.unassigned')}</p>
-                  ) : (
-                    <div className="cv-assignments-list">
-                      {getAssignedApps(selectedCv.id).map(app => (
-                        <div key={app.id} className="cv-assignment-item">
-                          <div className="assignment-info">
-                            <div className="assignment-company">{app.company}</div>
-                            <div className="assignment-position">{app.position}</div>
-                          </div>
-                          <button
-                            className="remove-btn"
-                            onClick={() => handleRemoveAssignment(app.id)}
-                            title={t('cv.removeAssignment')}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="cv-details-empty">
-                <div className="empty-icon">👈</div>
-                <p>{t('cv.selectHint')}</p>
-              </div>
-            )}
+      {/* Mobile: CV detail bottom sheet */}
+      {cvSheetOpen && selectedCv && (
+        <div className="cv-sheet-overlay" onClick={() => setCvSheetOpen(false)}>
+          <div className="cv-sheet-content" onClick={e => e.stopPropagation()}>
+            <button className="cv-sheet-close" onClick={() => setCvSheetOpen(false)}>✕</button>
+            {renderCVDetails(selectedCv)}
           </div>
         </div>
       )}
