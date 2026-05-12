@@ -3,14 +3,15 @@ package com.applikon.dto;
 import com.applikon.entity.Note;
 import com.applikon.entity.NoteCategory;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 public record NoteResponse(
         Long id,
         String content,
         NoteCategory category,
         Long applicationId,
-        LocalDateTime createdAt) {
+        Instant createdAt) {
 
     public static NoteResponse fromEntity(Note note) {
         return new NoteResponse(
@@ -18,7 +19,7 @@ public record NoteResponse(
                 note.getContent(),
                 note.getCategory(),
                 note.getApplication().getId(),
-                note.getCreatedAt()
+                note.getCreatedAt().toInstant(ZoneOffset.UTC)
         );
     }
 }
