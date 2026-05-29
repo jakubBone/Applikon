@@ -3,6 +3,12 @@
 Job application tracker for Polish IT candidates.
 Stack: Java 21 / Spring Boot 3.4 (backend) · React 19 / TypeScript / Vite (frontend) · PostgreSQL · Docker Compose.
 
+## Secret handling
+- Never open or print `.env`, `.env.*`, private keys, tokens, OAuth secrets, or production credentials.
+- Use environment variable names only.
+- Update `.env.example`, never `.env`.
+- Do not include secrets in logs, commits, tests, docs, or changelog.
+
 ## Commands
 
 **Backend** (`applikon-backend/`):
