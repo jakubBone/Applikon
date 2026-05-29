@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import './LandingPage.css'
 
-const PORTALS = ['LinkedIn', 'NoFluffJobs', 'JustJoin.it', 'Pracuj.pl', 'Bulldogjob', 'Rocket Jobs', 'Solid.jobs', 'TheProtocol.it']
+const PORTALS = ['LinkedIn', 'NoFluffJobs', 'JustJoin.it', 'Pracuj.pl', 'Bulldogjob', 'Rocket Jobs', 'Solid.jobs', 'TheProtocol']
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
