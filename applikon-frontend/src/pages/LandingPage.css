@@ -91,7 +91,7 @@
 .lp-hero {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 5rem 2.5rem 4rem;
+  padding: 6rem 2.5rem 5rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
@@ -147,11 +147,23 @@
 
 .lp-portal {
   display: inline-block;
-  font-weight: 800;
+  font-weight: 400;
   color: white;
-  text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.45);
-  text-underline-offset: 2px;
+}
+
+.lp-portal-name {
+  font-weight: 800;
+  position: relative;
+}
+
+.lp-portal-name::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .lp-cta-group {
@@ -192,8 +204,7 @@
 }
 
 .lp-trust a {
-  display: block;
-  margin-top: 0.2rem;
+  display: inline;
   color: white;
   text-decoration: underline;
   text-decoration-color: rgba(255, 255, 255, 0.5);
@@ -338,7 +349,7 @@
 .lp-features {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 4rem 2.5rem;
+  padding: 6rem 2.5rem;
 }
 
 .lp-features h2 {
@@ -347,6 +358,10 @@
   font-weight: 800;
   color: #1a1a2e;
   margin-bottom: 2rem;
+}
+
+.lp-feature-card.lp-feat-mobile-only {
+  display: none;
 }
 
 .lp-features-grid {
@@ -393,7 +408,7 @@
 .lp-why {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2.5rem 4rem;
+  padding: 0 2.5rem 6rem;
 }
 
 .lp-why h2 {
@@ -444,7 +459,7 @@
 /* ── FOOTER CTA ── */
 .lp-footer-cta {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 4rem 2.5rem;
+  padding: 6rem 2.5rem;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -494,7 +509,7 @@
 /* ── MOBILE ── */
 @media (max-width: 768px) {
   .lp-nav {
-    padding: 0.85rem 1.25rem;
+    padding: 0.85rem 1.5rem;
   }
 
   .lp-nav-privacy {
@@ -503,12 +518,16 @@
 
   .lp-hero {
     grid-template-columns: 1fr;
-    padding: 3rem 1.5rem 2rem;
-    gap: 2.5rem;
+    padding: 4rem 1.5rem 3rem;
+    gap: 3.5rem;
   }
 
   .lp-headline {
-    font-size: 2.1rem;
+    font-size: 2rem;
+  }
+
+  .lp-subtitle {
+    font-size: 1.05rem;
   }
 
   .lp-preview-img {
@@ -521,23 +540,65 @@
   }
 
   .lp-features {
-    padding: 3rem 1.25rem;
+    padding: 4.5rem 1.5rem;
+  }
+
+  .lp-features h2,
+  .lp-why h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
   .lp-features-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .lp-feat-desktop-only {
+    display: none;
+  }
+
+  .lp-feat-mobile-hide {
+    display: none;
+  }
+
+  .lp-feature-card.lp-feat-mobile-only {
+    display: flex;
+  }
+
+  .lp-feature-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .lp-feature-card p {
+    font-size: 0.93rem;
+    line-height: 1.7;
   }
 
   .lp-why {
-    padding: 0 1.25rem 3rem;
+    padding: 0 1.5rem 4.5rem;
   }
 
   .lp-why-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .lp-why-card {
+    padding: 1.25rem;
+  }
+
+  .lp-why-card p {
+    font-size: 0.9rem;
+    line-height: 1.65;
   }
 
   .lp-footer-cta {
-    padding: 3rem 1.25rem;
+    padding: 4.5rem 1.5rem;
+  }
+
+  .lp-footer-cta h2 {
+    font-size: 1.4rem;
   }
 
   .lp-footer-btn {

@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import './LandingPage.css'
 
-const PORTALS = ['LinkedIn', 'NoFluffJobs', 'JustJoin.it', 'Pracuj.pl', 'Bulldogjob', 'Rocket Jobs']
+const PORTALS = ['LinkedIn', 'NoFluffJobs', 'JustJoin.it', 'Pracuj.pl', 'Bulldogjob', 'Rocket Jobs', 'Solid.jobs', 'TheProtocol.it']
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20">
@@ -59,25 +59,25 @@ export function LandingPage() {
         <div className="lp-hero-blob lp-hero-blob-2" />
         <section className="lp-hero">
           <div className="lp-hero-text">
-            <span className="lp-badge">✦ {t('landing.badge')}</span>
             <h1 className="lp-headline">
               {t('landing.headline1')}<br />
               <span className="lp-headline-accent">{t('landing.headline2')}</span>
             </h1>
             <p className="lp-subtitle">
               {t('landing.subtitlePart1')}{' '}
-              <span
-                className="lp-portal"
-                style={{
-                  opacity: portalVisible ? 1 : 0,
-                  transform: portalVisible ? 'translateY(0)' : 'translateY(-8px)',
-                  transition: 'opacity 0.2s ease, transform 0.2s ease',
-                }}
-              >
-                {PORTALS[portalIndex]}
+              <span style={{ whiteSpace: 'nowrap' }}>
+                {t('landing.subtitlePart1b')}{' '}
+                <span
+                  className="lp-portal"
+                  style={{
+                    opacity: portalVisible ? 1 : 0,
+                    transform: portalVisible ? 'translateY(0)' : 'translateY(-8px)',
+                    transition: 'opacity 0.2s ease, transform 0.2s ease',
+                  }}
+                >
+                  <span className="lp-portal-name">{PORTALS[portalIndex]}</span>
+                </span>
               </span>
-              <br />
-              {t('landing.subtitlePart2')}{' '}{t('landing.subtitlePart3')}
               <br />
               <strong>Applikon</strong>{' '}{t('landing.subtitlePart4')}
             </p>
@@ -170,22 +170,27 @@ export function LandingPage() {
             <h3>{t('landing.feat2Title')}</h3>
             <p>{t('landing.feat2Desc')}</p>
           </div>
-          <div className="lp-feature-card">
+          <div className="lp-feature-card lp-feat-mobile-hide">
             <span className="lp-feat-icon">📝</span>
             <h3>{t('landing.feat3Title')}</h3>
             <p>{t('landing.feat3Desc')}</p>
           </div>
-          <div className="lp-feature-card">
+          <div className="lp-feature-card lp-feat-mobile-hide">
             <span className="lp-feat-icon">👤</span>
             <h3>{t('landing.feat4Title')}</h3>
             <p>{t('landing.feat4Desc')}</p>
           </div>
-          <div className="lp-feature-card">
+          <div className="lp-feature-card lp-feat-mobile-only">
+            <span className="lp-feat-icon">📝</span>
+            <h3>{t('landing.feat34Title')}</h3>
+            <p>{t('landing.feat34Desc')}</p>
+          </div>
+          <div className="lp-feature-card lp-feat-desktop-only">
             <span className="lp-feat-icon">📂</span>
             <h3>{t('landing.feat5Title')}</h3>
             <p>{t('landing.feat5Desc')}</p>
           </div>
-          <div className="lp-feature-card">
+          <div className="lp-feature-card lp-feat-desktop-only">
             <span className="lp-feat-icon">🔗</span>
             <h3>{t('landing.feat6Title')}</h3>
             <p>{t('landing.feat6Desc')}</p>
@@ -211,7 +216,7 @@ export function LandingPage() {
               <p>{t('landing.why2Desc')}</p>
             </div>
           </div>
-          <div className="lp-why-card">
+          <div className="lp-why-card lp-feat-desktop-only">
             <span className="lp-why-icon">📱</span>
             <div>
               <h3>{t('landing.why3Title')}</h3>
