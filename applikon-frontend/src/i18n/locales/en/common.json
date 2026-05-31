@@ -252,7 +252,7 @@
     "why1Title": "You don't leave me your password",
     "why1Desc": "The entire process happens on Google's servers - I only receive confirmation that the user is verified.",
     "why2Title": "What do I store?",
-    "why2Desc": "Only your email, name and Google ID. No passwords, no tokens.",
+    "why2Desc": "Only your email, name and Google ID. No passwords.",
     "why3Title": "Your 2FA works automatically",
     "why3Desc": "Have 2FA on Google? You're protecting Applikon too - no extra setup needed.",
     "why4Title": "Full access control",

@@ -254,7 +254,7 @@
     "why1Title": "Nie zostawiasz mi hasła",
     "why1Desc": "Całość odbywa się na serwerach Google - dostaję tylko potwierdzenie, że użytkownik jest zweryfikowany.",
     "why2Title": "Co przechowuję?",
-    "why2Desc": "Tylko Twój email, imię i identyfikator Google. Zero haseł, zero tokenów.",
+    "why2Desc": "Tylko Twój email, imię i identyfikator Google. Zero haseł.",
     "why3Title": "Twoje 2FA działa automatycznie",
     "why3Desc": "Masz 2FA w Google? Chronisz też Applikon - bez żadnej dodatkowej konfiguracji.",
     "why4Title": "Pełna kontrola dostępu",
