@@ -173,6 +173,7 @@
   margin-top: 0.25rem;
 }
 
+
 .lp-google-btn {
   display: inline-flex;
   align-items: center;
@@ -532,6 +533,10 @@
 
   .lp-preview-img {
     max-height: 280px;
+  }
+
+  .lp-badge {
+    display: none;
   }
 
   .lp-google-btn {
