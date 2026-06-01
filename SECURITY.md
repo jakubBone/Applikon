@@ -6,7 +6,7 @@ If you discover a security vulnerability in Applikon, please report it **private
 
 **Preferred channel:** [GitHub Security Advisories](https://github.com/jakubBone/applikon/security/advisories/new) — private, encrypted, and lets us track the fix and credit you.
 
-**Fallback:** jakub.bone1990@gmail.com
+**Fallback:** applikon1990@gmail.com
 
 Please include:
 
