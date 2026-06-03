@@ -150,6 +150,28 @@ export function LandingPage() {
         </section>
       </div>
 
+      {/* FOR WHOM */}
+      <section className="lp-forwhom">
+        <h2>{t('landing.forWhomTitle')}</h2>
+        <div className="lp-forwhom-grid">
+          <div className="lp-forwhom-card">
+            <span className="lp-forwhom-icon">👨‍💻</span>
+            <h3>{t('landing.forWhom1Title')}</h3>
+            <p>{t('landing.forWhom1Desc')}</p>
+          </div>
+          <div className="lp-forwhom-card">
+            <span className="lp-forwhom-icon">📊</span>
+            <h3>{t('landing.forWhom2Title')}</h3>
+            <p>{t('landing.forWhom2Desc')}</p>
+          </div>
+          <div className="lp-forwhom-card">
+            <span className="lp-forwhom-icon">🔄</span>
+            <h3>{t('landing.forWhom3Title')}</h3>
+            <p>{t('landing.forWhom3Desc')}</p>
+          </div>
+        </div>
+      </section>
+
       {/* FEATURES */}
       <section className="lp-features">
         <h2>{t('landing.featuresTitle')}</h2>
