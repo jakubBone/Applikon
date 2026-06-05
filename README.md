@@ -164,7 +164,7 @@ docker compose up --build
 
 Open `http://localhost:3000`.
 
-Production images (published to GHCR on every `master` build):
+Production images (published to GHCR on every `main` build):
 ```
 ghcr.io/jakubbone/applikon-backend:latest
 ghcr.io/jakubbone/applikon-frontend:latest

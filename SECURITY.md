@@ -19,7 +19,7 @@ I aim to acknowledge reports within **72 hours** and provide an initial assessme
 
 ## Supported Versions
 
-Only the `master` branch is actively maintained.
+Only the `main` branch is actively maintained.
 
 ## Disclosure
 
