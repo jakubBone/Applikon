@@ -1,7 +1,7 @@
 # Applikon Privacy Policy
 
 This file contains the privacy policy content in two language versions.
-The content is the source for the frontend (`src/content/privacyPolicy.ts`) — when
+The content is the source for the frontend (`src/content/privacyPolicy.ts`) - when
 updating, we update both places.
 
 Placeholders `{{...}}` should be replaced with concrete values before publication.
@@ -53,28 +53,28 @@ Zbieram minimalny zakres danych niezbędnych do działania aplikacji:
 - Notatki dołączone do aplikacji
 
 **Czego NIE zbieram:**
-- **Plików CV** — od wersji 07 aplikacja nie przyjmuje uploadu plików.
+- **Plików CV** - od wersji 07 aplikacja nie przyjmuje uploadu plików.
   Możesz jedynie wkleić link do CV hostowanego na własnym koncie
   (Google Drive, Dropbox itp.). Treść Twojego CV nigdy nie trafia na mój serwer.
 - Danych o lokalizacji, zachowaniu, reklamowych cookies, trackerów.
 
 ## 3. Po co mi te dane?
 
-- **Adres email i identyfikator Google** — do zalogowania Cię i rozpoznania
+- **Adres email i identyfikator Google** - do zalogowania Cię i rozpoznania
   przy kolejnych wizytach
-- **Imię** — żeby wyświetlić powitanie i spersonalizować interfejs
-- **Dane o Twoich aplikacjach o pracę** — bo to jest główna funkcja
+- **Imię** - żeby wyświetlić powitanie i spersonalizować interfejs
+- **Dane o Twoich aplikacjach o pracę** - bo to jest główna funkcja
   aplikacji: tracker procesu rekrutacyjnego
 
-**Podstawa prawna:** art. 6 ust. 1 lit. b RODO — wykonanie umowy (świadczenie
+**Podstawa prawna:** art. 6 ust. 1 lit. b RODO - wykonanie umowy (świadczenie
 usługi na Twoją prośbę, po zaakceptowaniu niniejszej polityki).
 
 ## 4. Jak długo przechowuję Twoje dane?
 
-- **Dopóki korzystasz z konta** — dopóki się logujesz i dodajesz dane
-- **Maksymalnie 12 miesięcy od ostatniej aktywności** — konta nieaktywne
+- **Dopóki korzystasz z konta** - dopóki się logujesz i dodajesz dane
+- **Maksymalnie 12 miesięcy od ostatniej aktywności** - konta nieaktywne
   dłużej niż rok są automatycznie usuwane (wraz ze wszystkimi Twoimi danymi)
-- **Natychmiast po usunięciu konta** — jeśli sam usuniesz konto w ustawieniach,
+- **Natychmiast po usunięciu konta** - jeśli sam usuniesz konto w ustawieniach,
   wszystkie Twoje dane znikają z bazy i z dysku w ciągu kilku sekund
 
 ## 5. Komu przekazuję Twoje dane?
@@ -84,7 +84,7 @@ usługi na Twoją prośbę, po zaakceptowaniu niniejszej polityki).
 Nie sprzedaję, nie udostępniam ani nie przekazuję danych osobom trzecim
 w celach marketingowych ani żadnych innych.
 
-Logowanie obsługuje Google (OAuth 2.0) — przy pierwszym logowaniu
+Logowanie obsługuje Google (OAuth 2.0) - przy pierwszym logowaniu
 Google przekazuje mi Twój email i imię. Poza tym nie ma innych integracji
 z zewnętrznymi serwisami.
 
@@ -92,20 +92,20 @@ z zewnętrznymi serwisami.
 
 Zgodnie z RODO masz prawo do:
 
-- **Dostępu do danych** — możesz zobaczyć co o Tobie przechowuję (przez UI aplikacji lub na prośbę mailową)
-- **Sprostowania** — jeśli któreś dane są nieprawidłowe (imię, email — aktualizuj je w profilu Google)
-- **Usunięcia** ("prawo do bycia zapomnianym") — jednym kliknięciem w ustawieniach aplikacji
-- **Ograniczenia przetwarzania** — możesz poprosić, żebym przestał wykorzystywać Twoje dane
-- **Wniesienia sprzeciwu** — możesz sprzeciwić się przetwarzaniu
-- **Przenoszenia danych** — na prośbę mailową mogę wyeksportować Twoje dane w formacie JSON
-- **Cofnięcia zgody** — możesz cofnąć zgodę w każdej chwili (skutkuje usunięciem konta)
-- **Wniesienia skargi do organu nadzorczego** — Prezes Urzędu Ochrony Danych Osobowych (UODO), ul. Stawki 2, 00-193 Warszawa
+- **Dostępu do danych** - możesz zobaczyć co o Tobie przechowuję (przez UI aplikacji lub na prośbę mailową)
+- **Sprostowania** - jeśli któreś dane są nieprawidłowe (imię, email - aktualizuj je w profilu Google)
+- **Usunięcia** ("prawo do bycia zapomnianym") - jednym kliknięciem w ustawieniach aplikacji
+- **Ograniczenia przetwarzania** - możesz poprosić, żebym przestał wykorzystywać Twoje dane
+- **Wniesienia sprzeciwu** - możesz sprzeciwić się przetwarzaniu
+- **Przenoszenia danych** - na prośbę mailową mogę wyeksportować Twoje dane w formacie JSON
+- **Cofnięcia zgody** - możesz cofnąć zgodę w każdej chwili (skutkuje usunięciem konta)
+- **Wniesienia skargi do organu nadzorczego** - Prezes Urzędu Ochrony Danych Osobowych (UODO), ul. Stawki 2, 00-193 Warszawa
 
 ## 7. Ciasteczka (cookies)
 
 Aplikacja używa **wyłącznie cookies technicznych** niezbędnych do działania:
 
-- `refresh_token` (httpOnly, secure) — utrzymuje Twoją sesję między wizytami
+- `refresh_token` (httpOnly, secure) - utrzymuje Twoją sesję między wizytami
 
 **Nie używam** żadnych cookies marketingowych, analitycznych, reklamowych
 ani trackerów zewnętrznych (Google Analytics, Facebook Pixel, itd.).
@@ -113,13 +113,21 @@ ani trackerów zewnętrznych (Google Analytics, Facebook Pixel, itd.).
 ## 8. Bezpieczeństwo
 
 - Komunikacja między Twoją przeglądarką a serwerem odbywa się przez HTTPS
-- Hasła nie są przechowywane — logujesz się przez Google (OAuth 2.0)
+- Hasła nie są przechowywane - logujesz się przez Google (OAuth 2.0).
+  Świadoma decyzja architektoniczna: bezpieczniejsza dla Ciebie i dla mnie.
+  Dla Ciebie: Twoje hasło nigdy nie trafia na mój serwer - uwierzytelnienie
+  obsługuje Google, nie ja. Dla mnie: nie buduję własnego systemu logowania
+  (reset hasła przez email, ochrona przed atakami) - jeśli baza danych
+  wycieknie, nie ma w niej haseł - mniejsza odpowiedzialność po stronie RODO.
+  Co jest w bazie: identyfikator Google (publiczne ID, nie można się nim
+  zalogować) oraz token sesji przechowywany jako hash (HmacSHA256) -
+  z hasha nie można odtworzyć oryginalnego tokena.
 - Tokeny sesyjne są trzymane w cookies httpOnly (niedostępne dla JavaScriptu)
 - Baza danych jest zabezpieczona przed dostępem z zewnątrz
 
 **Ważne:** ta aplikacja to projekt portfolio, nie produkt komercyjny.
 Nie mogę zagwarantować poziomu zabezpieczeń na poziomie banku. Jeśli
-rozważasz dodanie bardzo wrażliwych danych — zastanów się, czy rozsądnie
+rozważasz dodanie bardzo wrażliwych danych - zastanów się, czy rozsądnie
 powierzać je projektowi hobbystycznemu.
 
 ## 9. Zmiany polityki
@@ -133,7 +141,7 @@ przy następnym logowaniu.
 W sprawach związanych z danymi osobowymi pisz na:
 **{{CONTACT_EMAIL}}**
 
-Odpowiadam w miarę możliwości — to nie jest komercyjny projekt, więc
+Odpowiadam w miarę możliwości - to nie jest komercyjny projekt, więc
 czas odpowiedzi może wynosić kilka dni.
 
 ---
@@ -170,27 +178,27 @@ I collect the minimum data necessary for the application to work:
 - Notes attached to applications
 
 **What I do NOT collect:**
-- **CV files** — since version 07, the application does not accept file uploads.
+- **CV files** - since version 07, the application does not accept file uploads.
   You can only paste a link to a CV hosted on your own account
   (Google Drive, Dropbox, etc.). The contents of your CV never reach my server.
 - Location data, behavioral tracking, advertising cookies.
 
 ## 3. Why do I need this data?
 
-- **Email and Google ID** — to log you in and recognize you on subsequent visits
-- **Name** — to display a greeting and personalize the interface
-- **Job application data** — because that is the main function of the app:
+- **Email and Google ID** - to log you in and recognize you on subsequent visits
+- **Name** - to display a greeting and personalize the interface
+- **Job application data** - because that is the main function of the app:
   a recruitment process tracker
 
-**Legal basis:** GDPR Article 6(1)(b) — performance of a contract (providing
+**Legal basis:** GDPR Article 6(1)(b) - performance of a contract (providing
 the service at your request, after you accept this policy).
 
 ## 4. How long do I keep your data?
 
-- **As long as you use your account** — while you log in and add data
-- **Maximum 12 months from last activity** — accounts inactive for over
+- **As long as you use your account** - while you log in and add data
+- **Maximum 12 months from last activity** - accounts inactive for over
   a year are automatically deleted (together with all your data)
-- **Immediately after account deletion** — if you delete your account in
+- **Immediately after account deletion** - if you delete your account in
   settings, all your data is removed from the database and disk within seconds
 
 ## 5. Who do I share your data with?
@@ -200,7 +208,7 @@ the service at your request, after you accept this policy).
 I do not sell, share, or transfer data to third parties for marketing or
 any other purposes.
 
-Authentication is handled by Google (OAuth 2.0) — on first login, Google
+Authentication is handled by Google (OAuth 2.0) - on first login, Google
 provides me with your email and name. There are no other integrations
 with external services.
 
@@ -208,20 +216,20 @@ with external services.
 
 Under GDPR you have the right to:
 
-- **Access your data** — see what I store about you (via the application UI or upon email request)
-- **Rectification** — correct inaccurate data (name, email — update in your Google profile)
-- **Erasure** ("right to be forgotten") — one click in application settings
-- **Restrict processing** — ask me to stop using your data
+- **Access your data** - see what I store about you (via the application UI or upon email request)
+- **Rectification** - correct inaccurate data (name, email - update in your Google profile)
+- **Erasure** ("right to be forgotten") - one click in application settings
+- **Restrict processing** - ask me to stop using your data
 - **Object to processing**
-- **Data portability** — upon email request, I can export your data in JSON format
-- **Withdraw consent** — at any time (this results in account deletion)
-- **Lodge a complaint with a supervisory authority** — the Polish Data Protection Authority (UODO), ul. Stawki 2, 00-193 Warsaw, Poland
+- **Data portability** - upon email request, I can export your data in JSON format
+- **Withdraw consent** - at any time (this results in account deletion)
+- **Lodge a complaint with a supervisory authority** - the Polish Data Protection Authority (UODO), ul. Stawki 2, 00-193 Warsaw, Poland
 
 ## 7. Cookies
 
 The application uses **only technical cookies** necessary for operation:
 
-- `refresh_token` (httpOnly, secure) — maintains your session between visits
+- `refresh_token` (httpOnly, secure) - maintains your session between visits
 
 **I do not use** any marketing, analytics, advertising cookies, or external
 trackers (Google Analytics, Facebook Pixel, etc.).
@@ -229,7 +237,15 @@ trackers (Google Analytics, Facebook Pixel, etc.).
 ## 8. Security
 
 - Communication between your browser and the server uses HTTPS
-- No passwords are stored — you log in via Google (OAuth 2.0)
+- No passwords are stored - you log in via Google (OAuth 2.0).
+  A deliberate architectural choice: safer for both you and me.
+  For you: your password never reaches my server - authentication is handled
+  by Google, not me. For me: I don't build my own login system
+  (email-based password reset, protection against attacks) - if the database
+  leaks, there are no passwords in it - less liability under GDPR.
+  What is in the database: a Google identifier (public ID, cannot be used
+  to log in) and a session token stored as a hash (HmacSHA256) -
+  the original token cannot be recovered from the hash.
 - Session tokens are kept in httpOnly cookies (inaccessible to JavaScript)
 - The database is protected from external access
 
@@ -248,7 +264,7 @@ A significant change will trigger a new acceptance screen on your next login.
 For matters related to personal data, write to:
 **{{CONTACT_EMAIL}}**
 
-I respond when I can — this is not a commercial project, so response times
+I respond when I can - this is not a commercial project, so response times
 may be a few days.
 
 ---
