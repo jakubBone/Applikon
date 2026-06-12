@@ -1,672 +1,387 @@
-# Applikon v2 – Event-Driven Architecture
+# Applikon v2 — AI-Assisted Recruitment Companion
 
-> **Status:** Architectural vision document. This is a speculative design artifact,
-> not an implementation plan. Detailed specifications (brief.md, implementation-plan.md)
-> will be added when v2 work begins.
+> **Status:** Architectural vision document, agreed 2026-06-12.
+> Supersedes the previous v2 vision (4 microservices: core + notification + AI + analytics).
+> This is the basis for detailed specs (brief.md, implementation plans) when v2 work begins.
 
 ---
 
 # 1. Problem
 
-The v1 application is a monolith — all functionality (application tracking, CV management, notes) runs in a single process.
+v1 is a working, deployed monolith: application tracking, Kanban, notes, CVs, auth,
+RODO compliance, CI. It records what the user does — but it does not help them
+*get through* the recruitment process.
 
-**Current problems:**
-- When you add a new application, sending an email to the user blocks the main process
-- Generating recruitment questions would be time-consuming and freeze the interface
-- No ability to scale individual features independently
-- Adding new functionality requires modifying the entire monolith
+**v2 has two goals, in this order:**
 
-**New possibilities:**
-- Email notifications can be sent asynchronously (user doesn't wait)
-- Generating recruitment questions and company descriptions can happen in the background
-- If AI Service goes down, the application still works (separate process)
-- Easy to add new events and services that handle them
+1. **Real user value:** support the candidate at every moment of the actual
+   recruitment journey — not with features that look good in a demo, but with
+   features that answer "when does the user actually need this?"
+2. **Architecture as a portfolio story:** demonstrate modern backend skills
+   (modular architecture, event-driven design, Kafka, a second JVM framework,
+   LLM integration) **without overengineering**. The story is the *evolution*:
+   monolith → modular monolith → one deliberately extracted worker. Every
+   architectural element must be justified by a concrete feature.
 
-**Effect:** Application becomes more responsive, expansion is easier, system is more fault-tolerant.
+**Guiding principles (decided up front):**
+
+- A feature appears at the moment the user needs it — nothing generated "in advance".
+- AI costs must be **zero** (free API tiers only).
+- Not every feature needs AI. The most useful view in v2 (the screening cheat
+  sheet) uses none.
+- Reality of the Polish job-board market is binding: candidates apply through
+  job boards (no contact e-mail → no follow-ups), and most companies never
+  respond (response-based statistics carry no signal).
 
 ---
 
 # 2. User
 
-Same as v1: Polish IT candidates applying to 10-20 jobs per month (juniors, mid-level).
+Same as v1: Polish IT candidates (junior/mid) applying to 10–20 jobs per month,
+almost exclusively **through job boards** (pracuj.pl, justjoin.it, nofluffjobs).
 
-New expectations:
-- Wants **immediate confirmation** that application was added (without waiting for email)
-- Wants to receive **emails about application status changes**
-- Wants to receive **recruitment questions** and **brief company description** before the interview
-- All of these should happen **automatically, without their intervention**
+What their process actually looks like:
 
----
+1. They apply through a job board. They state their salary expectation in the
+   board's form (their own proposal — not data from the ad).
+2. **An HR recruiter may call unexpectedly** for a short screening — "what do
+   you know about our company?", "what are your expectations?", "notice period?".
+3. Or HR writes to schedule a short call — same content, minus the surprise.
+4. If screening passes, a **technical interview** follows.
+5. After the interview they note down the questions they were asked.
+6. Most applications end in silence. Boards fill up with dead cards.
 
-# 3. Why This Architecture?
-
-**Event-driven instead of synchronous (request-response):**
-- When a user adds an application, the monolith immediately returns "Added!" 
-- At the same time, it sends an `application.added` event to Kafka
-- Notification Service listens for this event and sends email in the background
-- AI Service listens for this event and generates questions in the background
-- User doesn't wait for anything beyond adding the application to the database
-
-**Microservices instead of a single monolith:**
-- Notification Service can be restarted/scaled independently
-- AI Service can use Python + ML libraries instead of Java
-- Each service has one clear responsibility (Single Responsibility Principle)
-
-**Kafka as the message broker:**
-- Services don't need to know about each other
-- Events can be processed at any pace
-- If Notification Service goes down, events wait in Kafka and process when the service restarts
-
-**Practical benefits:**
-- Fast responsiveness for the user
-- Easy expansion (add a new service, listen for an event)
-- Easier testing (test each service independently)
-- Scaling: if emails are slow, you scale Notification Service without affecting the rest
+v2 maps one feature to each of these moments.
 
 ---
 
-# 4. Target System
+# 3. Features
 
-Four components communicating through Kafka:
+## 3.1 Company brief (automatic, AI)
 
-## 1. Monolith (Core Service)
+**Moment:** right after adding an application — because the HR call can come
+at any time.
 
-**Current Applikon application extended with event publishing.**
+- Triggered by the `ApplicationAdded` event; generated asynchronously in the
+  background.
+- Content: what the company does, product, scale, known tech, ending with a
+  ready 3–4 sentence answer to *"what do you know about our company?"* and a
+  short *"why this company may interest you"* hook.
+- Generated in the user's language (PL/EN — i18n exists in v1).
+- **Grounded via web search** (Google Search grounding built into the Gemini
+  API). Without grounding the model hallucinates facts about small local
+  companies; with it the brief is based on real search results.
+- Frontend shows status `pending → processing → completed / failed`, with a
+  "regenerate" action on failure.
 
-Responsibilities:
-- User management and authentication (JWT)
-- Application CRUD (add, edit, delete, view)
-- Kanban board for status management
-- Interview notes
-- CV file management
-- **NEW:** Publishing events to Kafka
+## 3.2 Technical interview prep pack (on demand, AI)
 
-Events it publishes (sends to Kafka):
-- `application.added` — when user adds a new application
-- `application.status.changed` — when user changes status
-- `application.deleted` — when user deletes application
-- `cv.uploaded` — when user uploads a CV
+**Moment:** the user reached the technical stage. Never generated automatically —
+most applications never get this far, and pre-generating would burn LLM quota
+on content nobody reads.
 
-Events it consumes (listens for):
-- *(at this stage, none)*
+- Triggered by a button in application details; the UI also suggests it when a
+  card moves to `IN_PROGRESS`.
+- Input: the job ad text already archived in v1 (`jobDescription`) + position.
+- Output, three sections:
+  - **Technical questions** derived from the ad's requirements,
+  - **Questions worth asking the recruiter**,
+  - **"What to brush up"** — topics to refresh before the interview.
+- Explicitly **no generic HR/soft questions** — those belong to the screening
+  cheat sheet (3.3), where the answers are the user's own.
 
-How it works (flow):
-```
-1. User in interface: "Add new application to Google"
-2. Frontend sends POST /applications
-3. Core Service:
-   - Saves application to PostgreSQL database
-   - Returns JSON response to user (fast!)
-   - Publishes event `application.added` to Kafka
-4. Kafka stores the event
-5. Notification Service and AI Service listen for this event...
-```
+## 3.3 Screening cheat sheet (no AI)
 
----
+**Moment:** the unexpected HR call (or the scheduled HR screening — same content,
+different element of surprise).
 
-## 2. Notification Microservice (Notification Service)
+Two parts:
 
-**Sending emails to the user.**
+**a) "My answers" — global, per user, written by the user.**
+A page with a template of standard screening questions, each with a text field:
+tell me about yourself · why are you changing jobs · salary expectations ·
+notice period / availability · remote/hybrid preference · English level.
+The app's value here is the **template itself** — juniors often don't know what
+screening questions to expect. AI generates nothing: experience and motivation
+are the user's own.
 
-Responsibilities:
-- Listening for events from Kafka
-- Sending emails to the user
-- Email templates (HTML)
+**b) "Cheat sheet" view — per application, pure composition.**
+One screen in application details that assembles three things that already exist:
 
-Events it consumes:
-- `application.added` → Email: "You added a new application to [company]"
-- `application.status.changed` → Email: "Application status changed to [new status]"
-- `application.deleted` → Email: "You deleted application to [company]"
+1. the **company brief** (3.1),
+2. the **salary the user proposed in THIS application** (stored since v1 —
+   three weeks after applying nobody remembers what they typed into the form),
+3. the **global "My answers"** (with an edit link).
 
-Example flow:
-```
-Kafka topic "application.added" contains event:
-{
-  "userId": 123,
-  "applicationId": 456,
-  "companyName": "Google",
-  "position": "Software Engineer",
-  "timestamp": "2026-04-23T10:30:00Z"
-}
+Scenario: recruiter calls out of nowhere → open the application → everything is
+on one screen. The phone call stops being an ambush.
 
-Notification Service:
-1. Reads event from Kafka
-2. Generates email content from template
-3. Sends email to user (e.g. via SendGrid)
-4. Logs the send
-```
+## 3.4 Board cleanup
 
-Meaning: User always knows what's changing in their applications, without opening the app.
+**Moment:** silence. An application sitting in `SENT` for more than ~30 days is
+almost certainly dead.
 
----
+- The UI suggests archiving such applications as `REJECTED` /
+  `NO_RESPONSE` (enum exists since v1) with one click.
+- Keeps the Kanban honest and the board clean.
 
-## 3. AI Microservice (AI Service)
+## 3.5 Question bank (user data + AI on demand)
 
-**Generating recruitment questions and company descriptions.**
+**Moment:** after interviews. v1 already collects notes with the `QUESTIONS`
+category — questions that were *actually asked*.
 
-Responsibilities:
-- Listening for `application.added` events
-- Generating recruitment questions based on position and job description
-- Generating brief company descriptions
-- Storing generated data in AI Service database (or returning to Core Service)
+- Aggregated view of all `QUESTIONS` notes across all applications.
+- Per question, an on-demand "prepare me" action: AI generates a short
+  explanation / study material.
 
-Events it consumes:
-- `application.added` — user added application, now generate questions and description
+## 3.6 Weekly report (no AI)
 
-Example flow:
-```
-Event `application.added`:
-{
-  "companyName": "Google",
-  "position": "Senior Java Developer",
-  "jobDescription": "We are looking for...",
-  "applicationId": 456
-}
+**Moment:** Monday morning, planning the week.
 
-AI Service:
-1. Reads event from Kafka
-2. Extracts keywords from job description (Java, Spring Boot, Kubernetes, etc.)
-3. Generates questions:
-   - "How would you design a system handling 1 million users?"
-   - "Explain containerization and why Google uses it"
-   - "What are the advantages and disadvantages of microservices architecture?"
-   - etc. (10-15 questions)
-4. Generates company description:
-   - "Google — technology company based in Mountain View"
-   - "Specializes in: search engines, cloud (GCP), AI"
-   - "Culture: openness, innovation, high standards"
-5. Stores in AI Service database
-6. (Optional) publishes event `questions.generated` so Core Service knows they're ready
-```
+- Scheduled e-mail: applications sent last week + applications stuck too long
+  (feeding the cleanup suggestion, 3.4).
+- Deliberately thin: **no** response-rate statistics (companies rarely respond —
+  no signal), **no** upcoming-interview section, **no** AI content.
+- This is the only recurring e-mail in the system.
 
-Can this be Python?
-- **Yes!** AI Service can be written in Python (Flask/FastAPI) instead of Java
-- Can use ML, NLP libraries (spaCy, transformers, etc.)
-- Communicates with Kafka (using `confluent-kafka` library for Python)
+## 3.7 MCP server (optional, stage 4)
 
-Meaning: Before an interview, user sees questions they might get, knows about the company.
+An MCP server exposing the user's Applikon data (applications, statuses, notes)
+so it can be queried from an AI assistant: *"which companies did I apply to in
+May and which went silent?"*. No value for the casual user — high value as a
+portfolio demonstration of agent/tool integration.
+
+## Considered and rejected
+
+Kept on record deliberately — each rejection is an architecture/product
+decision worth defending in an interview.
+
+| Idea | Why rejected |
+|------|--------------|
+| 4 separate microservices (previous v2 vision) | Overengineering for this scale; analytics = a cron + SQL query, not a deployment |
+| AI service in Python | The portfolio sells Java skills; AI integration stays in the JVM |
+| Parse the job ad → autofill the form | Parsing is inaccurate; form fields are dropdowns; salary is the user's proposal, not ad data |
+| Skill profile + per-ad matching | Rejected as a feature; not the user's need |
+| Tech radar (aggregated stack stats) | Without ad parsing it has no data source; felt like artificial filler |
+| Follow-up reminders + AI-drafted follow-ups | Job-board reality: there is nobody to write to; you wait |
+| Response-based statistics / insights | Companies rarely respond — too little signal to compute anything honest |
+| Interview-date field + day-before reminder e-mail | The user knows about their interview and prepares anyway; calendars exist |
+| Soft/HR questions in the prep pack | Screening answers must be the user's own (3.3a), not generated |
+| E-mail on every status change | The user changed the status themselves; mail carries no new information |
+| Generated content in reminder/report e-mails | Mail is a nudge; content lives in the app |
 
 ---
 
-## 4. Analytics & Reports Service
+# 4. Architecture — Evolution in Stages
 
-**Weekly application statistics report.**
-
-Responsibilities:
-- Listening for events from Kafka (`application.added`, `application.status.changed`)
-- Collecting statistics throughout the week
-- Generating report every Monday at 9 AM
-- Publishing event `report.generated` to Notification Service
-
-Events it consumes:
-- `application.added` — count new applications
-- `application.status.changed` — track status changes (interviews, rejections)
-
-How it works:
 ```
-Throughout the week (Monday-Sunday):
-- Count how many applications added
-- Count how many applications change status to "INTERVIEW"
-- Count how many applications change status to "REJECTED"
-- Count how many applications wait without changes longer than 14 days (overdue)
+Stage 1                Stage 2                  Stage 3
+Spring Modulith   →    + Spring AI (in-proc) →  + Kafka + Quarkus AI worker
 
-Every Monday at 9:00 AM:
-1. Analytics Service queries the database
-2. Generates report:
-   {
-     "userId": 123,
-     "reportPeriod": "2026-04-20 to 2026-04-26",
-     "newApplications": 8,
-     "interviewsScheduled": 2,
-     "rejections": 3,
-     "agedApplications": 5,
-     "topCompanies": ["Google", "Amazon", "Spotify"],
-     "timestamp": "2026-04-28T09:00:00Z"
-   }
-3. Publishes event `report.generated` to Kafka
-4. Notification Service listens for this event and sends email to user
+Frontend ──► Spring Modulith backend
+             (applications, users, notifications, reports, ai*)
+                │  in-process events, publication registry in Postgres (outbox)
+                │  @Externalized ──► Kafka ◄──┐
+                ▼                             │
+             PostgreSQL              AI Worker (Quarkus + langchain4j)
+                                     * `ai` module extracted in stage 3
 ```
 
-Example email report content:
-```
-📊 Your report from last week (April 20-26)
+Two kinds of events, two scopes: **Spring Modulith events inside the process**,
+**Kafka only across the process boundary**. Final state: **two deployables**,
+not four.
 
-New applications: 8
-Interviews scheduled: 2 🎉
-Rejections: 3
-Waiting for response longer than 2 weeks: 5
+## Stage 1 — Spring Modulith (boundaries without cutting)
 
-Top companies:
-- Google (3 applications)
-- Amazon (2)
-- Spotify (2)
+Restructure the v1 backend into modules: `applications`, `users`,
+`notifications`, `reports`, `ai` (empty shell at first).
 
-Overdue pending: Stripe application waiting since day 22 - maybe worth following up?
-```
+- Inter-module communication via **Spring Modulith application events** with
+  the event publication registry persisted to PostgreSQL — the transactional
+  outbox pattern, for free.
+- `ApplicationModules.verify()` test guards module boundaries.
+- Weekly report = `reports` module + `@Scheduled` + a SQL query. **Not** a
+  separate service.
+- Board cleanup (3.4) and screening cheat sheet (3.3) land here — they need no
+  AI and no new infrastructure.
 
-Events it publishes:
-- `report.generated` — Notification Service sends email with report
+**Done when:** modules verified, events flow through the registry, report mail
+arrives on Monday, cheat sheet and cleanup work end-to-end.
 
-Meaning: User receives a weekly summary of their progress, sees which applications went stale without response.
+## Stage 2 — AI inside the modulith (Spring AI)
+
+The `ai` module implements the company brief (3.1), prep pack (3.2) and
+question-bank study material (3.5) **in-process**, triggered by modulith events
+(brief) or service calls (on-demand features).
+
+- **Spring AI** as the provider abstraction (`ChatModel`): swapping the LLM
+  provider is configuration, not code.
+- Structured output: model responses mapped directly onto Java records.
+- Async processing + `pending/processing/completed/failed` status visible in
+  the frontend.
+- Failure isolation: if the LLM provider is down, everything except AI content
+  keeps working.
+
+**Done when:** adding an application produces a grounded brief in the
+background; prep pack and study material generate on demand; provider can be
+switched between Gemini and Ollama via config.
+
+## Stage 3 — Kafka + extracting ONE worker (Quarkus)
+
+Extract the `ai` module into a standalone **AI Worker: Quarkus +
+quarkus-langchain4j**, communicating over Kafka.
+
+- Modulith events become Kafka messages via `@Externalized` — the stage-1
+  outbox naturally becomes the Kafka producer.
+- **Why the AI module and only it:** different profile — slow (seconds, not
+  milliseconds), dependent on an external API, can crash or lag without
+  affecting the core app, scales independently.
+- **Why notifications stays inside:** extracting it adds a deployment without
+  changing any quality attribute. Knowing how to extract a second service and
+  deliberately not doing it *is* the anti-overengineering argument.
+
+**Done when:** brief and prep pack flow through Kafka to the worker and back;
+killing the worker does not affect the core app; events replay after the worker
+restarts.
+
+## Stage 4 (optional) — MCP server
+
+Expose Applikon data through an MCP server (Spring AI has MCP server support),
+demonstrating agent/tool integration on top of the existing modules.
 
 ---
 
-## 5. Kafka
+# 5. Events
 
-**Event broker between the monolith and microservices.**
+## In-process (Spring Modulith, stages 1–2)
 
-Kafka topics (communication channels):
-- `application.added`
-- `application.status.changed`
-- `application.deleted`
-- `cv.uploaded`
-- `report.generated`
+| Event | Published by | Consumed by |
+|-------|-------------|-------------|
+| `ApplicationAdded` | `applications` | `ai` (brief), `reports` |
+| `ApplicationStatusChanged` | `applications` | `reports` |
+| `WeeklyReportGenerated` | `reports` | `notifications` (sends mail) |
 
-How it works:
-1. Core Service publishes (sends) event to Kafka
-2. Kafka stores event in logs (history can be replayed)
-3. Notification Service reads event from Kafka (even if offline, reads when it restarts)
-4. AI Service reads `application.added` events independently
-5. Analytics Service reads `application.added` and `application.status.changed` events independently
-6. No service waits for any other — everything is asynchronous
+## Externalized to Kafka (stage 3)
 
----
+A single request/result pair with a task-type discriminator — one pattern
+covers all AI features:
 
-# 6. Edge Cases & Details
+| Topic | Message | Notes |
+|-------|---------|-------|
+| `ai.tasks.requested` | `AiTaskRequested { taskId, type: BRIEF \| PREP_PACK \| STUDY_MATERIAL, payload }` | `BRIEF` externalized from `ApplicationAdded`; others published on user demand |
+| `ai.tasks.completed` | `AiTaskCompleted { taskId, result }` / `AiTaskFailed { taskId, error }` | Core service updates task status; frontend polls/refreshes |
 
-**If Notification Service goes down:**
-- Events wait in Kafka
-- When service restarts, it reads events and sends emails (may be delayed)
-- User doesn't lose any notifications
-
-**If AI Service is slow:**
-- Core Service already returned response to user
-- AI Service generates questions in background (may take 10-30 seconds)
-- When questions are ready, they appear in app (page refresh)
-- If AI Service is unavailable for days, questions won't generate — but app still works
-
-**If Analytics Service goes down:**
-- Events wait in Kafka (application.added, application.status.changed)
-- When Analytics Service restarts, it reads events and adds them to statistics
-- Report may be delayed (instead of Monday 9 AM, it'll be Monday 10 AM)
-- User receives report, but delayed
-
-**If Kafka goes down:**
-- System cannot publish new events
-- Can be resent when Kafka restarts (retry logic)
-
-**Duplicates:**
-- If the same event is processed 2x, email sends 2x
-- Solution: add `idempotency key` to events (e.g. event ID), Notification Service checks if already sent
+- At-least-once delivery; consumers idempotent by `taskId`.
+- Failed tasks land in a dead-letter topic for inspection.
 
 ---
 
-# 7. Implementation Phases
+# 6. AI Rules
 
-## Phase 1: Infrastructure & Kafka
-
-| Aspect | Description |
-|--------|------|
-| **Goal** | Run Kafka locally, configure Docker Compose |
-| **Why** | Foundation of system — without Kafka there's no communication between services |
-| **Requirements** | Docker Compose contains: Kafka, PostgreSQL, Redis (optional) |
-| **Success when** | `docker-compose up` runs Kafka without errors |
-
-## Phase 2: Core Service — Event Publishing
-
-| Aspect | Description |
-|--------|------|
-| **Goal** | Extend the monolith to send events to Kafka |
-| **Why** | This is the source of events — everything starts here |
-| **Requirements** | When user adds application, event `application.added` is sent to Kafka; interface still works normally |
-| **Success when** | You add application, see in logs that event reached Kafka |
-
-## Phase 3: Notification Service
-
-| Aspect | Description |
-|--------|------|
-| **Goal** | Build service that listens for events and sends emails |
-| **Why** | Solves problem: user will always know what's changing |
-| **Requirements** | Listens for `application.added`, `application.status.changed`, sends email via SendGrid/Spring Mail |
-| **Success when** | You add application in UI, receive confirmation email |
-
-## Phase 4: AI Service
-
-| Aspect | Description |
-|--------|------|
-| **Goal** | Build service that generates questions and company descriptions |
-| **Why** | Provides user value: interview preparation |
-| **Requirements** | Listens for `application.added`, generates 10-15 questions + description in 30 seconds |
-| **Success when** | You add application, shortly after (page refresh) you see questions and company description |
-
-## Phase 5: Analytics & Reports Service
-
-| Aspect | Description |
-|--------|------|
-| **Goal** | Build service that generates weekly report |
-| **Why** | User sees progress, knows which applications went stale |
-| **Requirements** | Listens for events, every Monday at 9 AM generates report, publishes event `report.generated` |
-| **Success when** | Monday morning you receive email with report (new applications, interviews, rejections, overdue) |
-
-## Phase 6: Integration & Refinement
-
-| Aspect | Description |
-|--------|------|
-| **Goal** | Connect all services, test end-to-end |
-| **Why** | Confidence that system works as a whole |
-| **Requirements** | `docker-compose up` runs all services, adding application -> email -> questions, report every Monday at 9 AM |
-| **Success when** | Entire flow works without errors: user adds application, gets email, sees questions; every Monday gets report; no memory leaks, logs are clear |
+| Rule | Decision |
+|------|----------|
+| Cost | **Zero.** Free API tiers only. The user volume (single-digit users, dozens of calls/day) fits comfortably. |
+| Production model | **Gemini 2.5 Flash** via the Gemini API (free-tier API key from Google AI Studio). The free tier is the same model with daily rate limits, not a weaker one. |
+| Grounding | Google Search grounding built into the Gemini API for the company brief (verify current free-tier daily limits before implementation). |
+| Dev model | **Ollama** locally — for testing the plumbing (events, statuses, retries), not content quality. |
+| Fallback provider | Groq (free tier, open models). Provider swap = config change thanks to the Spring AI / langchain4j abstraction. |
+| Privacy | Only job-ad content (public data) is ever sent to the LLM. **Never user personal data.** Consistent with the v1 RODO posture. |
+| Trigger policy | Brief: automatic. Everything else: on demand. Nothing generated "in advance". |
 
 ---
 
-# 8. Technology & Stack
+# 7. Non-Functional Requirements
 
-## Monolith (Core Service)
-
-- **Language:** Java 21
-- **Framework:** Spring Boot 3.4
-- **Database:** PostgreSQL
-- **Kafka Client:** `spring-kafka`
-- **Email:** Spring Mail (or SendGrid SDK)
-
-## Notification Service
-
-- **Language:** Java 21 (or Python 3.11)
-- **Framework:** Spring Boot (or Flask/FastAPI if Python)
-- **Database:** PostgreSQL (optional — can read from Core Service)
-- **Kafka Client:** `spring-kafka` (or `confluent-kafka` if Python)
-- **Email:** SendGrid SDK (or SMTP)
-
-## AI Service
-
-- **Language:** Python 3.11 (recommended) or Java
-- **Framework:** Flask or FastAPI (Python), or Spring Boot (Java)
-- **Database:** PostgreSQL (to store generated questions)
-- **Kafka Client:** `confluent-kafka` (Python) or `spring-kafka` (Java)
-- **NLP:** spaCy, transformers (optional for advanced text analysis)
-- **LLM:** Claude API (anthropic-sdk), OpenAI API, or local Ollama
-
-## Analytics & Reports Service
-
-- **Language:** Java 21
-- **Framework:** Spring Boot 3.4
-- **Database:** PostgreSQL (reads data from Core Service)
-- **Kafka Client:** `spring-kafka`
-- **Scheduler:** Spring Scheduling (to schedule report for Monday 9 AM)
-- **Aggregation:** Simple SQL queries for statistics counting
-
-## Kafka & Infrastructure
-
-- **Kafka:** Apache Kafka (Docker image)
-- **Docker Compose:** All services + databases + Kafka
-- **Redis:** Optional, for caching questions/descriptions
+- **Graceful degradation:** AI worker or LLM provider down → core app fully
+  functional; AI sections show `failed` with a retry action.
+- **Idempotency:** AI task processing keyed by `taskId`; duplicate Kafka
+  delivery must not produce duplicate content or duplicate mails.
+- **Responsiveness:** adding an application returns immediately; all AI work is
+  background work.
+- **Observability:** task statuses queryable; worker logs correlated by
+  `taskId`; Kafka UI in docker-compose for inspection.
+- **Cost guard:** daily LLM call counter; refuse new AI tasks gracefully when
+  the free-tier limit is near (the UI explains, the tracker keeps working).
 
 ---
 
-# 9. File Structure
+# 8. Deployment Shape
 
 ```
-easy-apply-v2/
-├── docker-compose.yml               # Everything in one: Kafka, PostgreSQL, services
-│
-├── core-service/                    # Monolith (extended)
-│   ├── src/main/java/com/applikon/
-│   │   ├── controller/
-│   │   │   ├── ApplicationController.java
-│   │   │   ├── AuthController.java
-│   │   │   └── CVController.java
-│   │   ├── service/
-│   │   │   ├── ApplicationService.java
-│   │   │   ├── CVService.java
-│   │   │   └── EventPublisher.java          # NEW: sends events to Kafka
-│   │   ├── repository/
-│   │   │   ├── ApplicationRepository.java
-│   │   │   ├── NoteRepository.java
-│   │   │   └── CVRepository.java
-│   │   ├── entity/
-│   │   │   ├── Application.java
-│   │   │   ├── Note.java
-│   │   │   ├── CV.java
-│   │   │   ├── User.java
-│   │   │   └── ApplicationStatus.java       # Enum
-│   │   ├── dto/
-│   │   │   ├── ApplicationRequest.java
-│   │   │   ├── ApplicationResponse.java
-│   │   │   └── ApplicationEvent.java        # Event to Kafka
-│   │   └── config/
-│   │       ├── KafkaProducerConfig.java     # NEW: Kafka configuration
-│   │       └── SecurityConfig.java
-│   ├── pom.xml
-│   └── Dockerfile
-│
-├── notification-service/             # New service
-│   ├── src/main/java/com/applikon/
-│   │   ├── listener/
-│   │   │   ├── ApplicationEventListener.java # Listens for events from Kafka
-│   │   │   └── ReportGeneratedListener.java  # Listens for report event
-│   │   ├── service/
-│   │   │   ├── EmailService.java
-│   │   │   └── MailTemplateService.java
-│   │   ├── dto/
-│   │   │   ├── ApplicationEvent.java        # Receives event
-│   │   │   └── ReportGeneratedEvent.java    # Receives report event
-│   │   ├── template/
-│   │   │   ├── application-added.html
-│   │   │   ├── status-changed.html
-│   │   │   └── weekly-report.html           # Template for report
-│   │   └── config/
-│   │       ├── KafkaConsumerConfig.java     # Reading from Kafka
-│   │       └── EmailConfig.java
-│   ├── pom.xml
-│   └── Dockerfile
-│
-├── ai-service/                       # New service (Python)
-│   ├── app.py                        # Flask/FastAPI app
-│   ├── kafka_listener.py             # Listening for Kafka
-│   ├── ai_generator.py               # Generating questions and descriptions
-│   ├── models.py                     # Database models
-│   ├── requirements.txt              # Dependencies (confluent-kafka, spacy, etc.)
-│   ├── templates/
-│   │   ├── questions.html            # Templates (optional)
-│   │   └── company_info.html
-│   └── Dockerfile
-│
-├── analytics-service/                # New service: weekly reports
-│   ├── src/main/java/com/applikon/
-│   │   ├── listener/
-│   │   │   └── ApplicationEventListener.java # Listens for events (application.added, status.changed)
-│   │   ├── service/
-│   │   │   ├── StatisticsService.java       # Count statistics
-│   │   │   ├── ReportGenerator.java         # Generate report
-│   │   │   └── EventPublisher.java          # Publish report.generated event
-│   │   ├── repository/
-│   │   │   └── ApplicationRepository.java   # Reads from Core Service DB
-│   │   ├── dto/
-│   │   │   ├── ApplicationEvent.java        # Receives event
-│   │   │   └── ReportGeneratedEvent.java    # Publishes report event
-│   │   ├── scheduler/
-│   │   │   └── WeeklyReportScheduler.java   # Every Monday 9 AM
-│   │   └── config/
-│   │       ├── KafkaConsumerConfig.java
-│   │       ├── KafkaProducerConfig.java
-│   │       └── SchedulerConfig.java
-│   ├── pom.xml
-│   └── Dockerfile
-│
-├── shared-libs/                      # Shared classes (optional)
-│   ├── src/main/java/com/applikon/
-│   │   ├── event/
-│   │   │   ├── ApplicationAddedEvent.java
-│   │   │   ├── ApplicationStatusChangedEvent.java
-│   │   │   ├── ApplicationDeletedEvent.java
-│   │   │   └── ReportGeneratedEvent.java
-│   │   └── config/
-│   │       └── KafkaTopicsConfig.java
-│   └── pom.xml
-│
-├── frontend/                         # React (no changes)
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── services/
-│   └── Dockerfile
-│
-└── docs/
-    ├── ARCHITECTURE.md               # System diagram
-    ├── KAFKA_TOPICS.md               # Topics description
-    └── SETUP.md                      # How to run
+docker-compose:
+  backend          # Spring Modulith (stages 1–2: the only app container)
+  ai-worker        # Quarkus (from stage 3)
+  postgres
+  kafka            # from stage 3
+  kafka-ui         # from stage 3, inspection only
+  frontend
 ```
+
+Two application deployables in the final state. The previous vision's
+`notification-service` and `analytics-service` are modules, not containers.
 
 ---
 
-# 10. Kafka Topics & Events
+# 9. Working Method
 
-## Topic Definitions
-
-```
-application.added             # New application was added
-application.status.changed    # Application status changed
-application.deleted           # Application was deleted
-cv.uploaded                    # New CV file was uploaded
-report.generated              # Weekly report was generated
-```
-
-## Example Events
-
-### Event: `application.added`
-
-```json
-{
-  "eventId": "550e8400-e29b-41d4-a716-446655440000",
-  "eventType": "APPLICATION_ADDED",
-  "userId": 123,
-  "applicationId": 456,
-  "companyName": "Google",
-  "position": "Senior Java Developer",
-  "source": "LinkedIn",
-  "jobDescription": "We are looking for a skilled Java developer...",
-  "salary": "150000",
-  "currency": "USD",
-  "timestamp": "2026-04-23T10:30:00Z"
-}
-```
-
-### Event: `application.status.changed`
-
-```json
-{
-  "eventId": "550e8400-e29b-41d4-a716-446655440001",
-  "eventType": "APPLICATION_STATUS_CHANGED",
-  "userId": 123,
-  "applicationId": 456,
-  "previousStatus": "SENT",
-  "newStatus": "INTERVIEW",
-  "timestamp": "2026-04-23T14:15:00Z"
-}
-```
-
-### Event: `application.deleted`
-
-```json
-{
-  "eventId": "550e8400-e29b-41d4-a716-446655440002",
-  "eventType": "APPLICATION_DELETED",
-  "userId": 123,
-  "applicationId": 456,
-  "companyName": "Google",
-  "timestamp": "2026-04-23T16:45:00Z"
-}
-```
-
-### Event: `report.generated`
-
-```json
-{
-  "eventId": "550e8400-e29b-41d4-a716-446655440003",
-  "eventType": "REPORT_GENERATED",
-  "userId": 123,
-  "reportPeriod": "2026-04-20 to 2026-04-26",
-  "newApplications": 8,
-  "interviewsScheduled": 2,
-  "rejections": 3,
-  "agedApplications": 5,
-  "topCompanies": ["Google", "Amazon", "Spotify"],
-  "timestamp": "2026-04-28T09:00:00Z"
-}
-```
+- **ADRs** (`spec/v2/adr/`): one short record per decision — "modulith before
+  microservices", "why notifications was not extracted", "why Gemini free
+  tier", "why no follow-ups". Continues the "discussed and intentionally
+  skipped" culture from `as-built.md`. Each ADR doubles as an interview answer.
+- **Each stage is shippable** and ends with: working deploy, updated as-built
+  notes, and a LinkedIn post about the evolution step.
+- Conventional commits, scopes as in v1 (`backend`, `frontend`, `spec`, `db`,
+  `infra`).
 
 ---
 
-# 11. Non-Functional Requirements
+# 10. Success Criteria
 
-## Performance
+v2 is successful when:
 
-- **Core Service:** Add application < 500ms
-- **Notification Service:** Send email < 5 seconds (can be asynchronous)
-- **AI Service:** Generate questions < 30 seconds
-- **Analytics Service:** Generate report < 10 seconds (every Monday 9 AM)
-- **Kafka:** Publish event < 100ms
-
-## Scalability
-
-- Kafka: min. 3 partitions per topic (for consumer scaling)
-- Notification Service: can be scaled independently (e.g. 2-3 instances)
-- AI Service: can be scaled independently
-- Core Service: scaling via load balancer
-
-## Reliability
-
-- **Kafka:** at-least-once delivery (events may be processed multiple times)
-- **Retry logic:** Notification Service retries email send on failure
-- **Dead Letter Queue:** Events that cannot be processed go to DLQ for debugging
-- **Health checks:** Each service has `/health` endpoint
-
-## Security
-
-- **Authentication:** JWT tokens (in Core Service)
-- **Kafka:** ACL (access control lists) — Notification Service can only read from its topics
-- **Environment variables:** SendGrid API key, DB password, etc.
-- **Logging:** Don't log sensitive data (passwords, tokens)
+- ✅ The backend is a verified Spring Modulith (`ApplicationModules.verify()`
+  passes; module boundaries enforced by tests).
+- ✅ Adding an application immediately returns and a grounded company brief
+  appears in the background with visible task status.
+- ✅ Prep pack and question-bank study material generate on demand only.
+- ✅ The screening cheat sheet composes brief + proposed salary + "My answers"
+  on one screen, with zero AI calls.
+- ✅ Stale applications (>30 days in SENT) get a one-click archive suggestion.
+- ✅ The weekly report mail arrives on schedule and contains only sent + stale
+  counts.
+- ✅ From stage 3: AI tasks flow through Kafka to the Quarkus worker; killing
+  the worker degrades only AI features; events replay on restart.
+- ✅ Total LLM cost: 0 PLN; only public job-ad content leaves the system.
+- ✅ Every non-obvious decision has an ADR.
 
 ---
 
-# 12. Success Criteria
+# 11. Educational Goals (the CV story)
 
-v2 architecture is successful when:
+- **Spring Modulith** — module boundaries, in-process domain events,
+  publication registry as a transactional outbox.
+- **Event-driven design at two scopes** — modulith events in-process, Kafka
+  across the process boundary, and the judgment of where each belongs.
+- **Apache Kafka** — producing via `@Externalized`, consuming, idempotency,
+  dead-letter handling.
+- **Quarkus + langchain4j** — a second JVM framework in a justified role:
+  a small async worker.
+- **LLM integration in Java** — Spring AI, structured output, grounding via
+  tool/search, provider abstraction, cost control, graceful degradation.
+- **Restraint as a skill** — the rejected-ideas table and the deliberately
+  non-extracted notifications module.
 
-- ✅ Docker Compose starts without errors (all services online)
-- ✅ Core Service publishes events to Kafka when user adds/changes application
-- ✅ Notification Service reads events and sends emails
-- ✅ AI Service reads events and generates questions in < 30 seconds
-- ✅ Analytics Service aggregates events throughout the week
-- ✅ Every Monday at 9 AM Analytics Service generates report and publishes event
-- ✅ Notification Service sends report via email to user
-- ✅ End-to-end: User adds application → gets email → sees questions and company description → gets report every week
-- ✅ Code is readable, each service has clear responsibility
-- ✅ Unit tests for each service
-- ✅ Documentation: how to run, how to add new service
-- ✅ No memory leaks, proper resource cleanup
-
----
-
-# 13. Educational Goals
-
-Developer learns:
-
-- **Event-driven architecture** — how to design event-based systems
-- **Apache Kafka** — publishing, consuming, partitioning
-- **Microservices** — one service = one task
-- **Asynchronous communication** — services don't wait for each other
-- **Service integration** — different technologies (Java + Python) working together
-- **Docker & Docker Compose** — containerization and orchestration
-- **System design** — how to think about scalability, reliability, separation of concerns
+One-sentence pitch: *"Applikon doesn't just track applications — it prepares
+you for the calls and interviews, at zero AI cost; architecturally it evolved
+from a monolith into a modulith with one deliberately extracted, event-driven
+AI worker."*
 
 ---
 
-# 14. Future Extensions (Out of Scope for v2)
+# 12. Future Extensions (Out of Scope for v2)
 
-- Email Analyzer: monitor emails from companies, auto-update statuses
-- Weekly Reports: statistics and weekly reports
-- Web Scraping: research companies, tech stacks, news
-- Mobile App: Android/iOS application
-- Payment System: premium features (advanced analytics, etc.)
+- Rejection-pattern analysis (needs more data than a single user accumulates).
+- E-mail inbox integration (auto-detecting company responses).
+- Mobile app.
+- v3: revisit extraction of further modules **only** when a concrete quality
+  attribute demands it.
